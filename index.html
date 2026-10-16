@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Applis EPS</title>
+<meta name="theme-color" content="#1f7a4d">
+<link rel="icon" href="icones/tournoi-192.png">
+<style>
+:root{--bg:#f3f5f1;--surface:#fff;--fg:#18201a;--muted:#5d6a60;--line:#d9ded4;--accent:#1f7a4d}
+@media (prefers-color-scheme:dark){:root{--bg:#111613;--surface:#1a211c;--fg:#e8eee9;--muted:#9aa89e;--line:#2c362f;--accent:#3fbf7f;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0 auto;max-width:640px;padding:24px 16px 48px;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+h1{font-size:28px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 24px}
+.tuiles{display:grid;gap:12px}
+a.tuile{display:flex;align-items:center;gap:16px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:16px;color:inherit;text-decoration:none}
+a.tuile img{width:64px;height:64px;border-radius:14px}
+a.tuile b{display:block;font-size:19px}
+a.tuile span{color:var(--muted);font-size:14px}
+h2{font-size:18px;margin:32px 0 8px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}
+summary{font-weight:600;cursor:pointer}
+li{margin:4px 0}
+.note{color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<h1>Applis EPS</h1>
+<p class="sub">Gratuites, sans compte, et elles marchent même sans internet au gymnase.</p>
+<div class="tuiles">
+  <a class="tuile" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><div><b>Tournoi</b><span>Matchs, scores, arbitres, classement</span></div></a>
+  <a class="tuile" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><div><b>Koh-Lanta Arène</b><span>Points par groupe, équipes, fair-play, fiche fin de leçon</span></div></a>
+</div>
+
+<h2>Mettre une appli sur son téléphone</h2>
+<p class="note">Ouvre d'abord l'appli (touche sa tuile), puis :</p>
+<details><summary>iPhone (Safari)</summary><ol><li>Touche le bouton Partager (carré avec une flèche).</li><li>Choisis « Sur l'écran d'accueil ».</li><li>Touche « Ajouter ».</li></ol></details>
+<details><summary>Android (Chrome)</summary><ol><li>Touche les 3 points en haut à droite.</li><li>Choisis « Installer l'application » ou « Ajouter à l'écran d'accueil ».</li></ol></details>
+
+<h2>Bon à savoir</h2>
+<ul class="note">
+  <li>Tes données restent uniquement sur ton téléphone. Personne d'autre ne les voit.</li>
+  <li>Sur iPhone, l'appli installée et Safari ne partagent pas leurs données : utilise toujours l'icône installée.</li>
+  <li>Pense au bouton 💾 Sauvegarde de temps en temps (fichier à garder dans Fichiers, Drive ou OneDrive). Il sert aussi à passer sur un nouveau téléphone.</li>
+  <li>Les nouvelles versions arrivent toutes seules à l'ouverture, sans effacer tes données.</li>
+</ul>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

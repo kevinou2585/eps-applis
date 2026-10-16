@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Koh-Lanta Arène</title>
+<meta name="theme-color" content="#e8590c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icones/koh-lanta-192.png">
+<link rel="apple-touch-icon" href="../icones/koh-lanta-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Koh-Lanta Arène">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout : appli une colonne pour téléphone — barre de groupe collante, onglets, liste d'aventuriers tactile */
+:root{
+  --bg:#eef3f1; --surface:#ffffff; --ink:#12302b; --muted:#5c716c; --line:#d3dfdb;
+  --torch:#e8590c; --torch-ink:#ffffff; --gold:#d9a400; --silver:#8a979b; --bronze:#b5652b;
+  --fair:#2f7d5b; --red:#c92a2a; --flash:#ffe8d6;
+  --jaune:#f1c232; --jaune-ink:#2b2100; --vert:#2f9e5b; --vert-ink:#fff; --bleu:#2f6fd0; --bleu-ink:#fff; --rouge:#d64545; --rouge-ink:#fff;
+  --t1:#e8590c; --t2:#0b7285; --t3:#7048e8; --t4:#5c6b73; --t5:#c2255c; --t6:#2b8a3e;
+  --display:"Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0d1a18; --surface:#152724; --ink:#e6f0ed; --muted:#93a8a2; --line:#28403b;
+  --torch:#ff7a2e; --torch-ink:#1a0d04; --flash:#3a2414; --fair:#4cc28a; --red:#ff6b6b;
+  color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0d1a18; --surface:#152724; --ink:#e6f0ed; --muted:#93a8a2; --line:#28403b;
+  --torch:#ff7a2e; --torch-ink:#1a0d04; --flash:#3a2414; --fair:#4cc28a; --red:#ff6b6b;
+  color-scheme:dark }
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; -webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box}
+button{font:inherit; color:inherit; cursor:pointer}
+button:focus-visible{outline:3px solid var(--torch); outline-offset:2px}
+.wrap{max-width:560px; margin:0 auto; padding-inline:16px; padding-block:0 96px}
+
+header{position:sticky; top:env(safe-area-inset-top,0px); z-index:5; background:var(--bg); padding-block:12px 8px; display:grid; gap:10px}
+.brand{display:flex; align-items:baseline; justify-content:space-between; gap:12px}
+.brand h1{font-family:var(--display); font-weight:800; font-size:1.55rem; margin:0; letter-spacing:-.01em; text-wrap:balance}
+.brand h1 span{color:var(--torch)}
+.brand small{color:var(--muted); font-size:.8rem; white-space:nowrap}
+.brand .right{display:grid; justify-items:end; gap:1px}
+.sync{font-size:.72rem!important; font-weight:700}
+.sync[data-st="err"],.sync[data-st="full"]{color:var(--red)!important}
+.brand{align-items:center}
+.brand h1{white-space:nowrap; font-size:clamp(1.15rem,5.6vw,1.55rem)}
+.archbtn{border:1px solid var(--line); background:var(--surface); border-radius:99px; padding:6px 11px; font-weight:700; font-size:.82rem; white-space:nowrap}
+.archbtn[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+@media (max-width:340px){ #today{display:none} }
+.groups{display:grid; grid-template-columns:repeat(4,1fr); gap:6px}
+.gbtn{border:2px solid transparent; border-radius:10px; padding:9px 4px; font-weight:700; font-size:.92rem; background:var(--surface); color:var(--ink); border-color:var(--line)}
+.gbtn[aria-pressed="true"]{background:var(--gc); color:var(--gi); border-color:var(--gc)}
+.tabs{display:grid; grid-template-columns:repeat(3,1fr); background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:3px}
+.tab{border:0; background:transparent; padding:9px 4px; border-radius:9px; font-weight:700; font-size:.9rem; color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--ink); color:var(--bg)}
+
+.hint{color:var(--muted); font-size:.82rem; margin:6px 2px 10px}
+.list{display:grid; gap:6px; margin:0; padding:0; list-style:none}
+.row{display:grid; grid-template-columns:1fr auto auto; align-items:stretch; background:var(--surface); border:1px solid var(--line); border-radius:12px; overflow:hidden; border-left:6px solid var(--gc)}
+.name{border:0; background:transparent; text-align:left; padding:12px 10px; display:flex; flex-direction:column; justify-content:center; gap:3px; min-width:0}
+.name b{font-size:1rem; line-height:1.2; overflow-wrap:anywhere}
+.nom{font-weight:400; color:var(--muted)}
+.badges{display:flex; flex-wrap:wrap; gap:4px}
+.badge{font-size:.7rem; font-weight:700; padding:2px 7px; border-radius:99px; letter-spacing:.02em}
+.b-cap{background:var(--gold); color:#2b2100}
+.b-fair{background:var(--fair); color:var(--bg)}
+.b-red{background:var(--red); color:#fff}
+.b-abs{background:var(--line); color:var(--muted)}
+.score{min-width:52px; display:grid; place-items:center; font-family:var(--display); font-weight:800; font-size:1.5rem; font-variant-numeric:tabular-nums; padding-inline:4px}
+.minus,.more{border:0; border-left:1px solid var(--line); background:transparent; width:48px; font-size:1.3rem; font-weight:700; color:var(--muted)}
+.minus:active,.more:active{background:var(--line)}
+.row.pop{animation:pop .45s ease-out}
+@keyframes pop{0%{background:var(--flash)}100%{background:var(--surface)}}
+.row.absent{opacity:.6; border-left-color:var(--line)}
+.row.absent .name b{text-decoration:line-through}
+.row.absent .score{color:var(--muted)}
+.sep{font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:14px 2px 4px; font-weight:700}
+
+.rank{display:grid; grid-template-columns:44px 1fr auto; align-items:center; gap:8px; padding:11px 12px; background:var(--surface); border:1px solid var(--line); border-radius:12px}
+.rank .pos{font-family:var(--display); font-weight:800; font-size:1.2rem; text-align:center; font-variant-numeric:tabular-nums}
+.rank .pts{font-family:var(--display); font-weight:800; font-size:1.25rem; font-variant-numeric:tabular-nums}
+.rank.r1{border-color:var(--gold); box-shadow:inset 4px 0 0 var(--gold)}
+.rank.r2{border-color:var(--silver); box-shadow:inset 4px 0 0 var(--silver)}
+.rank.r3{border-color:var(--bronze); box-shadow:inset 4px 0 0 var(--bronze)}
+.rank .who{min-width:0; overflow-wrap:anywhere}
+
+.card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px; display:grid; gap:8px}
+.card h2{font-family:var(--display); font-weight:800; font-size:1.05rem; margin:0; display:flex; justify-content:space-between; gap:8px; align-items:baseline}
+.card h2 em{font-style:normal; font-family:var(--body); font-size:.78rem; color:var(--muted); font-weight:700}
+.card ul{margin:0; padding:0; list-style:none; display:grid; gap:5px}
+.card li{display:flex; justify-content:space-between; gap:10px}
+.card li span:last-child{font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap}
+.empty{color:var(--muted); font-size:.9rem}
+.stack{display:grid; gap:10px}
+.actions{display:grid; gap:8px; margin-top:6px}
+.btn{border:0; border-radius:12px; padding:14px; font-weight:700; font-size:1rem}
+.btn-main{background:var(--torch); color:var(--torch-ink)}
+.btn-ghost{background:transparent; border:2px solid var(--line); color:var(--ink)}
+.btn-danger{background:var(--red); color:#fff}
+.confirm{display:grid; gap:8px; padding:12px; border:2px dashed var(--red); border-radius:12px}
+textarea{width:100%; min-height:160px; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); padding:10px; font:inherit; font-size:.85rem}
+
+.sheet-bg{position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:20; display:grid; align-items:end}
+.sheet{background:var(--surface); border-radius:18px 18px 0 0; padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px)); display:grid; gap:8px; max-width:560px; width:100%; margin:0 auto}
+.sheet h3{margin:0 0 4px; font-family:var(--display); font-size:1.15rem}
+.opt{display:flex; justify-content:space-between; align-items:center; gap:10px; border:1px solid var(--line); background:var(--bg); border-radius:12px; padding:13px 14px; font-weight:700; text-align:left}
+.opt span:last-child{font-size:.85rem; color:var(--muted); font-weight:400}
+.opt[aria-pressed="true"]{border-color:var(--torch); box-shadow:inset 0 0 0 1px var(--torch)}
+
+.toolbar{display:grid; grid-template-columns:1fr; gap:8px; margin-top:10px}
+.toolbar .resetbtn{padding:8px 12px}
+.tbrow{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.tbrow button{padding:9px 10px}
+#reset-panel{background:var(--surface)}
+.savebtn{border:2px solid var(--torch); background:var(--torch); color:var(--torch-ink); border-radius:12px; padding:8px 14px; font-weight:800; font-size:.92rem}
+.savewarn{border:2px solid var(--torch); background:var(--flash); border-radius:14px; padding:12px; display:grid; gap:8px}
+.savewarn b{font-size:.95rem}
+.savewarn .empty{color:var(--ink)}
+.mode{display:grid; grid-template-columns:repeat(3,1fr); background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:3px}
+.mode button{border:0; background:transparent; border-radius:9px; padding:10px 4px; font-weight:700; font-size:.88rem; color:var(--muted)}
+.mode button[aria-pressed="true"]{background:var(--torch); color:var(--torch-ink)}
+.resetbtn{border:2px solid var(--line); background:var(--surface); border-radius:12px; padding:0 12px; font-weight:700; font-size:.85rem; color:var(--red)}
+.tcfg{display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:8px 10px}
+.stepper{display:flex; align-items:center; gap:8px; font-weight:700}
+.stepper button{width:40px; height:40px; border-radius:10px; border:1px solid var(--line); background:var(--bg); font-size:1.2rem; font-weight:800}
+.stepper output{min-width:1.5ch; text-align:center; font-family:var(--display); font-size:1.3rem; font-variant-numeric:tabular-nums}
+.dice{border:0; border-radius:10px; padding:10px 12px; background:var(--ink); color:var(--bg); font-weight:700}
+.teams{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
+.team{border-radius:14px; background:var(--tc); color:#fff; padding:12px; display:grid; gap:8px; min-width:0}
+.team h2{margin:0; font-family:var(--display); font-weight:800; font-size:1.2rem; display:flex; justify-content:space-between; align-items:baseline; gap:6px}
+.team h2 small{font-family:var(--body); font-size:.75rem; font-weight:700; opacity:.9}
+.team .capn{font-size:.8rem; font-weight:700; opacity:.95; overflow-wrap:anywhere; min-height:1.1em}
+.team .tpts{font-family:var(--display); font-weight:800; font-size:2.3rem; line-height:1; font-variant-numeric:tabular-nums}
+.team .tpts span{font-size:.8rem; font-family:var(--body); font-weight:700; opacity:.9}
+.team .tbtns{display:grid; grid-template-columns:2fr 1fr; gap:6px}
+.team .tbtns button{border:0; border-radius:10px; padding:14px 6px; font-weight:800; font-size:1.05rem; background:rgba(255,255,255,.94); color:#12302b}
+.team .tbtns button.tm{background:rgba(0,0,0,.22); color:#fff}
+.team.pop{animation:tpop .45s ease-out}
+@keyframes tpop{0%{transform:scale(1.04)}100%{transform:scale(1)}}
+.comp{display:grid; gap:6px; margin-top:14px}
+.crow{display:grid; gap:8px; background:var(--surface); border:1px solid var(--line); border-left:6px solid var(--tc, var(--line)); border-radius:12px; padding:10px}
+.crow .cn{display:flex; justify-content:space-between; gap:8px; align-items:center}
+.crow .cn b{overflow-wrap:anywhere; min-width:0}
+.crow .cn span.pp{font-family:var(--display); font-weight:800; font-variant-numeric:tabular-nums}
+.letters{display:flex; flex-wrap:wrap; gap:6px}
+.letters button{min-width:44px; height:40px; border-radius:10px; border:1px solid var(--line); background:var(--bg); font-weight:800}
+.letters button[aria-pressed="true"]{background:var(--tc); border-color:var(--tc); color:#fff}
+.letters .capbtn{margin-left:auto; padding-inline:10px}
+.letters .capbtn[aria-pressed="true"]{background:var(--gold); border-color:var(--gold); color:#2b2100}
+.crow.absent{opacity:.55}
+.crow.absent b{text-decoration:line-through}
+@media (max-width:360px){ .teams{grid-template-columns:1fr} }
+.toast{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(16px + env(safe-area-inset-bottom,0px)); z-index:15; background:var(--ink); color:var(--bg); border-radius:12px; padding:10px 10px 10px 16px; display:flex; gap:12px; align-items:center; font-size:.92rem; max-width:calc(100% - 32px); box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.toast button{border:0; background:var(--torch); color:var(--torch-ink); border-radius:9px; padding:7px 12px; font-weight:700}
+.filters{display:flex; flex-wrap:wrap; gap:6px; margin:10px 0}
+.filters button{border:1px solid var(--line); background:var(--surface); border-radius:99px; padding:7px 13px; font-weight:700; font-size:.85rem}
+.filters button[aria-pressed="true"]{background:var(--gc, var(--ink)); border-color:var(--gc, var(--ink)); color:var(--gi, var(--bg))}
+details.arch{background:var(--surface); border:1px solid var(--line); border-left:6px solid var(--gc); border-radius:12px}
+details.arch summary{list-style:none; cursor:pointer; padding:12px; display:grid; gap:3px}
+details.arch summary::-webkit-details-marker{display:none}
+details.arch summary b{display:flex; justify-content:space-between; gap:8px}
+details.arch summary b span{color:var(--muted); font-weight:400; font-size:.85rem}
+details.arch summary small{color:var(--muted); font-size:.82rem; overflow-wrap:anywhere}
+details.arch[open] summary{border-bottom:1px solid var(--line)}
+.archbody{padding:10px; display:grid; gap:8px}
+.archbody .card{padding:10px; border-radius:10px}
+.archbtns{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.archbtns .btn{padding:11px; font-size:.92rem}
+.icons{grid-column:1 / -1; display:flex; gap:6px; padding:0 8px 8px 10px; flex-wrap:wrap}
+.ic{border:1px solid var(--line); background:var(--bg); border-radius:9px; height:36px; min-width:44px; padding:0 8px; font-size:1.05rem; display:inline-flex; align-items:center; gap:4px; font-weight:700}
+.ic small{font-size:.75rem}
+.ic[aria-pressed="true"]{border-color:var(--torch); background:var(--flash)}
+.ic.del{margin-left:auto}
+.legend{font-size:.74rem; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:6px 10px; margin:0 0 8px; line-height:1.5}
+.letters .absbtn{padding-inline:10px}
+.letters .absbtn[aria-pressed="true"]{background:var(--line); color:var(--ink)}
+@media (prefers-reduced-motion: reduce){ .row.pop{animation:none} }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand"><h1>Koh-Lanta <span>EPS</span></h1><button class="archbtn" id="open-arch" aria-pressed="false">🗂️ Archives</button><span class="right"><small id="today"></small><small id="sync" class="sync"></small></span></div>
+    <div class="tbrow"><button class="savebtn" id="backup-top">💾 Sauvegarde</button><button class="resetbtn" id="reset-top">Remettre à 0</button></div>
+    <div id="reset-panel" class="confirm" hidden></div>
+    <div class="groups" role="group" aria-label="Choix du groupe" id="groups"></div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-jeu" data-tab="jeu" aria-selected="true">Épreuves</button>
+      <button class="tab" role="tab" id="tab-class" data-tab="class" aria-selected="false">Classement</button>
+      <button class="tab" role="tab" id="tab-fin" data-tab="fin" aria-selected="false">Fin de leçon</button>
+    </div>
+  </header>
+
+  <section id="v-jeu">
+    <div class="toolbar">
+      <div class="mode" role="group" aria-label="Mode de notation">
+        <button id="m-cap" data-mode="cap">① Capitaines</button>
+        <button id="m-equipe" data-mode="equipe">② Équipes</button>
+        <button id="m-ind" data-mode="ind">③ Individuel</button>
+      </div>
+    </div>
+    <p class="hint" id="hint"></p>
+    <div id="teams" hidden></div>
+    <div class="card" id="capcall" hidden style="margin-bottom:10px"></div>
+    <ul class="list" id="list"></ul>
+  </section>
+  <section id="v-class" hidden>
+    <p class="hint">Classement du jour pour ce groupe (les absents ne sont pas classés).</p>
+    <div class="list" id="ranking"></div>
+  </section>
+  <section id="v-fin" hidden>
+    <div class="stack" id="recap"></div>
+  </section>
+  <section id="v-arch" hidden>
+    <p class="hint">Une fiche « Fin de leçon » est archivée à chaque remise à 0. Touche une fiche pour l'ouvrir. Quand ☁️ Enregistré s'affiche en haut, résultats et archives sont gardés en ligne sur ton compte, même si l'appli est fermée.</p>
+    <div class="filters" id="arch-filters"></div>
+    <div class="stack" id="arch-list"></div>
+  </section>
+</div>
+
+<div class="sheet-bg" id="sheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <h3 id="sheet-title"></h3>
+    <button class="opt" id="o-cap"><span>⭐ Capitaine</span><span>marquer / retirer</span></button>
+    <button class="opt" id="o-fair"><span>🤝 Fair-play / meilleur coéquipier</span><span>+3 pts au général</span></button>
+    <button class="opt" id="o-red"><span>🟥 Carton rouge</span><span>−3 pts au général</span></button>
+    <button class="opt" id="o-abs"><span>🚫 Absent</span><span>barré, placé en bas</span></button>
+    <button class="opt" id="o-del" hidden><span>🗑️ Retirer cet élève ajouté</span><span>le supprime de la liste</span></button>
+    <button class="btn btn-ghost" id="o-close">Fermer</button>
+  </div>
+</div>
+
+<div class="sheet-bg" id="bk" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="bk-title">
+    <h3 id="bk-title">💾 Sauvegarde</h3>
+    <p class="empty" style="margin:0" id="bk-info"></p>
+    <button class="btn btn-main" id="bk-save">⬇️ Sauvegarder (fichier + photo)</button>
+    <span class="empty" id="bk-msg"></span>
+    <label class="btn btn-ghost" style="text-align:center; cursor:pointer">⬆️ Recharger une sauvegarde<input type="file" id="bk-file" accept=".json,application/json,text/plain" hidden></label>
+    <div id="bk-confirm" class="confirm" hidden></div>
+    <button class="btn btn-ghost" id="bk-close">Fermer</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden><span id="toast-msg"></span><button id="toast-undo">Annuler</button></div>
+
+<script>
+const ROSTER = {
+ jaune:['Abdelhakim Sealiti','Ali Khokhar','Davina Mwanampulu Bi-Mukufu','Dubno Ahmed Nur Gease','Erina Sadiki','Imran Temsamani','Ishak Laouti','Issam El Khallouki','Lyn Bukens','Mario Louis Cioaca','Mathys Gary Nyandjou Joao','Mehdi Moussaid','Mohtadi Zemzem','Muhammad Misam Raza',"Raihane M'Rabet",'Saidou Sow','Warda Nihal Chabane'],
+ vert:['Abdoulaye Bah','Aissata Diallo','Ayoub Boumediene','Enes Kiliç','Fiona Ajdini','Imran Yaagoubi','Melissa Sandu','Nizar Bouzizoua','Othman Haddaoui Nour',"Pierre N'Diaye",'Ruqaya Haddouten','Safwane Bouali','Sefer Kaan Yilmaz','Yasin Taskin','Zeinab Harouna'],
+ bleu:['Abdourahamane Bah','Adam Zarioh','Aichabente Diallo','Alalli Alassane Bah Diallo','Amara Dore Soumaoroh','Bilal Zaian','Bradley François Quintino Landeut','Fatoumata Kaba','Mamadou Diouhé Diallo','Maryam Diallo','Mohamed Amchich','Naila Abajadi','Nathan Amini Nyembo','Rayan Azzouz Ben Ayad','Rodayna Azzouzi Amri','Russel-David Fernandez Tchamba','Walid Zian Marzgui Kanfoud'],
+ rouge:['Adam Bekhti','Amer Said Ibrahim','Buglem Baytoz','Daniel Fidel Marquez Fuentes Mpemba','Denis Mocanu','Fatoumata Binta Sow','Gouanwou Chloé Noumbissi Noumbissi','Islam El Guenouni','Jonaid Bouzaid','Mariam Sow',"M'Mahsaran Toure",'Mohammed Khlifi','Mouhamed Bah','Naïm Kouimen Lamarti','Pranjal Shresta','Rayan El Bouziani']
+};
+const GLABEL = {jaune:'Jaune', vert:'Vert', bleu:'Bleu', rouge:'Rouge'};
+const KEY = 'kl-arene-v1';
+const $ = id => document.getElementById(id);
+
+function blankTeam(){ return {n:3, pts:{}}; }
+function blankGroup(g){ const o = {}; ROSTER[g].forEach(n => o[n] = {p:0, cap:false, abs:false, fair:0, red:0}); return o; }
+function blank(){ const s = {group:'jaune', tab:'jeu', mode:'cap', g:{}, team:{}, extra:{}}; for (const g in ROSTER){ s.g[g] = blankGroup(g); s.team[g] = blankTeam(); s.extra[g] = []; } return s; }
+let saved = null;
+try { const raw = localStorage.getItem(KEY); if (raw) saved = JSON.parse(raw); } catch(e){}
+let S = blank();
+function applySaved(sv){
+  if (!sv || typeof sv !== 'object') return;
+  const prevGroup = S.group, prevTab = S.tab, prevMode = S.mode;
+  if (sv.extra) for (const g in ROSTER) (sv.extra[g] || []).forEach(n => { if (typeof n === 'string' && !ROSTER[g].includes(n)) ROSTER[g].push(n); });
+  S = blank(); S.group = prevGroup; S.tab = prevTab; S.mode = prevMode;
+  if (sv.extra) for (const g in ROSTER) S.extra[g] = (sv.extra[g] || []).filter(n => typeof n === 'string');
+  try { for (const g in ROSTER){ ROSTER[g].forEach(n => { const v = sv.g?.[g]?.[n]; if (v) S.g[g][n] = Object.assign(S.g[g][n], v); }); if (sv.team?.[g] && typeof sv.team[g] === 'object') S.team[g] = Object.assign(blankTeam(), sv.team[g]); } if (ROSTER[sv.group]) S.group = sv.group; if (sv.tab) S.tab = sv.tab; if (sv.mode) S.mode = sv.mode; S.ts = sv.ts || 0; } catch(e){}
+}
+applySaved(saved);
+// ---- enregistrement : sur l'appareil + en ligne (compte Claude) ----
+let cloud = null, cloudReady = false, pushTimer = null, writing = Promise.resolve();
+function save(){
+  S.ts = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){}
+  if (cloud){ clearTimeout(pushTimer); setSync('busy'); pushTimer = setTimeout(pushState, 700); }
+}
+function pushState(){
+  if (!cloud) return;
+  clearTimeout(pushTimer); pushTimer = null;
+  const body = JSON.parse(JSON.stringify(S));
+  writing = writing.then(() => cloud.state.set(body)).then(() => { if (!pushTimer) setSync('ok'); }).catch(cloudFail);
+  return writing;
+}
+function cloudFail(e){ console.warn('sauvegarde en ligne', e); if (e?.code === 'invalid_argument' || e?.code === 'not_granted' || e?.code === 'revoked'){ cloud = null; cloudReady = false; setSync('local'); return; } setSync(e?.code === 'quota_exceeded' ? 'full' : 'err'); }
+function setSync(st){
+  const el = $('sync'); if (!el) return;
+  const T = {ok:['☁️ Enregistré','Résultats et archives enregistrés en ligne sur ton compte.'],
+    busy:['☁️ …','Enregistrement en cours…'],
+    err:['⚠️ Hors ligne','Pas d\'enregistrement en ligne pour le moment : les résultats restent sur cet appareil.'],
+    full:['⚠️ Plein','L\'espace en ligne est plein : efface quelques archives.'],
+    local:['📱 Cet appareil','Enregistré seulement dans ce navigateur. Ouvre l\'appli connecté à ton compte Claude pour un enregistrement en ligne.']};
+  const t = T[st] || T.local; const was = el.dataset.st; el.textContent = t[0]; el.title = t[1]; el.dataset.st = st;
+  if (was !== undefined && (was === 'ok') !== (st === 'ok') && S.tab === 'fin' && st !== 'busy' && was !== 'busy') renderRecap();
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden && pushTimer) pushState(); });
+window.addEventListener('pagehide', () => { if (pushTimer) pushState(); });
+
+// ---- archives des fiches fin de leçon ----
+const AKEY = 'kl-arene-archives-v1';
+let ARCH = [];
+try { const a = JSON.parse(localStorage.getItem(AKEY) || '[]'); if (Array.isArray(a)) ARCH = a; } catch(e){}
+let remoteArch = new Set();
+function saveArch(){
+  try { localStorage.setItem(AKEY, JSON.stringify(ARCH)); } catch(e){}
+  if (!cloud || !cloudReady) return;
+  const ids = new Set(ARCH.map(a => a.id));
+  const add = ARCH.filter(a => !remoteArch.has(a.id)), del = [...remoteArch].filter(id => !ids.has(id));
+  if (!add.length && !del.length) return;
+  setSync('busy');
+  writing = writing.then(async () => {
+    for (const a of add){ await cloud.arch.doc(a.id).set(a); remoteArch.add(a.id); }
+    for (const id of del){ await cloud.arch.doc(id).delete(); remoteArch.delete(id); }
+    if (!pushTimer) setSync('ok');
+  }).catch(cloudFail);
+}
+function snapshot(g){
+  const d = recapData(g);
+  const has = people(g).some(x => x.p > 0 || x.fair || x.red || x.cap);
+  if (!has) return null;
+  return { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), t: Date.now(), g,
+    podium: d.podium.map(o => ({r:o.r, who:o.who.map(x => ({n:x.n, p:x.p}))})),
+    fair: d.fair.map(x => ({n:x.n, k:x.fair})), red: d.red.map(x => ({n:x.n, k:x.red})),
+    caps: d.caps.map(x => x.n), abs: d.abs.map(x => x.n) };
+}
+// archive les groupes donnés (avant remise à 0) et lie l'archive à la dernière action annulable
+function archiveGroups(groups){
+  const made = groups.map(snapshot).filter(Boolean);
+  if (!made.length) return 0;
+  ARCH.push(...made); saveArch();
+  const last = undoStack[undoStack.length - 1];
+  if (last){ const o = JSON.parse(last); o.archIds = made.map(a => a.id); undoStack[undoStack.length - 1] = JSON.stringify(o); }
+  return made.length;
+}
+
+let undoStack = [];
+function remember(label){ undoStack.push(JSON.stringify({g:S.g, team:S.team})); if (undoStack.length > 40) undoStack.shift(); showToast(label); }
+let toastTimer;
+function showToast(msg){ $('toast-msg').textContent = msg; $('toast').hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').hidden = true, 3500); }
+$('toast-undo').onclick = () => { const u = undoStack.pop(); if (!u) return; const o = JSON.parse(u); S.g = o.g; S.team = o.team;
+  if (o.archIds){ ARCH = ARCH.filter(a => !o.archIds.includes(a.id)); saveArch(); }
+  save(); render(); $('toast').hidden = true; };
+
+$('today').textContent = new Date().toLocaleDateString('fr-BE', {weekday:'short', day:'numeric', month:'short'});
+
+function gStyle(g){ return `--gc:var(--${g}); --gi:var(--${g}-ink)`; }
+function renderGroups(){
+  $('groups').innerHTML = Object.keys(ROSTER).map(g => `<button class="gbtn" id="g-${g}" data-g="${g}" style="${gStyle(g)}" aria-pressed="${S.group===g}">${GLABEL[g]}</button>`).join('');
+  $('groups').querySelectorAll('.gbtn').forEach(b => b.onclick = () => { S.group = b.dataset.g; save(); render(); });
+}
+function fmtName(n){ const i = n.indexOf(' '); return i < 0 ? esc(n) : `${esc(n.slice(0,i))} <span class="nom">${esc(n.slice(i+1))}</span>`; }
+function esc(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function badges(v){
+  let h = '';
+  if (v.cap) h += '<span class="badge b-cap">⭐ Capitaine</span>';
+  if (v.fair) h += `<span class="badge b-fair">🤝 Fair-play${v.fair>1?' ×'+v.fair:''}</span>`;
+  if (v.red) h += `<span class="badge b-red">🟥 Carton${v.red>1?' ×'+v.red:''}</span>`;
+  if (v.abs) h += '<span class="badge b-abs">Absent</span>';
+  return h ? `<span class="badges">${h}</span>` : '';
+}
+function people(g = S.group){ const d = S.g[g]; return ROSTER[g].map(n => ({n, ...d[n]})); }
+
+function renderList(){
+  const all = people();
+  const byName = (a,b) => a.n.localeCompare(b.n, 'fr');
+  const present = all.filter(x => !x.abs).sort(byName);
+  const absent = all.filter(x => x.abs).sort(byName);
+  const row = x => `<li class="row ${x.abs?'absent':''}" data-n="${esc(x.n)}" style="${gStyle(S.group)}">
+      <button class="name" data-act="plus" aria-label="${esc(x.n)} : ajouter 1 point" ${x.abs?'disabled':''}><b>${fmtName(x.n)}</b>${badges(x)}</button>
+      <span class="score" aria-label="points">${x.p}</span>
+      <button class="minus" data-act="minus" aria-label="retirer 1 point" ${x.abs?'disabled':''}>−</button>
+      <div class="icons">
+        ${x.abs ? '' : `<button class="ic" data-act="cap" aria-pressed="${!!x.cap}" aria-label="Capitaine">⭐</button>
+        <button class="ic" data-act="fair" aria-label="Fair-play +3">🤝${x.fair ? `<small>${x.fair}</small>` : ''}</button>
+        <button class="ic" data-act="red" aria-label="Carton rouge −3">🟥${x.red ? `<small>${x.red}</small>` : ''}</button>`}
+        <button class="ic" data-act="abs" aria-pressed="${!!x.abs}" aria-label="${x.abs ? 'Remettre présent' : 'Absent'}">${x.abs ? '✅ <small>Présent</small>' : '🚫'}</button>
+        ${S.extra[S.group].includes(x.n) ? '<button class="ic del" data-act="del" aria-label="Retirer cet élève ajouté">🗑️</button>' : ''}
+      </div>
+    </li>`;
+  $('list').innerHTML = `<li class="legend">Touche le nom : <b>+1 pt</b> · <b>−</b> : −1 pt · ⭐ capitaine · 🤝 fair-play (+3) · 🟥 carton rouge (−3) · 🚫 absent · une erreur ? « Annuler » en bas</li>` + present.map(row).join('') + (absent.length ? `<li class="sep">Absents (${absent.length})</li>` + absent.map(row).join('') : '') +
+    `<li class="card" style="margin-top:10px">
+       <h2>➕ Ajouter un élève<em>groupe ${GLABEL[S.group]}</em></h2>
+       <form id="add-form" style="display:grid; grid-template-columns:1fr auto; gap:8px">
+         <input id="add-name" type="text" autocomplete="off" placeholder="Prénom Nom" aria-label="Prénom et nom du nouvel élève" style="min-width:0; border:1px solid var(--line); border-radius:10px; padding:12px; background:var(--bg); color:var(--ink); font:inherit">
+         <button class="btn btn-main" type="submit" style="padding:12px 16px">Ajouter</button>
+       </form>
+       <span class="empty" id="add-msg">Pour un élève qui n'est pas sur les listes.</span>
+     </li>`;
+  $('add-form').onsubmit = e => { e.preventDefault(); addStudent(); };
+}
+$('list').addEventListener('click', e => {
+  const btn = e.target.closest('button'); if (!btn) return;
+  const li = btn.closest('.row'); if (!li) return; const n = li.dataset.n; const v = S.g[S.group][n];
+  if (btn.dataset.act === 'plus'){ remember(`+1 pour ${n.split(' ')[0]}`); v.p++; save(); render(); flash(n); }
+  else if (btn.dataset.act === 'minus'){ if (v.p <= 0) return; remember(`−1 pour ${n.split(' ')[0]}`); v.p--; save(); render(); }
+  else if (btn.dataset.act === 'cap'){ remember(v.cap ? `${n.split(' ')[0]} n'est plus capitaine` : `⭐ ${n.split(' ')[0]} capitaine`); v.cap = !v.cap; save(); render(); }
+  else if (btn.dataset.act === 'fair'){ remember(`🤝 Fair-play pour ${n.split(' ')[0]}`); v.fair++; save(); render(); }
+  else if (btn.dataset.act === 'red'){ remember(`🟥 Carton rouge pour ${n.split(' ')[0]}`); v.red++; save(); render(); }
+  else if (btn.dataset.act === 'abs'){ remember(v.abs ? `${n.split(' ')[0]} présent` : `🚫 ${n.split(' ')[0]} absent`); v.abs = !v.abs; save(); render(); }
+  else if (btn.dataset.act === 'del'){ sheetName = n; $('o-del').onclick(); }
+  else openSheet(n);
+});
+function flash(n){ const el = [...document.querySelectorAll('#list .row')].find(r => r.dataset.n === n); if (el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } }
+
+let sheetName = null;
+function openSheet(n){
+  sheetName = n; const v = S.g[S.group][n];
+  $('sheet-title').textContent = n;
+  $('o-cap').setAttribute('aria-pressed', v.cap); $('o-abs').setAttribute('aria-pressed', v.abs);
+  $('o-cap').firstElementChild.textContent = v.cap ? '⭐ Retirer capitaine' : '⭐ Capitaine';
+  $('o-abs').firstElementChild.textContent = v.abs ? '✅ Présent (annuler l\'absence)' : '🚫 Absent';
+  $('o-fair').lastElementChild.textContent = v.fair ? `déjà ${v.fair} fois · +3 pts au général` : '+3 pts au général';
+  $('o-red').lastElementChild.textContent = v.red ? `déjà ${v.red} fois · −3 pts au général` : '−3 pts au général';
+  $('o-del').hidden = !S.extra[S.group].includes(n);
+  $('sheet').hidden = false; $('o-close').focus();
+}
+function closeSheet(){ $('sheet').hidden = true; sheetName = null; }
+$('o-close').onclick = closeSheet;
+$('sheet').onclick = e => { if (e.target === $('sheet')) closeSheet(); };
+function act(fn, label){ const v = S.g[S.group][sheetName]; remember(label); fn(v); save(); closeSheet(); render(); }
+$('o-cap').onclick = () => act(v => v.cap = !v.cap, 'Capitaine modifié');
+$('o-abs').onclick = () => act(v => v.abs = !v.abs, 'Présence modifiée');
+$('o-fair').onclick = () => act(v => v.fair++, `🤝 Fair-play pour ${sheetName.split(' ')[0]}`);
+$('o-red').onclick = () => act(v => v.red++, `🟥 Carton rouge pour ${sheetName.split(' ')[0]}`);
+$('o-del').onclick = () => { const g = S.group, n = sheetName;
+  S.extra[g] = S.extra[g].filter(x => x !== n); ROSTER[g] = ROSTER[g].filter(x => x !== n); delete S.g[g][n];
+  undoStack = []; save(); closeSheet(); render(); showToast(`${n} retiré de la liste`); };
+
+// ---- ajouter un élève ----
+function addStudent(){
+  const inp = $('add-name'); const n = inp.value.trim().replace(/\s+/g, ' ');
+  const msg = $('add-msg');
+  if (!n){ msg.textContent = 'Écris le prénom et le nom de l\'élève.'; return; }
+  if (Object.values(ROSTER).some(l => l.includes(n))){ msg.textContent = `${n} est déjà dans une liste.`; return; }
+  ROSTER[S.group].push(n); S.extra[S.group].push(n);
+  S.g[S.group][n] = {p:0, cap:false, abs:false, fair:0, red:0};
+  undoStack = []; save(); render(); showToast(`${n} ajouté au groupe ${GLABEL[S.group]}`);
+}
+
+// ---- étape 1 : épreuve des capitaines ----
+function renderCapCall(){
+  const g = S.group, T = S.team[g], N = T.n;
+  const top = ranked().filter(x => x.p > 0).slice(0, N);
+  const medal = i => ['🥇','🥈','🥉'][i] || `${i+1}.`;
+  $('capcall').innerHTML = `<div class="tcfg" style="padding:6px 0; border:0"><div class="stepper"><span>Nombre d'équipes</span><button id="cn-minus" aria-label="Une équipe de moins">−</button><output>${N}</output><button id="cn-plus" aria-label="Une équipe de plus">+</button></div></div>` +
+    `<h2>⭐ ${N} capitaines<em>${top.length}/${N}</em></h2>` +
+    (top.length ? '<ul>' + top.map((x,i) => `<li><span>${medal(i)} <b>${fmtName(x.n)}</b></span><span>${x.p} pt${x.p>1?'s':''} · équipe ${LET[i]}</span></li>`).join('') + '</ul>' : `<p class="empty">Donne des points pendant l'épreuve : les ${N} meilleurs apparaîtront ici, un capitaine par équipe.</p>`) +
+    `<button class="btn btn-main" id="promote" ${top.length ? '' : 'disabled'}>Nommer ${top.length > 1 ? 'ces ' + top.length : 'ce'} capitaine${top.length > 1 ? 's' : ''} et former ${N} équipes →</button>`;
+  $('cn-minus').onclick = () => { if (T.n > 2){ T.n--; save(); render(); } };
+  $('cn-plus').onclick = () => { if (T.n < 6){ T.n++; save(); render(); } };
+  $('promote').onclick = () => {
+    const d = S.g[g];
+    remember('Capitaines nommés');
+    ROSTER[g].forEach(n => { d[n].cap = false; d[n].eq = null; });
+    top.forEach((x, i) => { d[x.n].cap = true; d[x.n].eq = LET[i]; });
+    S.team[g] = {n: N, pts:{}};
+    S.mode = 'equipe'; save(); render(); window.scrollTo(0, 0);
+  };
+}
+
+// ---- mode équipes (sous-groupes dans la couleur du jour) ----
+const LET = ['A','B','C','D','E','F'];
+function presentOf(g){ return ROSTER[g].filter(n => !S.g[g][n].abs); }
+function tColor(i){ return `var(--t${i+1})`; }
+function renderTeams(){
+  const g = S.group, T = S.team[g], d = S.g[g];
+  const letters = LET.slice(0, T.n);
+  const cards = letters.map((L, i) => {
+    const mem = presentOf(g).filter(n => d[n].eq === L);
+    const caps = mem.filter(n => d[n].cap).map(n => n.split(' ')[0]);
+    return `<div class="team" id="t-${L}" style="--tc:${tColor(i)}">
+      <h2>Équipe ${L}<small>${mem.length} élève${mem.length>1?'s':''}</small></h2>
+      <div class="capn">${caps.length ? '⭐ ' + esc(caps.join(', ')) : 'Pas de capitaine'}</div>
+      <div class="tpts">${T.pts[L] || 0} <span>pts</span></div>
+      <div class="tbtns"><button data-t="${L}" data-d="1" aria-label="+1 pour toute l'équipe ${L}">+1 équipe</button><button class="tm" data-t="${L}" data-d="-1" aria-label="−1 pour l'équipe ${L}">−1</button></div>
+    </div>`; }).join('');
+  const byName = (a,b) => a.localeCompare(b,'fr');
+  const pres = presentOf(g).sort(byName), abs = ROSTER[g].filter(n => d[n].abs).sort(byName);
+  const unassigned = pres.filter(n => !letters.includes(d[n].eq)).length;
+  const crow = n => { const v = d[n]; const i = letters.indexOf(v.eq);
+    return `<div class="crow ${v.abs?'absent':''}" data-n="${esc(n)}" style="${i>=0?'--tc:'+tColor(i):''}">
+      <div class="cn"><b>${fmtName(n)}</b><span class="pp">${v.p} pt${v.p>1?'s':''}</span></div>
+      ${v.abs ? '<div class="letters"><span class="empty" style="align-self:center">Absent · pas d\'équipe</span><button class="absbtn" data-abs="1" style="margin-left:auto" aria-label="Remettre présent">✅ Présent</button></div>' : `<div class="letters">${letters.map((L,j) => `<button data-set="${L}" style="--tc:${tColor(j)}" aria-pressed="${v.eq===L}" aria-label="Mettre dans l'équipe ${L}">${L}</button>`).join('')}<button class="capbtn" data-cap="1" aria-pressed="${v.cap}" aria-label="Capitaine">⭐ Cap.</button><button class="absbtn" data-abs="1" aria-label="Absent">🚫 Abs.</button></div>`}
+    </div>`; };
+  $('teams').innerHTML =
+    `<div class="tcfg"><div class="stepper"><span>Équipes</span><button id="tn-minus" aria-label="Une équipe de moins">−</button><output id="tn">${T.n}</output><button id="tn-plus" aria-label="Une équipe de plus">+</button></div>
+       <button class="dice" id="shuffle">🎲 Répartir au hasard</button></div>
+     <div class="teams">${cards}</div>
+     <div class="comp"><p class="sep" style="margin:4px 2px 0">Composition des équipes${unassigned ? ` · ${unassigned} sans équipe` : ''}</p>${pres.map(crow).join('')}${abs.length ? `<p class="sep">Absents (${abs.length})</p>` + abs.map(crow).join('') : ''}</div>`;
+  $('tn-minus').onclick = () => { if (T.n > 2){ T.n--; save(); render(); } };
+  $('tn-plus').onclick = () => { if (T.n < 6){ T.n++; save(); render(); } };
+  $('shuffle').onclick = () => {
+    remember('Équipes réparties au hasard');
+    const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const p = presentOf(g); const caps = shuffle(p.filter(n => d[n].cap)), others = shuffle(p.filter(n => !d[n].cap));
+    [...caps, ...others].forEach((n, k) => d[n].eq = letters[k % letters.length]);
+    save(); render();
+  };
+}
+$('teams').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const g = S.group, T = S.team[g], d = S.g[g];
+  if (b.dataset.t){
+    const L = b.dataset.t, dd = +b.dataset.d;
+    if (dd < 0 && !(T.pts[L] > 0)) return;
+    const mem = presentOf(g).filter(n => d[n].eq === L);
+    if (!mem.length){ showToast(`L'équipe ${L} n'a encore aucun élève`); return; }
+    remember(`${dd > 0 ? '+1' : '−1'} pour l'équipe ${L} (${mem.length} élèves)`);
+    T.pts[L] = (T.pts[L] || 0) + dd;
+    mem.forEach(n => d[n].p = Math.max(0, d[n].p + dd));
+    save(); render();
+    const el = $('t-' + L); if (el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+    return;
+  }
+  const row = b.closest('.crow'); if (!row) return; const n = row.dataset.n;
+  if (b.dataset.set){ d[n].eq = d[n].eq === b.dataset.set ? null : b.dataset.set; save(); render(); }
+  else if (b.dataset.cap){ d[n].cap = !d[n].cap; save(); render(); }
+  else if (b.dataset.abs){ remember(d[n].abs ? `${n.split(' ')[0]} présent` : `🚫 ${n.split(' ')[0]} absent`); d[n].abs = !d[n].abs; if (d[n].abs) d[n].eq = null; save(); render(); }
+});
+document.querySelectorAll('.mode button').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; save(); render(); });
+
+// ---- remise à zéro (visible dès la première page) ----
+let resetOpen = false;
+function renderResetPanel(){
+  const p = $('reset-panel'); p.hidden = !resetOpen; if (!resetOpen) return;
+  const G = GLABEL[S.group];
+  p.innerHTML = `<b>Que veux-tu remettre à 0 ?</b>
+    <span class="empty">Points, équipes, capitaines, absents, fair-play et cartons seront effacés. Les élèves ajoutés restent dans la liste.</span>
+    <button class="btn btn-danger" id="rz-one">Le groupe ${G}</button>
+    <button class="btn btn-danger" id="rz-all">Les 4 groupes</button>
+    <button class="btn btn-ghost" id="rz-no">Annuler</button>`;
+  const one = $('rz-one'); if (one) one.onclick = () => { remember(`Groupe ${G} remis à 0`); archived(archiveGroups([S.group])); S.g[S.group] = blankGroup(S.group); S.team[S.group] = blankTeam(); resetOpen = false; save(); render(); };
+  $('rz-all').onclick = () => { remember('Les 4 groupes remis à 0'); archived(archiveGroups(Object.keys(ROSTER))); for (const g in ROSTER){ S.g[g] = blankGroup(g); S.team[g] = blankTeam(); } resetOpen = false; save(); render(); };
+  $('rz-no').onclick = () => { resetOpen = false; renderResetPanel(); };
+}
+$('reset-top').onclick = () => { resetOpen = !resetOpen; renderResetPanel(); };
+
+function ranked(g = S.group){
+  const list = people(g).filter(x => !x.abs).sort((a,b) => b.p - a.p || a.n.localeCompare(b.n,'fr'));
+  list.forEach(x => x.rank = list.filter(y => y.p > x.p).length + 1);
+  return list;
+}
+function renderRanking(){
+  const list = ranked(); const any = list.some(x => x.p > 0);
+  $('ranking').innerHTML = list.map(x => {
+    const medal = any && x.p > 0 && x.rank <= 3 ? ['🥇','🥈','🥉'][x.rank-1] : x.rank;
+    return `<div class="rank ${any && x.p>0 && x.rank<=3 ? 'r'+x.rank : ''}"><span class="pos">${medal}</span><span class="who"><b>${fmtName(x.n)}</b> ${x.cap?'⭐':''}</span><span class="pts">${x.p}</span></div>`;
+  }).join('') || '<p class="empty">Tous les élèves sont absents.</p>';
+}
+
+let confirmReset = false;
+function recapData(g = S.group){
+  const list = ranked(g).filter(x => x.p > 0);
+  const podium = [1,2,3].map(r => ({r, who: list.filter(x => x.rank === r)})).filter(o => o.who.length);
+  const all = people(g);
+  return { podium,
+    fair: all.filter(x => x.fair), red: all.filter(x => x.red),
+    caps: all.filter(x => x.cap), abs: all.filter(x => x.abs) };
+}
+const XL = {1:5, 2:3, 3:1};
+function renderRecap(){
+  const d = recapData(); const G = GLABEL[S.group];
+  const li = (a, b) => `<li><span>${a}</span><span>${b}</span></li>`;
+  const sec = (title, note, items) => `<div class="card"><h2>${title}<em>${note}</em></h2>${items.length ? '<ul>'+items.join('')+'</ul>' : '<p class="empty">Personne</p>'}</div>`;
+  const pod = d.podium.flatMap(o => o.who.map(x => li(`${['🥇','🥈','🥉'][o.r-1]} ${esc(x.n)}`, `${x.p} pt${x.p>1?'s':''} → ${o.r===1?'1er':o.r+'e'} (+${XL[o.r]})`)));
+  $('recap').innerHTML =
+    `<div class="card" style="border-left:6px solid var(--${S.group})"><h2>Groupe ${G}<em>${new Date().toLocaleDateString('fr-BE')}</em></h2><p class="empty" style="margin:0">À reporter dans le fichier Excel : une ligne par élève ci-dessous.</p></div>` +
+    sec('🏆 Top 3 du jour', 'Excel : 1er · 2e · 3e', pod) +
+    sec('🤝 Fair-play', 'Excel : Fair-play (+3)', d.fair.map(x => li(esc(x.n), x.fair > 1 ? `×${x.fair}` : '×1'))) +
+    sec('🟥 Cartons rouges', 'Excel : Perturbateur (−3)', d.red.map(x => li(esc(x.n), x.red > 1 ? `×${x.red}` : '×1'))) +
+    sec('⭐ Capitaines', '', d.caps.map(x => li(esc(x.n), ''))) +
+    sec('🚫 Absents', '', d.abs.map(x => li(esc(x.n), ''))) +
+    ($('sync')?.dataset.st === 'ok' ? '' : `<div class="savewarn"><b>💾 Pense à sauvegarder !</b><span class="empty">Sur ce téléphone, la séance n'est pas enregistrée en ligne. Télécharge une sauvegarde avant de fermer l'appli.</span><button class="btn btn-main" id="warn-save">💾 Sauvegarde</button></div>`) +
+    `<div class="actions">
+       <button class="btn btn-main" id="copy">Copier le récap</button>
+       <textarea id="recap-text" readonly hidden aria-label="Texte du récap"></textarea>
+       ${confirmReset
+         ? `<div class="confirm"><b>Remettre tout le groupe ${G} à 0 ?</b><span class="empty">Points, capitaines, absents, fair-play et cartons seront effacés pour ce groupe.</span><button class="btn btn-danger" id="reset-yes">Oui, nouvelle leçon</button><button class="btn btn-ghost" id="reset-no">Non, garder</button></div>`
+         : `<button class="btn btn-ghost" id="reset">Nouvelle leçon : remettre le groupe ${G} à 0</button>`}
+     </div>`;
+  $('copy').onclick = copyRecap; if ($('warn-save')) $('warn-save').onclick = openBackup;
+  if (confirmReset){ $('reset-yes').onclick = () => { remember(`Groupe ${G} remis à 0`); archived(archiveGroups([S.group])); S.g[S.group] = blankGroup(S.group); S.team[S.group] = blankTeam(); confirmReset = false; save(); render(); };
+                     $('reset-no').onclick = () => { confirmReset = false; renderRecap(); }; }
+  else $('reset').onclick = () => { confirmReset = true; renderRecap(); };
+}
+function archived(k){ if (k) setTimeout(() => showToast(k > 1 ? `${k} fiches archivées · remis à 0` : 'Fiche archivée · remis à 0'), 0); }
+let archFilter = 'tous', archConfirm = null;
+const fmtDay = t => new Date(t).toLocaleDateString('fr-BE', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+const fmtHour = t => new Date(t).toLocaleTimeString('fr-BE', {hour:'2-digit', minute:'2-digit'});
+function archText(a){
+  const L = [`KOH-LANTA EPS — Groupe ${GLABEL[a.g] || a.g} — ${new Date(a.t).toLocaleDateString('fr-BE')}`, ''];
+  L.push('TOP 3 DU JOUR'); if (!a.podium.length) L.push('  —');
+  a.podium.forEach(o => o.who.forEach(x => L.push(`  ${o.r===1?'1er':o.r+'e'} : ${x.n} (${x.p} pts)`)));
+  L.push('', 'FAIR-PLAY (+3)'); L.push(...(a.fair.length ? a.fair.map(x => `  ${x.n}${x.k>1?' ×'+x.k:''}`) : ['  —']));
+  L.push('', 'CARTON ROUGE (−3)'); L.push(...(a.red.length ? a.red.map(x => `  ${x.n}${x.k>1?' ×'+x.k:''}`) : ['  —']));
+  L.push('', 'CAPITAINES : ' + (a.caps.join(', ') || '—'));
+  L.push('ABSENTS : ' + (a.abs.join(', ') || '—'));
+  return L.join('\n');
+}
+function renderArchives(){
+  const opts = ['tous', ...Object.keys(ROSTER)];
+  $('arch-filters').innerHTML = opts.map(g => `<button data-f="${g}" aria-pressed="${archFilter===g}" style="${g==='tous'?'':gStyle(g)}">${g==='tous'?'Tous':GLABEL[g]} (${ARCH.filter(a => g==='tous' || a.g===g).length})</button>`).join('');
+  $('arch-filters').querySelectorAll('button').forEach(b => b.onclick = () => { archFilter = b.dataset.f; archConfirm = null; renderArchives(); });
+  const list = ARCH.filter(a => archFilter === 'tous' || a.g === archFilter).sort((a,b) => b.t - a.t);
+  if (!list.length){ $('arch-list').innerHTML = '<p class="empty">Aucune fiche archivée pour l\'instant. Elles apparaîtront ici après chaque « Remettre à 0 ».</p>'; return; }
+  const li = (a, b) => `<li><span>${a}</span><span>${b}</span></li>`;
+  const sec = (title, items, keep) => items.length || keep ? `<div class="card"><h2>${title}</h2>${items.length ? '<ul>'+items.join('')+'</ul>' : '<p class="empty">Personne</p>'}</div>` : '';
+  let day = '', h = '';
+  list.forEach(a => {
+    const dd = fmtDay(a.t);
+    if (dd !== day){ day = dd; h += `<p class="sep">${esc(dd)}</p>`; }
+    const top = a.podium[0]?.who.map(x => x.n.split(' ')[0]).join(', ');
+    const sum = [top ? '🥇 ' + top : 'Pas de points', a.fair.length ? `🤝 ${a.fair.length}` : '', a.red.length ? `🟥 ${a.red.length}` : '', a.abs.length ? `🚫 ${a.abs.length}` : ''].filter(Boolean).join(' · ');
+    h += `<details class="arch" style="${gStyle(a.g)}" data-id="${a.id}" ${archConfirm===a.id?'open':''}>
+      <summary><b>Groupe ${GLABEL[a.g] || esc(a.g)}<span>${fmtHour(a.t)}</span></b><small>${esc(sum)}</small></summary>
+      <div class="archbody">
+        ${sec('🏆 Top 3', a.podium.flatMap(o => o.who.map(x => li(`${['🥇','🥈','🥉'][o.r-1]} ${esc(x.n)}`, `${x.p} pt${x.p>1?'s':''} (+${XL[o.r]})`))), true)}
+        ${sec('🤝 Fair-play (+3)', a.fair.map(x => li(esc(x.n), '×' + x.k)))}
+        ${sec('🟥 Cartons rouges (−3)', a.red.map(x => li(esc(x.n), '×' + x.k)))}
+        ${sec('⭐ Capitaines', a.caps.map(n => li(esc(n), '')))}
+        ${sec('🚫 Absents', a.abs.map(n => li(esc(n), '')))}
+        ${archConfirm === a.id
+          ? `<div class="confirm"><b>Effacer cette fiche ?</b><span class="empty">Elle sera supprimée définitivement.</span><button class="btn btn-danger" data-del="${a.id}">Oui, effacer</button><button class="btn btn-ghost" data-keep="1">Non, garder</button></div>`
+          : `<div class="archbtns"><button class="btn btn-ghost" data-copy="${a.id}">Copier</button><button class="btn btn-ghost" style="color:var(--red)" data-ask="${a.id}">🗑️ Effacer</button></div>`}
+        <textarea readonly hidden aria-label="Texte de la fiche"></textarea>
+      </div></details>`;
+  });
+  $('arch-list').innerHTML = h;
+}
+$('arch-list').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.ask){ archConfirm = b.dataset.ask; renderArchives(); }
+  else if (b.dataset.keep){ archConfirm = null; renderArchives(); }
+  else if (b.dataset.del){ ARCH = ARCH.filter(a => a.id !== b.dataset.del); archConfirm = null; saveArch(); renderArchives(); showToast('Fiche effacée'); }
+  else if (b.dataset.copy){ const a = ARCH.find(x => x.id === b.dataset.copy); if (!a) return; const t = archText(a); const ta = b.closest('.archbody').querySelector('textarea'); ta.value = t;
+    const fallback = () => { ta.hidden = false; ta.select(); b.textContent = 'Sélectionne et copie'; };
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => b.textContent = 'Copié ✓').catch(fallback); else fallback(); }
+});
+// ---- sauvegarde dans un fichier ----
+const BKEY = 'kl-arene-lastbackup';
+function lastBackup(){ try { return +localStorage.getItem(BKEY) || 0; } catch(e){ return 0; } }
+function openBackup(){
+  const lb = lastBackup();
+  const where = $('sync')?.dataset.st === 'ok' ? 'Tes résultats sont déjà enregistrés en ligne (☁️). Le fichier est une sécurité en plus.' : 'Sur ce téléphone, les résultats ne sont pas enregistrés en ligne : télécharge une sauvegarde à la fin de chaque leçon.';
+  $('bk-info').textContent = where + (lb ? ` Dernière sauvegarde : ${new Date(lb).toLocaleString('fr-BE', {weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}.` : ' Aucune sauvegarde pour l\'instant.');
+  $('bk-msg').textContent = 'Crée une photo des fiches fin de leçon (à enregistrer dans tes photos) et un fichier avec les scores des 4 groupes et les archives, pour pouvoir tout recharger.';
+  $('bk-confirm').hidden = true; $('bk').hidden = false;
+}
+$('backup-top').onclick = openBackup;
+$('bk-close').onclick = () => $('bk').hidden = true;
+$('bk').onclick = e => { if (e.target === $('bk')) $('bk').hidden = true; };
+// image PNG des fiches fin de leçon (tous les groupes qui ont des résultats)
+function recapImage(){
+  const W = 1080, P = 60, cs = getComputedStyle(document.documentElement);
+  const col = g => cs.getPropertyValue('--' + g).trim() || '#888';
+  const groups = Object.keys(ROSTER).filter(g => people(g).some(x => x.p > 0 || x.fair || x.red || x.cap));
+  const lines = [];
+  const add = (t, o = {}) => lines.push({t, ...o});
+  add('KOH-LANTA EPS', {size:64, bold:true, color:'#e8590c'});
+  add(new Date().toLocaleDateString('fr-BE', {weekday:'long', day:'numeric', month:'long', year:'numeric'}) + ' · ' + new Date().toLocaleTimeString('fr-BE', {hour:'2-digit', minute:'2-digit'}), {size:34, color:'#5c716c', gap:30});
+  if (!groups.length) add('Aucun résultat pour l’instant.', {size:38});
+  groups.forEach(g => {
+    const d = recapData(g);
+    add('Groupe ' + GLABEL[g], {size:52, bold:true, bar:col(g), gap:10, top:30});
+    add('Top 3 du jour', {size:34, bold:true, color:'#5c716c'});
+    if (!d.podium.length) add('  —', {size:38});
+    d.podium.forEach(o => o.who.forEach(x => add(`${['1er','2e','3e'][o.r-1]}  ${x.n} · ${x.p} pt${x.p>1?'s':''} (+${XL[o.r]})`, {size:40, bold:o.r===1})));
+    const list = (title, arr) => { if (!arr.length) return; add(title, {size:34, bold:true, color:'#5c716c', top:12}); add(arr.join(', '), {size:38, wrap:true}); };
+    list('Fair-play (+3)', d.fair.map(x => x.n + (x.fair > 1 ? ' ×' + x.fair : '')));
+    list('Carton rouge (−3)', d.red.map(x => x.n + (x.red > 1 ? ' ×' + x.red : '')));
+    list('Capitaines', d.caps.map(x => x.n));
+    list('Absents', d.abs.map(x => x.n));
+  });
+  const c = document.createElement('canvas'), ctx = c.getContext('2d');
+  const font = l => `${l.bold ? '700' : '400'} ${l.size}px "Atkinson Hyperlegible", system-ui, sans-serif`;
+  // découpe les longues lignes
+  const rows = [];
+  lines.forEach(l => { ctx.font = font(l); if (!l.wrap){ rows.push(l); return; }
+    let cur = ''; l.t.split(' ').forEach(w => { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width > W - 2*P - 30 && cur){ rows.push({...l, t:cur}); cur = w; } else cur = t; }); if (cur) rows.push({...l, t:cur}); });
+  const H = P*2 + rows.reduce((h, l) => h + l.size*1.35 + (l.gap||0) + (l.top||0), 0);
+  c.width = W; c.height = Math.ceil(H);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, c.height);
+  let y = P;
+  rows.forEach(l => {
+    y += (l.top||0);
+    if (l.bar){ ctx.fillStyle = l.bar; ctx.fillRect(P - 30, y + 6, 14, l.size); }
+    ctx.font = font(l); ctx.fillStyle = l.color || '#12302b'; ctx.textBaseline = 'top';
+    ctx.fillText(l.t, P, y + 4, W - 2*P);
+    y += l.size*1.35 + (l.gap||0);
+  });
+  return new Promise(res => c.toBlob(res, 'image/png'));
+}
+async function offerFile(filename, data){
+  let dl = null; try { dl = window.claude?.use ? await claude.use('downloads') : null; } catch(e){}
+  if (dl){ await dl.save({filename, data}); return; }
+  const blob = data instanceof Blob ? data : new Blob([data], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+$('bk-save').onclick = async () => {
+  const now = new Date(), pad = n => String(n).padStart(2, '0');
+  const stamp = `${pad(now.getDate())}-${pad(now.getMonth()+1)}-${now.getFullYear()} ${pad(now.getHours())}h${pad(now.getMinutes())}`;
+  const msg = $('bk-msg'), out = [];
+  const err = e => e?.code === 'declined' ? 'annulé' : 'n\'a pas marché';
+  msg.textContent = 'Photo en préparation…';
+  try { const img = await recapImage(); await offerFile(`${stamp} Koh-Lanta photo fiche.png`, img); out.push('📷 Photo : ok (choisis « Enregistrer l\'image » pour la mettre dans tes photos)'); }
+  catch(e){ out.push('📷 Photo : ' + err(e)); }
+  try { await offerFile(`${stamp} Koh-Lanta sauvegarde.json`, JSON.stringify({app:'koh-lanta-arene', v:1, at:now.getTime(), state:S, archives:ARCH}));
+    try { localStorage.setItem(BKEY, String(Date.now())); } catch(e){}
+    out.push('💾 Fichier de sauvegarde : ok (dans Fichiers ou Téléchargements)'); }
+  catch(e){ out.push('💾 Fichier de sauvegarde : ' + err(e)); }
+  msg.innerHTML = out.map(esc).join('<br>');
+};
+$('bk-file').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  let o = null; try { o = JSON.parse(await f.text()); } catch(err){}
+  const c = $('bk-confirm'); c.hidden = false;
+  if (!o || o.app !== 'koh-lanta-arene' || !o.state){ c.innerHTML = '<b>Ce fichier n\'est pas une sauvegarde Koh-Lanta.</b>'; return; }
+  const newA = (Array.isArray(o.archives) ? o.archives : []).filter(a => a && a.id && !ARCH.some(x => x.id === a.id));
+  c.innerHTML = `<b>Sauvegarde du ${esc(new Date(o.at).toLocaleString('fr-BE', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}))}</b>
+    <span class="empty">${newA.length} fiche${newA.length>1?'s':''} d'archive en plus sera${newA.length>1?'ont':''} ajoutée${newA.length>1?'s':''}. Les scores en cours seront remplacés par ceux de la sauvegarde.</span>
+    <button class="btn btn-danger" id="bk-yes">Recharger cette sauvegarde</button>
+    <button class="btn btn-ghost" id="bk-no">Annuler</button>`;
+  $('bk-no').onclick = () => { c.hidden = true; };
+  $('bk-yes').onclick = () => {
+    applySaved(o.state); undoStack = [];
+    ARCH.push(...newA); saveArch(); save(); render();
+    $('bk').hidden = true; showToast('Sauvegarde rechargée ✓');
+  };
+};
+
+function recapText(){
+  const d = recapData(); const L = [`KOH-LANTA EPS — Groupe ${GLABEL[S.group]} — ${new Date().toLocaleDateString('fr-BE')}`, ''];
+  L.push('TOP 3 DU JOUR'); if (!d.podium.length) L.push('  —');
+  d.podium.forEach(o => o.who.forEach(x => L.push(`  ${o.r===1?'1er':o.r+'e'} : ${x.n} (${x.p} pts)`)));
+  L.push('', 'FAIR-PLAY (+3)'); L.push(...(d.fair.length ? d.fair.map(x => `  ${x.n}${x.fair>1?' ×'+x.fair:''}`) : ['  —']));
+  L.push('', 'CARTON ROUGE (−3)'); L.push(...(d.red.length ? d.red.map(x => `  ${x.n}${x.red>1?' ×'+x.red:''}`) : ['  —']));
+  L.push('', 'CAPITAINES : ' + (d.caps.map(x => x.n).join(', ') || '—'));
+  L.push('ABSENTS : ' + (d.abs.map(x => x.n).join(', ') || '—'));
+  return L.join('\n');
+}
+function copyRecap(){
+  const t = recapText(); const ta = $('recap-text'); ta.value = t;
+  navigator.clipboard?.writeText(t).then(() => { $('copy').textContent = 'Récap copié ✓'; })
+    .catch(() => { ta.hidden = false; ta.select(); $('copy').textContent = 'Sélectionne le texte et copie-le'; })
+    ?? (ta.hidden = false, ta.select());
+}
+
+$('open-arch').onclick = () => { S.tab = S.tab === 'arch' ? 'fin' : 'arch'; archConfirm = null; save(); render(); window.scrollTo(0, 0); };
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => { S.tab = t.dataset.tab; confirmReset = false; save(); render(); });
+function render(){
+  renderGroups(); renderResetPanel();
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === S.tab));
+  $('open-arch').setAttribute('aria-pressed', S.tab === 'arch');
+  $('v-jeu').hidden = S.tab !== 'jeu'; $('v-class').hidden = S.tab !== 'class'; $('v-fin').hidden = S.tab !== 'fin'; $('v-arch').hidden = S.tab !== 'arch';
+  const team = S.tab === 'jeu' && S.mode === 'equipe';
+  const capStep = S.mode === 'cap';
+  if (S.tab === 'jeu'){
+    $('m-cap').setAttribute('aria-pressed', capStep); $('m-equipe').setAttribute('aria-pressed', S.mode === 'equipe'); $('m-ind').setAttribute('aria-pressed', S.mode === 'ind');
+    $('hint').innerHTML = capStep
+      ? '<b>Épreuve des capitaines</b> : touche un nom pour +1 pt. Choisis le nombre d\'équipes : les meilleurs deviennent capitaines (un par équipe). Tu pourras changer les capitaines ensuite dans ② Équipes.'
+      : team
+      ? '<b>Mode équipes</b> : choisis le nombre d\'équipes, répartis les élèves (A, B, C…) et marque les capitaines. « +1 équipe » donne 1 pt à chaque élève de l\'équipe.'
+      : '<b>Mode individuel</b> : chaque élève marque ses propres points.';
+    $('teams').hidden = !team; $('list').hidden = team;
+    $('capcall').hidden = !capStep;
+    if (capStep) renderCapCall();
+    if (team) renderTeams(); else renderList();
+  } else if (S.tab === 'class') renderRanking(); else if (S.tab === 'arch') renderArchives(); else renderRecap();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!$('sheet').hidden) closeSheet(); $('bk').hidden = true; } });
+try { navigator.wakeLock?.request('screen').catch(()=>{}); } catch(e){}
+render();
+setSync('local');
+(async () => {
+  if (!window.claude?.use) return;
+  try {
+    const db = null, user = null; // version collègues : pas d'enregistrement en ligne
+    if (!db || !user) return;
+    const uid = await user.id(); if (!uid) return;
+    const base = db.doc('data/users/' + uid + '/arene');
+    const c = {state: base, arch: base.collection('archives')};
+    setSync('busy');
+    const [st, ar] = await Promise.all([c.state.get(), c.arch.limit(1000).get()]);
+    cloud = c;
+    // l'état le plus récent gagne (en ligne ou sur l'appareil)
+    const remote = st.exists ? st.data() : null;
+    if (remote && (remote.ts || 0) > (S.ts || 0)){ applySaved(remote); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} render(); }
+    else if (S.ts) pushState();
+    // archives : on réunit celles de l'appareil et celles en ligne
+    ar.docs.forEach(d => { remoteArch.add(d.id); const a = d.data(); if (a && !ARCH.some(x => x.id === a.id)) ARCH.push(a); });
+    cloudReady = true;
+    try { localStorage.setItem(AKEY, JSON.stringify(ARCH)); } catch(e){}
+    saveArch();
+    if (S.tab === 'arch') renderArchives();
+    if (!pushTimer) setSync('ok');
+  } catch(e){ cloud = null; cloudFail(e); }
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(() => {});
+</script>
+</body>
+</html>

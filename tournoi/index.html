@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tournoi</title>
+<meta name="theme-color" content="#1f7a4d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icones/tournoi-192.png">
+<link rel="apple-touch-icon" href="../icones/tournoi-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tournoi">
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one-column pitch-side tool — sticky header with tabs, match cards with big score steppers, standings and bonus lists. */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --line:#d9ded4; --fg:#18201a; --muted:#5d6a60;
+  --accent:#1f7a4d; --accent-fg:#ffffff; --soft:#e6efe8; --warn:#b3471d; --gold:#b98a10; --gold-soft:#f6ecc8;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111613; --surface:#1a211c; --line:#2c362f; --fg:#e8eee9; --muted:#9aa89e;
+  --accent:#3fbf7f; --accent-fg:#08130d; --soft:#203027; --warn:#f08a5d; --gold:#e8c14e; --gold-soft:#3a3216; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111613; --surface:#1a211c; --line:#2c362f; --fg:#e8eee9; --muted:#9aa89e;
+  --accent:#3fbf7f; --accent-fg:#08130d; --soft:#203027; --warn:#f08a5d; --gold:#e8c14e; --gold-soft:#3a3216; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;padding:0 16px 40px;max-width:680px;margin:0 auto}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px 8px;display:flex;flex-direction:column;gap:10px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:800;font-size:1.9rem;margin:0;letter-spacing:.02em;text-transform:uppercase;line-height:1}
+.sub{color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.tabs button{border:0;background:none;padding:9px 2px;border-radius:7px;font-weight:600;font-size:.88rem;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
+main{display:flex;flex-direction:column;gap:14px;padding-top:6px}
+.lbl{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+
+/* bibs (chasubles) */
+.bib{display:inline-grid;place-items:center;flex:none;min-width:2em;height:2em;padding:0 .25em;border-radius:50%;font-family:var(--display);font-weight:800;font-size:1rem;color:#fff;border:2px solid rgba(0,0,0,.18);font-variant-numeric:tabular-nums}
+.tag{display:inline-flex;align-items:center;gap:7px;min-width:0}
+.tn{font-weight:600;overflow-wrap:anywhere}
+.c0{background:#e2602a}.c1{background:#f2c230;color:#1d1a0c}.c2{background:#2f6fd0}.c3{background:#2f9c58}.c4{background:#c9343b}.c5{background:#7a4bc2}
+.c6{background:#e05a9c}.c7{background:#eeeeea;color:#1b1b1b}.c8{background:#1e2329}.c9{background:#2aa7b3}.c10{background:#8a9096}.c11{background:#8a5a35}
+
+/* match cards */
+.field{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:12px}
+.fhead{display:flex;justify-content:space-between;align-items:center}
+.fname{font-family:var(--display);font-weight:700;font-size:1.15rem;text-transform:uppercase;letter-spacing:.04em}
+.match{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:start;gap:6px}
+.side{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;text-align:center}
+.side .bib{font-size:1.3rem}
+.side .tn{font-size:.95rem;line-height:1.2}
+.score{font-family:var(--display);font-weight:800;font-size:3.4rem;line-height:1;font-variant-numeric:tabular-nums;text-align:center}
+.step{display:flex;gap:8px}
+.step button{width:50px;height:46px;border-radius:10px;border:1px solid var(--line);background:var(--soft);font-size:1.6rem;font-weight:700;line-height:1}
+.step button.plus{background:var(--accent);color:var(--accent-fg);border-color:transparent}
+.step.sm button{width:40px;height:38px;font-size:1.3rem}
+.vs{font-family:var(--display);color:var(--muted);font-weight:700;font-size:1.05rem;align-self:center}
+.end{border:0;border-radius:10px;padding:13px;font-weight:700;font-size:1rem;background:var(--fg);color:var(--bg)}
+.idle{color:var(--muted);font-size:.95rem;padding:6px 0 2px}
+
+.ref{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:none;border-radius:999px;padding:3px 10px 3px 3px;display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:600}
+.chip .bib{font-size:.75rem}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--soft)}
+.star{border:1px solid var(--line);background:none;border-radius:10px;padding:8px 12px;font-weight:700;font-size:.9rem;align-self:flex-start}
+.star[aria-pressed="true"]{background:var(--gold-soft);border-color:var(--gold);color:var(--fg)}
+.star:disabled{opacity:.45;cursor:default}
+
+.bench{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.panel{background:var(--soft);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.panel p{margin:0}
+.btn{border:0;border-radius:10px;padding:13px 16px;font-weight:700;background:var(--accent);color:var(--accent-fg);font-size:1rem}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--fg)}
+.btn.danger{background:var(--warn);color:#fff}
+
+/* table */
+.tw{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem}
+th,td{padding:9px 6px;text-align:center;white-space:nowrap}
+th{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;border-bottom:1px solid var(--line)}
+tbody tr+tr td{border-top:1px solid var(--line)}
+td.rk{font-family:var(--display);font-weight:700;color:var(--muted);width:2em}
+td.pts{font-family:var(--display);font-weight:800;font-size:1.35rem}
+td.team{text-align:left;white-space:normal;min-width:7.5em}
+th:nth-child(2){text-align:left}
+tr.lead td.rk{color:var(--accent)}
+.pos{color:var(--accent);font-weight:700}.neg{color:var(--warn);font-weight:700}
+.legend{color:var(--muted);font-size:.8rem;margin:0}
+@media (max-width:560px){
+  .tw table{font-size:.8rem}
+  .tw th,.tw td{padding:8px 2px}
+  .tw th{font-size:.6rem;letter-spacing:.02em}
+  .tw td.team{min-width:0;padding-left:4px}
+  .tw td.team .tag{gap:5px}
+  .tw td.team .bib{font-size:.78rem}
+  .tw td.team .tn{font-size:.82rem;line-height:1.15}
+  .tw td.pts{font-size:1.15rem}
+  .tw td.rk{width:1.4em}
+  .tw .mix span{font-size:.62rem;padding:0 4px}
+}
+
+/* bonus list */
+.blist{display:flex;flex-direction:column;gap:8px}
+.brow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.brow .tag{flex:1 1 100%}
+.bgrp{display:flex;align-items:center;gap:8px}
+.bgrp .k{font-size:.78rem;color:var(--muted);font-weight:600;line-height:1.1}
+.bgrp .v{font-family:var(--display);font-weight:800;font-size:1.3rem;min-width:1.3em;text-align:center;font-variant-numeric:tabular-nums}
+.btot{margin-left:auto;font-family:var(--display);font-weight:800;font-size:1.3rem}
+
+/* history */
+.hist{display:flex;flex-direction:column;gap:8px}
+.hrow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:10px}
+.hmain{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;border:0;background:none;padding:0;text-align:left;width:100%}
+.hmain .tag:last-child{justify-content:flex-end;text-align:right}
+.hsc{font-family:var(--display);font-weight:800;font-size:1.4rem;font-variant-numeric:tabular-nums;text-align:center}
+.hmeta{color:var(--muted);font-size:.8rem;display:flex;flex-wrap:wrap;gap:4px 12px}
+.hedit{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+
+/* setup */
+.setup{display:flex;flex-direction:column;gap:12px;padding-top:4px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.val{font-family:var(--display);font-weight:800;font-size:2.2rem;min-width:1.6em;text-align:center;font-variant-numeric:tabular-nums}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--soft);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:none;border-radius:7px;padding:9px 4px;font-weight:600;font-size:.9rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(14em,1fr));gap:8px}
+.names label{display:flex;align-items:center;gap:8px}
+.names select{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px;font:inherit;color:inherit}
+.names input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px}
+.preview{display:flex;flex-wrap:wrap;gap:8px 14px}
+.rules{color:var(--muted);font-size:.9rem;margin:0}
+.ptsrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ptsrow .val{font-size:1.6rem}
+.sport{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 11px;background:var(--gold-soft);border:1px solid var(--gold);font-weight:700;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em}
+.fleft{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.flist{display:flex;flex-direction:column;gap:8px}
+.flist label{display:flex;align-items:center;gap:10px}
+.flist .fnum{font-family:var(--display);font-weight:700;text-transform:uppercase;letter-spacing:.04em;min-width:5.2em}
+.flist input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px}
+.seg.wrap{grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(7em,1fr))}
+.mix{display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+.mix span{font-size:.72rem;border-radius:6px;padding:1px 6px;background:var(--soft);color:var(--muted);font-weight:600}
+</style>
+
+<div id="app"></div>
+
+<script>
+const KEY='tournoi-v2';
+const PTS={win:3,draw:2,loss:1};
+const COLORS=['Orange','Jaune','Bleu','Vert','Rouge','Violet','Rose','Blanc','Noir','Turquoise','Gris','Marron'];
+const SPORTS=['Basket','Volley','Foot','Handball','Unihoc','Badminton','Ultimate','Tchoukball'];
+let S=null, tab='terrains', open=null, confirmReset=false, editDel=null, sv='all';
+let setup={n:9,f:3,showFields:true,refs:true,mode:'num',names:{},colors:{},fp:1,afp:-1,ref:1,multi:false,fs:{},sm:'chaque'};
+// Several sports: each field has its sport. sm 'chaque' = every pair meets in every sport; 'reparti' = every pair meets once, sports spread evenly.
+const hasSports=()=>!!(S&&Array.isArray(S.sports)&&S.sports.length);
+const eachSport=()=>hasSports()&&S.sm==='chaque';
+const fieldSportName=(cfg,k)=>{const v=cfg.fs[k];return (v===undefined?(SPORTS[k]||`Sport ${k+1}`):String(v)).trim()||`Sport ${k+1}`};
+function sportList(cfg){const list=[],idx=[];for(let k=0;k<cfg.f;k++){const nm=fieldSportName(cfg,k);let i=list.findIndex(x=>x.toLowerCase()===nm.toLowerCase());if(i<0){i=list.length;list.push(nm)}idx.push(i)}return {list,idx}}
+const sportOfField=k=>hasSports()?S.fieldSport[k]:null;
+const sportName=s=>hasSports()&&s!==null&&s!==undefined?S.sports[s]:'';
+const useRefs=()=>S&&S.refs!==false;
+try{const r=localStorage.getItem(KEY); if(r) S=JSON.parse(r);}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function makePairs(n){const p=[];for(let i=1;i<=n;i++)for(let j=i+1;j<=n;j++)p.push(Math.random()<.5?[i,j]:[j,i]);return shuffle(p)}
+function makeQueue(){
+  if(!hasSports()) return makePairs(S.n);
+  const q=[];
+  if(eachSport()){S.sports.forEach((_,s)=>makePairs(S.n).forEach(p=>q.push([p[0],p[1],s])));return shuffle(q)}
+  return spreadSports(makePairs(S.n));
+}
+// Each pair once: give every pair a sport so that each sport gets matches in proportion to its fields
+// and each team plays every sport about as often, then improve by swapping sports between pairs.
+function spreadSports(pairs){
+  const ns=S.sports.length, nf={}; S.fieldSport.forEach(s=>nf[s]=(nf[s]||0)+1);
+  const quota=S.sports.map((_,s)=>Math.floor(pairs.length*nf[s]/S.f));
+  let extra=pairs.length-quota.reduce((x,y)=>x+y,0);
+  S.sports.map((_,s)=>s).sort((x,y)=>(pairs.length*nf[y]/S.f%1)-(pairs.length*nf[x]/S.f%1)).forEach(s=>{if(extra>0){quota[s]++;extra--}});
+  const sp=[]; quota.forEach((q,s)=>{for(let i=0;i<q;i++) sp.push(s)}); shuffle(sp);
+  const c={}; for(let t=1;t<=S.n;t++) c[t]=Array(ns).fill(0);
+  pairs.forEach((p,i)=>{c[p[0]][sp[i]]++;c[p[1]][sp[i]]++});
+  const want=S.sports.map((_,s)=>(S.n-1)*quota[s]/pairs.length);
+  const cost=(t,s,d)=>{const v=c[t][s]+d-want[s];return v*v};
+  for(let it=0;it<pairs.length*400;it++){
+    const i=Math.floor(Math.random()*pairs.length), j=Math.floor(Math.random()*pairs.length), x=sp[i], y=sp[j];
+    if(x===y) continue;
+    const [a,b]=pairs[i], [e,f]=pairs[j];
+    const before=[[a,x,0],[b,x,0],[a,y,0],[b,y,0],[e,y,0],[f,y,0],[e,x,0],[f,x,0]];
+    let delta=0; before.forEach(([t,s])=>delta-=cost(t,s,0));
+    c[a][x]--;c[b][x]--;c[a][y]++;c[b][y]++;c[e][y]--;c[f][y]--;c[e][x]++;c[f][x]++;
+    before.forEach(([t,s])=>delta+=cost(t,s,0));
+    if(delta<=0){sp[i]=y;sp[j]=x}
+    else{c[a][x]++;c[b][x]++;c[a][y]--;c[b][y]--;c[e][y]++;c[f][y]++;c[e][x]--;c[f][x]--}
+  }
+  return pairs.map((p,i)=>[p[0],p[1],sp[i]]);
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const colorIdx=(cfg,t)=>{const v=cfg.colors&&cfg.colors[t];return v===undefined||v===null?(t-1)%12:+v};
+function colorName(cfg,t){
+  const idx=colorIdx(cfg,t), base=COLORS[idx];
+  let same=0,before=0; for(let i=1;i<=cfg.n;i++) if(colorIdx(cfg,i)===idx){same++; if(i<t) before++}
+  return same>1?`${base} ${before+1}`:base;
+}
+function nameFor(cfg,t){
+  if(cfg.mode==='col') return colorName(cfg,t);
+  if(cfg.mode==='nom'){const v=(cfg.names[t]||'').trim();return v||`Équipe ${t}`}
+  return `Équipe ${t}`;
+}
+const tname=t=>S.names[t];
+function bib(t,cfg){cfg=cfg||S;const c=`c${cfg.mode==='col'?colorIdx(cfg,t):(t-1)%12}`;
+  const inner=cfg.mode==='num'?t:cfg.mode==='nom'?esc((nameFor(cfg,t)[0]||'').toUpperCase()):'';
+  return `<span class="bib ${c}" aria-hidden="true">${inner}</span>`}
+const tag=(t,cfg)=>`<span class="tag">${bib(t,cfg)}<span class="tn">${esc(cfg?nameFor(cfg,t):tname(t))}</span></span>`;
+const last=t=>S.last[t]??-1;
+const sign=v=>v>0?`+${v}`:`${v}`;
+
+function startTournament(){
+  const names={}; for(let i=1;i<=setup.n;i++) names[i]=nameFor(setup,i);
+  const colors={}; for(let i=1;i<=setup.n;i++) colors[i]=colorIdx(setup,i);
+  S={n:setup.n,f:setup.f,showFields:setup.showFields,refs:setup.refs,mode:setup.mode,names,colors,bonus:{fp:setup.fp,afp:setup.afp,ref:setup.ref},
+     cycle:1,queue:[],live:Array(setup.f).fill(null),results:[],last:{},seq:0,nextId:1,fp:{},afp:{}};
+  if(setup.showFields&&setup.multi){const sp=sportList(setup);S.sports=sp.list;S.fieldSport=sp.idx;S.sm=setup.sm}
+  S.queue=makeQueue(); sv='all';
+  fill(); save(); tab='terrains'; render(); wake();
+}
+function busy(){const s=new Set();S.live.forEach(m=>{if(m){s.add(m.a);s.add(m.b)}});return s}
+// Fill every free slot with the queued match whose two teams have rested the longest.
+function fill(){
+  for(let k=0;k<S.f;k++){
+    if(S.live[k]) continue;
+    const b=busy(), s=sportOfField(k), ex=s===null?null:excess(s); let best=-1, bk=null;
+    S.queue.forEach((p,i)=>{
+      if(b.has(p[0])||b.has(p[1])) return;
+      if(s!==null&&p[2]!==s) return;
+      // with sports: first the teams that have played this sport least compared with their other sports
+      const key=[ex?ex[p[0]]+ex[p[1]]:0, Math.max(last(p[0]),last(p[1])), last(p[0])+last(p[1])];
+      if(!bk||key[0]<bk[0]||(key[0]===bk[0]&&(key[1]<bk[1]||(key[1]===bk[1]&&key[2]<bk[2])))){bk=key;best=i}
+    });
+    if(best<0) continue;
+    const [a,b2]=S.queue.splice(best,1)[0];
+    S.live[k]={a,b:b2,sa:0,sb:0,cycle:S.cycle,ref:null,star:false};
+    if(s!==null) S.live[k].sport=s;
+  }
+  // a referee who now has to play loses the referee slot
+  const b=busy(); S.live.forEach(m=>{if(m&&m.ref&&b.has(m.ref)){m.ref=null;m.star=false}});
+  if(!useRefs()) return;
+  // give each match without referee a team from the side: fewest refereeing duties first, then longest waiting
+  const duty={}; S.results.forEach(r=>{if(r.ref) duty[r.ref]=(duty[r.ref]||0)+1});
+  S.live.forEach(m=>{
+    if(!m||m.ref) return;
+    const taken=new Set(S.live.filter(Boolean).map(x=>x.ref).filter(Boolean));
+    const free=[]; for(let t=1;t<=S.n;t++) if(!b.has(t)&&!taken.has(t)) free.push(t);
+    free.sort((x,y)=>(duty[x]||0)-(duty[y]||0)||last(x)-last(y));
+    if(free.length) m.ref=free[0];
+  });
+}
+// matches per team per sport, finished and in progress
+function sportCounts(done){const c={};for(let t=1;t<=S.n;t++) c[t]=S.sports.map(()=>0);
+  S.results.forEach(r=>{if(r.sport!==undefined){c[r.a][r.sport]++;c[r.b][r.sport]++}});
+  if(!done) S.live.forEach(m=>{if(m&&m.sport!==undefined){c[m.a][m.sport]++;c[m.b][m.sport]++}});return c}
+function excess(s){const c=sportCounts(),e={};for(let t=1;t<=S.n;t++) e[t]=c[t][s]-Math.min(...c[t]);return e}
+function finish(k){
+  const m=S.live[k]; if(!m) return;
+  S.seq++; S.last[m.a]=S.seq; S.last[m.b]=S.seq;
+  const r={id:S.nextId++,a:m.a,b:m.b,sa:m.sa,sb:m.sb,cycle:m.cycle,field:k+1,ref:m.ref,star:!!(m.ref&&m.star)};
+  if(m.sport!==undefined) r.sport=m.sport;
+  S.results.push(r);
+  S.live[k]=null; fill(); save(); render();
+}
+function newCycle(){S.cycle++; S.queue.push(...makeQueue()); fill(); save(); render();}
+const cycleTotal=()=>S.n*(S.n-1)/2*(eachSport()?S.sports.length:1);
+const cycleDone=()=>S.results.filter(r=>r.cycle===S.cycle).length;
+const slotName=k=>S.showFields?`Terrain ${k+1}`:`Match ${String.fromCharCode(65+k)}`;
+
+function refStars(t){return S.results.filter(r=>r.star&&r.ref===t).length}
+function bonusOf(t){const fp=S.fp[t]||0, afp=S.afp[t]||0, rs=refStars(t);
+  return {fp,afp,rs,total:fp*S.bonus.fp+afp*S.bonus.afp+rs*S.bonus.ref}}
+
+function standings(only){
+  const t={}; for(let i=1;i<=S.n;i++) t[i]={team:i,j:0,g:0,n:0,p:0,bp:0,bc:0,mp:0};
+  const one=only!==undefined&&only!=='all';
+  S.results.forEach(r=>{
+    if(one&&r.sport!==only) return;
+    const A=t[r.a],B=t[r.b]; A.j++;B.j++; A.bp+=r.sa;A.bc+=r.sb;B.bp+=r.sb;B.bc+=r.sa;
+    if(r.sa>r.sb){A.g++;B.p++;A.mp+=PTS.win;B.mp+=PTS.loss}
+    else if(r.sa<r.sb){B.g++;A.p++;B.mp+=PTS.win;A.mp+=PTS.loss}
+    else{A.n++;B.n++;A.mp+=PTS.draw;B.mp+=PTS.draw}
+  });
+  Object.values(t).forEach(r=>{r.bonus=one?0:bonusOf(r.team).total;r.pts=r.mp+r.bonus});
+  return Object.values(t).sort((x,y)=>y.pts-x.pts||(y.bp-y.bc)-(x.bp-x.bc)||y.bp-x.bp||y.g-x.g||x.team-y.team);
+}
+
+/* ---------- views ---------- */
+function stepper(act,label,val,extra=''){
+  return `<div class="row"><div>${label}</div><div class="row" style="gap:6px">
+    <div class="step"><button data-act="${act}" data-d="-1" ${extra} aria-label="Diminuer">−</button></div>
+    <div class="val">${val}</div>
+    <div class="step"><button class="plus" data-act="${act}" data-d="1" ${extra} aria-label="Augmenter">+</button></div></div></div>`;
+}
+function viewSetup(){
+  const c=setup, multi=c.showFields&&c.multi, sp=sportList(c), pairs=c.n*(c.n-1)/2, tot=pairs*(multi&&c.sm==='chaque'?sp.list.length:1), rest=Math.max(0,c.n-2*c.f);
+  const seg=(key,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-act="seg" data-k="${key}" data-v="${v}" aria-pressed="${String(c[key])===String(v)}">${l}</button>`).join('')}</div>`;
+  let names='';
+  if(c.mode==='nom'){names='<div class="names">';for(let i=1;i<=c.n;i++) names+=`<label>${bib(i,{mode:'num'})}<input id="nm-${i}" data-name="${i}" placeholder="Équipe ${i}" value="${esc(c.names[i]||'')}" maxlength="24" autocomplete="off"></label>`;names+='</div>'}
+  else if(c.mode==='col'){names='<p class="rules">Choisis la couleur de chasuble de chaque équipe.</p><div class="names">';for(let i=1;i<=c.n;i++){const ci=colorIdx(c,i);
+    names+=`<label>${bib(i,c)}<span class="sub" style="min-width:1.6em">${i}.</span><select id="col-${i}" data-col="${i}" aria-label="Couleur de l'équipe ${i}">${COLORS.map((nm,j)=>`<option value="${j}" ${j===ci?'selected':''}>${nm}</option>`).join('')}</select></label>`}
+    names+='</div>'}
+  else{names=`<div class="preview">${Array.from({length:Math.min(c.n,12)},(_,i)=>tag(i+1,c)).join('')}${c.n>12?'<span class="sub">…</span>':''}</div>`}
+  return `<div class="setup">
+    <div class="box">${stepper('sn','<div class="lbl">Équipes</div>',c.n)}</div>
+    <div class="box"><div class="lbl">Nom des équipes</div>
+      ${seg('mode',[['num','Numéros'],['col','Couleurs'],['nom','Noms']])}
+      ${names}</div>
+    <div class="box"><div class="lbl">Terrains</div>
+      ${seg('showFields',[['true','Avec terrains'],['false','Sans terrain']])}
+      ${stepper('sf',`<div class="sub">${c.showFields?'Nombre de terrains':'Matchs en même temps'}</div>`,c.f)}
+      ${c.showFields?seg('multi',[['false','Même sport partout'],['true','Un sport par terrain']]):''}
+      ${multi?`<div class="flist">${Array.from({length:c.f},(_,k)=>`<label><span class="fnum">Terrain ${k+1}</span><input id="fs-${k}" data-fs="${k}" list="sports-list" value="${esc(c.fs[k]===undefined?(SPORTS[k]||''):c.fs[k])}" placeholder="Sport ${k+1}" maxlength="20" autocomplete="off"></label>`).join('')}</div>
+      <datalist id="sports-list">${SPORTS.map(x=>`<option value="${x}"></option>`).join('')}</datalist>
+      <p class="rules">Deux terrains avec le même sport comptent comme un seul sport joué sur deux terrains.</p>
+      <div class="seg wrap">${[['chaque','Chaque duel dans chaque sport'],['reparti','Chaque duel une fois']].map(([v,l])=>`<button data-act="seg" data-k="sm" data-v="${v}" aria-pressed="${c.sm===v}">${l}</button>`).join('')}</div>
+      <p class="rules" id="sm-rules">${c.sm==='chaque'?`Chaque équipe affronte toutes les autres en ${esc(sp.list.join(', '))}. Les équipes passent à tour de rôle sur chaque terrain.`:`Chaque équipe affronte toutes les autres une seule fois. L'appli fait tourner les sports pour que chaque équipe joue autant à chaque sport.`}</p>`:''}</div>
+    <div class="box"><div class="lbl">Arbitres</div>
+      ${seg('refs',[['true','Avec arbitres'],['false','Sans arbitre']])}
+      <p class="rules">${c.refs?'Une équipe sur le côté arbitre chaque match, à tour de rôle. Tu peux la changer et noter un bon arbitrage sous le match.':'Les équipes sur le côté se reposent.'}</p></div>
+    <div class="box"><div class="lbl">Points extra</div>
+      <div class="ptsrow"><span>Fair-play</span><div class="row" style="gap:6px"><div class="step sm"><button data-act="pv" data-k="fp" data-d="-1" aria-label="Diminuer">−</button></div><div class="val">${sign(c.fp)}</div><div class="step sm"><button class="plus" data-act="pv" data-k="fp" data-d="1" aria-label="Augmenter">+</button></div></div></div>
+      <div class="ptsrow"><span>Perturbateur</span><div class="row" style="gap:6px"><div class="step sm"><button data-act="pv" data-k="afp" data-d="-1" aria-label="Diminuer">−</button></div><div class="val">${sign(c.afp)}</div><div class="step sm"><button class="plus" data-act="pv" data-k="afp" data-d="1" aria-label="Augmenter">+</button></div></div></div>
+      ${c.refs?'':'<!--'}<div class="ptsrow"><span>Bon arbitrage</span><div class="row" style="gap:6px"><div class="step sm"><button data-act="pv" data-k="ref" data-d="-1" aria-label="Diminuer">−</button></div><div class="val">${sign(c.ref)}</div><div class="step sm"><button class="plus" data-act="pv" data-k="ref" data-d="1" aria-label="Augmenter">+</button></div></div></div>${c.refs?'':'-->'}
+    </div>
+    <p class="rules">${tot} matchs pour que tout le monde rencontre tout le monde${multi&&c.sm==='chaque'&&sp.list.length>1?` dans chaque sport (${pairs} par sport)`:''}. ${rest?`${rest} équipe${rest>1?'s':''} sur le côté à chaque rotation.`:'Aucune équipe sur le côté.'} Victoire 3 pts, nul 2 pts, défaite 1 pt.</p>
+    <button class="btn" data-act="start">Lancer le tournoi</button>
+  </div>`;
+}
+
+function viewFields(){
+  const b=busy(); let h='';
+  const benched=[]; for(let i=1;i<=S.n;i++) if(!b.has(i)) benched.push(i);
+  benched.sort((x,y)=>last(x)-last(y));
+  const refsTaken=new Set(S.live.filter(Boolean).map(m=>m.ref).filter(Boolean));
+  S.live.forEach((m,k)=>{
+    const fs=sportOfField(k), left=fs!==null?S.queue.some(p=>p[2]===fs):S.queue.length>0;
+    h+=`<section class="field" aria-label="${slotName(k)}${fs!==null?' '+esc(sportName(fs)):''}"><div class="fhead"><span class="fleft"><span class="fname">${slotName(k)}</span>${fs!==null?`<span class="sport">${esc(sportName(fs))}</span>`:''}</span>${m&&m.cycle>1?`<span class="sub">tour ${m.cycle}</span>`:''}</div>`;
+    if(!m){h+=`<div class="idle">${left?'En attente : les équipes libres jouent déjà ailleurs.':fs!==null?`Plus de match de ${esc(sportName(fs))} dans ce tour.`:'Plus de match à lancer dans ce tour.'}</div></section>`;return}
+    const side=(t,s,sd)=>`<div class="side">${bib(t)}<span class="tn">${esc(tname(t))}</span><div class="score">${s}</div>
+      <div class="step"><button data-act="sc" data-k="${k}" data-s="${sd}" data-d="-1" aria-label="Retirer un but à ${esc(tname(t))}">−</button><button class="plus" data-act="sc" data-k="${k}" data-s="${sd}" data-d="1" aria-label="But pour ${esc(tname(t))}">+</button></div></div>`;
+    const choices=benched.filter(t=>t===m.ref||!refsTaken.has(t));
+    h+=`<div class="match">${side(m.a,m.sa,'a')}<span class="vs">contre</span>${side(m.b,m.sb,'b')}</div>`;
+    if(useRefs()&&(choices.length||m.ref)){
+      h+=`<div class="ref"><span class="lbl">Arbitre${choices.length>1?' · touche une autre équipe pour changer':''}</span><div class="chips">${choices.map(t=>`<button class="chip" data-act="ref" data-k="${k}" data-t="${t}" aria-pressed="${m.ref===t}">${bib(t)}${esc(tname(t))}</button>`).join('')}</div>
+        <button class="star" data-act="star" data-k="${k}" aria-pressed="${!!m.star}" ${m.ref?'':'disabled'}>${m.star?'★ Bien arbitré':'☆ Bien arbitré ?'} (${sign(S.bonus.ref)})</button></div>`;
+    }
+    h+=`<button class="end" data-act="fin" data-k="${k}">Fin du match · ${m.sa>m.sb?`victoire ${esc(tname(m.a))}`:m.sa<m.sb?`victoire ${esc(tname(m.b))}`:'égalité'}</button></section>`;
+  });
+  if(benched.length) h+=`<div><div class="lbl" style="margin-bottom:8px">Sur le côté</div><div class="bench">${benched.map(t=>tag(t)).join('')}</div></div>`;
+  if(!S.queue.length){
+    const anyLive=S.live.some(Boolean);
+    h+=`<div class="panel"><p><strong>Tout le monde a rencontré tout le monde${S.cycle>1?` (tour ${S.cycle})`:''}.</strong> ${anyLive?'Finis les matchs en cours, ou lance déjà le tour suivant.':'Tu peux arrêter ici ou rejouer contre les mêmes.'}</p>
+      <button class="btn" data-act="cycle">Continuer : tour ${S.cycle+1}</button></div>`;
+  }
+  return h;
+}
+
+function viewTable(){
+  if(!hasSports()||(sv!=='all'&&!S.sports[sv])) sv='all';
+  const rows=standings(sv);
+  const hasBonus=rows.some(r=>r.bonus!==0);
+  let filt='', mix='';
+  if(hasSports()){
+    filt=`<div class="seg wrap">${[['all','Général'],...S.sports.map((x,i)=>[i,esc(x)])].map(([v,l])=>`<button data-act="sv" data-v="${v}" aria-pressed="${String(sv)===String(v)}">${l}</button>`).join('')}</div>`;
+    if(sv==='all'){const c=sportCounts(true);mix=t=>`<div class="mix">${S.sports.map((x,i)=>`<span title="${esc(x)}">${esc(x.slice(0,3))} ${c[t][i]}</span>`).join('')}</div>`}
+  }
+  return `${filt}<div class="tw"><table><thead><tr><th>#</th><th>Équipe</th><th>Pts</th><th>J</th><th>G</th><th>N</th><th>P</th><th>Buts</th><th>+/−</th><th>Extra</th></tr></thead><tbody>
+  ${rows.map((r,i)=>{const d=r.bp-r.bc;const p=rows[i-1];const rank=i>0&&r.pts===p.pts&&d===p.bp-p.bc&&r.bp===p.bp?'=':i+1;
+    return `<tr class="${i===0&&r.j?'lead':''}"><td class="rk">${rank}</td><td class="team">${tag(r.team)}${mix?mix(r.team):''}</td><td class="pts">${r.pts}</td><td>${r.j}</td><td>${r.g}</td><td>${r.n}</td><td>${r.p}</td><td>${r.bp}–${r.bc}</td><td>${sign(d)}</td><td class="${r.bonus>0?'pos':r.bonus<0?'neg':''}">${r.bonus?sign(r.bonus):'–'}</td></tr>`}).join('')}
+  </tbody></table></div>
+  <p class="legend">Pts = points de match + points extra. J joués · G gagnés · N nuls · P perdus. Victoire 3, nul 2, défaite 1. Extra : fair-play ${sign(S.bonus.fp)}, perturbateur ${sign(S.bonus.afp)}${useRefs()?`, bon arbitrage ${sign(S.bonus.ref)}`:''}. À égalité : différence de buts, puis buts marqués.${hasSports()?(sv==='all'?' Sous chaque équipe : nombre de matchs joués par sport.':' Classement de ce sport seul, sans les points extra.'):''}${hasBonus||sv!=='all'?'':' Les points extra se donnent dans l\'onglet Bonus.'}</p>`;
+}
+
+function viewBonus(){
+  let h=`<p class="legend">Touche + pour donner une mention à une équipe, − pour la retirer.${useRefs()?' Les bons arbitrages se notent match par match, sous chaque match.':''}</p><div class="blist">`;
+  for(let t=1;t<=S.n;t++){const b=bonusOf(t);
+    h+=`<div class="brow">${tag(t)}
+      <div class="bgrp"><span class="k">Fair-play<br>${sign(S.bonus.fp)}</span><div class="step sm"><button data-act="bfp" data-t="${t}" data-d="-1" aria-label="Retirer une mention fair-play">−</button></div><span class="v">${b.fp}</span><div class="step sm"><button class="plus" data-act="bfp" data-t="${t}" data-d="1" aria-label="Ajouter une mention fair-play">+</button></div></div>
+      <div class="bgrp"><span class="k">Perturbateur<br>${sign(S.bonus.afp)}</span><div class="step sm"><button data-act="bafp" data-t="${t}" data-d="-1" aria-label="Retirer une mention perturbateur">−</button></div><span class="v">${b.afp}</span><div class="step sm"><button class="plus" style="background:var(--warn);color:#fff" data-act="bafp" data-t="${t}" data-d="1" aria-label="Ajouter une mention perturbateur">+</button></div></div>
+      ${useRefs()?`<div class="bgrp"><span class="k">Arbitrage<br>★</span><span class="v">${b.rs}</span></div>`:''}
+      <span class="btot ${b.total>0?'pos':b.total<0?'neg':''}">${b.total?sign(b.total):'0'}</span></div>`;
+  }
+  return h+'</div>';
+}
+
+function viewHistory(){
+  if(!S.results.length) return `<div class="idle">Aucun match terminé pour l'instant. Les résultats apparaîtront ici ; touche un match pour corriger son score.</div>`;
+  return `<div class="hist">${S.results.slice().reverse().map(r=>{
+    const isOpen=open===r.id;
+    const meta=[r.sport!==undefined?esc(sportName(r.sport)):'', S.showFields?`Terrain ${r.field}`:'', S.cycle>1?`tour ${r.cycle}`:'', r.ref?`arbitre : ${esc(tname(r.ref))}${r.star?' ★':''}`:''].filter(Boolean);
+    return `<div class="hrow"><button class="hmain" data-act="open" data-id="${r.id}" aria-expanded="${isOpen}">${tag(r.a)}<span class="hsc">${r.sa} – ${r.sb}</span>${tag(r.b)}</button>
+    ${meta.length?`<div class="hmeta">${meta.map(x=>`<span>${x}</span>`).join('')}</div>`:''}
+    ${isOpen?`<div class="hedit">
+      <div class="step"><button data-act="ed" data-id="${r.id}" data-s="sa" data-d="-1" aria-label="Moins">−</button><button class="plus" data-act="ed" data-id="${r.id}" data-s="sa" data-d="1" aria-label="Plus">+</button></div>
+      <div class="step"><button data-act="ed" data-id="${r.id}" data-s="sb" data-d="-1" aria-label="Moins">−</button><button class="plus" data-act="ed" data-id="${r.id}" data-s="sb" data-d="1" aria-label="Plus">+</button></div>
+      ${r.ref?`<button class="star" data-act="hstar" data-id="${r.id}" aria-pressed="${r.star}">${r.star?'★':'☆'} Arbitrage</button>`:''}
+      <button class="btn ${editDel===r.id?'danger':'ghost'}" data-act="del" data-id="${r.id}">${editDel===r.id?'Confirmer : à rejouer':'Annuler ce match'}</button>
+    </div>`:''}</div>`}).join('')}</div>`;
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(!S){app.innerHTML=`<header><div class="top"><div><h1>Tournoi</h1><div class="sub">Réglages avant le coup d'envoi</div></div></div></header><main>${viewSetup()}</main>`;return}
+  const done=cycleDone(), tot=cycleTotal();
+  const tabs=[['terrains',S.showFields?'Terrains':'Matchs'],['classement','Classement'],['bonus','Bonus'],['matchs','Résultats']];
+  app.innerHTML=`<header>
+    <div class="top"><div><h1>Tournoi</h1><div class="sub">${S.n} équipes · tour ${S.cycle} · ${done}/${tot} matchs</div></div>
+      <button class="btn ${confirmReset?'danger':'ghost'}" style="padding:8px 12px;font-size:.85rem" data-act="reset">${confirmReset?'Tout effacer ?':'Nouveau'}</button></div>
+    <nav class="tabs" role="tablist">${tabs.map(([id,l])=>`<button role="tab" aria-selected="${tab===id}" data-act="tab" data-t="${id}">${l}</button>`).join('')}</nav></header>
+  <main>${tab==='terrains'?viewFields():tab==='classement'?viewTable():tab==='bonus'?viewBonus():viewHistory()}</main>`;
+}
+
+document.addEventListener('change',e=>{const i=e.target.dataset&&e.target.dataset.col;if(i){setup.colors[i]=+e.target.value;render();const el=document.getElementById('col-'+i);if(el&&el.focus)el.focus()}});
+document.addEventListener('input',e=>{const d=e.target.dataset||{};if(d.name) setup.names[d.name]=e.target.value;
+  if(d.fs!==undefined){setup.fs[d.fs]=e.target.value;const el=document.getElementById('sm-rules');if(el&&setup.sm==='chaque') el.textContent=`Chaque équipe affronte toutes les autres en ${sportList(setup).list.join(', ')}. Les équipes passent à tour de rôle sur chaque terrain.`}});
+document.addEventListener('focusout',e=>{if(!S&&e.target.dataset&&e.target.dataset.fs!==undefined) setTimeout(()=>{const a=document.activeElement;const id=a&&a.id;render();if(id){const el=document.getElementById(id);if(el&&el.focus)el.focus()}},0)});
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]'); if(!el) return;
+  const a=el.dataset.act, d=+el.dataset.d||0;
+  if(a!=='reset') confirmReset=false;
+  if(a!=='del') editDel=null;
+  if(a==='sn'){setup.n=Math.min(30,Math.max(2,setup.n+d));render()}
+  else if(a==='sf'){setup.f=Math.min(8,Math.max(1,setup.f+d));render()}
+  else if(a==='seg'){const k=el.dataset.k,v=el.dataset.v;setup[k]=(k==='showFields'||k==='refs'||k==='multi')?v==='true':v;render()}
+  else if(a==='sv'){sv=el.dataset.v==='all'?'all':+el.dataset.v;render()}
+  else if(a==='pv'){const k=el.dataset.k;setup[k]=k==='afp'?Math.min(0,Math.max(-5,setup[k]+d)):Math.min(5,Math.max(0,setup[k]+d));render()}
+  else if(a==='start') startTournament();
+  else if(a==='tab'){tab=el.dataset.t;open=null;render()}
+  else if(a==='sc'){const m=S.live[+el.dataset.k];const s=el.dataset.s==='a'?'sa':'sb';m[s]=Math.max(0,m[s]+d);save();render()}
+  else if(a==='ref'){const m=S.live[+el.dataset.k],t=+el.dataset.t;if(m.ref===t){m.ref=null;m.star=false}else m.ref=t;save();render()}
+  else if(a==='star'){const m=S.live[+el.dataset.k];if(m.ref){m.star=!m.star;save();render()}}
+  else if(a==='fin') finish(+el.dataset.k);
+  else if(a==='cycle') newCycle();
+  else if(a==='bfp'||a==='bafp'){const o=a==='bfp'?S.fp:S.afp,t=el.dataset.t;o[t]=Math.max(0,(o[t]||0)+d);save();render()}
+  else if(a==='open'){const id=+el.dataset.id;open=open===id?null:id;render()}
+  else if(a==='ed'){const r=S.results.find(x=>x.id===+el.dataset.id);r[el.dataset.s]=Math.max(0,r[el.dataset.s]+d);save();render()}
+  else if(a==='hstar'){const r=S.results.find(x=>x.id===+el.dataset.id);r.star=!r.star;save();render()}
+  else if(a==='del'){
+    const id=+el.dataset.id;
+    if(editDel!==id){editDel=id;render();return}
+    const i=S.results.findIndex(x=>x.id===id); const r=S.results.splice(i,1)[0];
+    if(r.cycle===S.cycle) S.queue.unshift(r.sport!==undefined&&hasSports()?[r.a,r.b,r.sport]:[r.a,r.b]);
+    editDel=null;open=null;fill();save();render();
+  }
+  else if(a==='reset'){
+    if(!confirmReset){confirmReset=true;render();setTimeout(()=>{if(confirmReset){confirmReset=false;render()}},4000);return}
+    confirmReset=false;S=null;try{localStorage.removeItem(KEY)}catch(e){};render();
+  }
+});
+
+// Keep the screen awake pitch-side when the browser allows it.
+async function wake(){try{if('wakeLock' in navigator) await navigator.wakeLock.request('screen')}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(S&&document.visibilityState==='visible') wake()});
+render(); if(S) wake();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(() => {});
+</script>
+</body>
+</html>

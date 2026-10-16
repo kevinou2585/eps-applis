@@ -1,14 +1,15 @@
 // Fait marcher les applis sans internet. Version a changer a chaque mise en ligne pour rafraichir le cache.
-const VERSION = 'eps-v39';
+const VERSION = 'eps-v40';
 const FICHIERS = [
   './', './index.html', './manifest.webmanifest', './eleves.chiffre.json',
-  './carnet/', './tournoi/', './koh-lanta/', './tableau/', './le-fist/', './classeur/', './installer/',
+  './carnet/', './tournoi/', './koh-lanta/', './tableau/', './le-fist/', './classeur/', './battle/', './installer/',
   './icones/carnet-180.png', './icones/carnet-192.png', './icones/carnet-512.png',
   './icones/eps-180.png', './icones/eps-192.png', './icones/eps-512.png',
   './icones/tournoi-180.png', './icones/tournoi-192.png', './icones/tournoi-512.png',
   './icones/koh-lanta-180.png', './icones/koh-lanta-192.png', './icones/koh-lanta-512.png',
   './icones/le-fist-180.png', './icones/le-fist-192.png', './icones/le-fist-512.png',
-  './icones/classeur-180.png', './icones/classeur-192.png', './icones/classeur-512.png'
+  './icones/classeur-180.png', './icones/classeur-192.png', './icones/classeur-512.png',
+  './icones/battle-180.png', './icones/battle-192.png', './icones/battle-512.png'
 ];
 
 self.addEventListener('install', e => {

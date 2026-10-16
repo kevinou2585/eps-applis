@@ -5,16 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Tournoi</title>
 <meta name="theme-color" content="#1f7a4d">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" href="../icones/tournoi-192.png">
-<link rel="apple-touch-icon" href="../icones/tournoi-180.png">
+<link rel="apple-touch-icon" href="../icones/eps-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Tournoi">
+<meta name="apple-mobile-web-app-title" content="EPS">
 <style>/* Pas de zoom quand on tape vite deux fois sur un bouton (iPhone) */
-html,body,button,a,input,label,select{touch-action:manipulation}</style>
+html,body,button,a,input,label,select{touch-action:manipulation}
+/* Retour vers l'accueil de l'appli EPS */
+.eps-retour{display:flex;align-items:center;gap:6px;max-width:680px;margin:0 auto;padding:10px 16px 0;font:600 14px system-ui,-apple-system,sans-serif;color:#5d6a60;text-decoration:none}
+@media (prefers-color-scheme:dark){.eps-retour{color:#9aa89e}}</style>
 </head>
 <body>
+<a class="eps-retour" href="../">‹ Mes applis</a>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: one-column pitch-side tool — sticky header with tabs, match cards with big score steppers, standings and bonus lists. */

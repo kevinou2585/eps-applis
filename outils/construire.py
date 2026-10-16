@@ -17,16 +17,21 @@ def tete(titre, dossier, couleur):
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>{titre}</title>
 <meta name="theme-color" content="{couleur}">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" href="../icones/{dossier}-192.png">
-<link rel="apple-touch-icon" href="../icones/{dossier}-180.png">
+<link rel="apple-touch-icon" href="../icones/eps-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="{titre}">
+<meta name="apple-mobile-web-app-title" content="EPS">
 <style>/* Pas de zoom quand on tape vite deux fois sur un bouton (iPhone) */
-html,body,button,a,input,label,select{{touch-action:manipulation}}</style>
+html,body,button,a,input,label,select{{touch-action:manipulation}}
+/* Retour vers l'accueil de l'appli EPS */
+.eps-retour{{display:flex;align-items:center;gap:6px;max-width:680px;margin:0 auto;padding:10px 16px 0;font:600 14px system-ui,-apple-system,sans-serif;color:#5d6a60;text-decoration:none}}
+@media (prefers-color-scheme:dark){{.eps-retour{{color:#9aa89e}}}}</style>
 """
 
+
+RETOUR = '<a class="eps-retour" href="../">‹ Mes applis</a>\n'
 
 PIED = """
 <script>
@@ -40,7 +45,7 @@ if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.re
 def tournoi(src):
     corps = Path(src).read_text(encoding="utf-8")
     corps = re.sub(r"^\s*<title>.*?</title>\s*", "", corps, count=1)
-    return tete("Tournoi", "tournoi", "#1f7a4d") + "</head>\n<body>\n" + corps + PIED
+    return tete("Tournoi", "tournoi", "#1f7a4d") + "</head>\n<body>\n" + RETOUR + corps + PIED
 
 
 def koh_lanta(src):
@@ -62,7 +67,7 @@ def koh_lanta(src):
     if "copy-link" in corps or "claude.ai" in corps:
         sys.exit("Reste un lien claude.ai dans Koh-Lanta")
     return (tete("Koh-Lanta Arène", "koh-lanta", "#e8590c") + style_base + "\n</head>\n<body>\n"
-            + corps + PIED)
+            + RETOUR + corps + PIED)
 
 
 if __name__ == "__main__":

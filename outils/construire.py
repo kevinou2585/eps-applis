@@ -133,8 +133,17 @@ def carnet(src):
     corps = corps.replace("'Tout est enregistré dans ton compte Claude'", "'Enregistré sur cet appareil'")
     if "connecté à ton compte Claude" in corps:
         sys.exit("Carnet : texte Claude restant")
+    avant = "  return [['Période 1','2026-08-31','salle'],['Période 2','2026-10-17','salle'],['Période 3','2026-12-19','salle'],['Période 4','2027-03-31','salle']]\n    .map(([name, start, type]) => ({id: nid('p'), name, start, type}));"
+    if avant not in corps:
+        sys.exit("Carnet : periodes par defaut introuvables")
+    corps = corps.replace(avant, avant.replace("({id: nid('p'), name, start, type})",
+        "({id: nid('p'), name, start: (+start.slice(0, 4) + decalAnnee()) + start.slice(4), type})"))
+    corps = corps.replace("function defaultPeriods(){",
+        "// Annee scolaire choisie (bouton a cote du titre) : les dates proposees suivent l'annee.\n"
+        "function decalAnnee(){ try { const a = parseInt(localStorage.getItem('carnet-eps-annee'), 10); return a ? a - 2026 : 0; } catch(e){ return 0; } }\n"
+        "function defaultPeriods(){", 1)
     retour = RETOUR.replace('</a>\n', '<span style="font-weight:500">· Version bêta, pas encore finie</span></a>\n')
-    return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + DRIVE_JS + PIED
+    return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + ANNEES_JS + DRIVE_JS + PIED
 
 
 def classeur(src):
@@ -164,6 +173,94 @@ def classeur(src):
     haut = '<a class="eps-retour eps-larg" href="../" style="position:fixed;top:0;right:0;z-index:40;background:var(--panel);border-radius:0 0 0 12px;padding:8px 14px">‹ Mes applis</a>\n'
     css = "<style>@media (max-width:860px){.eps-larg{display:none!important}}</style>\n"
     return tete("Classeur EPS", "classeur", "#14211d") + css + "</head>\n<body>\n" + haut + t + PIED
+# Carnet : une annee scolaire a la fois. Les autres annees sont rangees sur le telephone (et dans le Drive)
+# et on passe de l'une a l'autre par le bouton a cote du titre.
+ANNEES_JS = r"""
+<style>
+.annee-btn{border:1px solid var(--line); background:var(--surface); color:var(--fg); border-radius:99px; padding:5px 10px; font:700 .85rem var(--body); white-space:nowrap}
+.annee-btn.vieux{background:var(--warn-soft); border-color:var(--warn); color:var(--warn)}
+.annees{position:fixed; inset:0; z-index:60; background:rgba(10,20,30,.45); display:flex; align-items:flex-end; justify-content:center}
+.annees>div{background:var(--surface); width:min(560px,100%); max-height:85vh; overflow:auto; border-radius:18px 18px 0 0; padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px)); display:grid; gap:8px}
+.annees h3{margin:0; font:700 1.3rem var(--display); text-transform:uppercase}
+.annees .an{display:flex; align-items:center; gap:10px; width:100%; text-align:left; border:1px solid var(--line); background:var(--surface); border-radius:12px; padding:12px; font:600 1rem var(--body); color:var(--fg)}
+.annees .an b{flex:1}
+.annees .an small{color:var(--muted); font-weight:500}
+.annees .an[aria-current="true"]{border-color:var(--accent); background:var(--accent-soft)}
+.annees .confirm{display:grid; gap:8px; background:var(--surface2); border-radius:12px; padding:12px}
+@media (max-width:380px){ #sync>span{display:none} }
+</style>
+<script>
+(() => {
+  const CLE = 'carnet-eps-annee', ARCH = 'carnet-eps-archive-';
+  const lab = y => y + '-' + (y + 1);
+  const parDefaut = () => { const d = new Date(); return lab(d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1); };
+  const get = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+  let cur = get(CLE);
+  if (!cur){ cur = parDefaut(); try { localStorage.setItem(CLE, cur); } catch(e){} }
+  const archives = () => { const o = {}; try { for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k.startsWith(ARCH)) o[k.slice(ARCH.length)] = k; } } catch(e){} return o; };
+  const nbClasses = k => { try { const o = JSON.parse(get(k)); return (o.state.classes || []).filter(c => !c.act).length; } catch(e){ return 0; } };
+
+  const brand = document.querySelector('header.top .brand');
+  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'annee-btn'; btn.id = 'annee-btn';
+  btn.textContent = cur + ' ▾'; btn.setAttribute('aria-label', 'Année scolaire ' + cur + ', changer');
+  if (cur !== parDefaut()) btn.classList.add('vieux');
+  brand.after(btn);
+  btn.onclick = ouvrir;
+
+  function ouvrir(){
+    const a = archives(), y0 = 2026, ys = new Set();
+    for (let y = y0; y <= Math.max(y0, +parDefaut().slice(0, 4)) + 10; y++) ys.add(lab(y));
+    Object.keys(a).forEach(l => ys.add(l)); ys.add(cur);
+    const liste = [...ys].sort();
+    const w = document.createElement('div'); w.className = 'annees';
+    w.innerHTML = `<div><h3>Année scolaire</h3>
+      <p class="small muted" style="margin:0">Une année à la fois. Quand l'année est finie, choisis la suivante : l'ancienne est rangée dans les archives et tu peux y revenir ici à tout moment.</p>
+      ${liste.map(l => `<button class="an" type="button" data-an="${l}" aria-current="${l === cur}"><b>${l}</b><small>${l === cur ? 'ouverte' : a[l] ? '📁 archivée · ' + nbClasses(a[l]) + ' classe(s)' : 'nouvelle'}</small></button>`).join('')}
+      <div id="an-box"></div>
+      <button class="btn" type="button" id="an-close">Fermer</button></div>`;
+    document.body.appendChild(w);
+    const fermer = () => w.remove();
+    w.onclick = e => { if (e.target === w) fermer(); };
+    w.querySelector('#an-close').onclick = fermer;
+    w.querySelectorAll('[data-an]').forEach(b => b.onclick = () => {
+      const l = b.dataset.an; if (l === cur){ fermer(); return; }
+      const box = w.querySelector('#an-box');
+      box.innerHTML = `<div class="confirm"><b>Passer à l'année ${l} ?</b><span class="small">${a[l] ? 'Tu retrouves tes classes et tes notes de ' + l + '.' : 'Tu repars d\'un carnet vide (tes réglages de barème sont gardés).'} L'année ${cur} est rangée dans les archives : tu peux y revenir ici quand tu veux.</span><div class="row2"><button class="btn" type="button" id="an-no">Annuler</button><button class="btn pri" type="button" id="an-yes">Passer à ${l}</button></div></div>`;
+      box.scrollIntoView({block: 'nearest'});
+      box.querySelector('#an-no').onclick = () => box.innerHTML = '';
+      box.querySelector('#an-yes').onclick = async () => { box.querySelector('#an-yes').disabled = true; box.querySelector('#an-yes').textContent = 'Un instant…'; await changer(l, a[l], box); };
+    });
+  }
+
+  async function changer(l, cleArch, box){
+    try { if (window.carnetDriveVider) await Promise.race([window.carnetDriveVider(), new Promise(r => setTimeout(r, 15000))]); } catch(e){}
+    window.carnetChangeAnnee = true; // plus aucun envoi Drive avec les donnees de l'ancienne annee
+    // 1. ranger l'annee ouverte
+    try { localStorage.setItem(ARCH + cur, JSON.stringify({state: S, photos: PH, at: Date.now()})); }
+    catch(e){
+      try { localStorage.setItem(ARCH + cur, JSON.stringify({state: S, photos: {}, at: Date.now()})); }
+      catch(e2){ window.carnetChangeAnnee = false; box.innerHTML = '<div class="confirm"><b>La mémoire du téléphone est pleine : impossible de ranger cette année.</b><span class="small">Télécharge d\'abord une copie (Réglages › Sauvegarde), puis réessaie.</span></div>'; return; }
+    }
+    // 2. ouvrir l'autre annee
+    let st, ph = {};
+    if (cleArch){ const o = JSON.parse(get(cleArch)); st = o.state; ph = o.photos || {}; }
+    else {
+      const keep = {...S.settings}; delete keep.tt;
+      st = {v: 1, ts: Date.now(), cur: null, settings: {...keep, tt: []}, classes: [], deleted: []};
+    }
+    try {
+      localStorage.setItem(KEY, JSON.stringify(st));
+      localStorage.setItem(PKEY, JSON.stringify(ph));
+      localStorage.setItem(CLE, l);
+      localStorage.removeItem(UKEY);
+      if (cleArch) localStorage.removeItem(cleArch);
+    } catch(e){ window.carnetChangeAnnee = false; box.innerHTML = '<div class="confirm"><b>Le changement d\'année n\'a pas pu se faire (mémoire pleine).</b></div>'; return; }
+    location.reload();
+  }
+})();
+</script>
+"""
+
 
 # Carnet : sauvegarde automatique dans le Google Drive de l'enseignant (son propre script Apps Script).
 DRIVE_JS = r"""
@@ -180,6 +277,7 @@ DRIVE_JS = r"""
   const ecrire = o => { try { localStorage.setItem(CLE, JSON.stringify(o)); } catch(e){} };
   const heure = ts => { const d = new Date(ts), z = n => String(n).padStart(2, '0'); return `${d.getDate()}/${d.getMonth() + 1} à ${z(d.getHours())}h${z(d.getMinutes())}`; };
   let minuteur = null, enCours = false;
+  const annee = () => { try { return localStorage.getItem('carnet-eps-annee') || ''; } catch(e){ return ''; } };
 
   function feuilles(){
     const out = [];
@@ -194,16 +292,16 @@ DRIVE_JS = r"""
   }
   async function appel(o, corps){
     const r = corps ? await fetch(o.url, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(corps)})
-                    : await fetch(o.url + (o.url.includes('?') ? '&' : '?') + 'cle=' + encodeURIComponent(o.cle));
+                    : await fetch(o.url + (o.url.includes('?') ? '&' : '?') + 'cle=' + encodeURIComponent(o.cle) + '&annee=' + encodeURIComponent(annee()));
     return r.json();
   }
   async function envoyer(){
-    const o = lire(); if (!o.url || !o.cle || !o.attente) return;
+    const o = lire(); if (!o.url || !o.cle || !o.attente || window.carnetChangeAnnee) return;
     if (enCours){ planifier(4000); return; }
     if (!navigator.onLine){ etat(); return; }
     enCours = true; const debut = Date.now();
     try {
-      const rep = await appel(o, {cle: o.cle, copie: {app: 'carnet-eps', v: 1, at: Date.now(), state: S}, feuilles: feuilles()});
+      const rep = await appel(o, {cle: o.cle, annee: annee(), copie: {app: 'carnet-eps', v: 1, at: Date.now(), state: S}, feuilles: feuilles()});
       const n = lire();
       if (rep.ok){ n.dernier = Date.now(); n.err = ''; if ((n.modif || 0) <= debut) n.attente = false; }
       else n.err = rep.err === 'code' ? 'Le code ne correspond pas à ce tableau.' : 'Le tableau a refusé l\'envoi (' + rep.err + ').';
@@ -213,6 +311,8 @@ DRIVE_JS = r"""
     if (lire().attente && !lire().err) planifier(4000);
   }
   function planifier(ms){ clearTimeout(minuteur); minuteur = setTimeout(envoyer, ms); }
+  // Avant de changer d'annee scolaire : on termine l'envoi en attente de l'annee en cours.
+  window.carnetDriveVider = async () => { clearTimeout(minuteur); if (lire().attente && navigator.onLine){ while (enCours) await new Promise(r => setTimeout(r, 300)); await envoyer(); } };
   // Chaque enregistrement du carnet sur le telephone declenche un envoi quelques secondes plus tard.
   const avant = window.persistLocal;
   window.persistLocal = function(){ avant.apply(this, arguments); const o = lire(); if (!o.url) return; o.attente = true; o.modif = Date.now(); ecrire(o); planifier(6000); etat(); };

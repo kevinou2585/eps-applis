@@ -131,7 +131,7 @@ textarea{width:100%; min-height:160px; border-radius:10px; border:1px solid var(
 .savewarn{border:2px solid var(--torch); background:var(--flash); border-radius:14px; padding:12px; display:grid; gap:8px}
 .savewarn b{font-size:.95rem}
 .savewarn .empty{color:var(--ink)}
-.mode{display:grid; grid-template-columns:repeat(3,1fr); background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:3px}
+.mode{display:grid; grid-template-columns:repeat(2,1fr); background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:3px}
 .mode button{border:0; background:transparent; border-radius:9px; padding:10px 4px; font-weight:700; font-size:.88rem; color:var(--muted)}
 .mode button[aria-pressed="true"]{background:var(--torch); color:var(--torch-ink)}
 .resetbtn{border:2px solid var(--line); background:var(--surface); border-radius:12px; padding:0 12px; font-weight:700; font-size:.85rem; color:var(--red)}
@@ -157,6 +157,9 @@ textarea{width:100%; min-height:160px; border-radius:10px; border:1px solid var(
 .crow .cn{display:flex; justify-content:space-between; gap:8px; align-items:center}
 .crow .cn b{overflow-wrap:anywhere; min-width:0}
 .crow .cn span.pp{font-family:var(--display); font-weight:800; font-variant-numeric:tabular-nums}
+.crow .pm{display:flex; align-items:center; gap:6px; flex:none}
+.crow .pm button{min-width:44px; height:38px; border-radius:10px; border:1px solid var(--line); background:var(--bg); font-weight:800}
+.crow .pm button.plus{background:var(--torch); border-color:var(--torch); color:var(--torch-ink)}
 .letters{display:flex; flex-wrap:wrap; gap:6px}
 .letters button{min-width:44px; height:40px; border-radius:10px; border:1px solid var(--line); background:var(--bg); font-weight:800}
 .letters button[aria-pressed="true"]{background:var(--tc); border-color:var(--tc); color:#fff}
@@ -208,9 +211,9 @@ details.arch[open] summary{border-bottom:1px solid var(--line)}
   <section id="v-jeu">
     <div class="toolbar">
       <div class="mode" role="group" aria-label="Mode de notation">
-        <button id="m-cap" data-mode="cap">① Capitaines</button>
-        <button id="m-equipe" data-mode="equipe">② Équipes</button>
-        <button id="m-ind" data-mode="ind">③ Individuel</button>
+        <button id="m-cap" data-mode="cap" hidden>Capitaines</button>
+        <button id="m-equipe" data-mode="equipe">① Équipes</button>
+        <button id="m-ind" data-mode="ind">② Individuel</button>
       </div>
     </div>
     <p class="hint" id="hint"></p>
@@ -266,7 +269,7 @@ const $ = id => document.getElementById(id);
 
 function blankTeam(){ return {n:3, pts:{}}; }
 function blankGroup(g){ const o = {}; ROSTER[g].forEach(n => o[n] = {p:0, cap:false, abs:false, fair:0, red:0}); return o; }
-function blank(){ const s = {group:'jaune', tab:'jeu', mode:'cap', g:{}, team:{}, extra:{}}; for (const g in ROSTER){ s.g[g] = blankGroup(g); s.team[g] = blankTeam(); s.extra[g] = []; } return s; }
+function blank(){ const s = {group:'jaune', tab:'jeu', mode:'equipe', g:{}, team:{}, extra:{}}; for (const g in ROSTER){ s.g[g] = blankGroup(g); s.team[g] = blankTeam(); s.extra[g] = []; } return s; }
 let saved = null;
 try { const raw = localStorage.getItem(KEY); if (raw) saved = JSON.parse(raw); } catch(e){}
 let S = blank();
@@ -490,7 +493,7 @@ function renderTeams(){
   const unassigned = pres.filter(n => !letters.includes(d[n].eq)).length;
   const crow = n => { const v = d[n]; const i = letters.indexOf(v.eq);
     return `<div class="crow ${v.abs?'absent':''}" data-n="${esc(n)}" style="${i>=0?'--tc:'+tColor(i):''}">
-      <div class="cn"><b>${fmtName(n)}</b><span class="pp">${v.p} pt${v.p>1?'s':''}</span></div>
+      <div class="cn"><b>${fmtName(n)}</b>${v.abs ? `<span class="pp">${v.p} pt${v.p>1?'s':''}</span>` : `<span class="pm"><button data-pm="-1" aria-label="${esc(n)} : retirer 1 point">−1</button><span class="pp">${v.p} pt${v.p>1?'s':''}</span><button class="plus" data-pm="1" aria-label="${esc(n)} : ajouter 1 point">+1</button></span>`}</div>
       ${v.abs ? '<div class="letters"><span class="empty" style="align-self:center">Absent · pas d\'équipe</span><button class="absbtn" data-abs="1" style="margin-left:auto" aria-label="Remettre présent">✅ Présent</button></div>' : `<div class="letters">${letters.map((L,j) => `<button data-set="${L}" style="--tc:${tColor(j)}" aria-pressed="${v.eq===L}" aria-label="Mettre dans l'équipe ${L}">${L}</button>`).join('')}<button class="capbtn" data-cap="1" aria-pressed="${v.cap}" aria-label="Capitaine">⭐ Cap.</button><button class="absbtn" data-abs="1" aria-label="Absent">🚫 Abs.</button></div>`}
     </div>`; };
   $('teams').innerHTML =
@@ -524,7 +527,8 @@ $('teams').addEventListener('click', e => {
     return;
   }
   const row = b.closest('.crow'); if (!row) return; const n = row.dataset.n;
-  if (b.dataset.set){ d[n].eq = d[n].eq === b.dataset.set ? null : b.dataset.set; save(); render(); }
+  if (b.dataset.pm){ const dd = +b.dataset.pm; if (dd < 0 && d[n].p <= 0) return; remember(`${dd > 0 ? '+1' : '−1'} pour ${n.split(' ')[0]}`); d[n].p += dd; save(); render(); }
+  else if (b.dataset.set){ d[n].eq = d[n].eq === b.dataset.set ? null : b.dataset.set; save(); render(); }
   else if (b.dataset.cap){ d[n].cap = !d[n].cap; save(); render(); }
   else if (b.dataset.abs){ remember(d[n].abs ? `${n.split(' ')[0]} présent` : `🚫 ${n.split(' ')[0]} absent`); d[n].abs = !d[n].abs; if (d[n].abs) d[n].eq = null; save(); render(); }
 });
@@ -763,6 +767,7 @@ function render(){
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === S.tab));
   $('open-arch').setAttribute('aria-pressed', S.tab === 'arch');
   $('v-jeu').hidden = S.tab !== 'jeu'; $('v-class').hidden = S.tab !== 'class'; $('v-fin').hidden = S.tab !== 'fin'; $('v-arch').hidden = S.tab !== 'arch';
+  if (S.mode === 'cap') S.mode = 'equipe'; // l'onglet Capitaines a été retiré
   const team = S.tab === 'jeu' && S.mode === 'equipe';
   const capStep = S.mode === 'cap';
   if (S.tab === 'jeu'){
@@ -770,7 +775,7 @@ function render(){
     $('hint').innerHTML = capStep
       ? '<b>Épreuve des capitaines</b> : touche un nom pour +1 pt. Choisis le nombre d\'équipes : les meilleurs deviennent capitaines (un par équipe). Tu pourras changer les capitaines ensuite dans ② Équipes.'
       : team
-      ? '<b>Mode équipes</b> : choisis le nombre d\'équipes, répartis les élèves (A, B, C…) et marque les capitaines. « +1 équipe » donne 1 pt à chaque élève de l\'équipe.'
+      ? '<b>Mode équipes</b> : choisis le nombre d\'équipes, répartis les élèves (A, B, C…) et marque les capitaines. « +1 équipe » donne 1 pt à chaque élève de l\'équipe, +1 / −1 à côté d\'un nom ne compte que pour lui.'
       : '<b>Mode individuel</b> : chaque élève marque ses propres points.';
     $('teams').hidden = !team; $('list').hidden = team;
     $('capcall').hidden = !capStep;

@@ -32,8 +32,9 @@ h1{font-size:26px;margin:6px 0 2px;letter-spacing:-.01em}
 h2{font-size:18px;margin:18px 0 8px}
 .sous{color:var(--muted);margin:0 0 14px}
 .carte{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
-.choix{display:flex;gap:8px;flex-wrap:wrap}
-.choix button{flex:1;min-width:70px;font-weight:700;font-size:20px}
+.choix{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.choix button{min-width:0;padding:12px 2px;font-weight:700;font-size:19px;text-align:center;white-space:nowrap}
+.choix button.txt{font-size:14px;letter-spacing:-.01em}
 .choix button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .joueur{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .joueur input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
@@ -119,7 +120,7 @@ function accueil(){
   <p class="sous">Fléchettes entre collègues. 101, 301, 501 (pas besoin de finir en double) ou Cricket.</p>
   <div class="carte">
     <h2 style="margin-top:0">Départ</h2>
-    <div class="choix">${[101,301,501,'cricket'].map(n=>`<button data-dep="${n}" class="${S.depart===n?'on':''}">${n==='cricket'?'Cricket':n}</button>`).join('')}</div>
+    <div class="choix">${[101,301,501,'cricket'].map(n=>`<button data-dep="${n}" class="${S.depart===n?'on':''} ${n==='cricket'?'txt':''}">${n==='cricket'?'Cricket':n}</button>`).join('')}</div>
     ${S.depart==='cricket'?'<p class="sous" style="margin:10px 0 0;font-size:14px">Ferme 15 à 20 et le Bull (3 touches chacun : simple 1, double 2, triple 3). Une fois fermé, chaque touche en plus marque des points tant qu\'un adversaire ne l\'a pas fermé. Gagne celui qui a tout fermé avec au moins autant de points que les autres.</p>':''}
     <h2>Joueurs <span class="sous" style="font-weight:400;font-size:14px">(dans l'ordre de jeu)</span></h2>
     <div id="joueurs">${S.noms.map((n,i)=>`

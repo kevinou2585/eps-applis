@@ -1,5 +1,5 @@
 // Fait marcher les applis sans internet. Version a changer a chaque mise en ligne pour rafraichir le cache.
-const VERSION = 'eps-v35';
+const VERSION = 'eps-v36';
 const FICHIERS = [
   './', './index.html', './manifest.webmanifest', './eleves.chiffre.json',
   './carnet/', './tournoi/', './koh-lanta/', './tableau/', './le-fist/', './classeur/', './installer/',
@@ -12,7 +12,8 @@ const FICHIERS = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FICHIERS)).then(() => self.skipWaiting()));
+  // cache 'reload' : on prend les fichiers frais sur le site, jamais une vieille copie du navigateur.
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FICHIERS.map(f => new Request(f, {cache: 'reload'})))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -42,19 +43,15 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin !== location.origin) return;
-  // no-cache : on redemande toujours au site s'il y a du neuf (sinon le telephone garde 10 min l'ancienne page).
-  // Reseau faible (gare, train) : si internet ne repond pas en 2,5 s, on ouvre la copie gardee ;
-  // la nouvelle version, si elle arrive ensuite, est gardee pour la prochaine ouverture.
+  // Pages du site : la copie du telephone s'ouvre tout de suite (rapide, meme en mode avion).
+  // En meme temps, on redemande le site pour garder une copie a jour. Chaque mise en ligne change
+  // VERSION : le telephone installe alors la nouvelle version et la page se recharge toute seule.
   const reseau = (req.mode === 'navigate' ? fetch(req.url, {cache: 'no-cache', credentials: 'same-origin'}) : fetch(req, {cache: 'no-cache'}))
     .then(rep => {
       if (rep.ok && !rep.redirected) { const copie = rep.clone(); caches.open(VERSION).then(c => c.put(req, copie)); }
       return rep;
     });
-  e.respondWith(caches.match(req, {ignoreSearch: true}).then(copie => {
-    const viaReseau = reseau.then(rep => (rep.redirected && req.mode === 'navigate') ? Response.redirect(rep.url, 302) : rep);
-    if (!copie) return viaReseau;
-    const delai = new Promise(ok => setTimeout(() => ok(copie), 2500));
-    return Promise.race([viaReseau.catch(() => copie), delai]);
-  }));
+  e.respondWith(caches.match(req, {ignoreSearch: true}).then(copie =>
+    copie || reseau.then(rep => (rep.redirected && req.mode === 'navigate') ? Response.redirect(rep.url, 302) : rep)));
   e.waitUntil(reseau.catch(() => {}));
 });

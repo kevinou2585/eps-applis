@@ -141,7 +141,7 @@ textarea{width:100%; min-height:160px; border-radius:10px; border:1px solid var(
 .stepper output{min-width:1.5ch; text-align:center; font-family:var(--display); font-size:1.3rem; font-variant-numeric:tabular-nums}
 .dice{border:0; border-radius:10px; padding:10px 12px; background:var(--ink); color:var(--bg); font-weight:700}
 .teams{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px}
-.team{border-radius:14px; background:var(--tc); color:#fff; padding:12px; display:grid; gap:8px; min-width:0}
+.team{border-radius:14px; background:var(--tc); color:var(--tk,#fff); padding:12px; display:grid; gap:8px; min-width:0}
 .team h2{margin:0; font-family:var(--display); font-weight:800; font-size:1.2rem; display:flex; justify-content:space-between; align-items:baseline; gap:6px}
 .team h2 small{font-family:var(--body); font-size:.75rem; font-weight:700; opacity:.9}
 .team .capn{font-size:.8rem; font-weight:700; opacity:.95; overflow-wrap:anywhere; min-height:1.1em}
@@ -149,7 +149,7 @@ textarea{width:100%; min-height:160px; border-radius:10px; border:1px solid var(
 .team .tpts span{font-size:.8rem; font-family:var(--body); font-weight:700; opacity:.9}
 .team .tbtns{display:grid; grid-template-columns:2fr 1fr; gap:6px}
 .team .tbtns button{border:0; border-radius:10px; padding:14px 6px; font-weight:800; font-size:1.05rem; background:rgba(255,255,255,.94); color:#12302b}
-.team .tbtns button.tm{background:rgba(0,0,0,.22); color:#fff}
+.team .tbtns button.tm{background:rgba(0,0,0,.22); color:var(--tk,#fff)}
 .team.pop{animation:tpop .45s ease-out}
 @keyframes tpop{0%{transform:scale(1.04)}100%{transform:scale(1)}}
 .comp{display:grid; gap:6px; margin-top:14px}
@@ -162,7 +162,8 @@ textarea{width:100%; min-height:160px; border-radius:10px; border:1px solid var(
 .crow .pm button.plus{background:var(--torch); border-color:var(--torch); color:var(--torch-ink)}
 .letters{display:flex; flex-wrap:wrap; gap:6px}
 .letters button{min-width:44px; height:40px; border-radius:10px; border:1px solid var(--line); background:var(--bg); font-weight:800}
-.letters button[aria-pressed="true"]{background:var(--tc); border-color:var(--tc); color:#fff}
+.letters button[aria-pressed="true"]{background:var(--tc); border-color:var(--tc); color:var(--tk,#fff)}
+.team .tcol{font:700 .8rem var(--body); border:0; border-radius:8px; padding:4px 6px; background:rgba(255,255,255,.9); color:#12302b; width:100%}
 .letters .capbtn{margin-left:auto; padding-inline:10px}
 .letters .capbtn[aria-pressed="true"]{background:var(--gold); border-color:var(--gold); color:#2b2100}
 .crow.absent{opacity:.55}
@@ -467,7 +468,7 @@ function renderCapCall(){
     remember('Capitaines nommés');
     ROSTER[g].forEach(n => { d[n].cap = false; d[n].eq = null; });
     top.forEach((x, i) => { d[x.n].cap = true; d[x.n].eq = LET[i]; });
-    S.team[g] = {n: N, pts:{}};
+    S.team[g] = {n: N, pts:{}, col: S.team[g].col};
     S.mode = 'equipe'; save(); render(); window.scrollTo(0, 0);
   };
 }
@@ -475,7 +476,12 @@ function renderCapCall(){
 // ---- mode équipes (sous-groupes dans la couleur du jour) ----
 const LET = ['A','B','C','D','E','F'];
 function presentOf(g){ return ROSTER[g].filter(n => !S.g[g][n].abs); }
-function tColor(i){ return `var(--t${i+1})`; }
+// Couleurs au choix pour chaque équipe (menu dans la carte de l'équipe).
+const TCOLS = [['orange','Orange','#e8590c'],['turquoise','Turquoise','#0b7285'],['violet','Violet','#7048e8'],['gris','Gris','#5c6b73'],['rose','Rose','#c2255c'],['vert','Vert','#2b8a3e'],
+  ['jaune','Jaune','#f2c230','#2b2100'],['rouge','Rouge','#e03131'],['bleu','Bleu','#1c7ed6'],['noir','Noir','#212529'],['blanc','Blanc','#f1f3f5','#212529'],['marron','Marron','#8d5a2b']];
+const DEFCOL = ['orange','turquoise','violet','gris','rose','vert'];
+function tCol(i){ const c = (S.team[S.group].col || {})[LET[i]] || DEFCOL[i]; return TCOLS.find(x => x[0] === c) || TCOLS[0]; }
+function tColor(i){ const c = tCol(i); return c[2] + (c[3] ? ';--tk:' + c[3] : ''); }
 function renderTeams(){
   const g = S.group, T = S.team[g], d = S.g[g];
   const letters = LET.slice(0, T.n);
@@ -484,6 +490,7 @@ function renderTeams(){
     const caps = mem.filter(n => d[n].cap).map(n => n.split(' ')[0]);
     return `<div class="team" id="t-${L}" style="--tc:${tColor(i)}">
       <h2>Équipe ${L}<small>${mem.length} élève${mem.length>1?'s':''}</small></h2>
+      <select class="tcol" data-col="${L}" aria-label="Couleur de l'équipe ${L}">${TCOLS.map(c => `<option value="${c[0]}" ${tCol(i)[0] === c[0] ? 'selected' : ''}>🎨 ${c[1]}</option>`).join('')}</select>
       <div class="capn">${caps.length ? '⭐ ' + esc(caps.join(', ')) : 'Pas de capitaine'}</div>
       <div class="tpts">${T.pts[L] || 0} <span>pts</span></div>
       <div class="tbtns"><button data-t="${L}" data-d="1" aria-label="+1 pour toute l'équipe ${L}">+1 équipe</button><button class="tm" data-t="${L}" data-d="-1" aria-label="−1 pour l'équipe ${L}">−1</button></div>
@@ -511,6 +518,10 @@ function renderTeams(){
     save(); render();
   };
 }
+$('teams').addEventListener('change', e => {
+  const s = e.target.closest('select[data-col]'); if (!s) return;
+  const T = S.team[S.group]; T.col = T.col || {}; T.col[s.dataset.col] = s.value; save(); render();
+});
 $('teams').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   const g = S.group, T = S.team[g], d = S.g[g];
@@ -544,8 +555,8 @@ function renderResetPanel(){
     <button class="btn btn-danger" id="rz-one">Le groupe ${G}</button>
     <button class="btn btn-danger" id="rz-all">Les 4 groupes</button>
     <button class="btn btn-ghost" id="rz-no">Annuler</button>`;
-  const one = $('rz-one'); if (one) one.onclick = () => { remember(`Groupe ${G} remis à 0`); archived(archiveGroups([S.group])); S.g[S.group] = blankGroup(S.group); S.team[S.group] = blankTeam(); resetOpen = false; save(); render(); };
-  $('rz-all').onclick = () => { remember('Les 4 groupes remis à 0'); archived(archiveGroups(Object.keys(ROSTER))); for (const g in ROSTER){ S.g[g] = blankGroup(g); S.team[g] = blankTeam(); } resetOpen = false; save(); render(); };
+  const one = $('rz-one'); if (one) one.onclick = () => { remember(`Groupe ${G} remis à 0`); archived(archiveGroups([S.group])); S.g[S.group] = blankGroup(S.group); S.team[S.group] = {...blankTeam(), col: S.team[S.group].col}; resetOpen = false; save(); render(); };
+  $('rz-all').onclick = () => { remember('Les 4 groupes remis à 0'); archived(archiveGroups(Object.keys(ROSTER))); for (const g in ROSTER){ S.g[g] = blankGroup(g); S.team[g] = {...blankTeam(), col: S.team[g].col}; } resetOpen = false; save(); render(); };
   $('rz-no').onclick = () => { resetOpen = false; renderResetPanel(); };
 }
 $('reset-top').onclick = () => { resetOpen = !resetOpen; renderResetPanel(); };

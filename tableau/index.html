@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Classement Koh-Lanta</title>
+<meta name="theme-color" content="#e8590c">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" href="../icones/koh-lanta-192.png">
+<link rel="apple-touch-icon" href="../icones/eps-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EPS">
+<style>
+:root{--bg:#eef3f1;--surface:#fff;--ink:#12302b;--muted:#5c716c;--line:#d3dfdb;--torch:#e8590c;--gold:#d9a400;--silver:#8a979b;--bronze:#b5652b;--fair:#2f7d5b;--red:#c92a2a;
+  --jaune:#f1c232;--jaune-ink:#2b2100;--vert:#2f9e5b;--vert-ink:#fff;--bleu:#2f6fd0;--bleu-ink:#fff;--rouge:#d64545;--rouge-ink:#fff;--tout:#12302b;--tout-ink:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1a18;--surface:#152724;--ink:#e6f0ed;--muted:#93a8a2;--line:#28403b;--tout:#e6f0ed;--tout-ink:#0d1a18;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body,button,a{touch-action:manipulation}
+body{margin:0 auto;max-width:600px;padding:0 16px calc(32px + env(safe-area-inset-bottom,0px));background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.retour{display:inline-block;padding:10px 0 0;font-weight:600;font-size:14px;color:var(--muted);text-decoration:none}
+header{position:sticky;top:0;background:var(--bg);padding:8px 0 10px;display:grid;gap:10px;z-index:2}
+.haut{display:flex;justify-content:space-between;align-items:center;gap:10px}
+h1{margin:0;font-size:22px}
+.maj{color:var(--muted);font-size:12px;text-align:right}
+.maj button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:5px 10px;font:inherit;font-weight:600}
+.onglets{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.onglets button{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 2px;font:inherit;font-weight:700;font-size:13px}
+.onglets button[aria-pressed="true"]{background:var(--c);color:var(--ci);border-color:var(--c)}
+.ligne{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:6px}
+.ligne.r1{box-shadow:inset 4px 0 0 var(--gold)}.ligne.r2{box-shadow:inset 4px 0 0 var(--silver)}.ligne.r3{box-shadow:inset 4px 0 0 var(--bronze)}
+.rg{font-weight:800;text-align:center;color:var(--muted)}
+.nm{min-width:0;overflow-wrap:anywhere}
+.nm small{display:block;color:var(--muted);font-size:12px}
+.pt{font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
+.vide,.note{color:var(--muted);font-size:14px}
+.err{color:var(--red);font-size:14px}
+h2{font-size:15px;margin:18px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.lecons{display:grid;gap:4px;font-size:14px}
+.lecons div{display:flex;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+</style>
+</head>
+<body>
+<a class="retour" href="../">‹ Mes applis</a>
+<header>
+  <div class="haut"><h1>🏆 Classement Koh-Lanta</h1><div class="maj"><button id="maj" type="button">↻ Actualiser</button><div id="etat"></div></div></div>
+  <div class="onglets" id="onglets"></div>
+</header>
+<main id="vue"></main>
+<script>
+const GR = [['top','Top 10','tout'],['Jaune','Jaune','jaune'],['Vert','Vert','vert'],['Bleu','Bleu','bleu'],['Rouge','Rouge','rouge']];
+const CLE = {Jaune:'jaune', Vert:'vert', Bleu:'bleu', Rouge:'rouge'};
+const lire = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+let onglet = lire('kl-tableau-onglet') || 'top';
+let D = null; try { D = JSON.parse(lire('kl-tableau-cache')); } catch(e){}
+let listes = {}; try { listes = JSON.parse(lire('kl-listes-v1')) || {}; } catch(e){}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// Totaux par élève, à partir du journal des fins de leçon (même barème que l'Excel).
+function totaux(){
+  const t = {};
+  const el = (n, g) => t[n] || (t[n] = {n, g, p:0, o:0, a:0, b:0, f:0, r:0});
+  Object.keys(CLE).forEach(g => (listes[CLE[g]] || []).forEach(n => el(n, g)));
+  (D?.lignes || []).forEach(l => { const x = el(l.eleve, l.groupe); x.p += Number(l.points) || 0;
+    if (l.place === '1er') x.o++; else if (l.place === '2e') x.a++; else if (l.place === '3e') x.b++;
+    else if (l.place === 'Fair-play') x.f++; else if (l.place === 'Perturbateur') x.r++; });
+  return Object.values(t);
+}
+function detail(x){
+  const s = [x.o ? `🥇${x.o}` : '', x.a ? `🥈${x.a}` : '', x.b ? `🥉${x.b}` : '', x.f ? `🤝${x.f}` : '', x.r ? `🟥${x.r}` : ''].filter(Boolean).join(' ');
+  return s;
+}
+function liste(xs, avecGroupe){
+  xs.sort((a, b) => b.p - a.p || a.n.localeCompare(b.n, 'fr'));
+  return xs.map(x => { const rg = xs.filter(y => y.p > x.p).length + 1;
+    return `<div class="ligne ${x.p > 0 && rg <= 3 ? 'r' + rg : ''}"><span class="rg">${rg}</span><span class="nm">${esc(x.n)}<small>${avecGroupe ? esc(x.g) + (detail(x) ? ' · ' : '') : ''}${detail(x)}</small></span><span class="pt">${x.p}</span></div>`; }).join('');
+}
+function rendre(){
+  document.getElementById('onglets').innerHTML = GR.map(([id, l, c]) => `<button type="button" data-o="${id}" style="--c:var(--${c});--ci:var(--${c}-ink)" aria-pressed="${onglet === id}">${l}</button>`).join('');
+  document.querySelectorAll('#onglets button').forEach(b => b.onclick = () => { onglet = b.dataset.o; try { localStorage.setItem('kl-tableau-onglet', onglet); } catch(e){} rendre(); });
+  const v = document.getElementById('vue');
+  if (!D){ v.innerHTML = '<p class="vide">Pas encore de résultats. Ils arrivent quand un prof touche « 📤 Envoyer au tableau général » en fin de leçon Koh-Lanta.</p>'; return; }
+  const T = totaux();
+  if (onglet === 'top'){
+    const top = T.filter(x => x.p > 0).sort((a, b) => b.p - a.p).slice(0, 10);
+    v.innerHTML = top.length ? liste(top, true) : '<p class="vide">Personne n\'a encore de points.</p>';
+  } else {
+    v.innerHTML = liste(T.filter(x => x.g === onglet), false) || '<p class="vide">Aucun élève.</p>';
+    const lec = {}; D.lignes.filter(l => l.groupe === onglet).forEach(l => { lec[l.date] = (lec[l.date] || 0) + 1; });
+    const jours = Object.keys(lec).sort().reverse();
+    if (jours.length) v.innerHTML += `<h2>Leçons envoyées</h2><div class="lecons">${jours.map(j => `<div><span>${new Date(j + 'T12:00').toLocaleDateString('fr-BE', {weekday:'long', day:'numeric', month:'long'})}</span><span>${lec[j]} ligne${lec[j] > 1 ? 's' : ''}</span></div>`).join('')}</div>`;
+  }
+}
+async function charger(){
+  const u = lire('eps-script'), c = lire('eps-code'), etat = document.getElementById('etat');
+  if (!u || !c){ etat.innerHTML = '<span class="err">Ouvre l\'accueil EPS avec internet</span>'; return; }
+  if (!navigator.onLine){ etat.textContent = D ? 'Hors ligne · dernière version' : 'Hors ligne'; return; }
+  etat.textContent = 'Mise à jour…';
+  try {
+    const o = await (await fetch(u + '?code=' + encodeURIComponent(c))).json();
+    if (!o.ok) throw new Error(o.err);
+    D = {lignes: o.lignes, t: Date.now()};
+    try { localStorage.setItem('kl-tableau-cache', JSON.stringify(D)); } catch(e){}
+    etat.textContent = 'À jour'; rendre();
+  } catch(e){ etat.innerHTML = '<span class="err">Mise à jour impossible</span>'; }
+}
+document.getElementById('maj').onclick = charger;
+rendre(); charger();
+if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.register('../sw.js').catch(() => {});
+</script>
+</body>
+</html>

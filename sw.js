@@ -1,8 +1,8 @@
 // Fait marcher les applis sans internet. Version a changer a chaque mise en ligne pour rafraichir le cache.
-const VERSION = 'eps-v8';
+const VERSION = 'eps-v9';
 const FICHIERS = [
   './', './index.html', './manifest.webmanifest', './eleves.chiffre.json',
-  './carnet/', './tournoi/', './koh-lanta/',
+  './carnet/', './tournoi/', './koh-lanta/', './tableau/',
   './icones/carnet-180.png', './icones/carnet-192.png', './icones/carnet-512.png',
   './icones/eps-180.png', './icones/eps-192.png', './icones/eps-512.png',
   './icones/tournoi-180.png', './icones/tournoi-192.png', './icones/tournoi-512.png',

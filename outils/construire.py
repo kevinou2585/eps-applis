@@ -112,7 +112,8 @@ def koh_lanta(src):
     sortie = subprocess.run(["node", "-e", "process.stdout.write(JSON.stringify(" + m_r.group(1) + "))"],
                             capture_output=True, text=True, check=True).stdout
     # Le lien du tableau des scores (Drive) est chiffre avec les listes : il n'apparait pas en clair sur le site.
-    secret = {"listes": json.loads(sortie), "tableau": os.environ.get("KL_TABLEAU", "")}
+    secret = {"listes": json.loads(sortie), "tableau": os.environ.get("KL_TABLEAU", ""),
+              "script": os.environ.get("KL_SCRIPT", "")}
     (RACINE / "eleves.chiffre.json").write_text(json.dumps(chiffrer(secret)), encoding="utf-8")
     corps = corps[:m_r.start()] + LISTES_JS + corps[m_r.end():]
     if "jaune:['" in corps:
@@ -120,7 +121,62 @@ def koh_lanta(src):
     if "copy-link" in corps or "claude.ai" in corps:
         sys.exit("Reste un lien claude.ai dans Koh-Lanta")
     return (tete("Koh-Lanta Arène", "koh-lanta", "#e8590c") + style_base + "\n</head>\n<body>\n"
-            + RETOUR + corps + PIED)
+            + RETOUR + corps + ENVOI_JS + PIED)
+
+
+# Bouton "Envoyer au tableau general" sous la fiche fin de lecon. L'adresse du script Google et le code
+# viennent de l'accueil (localStorage eps-script / eps-code). Sans internet, l'envoi attend et repart seul.
+ENVOI_JS = r"""
+<script>
+(() => {
+  const PL = {1: ['1er', 5], 2: ['2e', 3], 3: ['3e', 1]};
+  const FILE = 'kl-envois-attente', FAITS = 'kl-envois-faits';
+  const lire = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch(e){ return {}; } };
+  const ecrire = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+  const reglage = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+  const jour = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  // Une lecon = un groupe un jour : renvoyer remplace l'envoi precedent dans le tableau.
+  function lecon(){
+    const g = S.group, r = recapData(g), lignes = [];
+    r.podium.forEach(o => o.who.forEach(x => lignes.push({eleve: x.n, place: PL[o.r][0], points: PL[o.r][1]})));
+    r.fair.forEach(x => { for (let i = 0; i < x.fair; i++) lignes.push({eleve: x.n, place: 'Fair-play', points: 3}); });
+    r.red.forEach(x => { for (let i = 0; i < x.red; i++) lignes.push({eleve: x.n, place: 'Perturbateur', points: -3}); });
+    return {id: jour() + '-' + g, date: jour(), groupe: GLABEL[g], lignes};
+  }
+  async function envoyer(p){
+    const u = reglage('eps-script'), c = reglage('eps-code');
+    if (!u || !c) throw new Error('reglage');
+    const rep = await fetch(u, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({...p, code: c})});
+    const o = await rep.json(); if (!o.ok) throw new Error(o.err || 'refus');
+    const f = lire(FAITS); f[p.id] = Date.now(); ecrire(FAITS, f);
+    const a = lire(FILE); delete a[p.id]; ecrire(FILE, a);
+  }
+  async function viderFile(){ const a = lire(FILE); for (const id of Object.keys(a)){ try { await envoyer(a[id]); } catch(e){ break; } } bouton(true); }
+  function bouton(force){
+    const rc = document.getElementById('recap'); if (!rc) return;
+    const act = rc.querySelector('.actions'); if (!act) return;
+    if (!reglage('eps-script')) return;
+    let d = document.getElementById('kl-envoi');
+    if (d && !force) return;
+    if (!d){ d = document.createElement('div'); d.id = 'kl-envoi'; d.className = 'card'; act.before(d); }
+    const p = lecon(), fait = lire(FAITS)[p.id], attente = lire(FILE)[p.id];
+    d.innerHTML = `<button class="btn btn-main" type="button">📤 Envoyer au tableau général</button><span class="empty" id="kl-envoi-m">${attente ? '📶 En attente d\'internet : ce sera envoyé tout seul.' : fait ? '✅ Déjà envoyé aujourd\'hui. Renvoyer remplace l\'envoi précédent.' : 'Envoie la fiche du groupe ' + p.groupe + ' dans le classement général.'}</span>`;
+    d.querySelector('button').onclick = async () => {
+      const p = lecon(), m = document.getElementById('kl-envoi-m');
+      if (!p.lignes.length){ m.textContent = 'Rien à envoyer : personne n\'a de points.'; return; }
+      m.textContent = 'Envoi…';
+      try { await envoyer(p); m.textContent = '✅ Envoyé au tableau général (' + p.lignes.length + ' ligne' + (p.lignes.length > 1 ? 's' : '') + ').'; }
+      catch(e){ const a = lire(FILE); a[p.id] = p; ecrire(FILE, a);
+        m.textContent = navigator.onLine ? '⚠️ L\'envoi n\'a pas marché. Nouvel essai tout seul à la prochaine ouverture.' : '📶 Pas d\'internet : ce sera envoyé tout seul dès que le téléphone est connecté.'; }
+    };
+  }
+  new MutationObserver(() => bouton(false)).observe(document.getElementById('recap'), {childList: true});
+  bouton(false);
+  if (navigator.onLine) viderFile();
+  window.addEventListener('online', viderFile);
+})();
+</script>
+"""
 
 
 if __name__ == "__main__":

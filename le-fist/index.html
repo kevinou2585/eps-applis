@@ -73,6 +73,17 @@ h2{font-size:18px;margin:18px 0 8px}
 .or button{width:100%;margin-top:8px;font-size:19px;padding:14px}
 .lien{background:none;border:none;color:var(--muted);text-decoration:underline;padding:6px}
 .histo{color:var(--muted);font-size:13px;margin-top:14px}
+/* Cricket */
+.cri{width:100%;border-collapse:separate;border-spacing:0 4px;margin:8px 0;font-variant-numeric:tabular-nums}
+.cri th,.cri td{text-align:center;padding:4px 2px}
+.cri th{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
+.cri th.actif{color:var(--accent)}
+.cri td.num{font-weight:800;font-size:18px;width:52px;background:var(--surface);border-radius:10px}
+.cri td.num.mort{color:var(--muted);text-decoration:line-through}
+.cri td.mk{font-size:20px;font-weight:800}
+.cri td.mk.actif{background:var(--soft);border-radius:10px}
+.cri tr.pts td{font-size:22px;font-weight:800;padding-top:8px}
+.pave.cri-pave{grid-template-columns:repeat(4,1fr)}
 </style>
 </head>
 <body>
@@ -97,6 +108,7 @@ function afficher(){
   if (!p) return accueil();
   if (p.etat === 'or') return flecheOr();
   if (p.etat === 'fin') return fin();
+  if (p.mode === 'cricket') return jeuCricket();
   jeu();
 }
 
@@ -104,10 +116,11 @@ function afficher(){
 function accueil(){
   $('app').innerHTML = `
   <h1>🎯 Le Fist</h1>
-  <p class="sous">Fléchettes entre collègues. Pas besoin de finir en double.</p>
+  <p class="sous">Fléchettes entre collègues. 101, 301, 501 (pas besoin de finir en double) ou Cricket.</p>
   <div class="carte">
     <h2 style="margin-top:0">Départ</h2>
-    <div class="choix">${[101,301,501].map(n=>`<button data-dep="${n}" class="${S.depart===n?'on':''}">${n}</button>`).join('')}</div>
+    <div class="choix">${[101,301,501,'cricket'].map(n=>`<button data-dep="${n}" class="${S.depart===n?'on':''}">${n==='cricket'?'Cricket':n}</button>`).join('')}</div>
+    ${S.depart==='cricket'?'<p class="sous" style="margin:10px 0 0;font-size:14px">Ferme 15 à 20 et le Bull (3 touches chacun : simple 1, double 2, triple 3). Une fois fermé, chaque touche en plus marque des points tant qu\'un adversaire ne l\'a pas fermé. Gagne celui qui a tout fermé avec au moins autant de points que les autres.</p>':''}
     <h2>Joueurs <span class="sous" style="font-weight:400;font-size:14px">(dans l'ordre de jeu)</span></h2>
     <div id="joueurs">${S.noms.map((n,i)=>`
       <div class="joueur"><input data-i="${i}" value="${esc(n)}" placeholder="Joueur ${i+1}" autocomplete="off">
@@ -117,7 +130,7 @@ function accueil(){
     <div class="bas"><button class="prim gros" id="go">Lancer la partie</button></div>
   </div>
   ${Object.keys(S.victoires).length ? `<p class="histo">Victoires : ${Object.entries(S.victoires).sort((a,b)=>b[1]-a[1]).map(([n,v])=>`${esc(n)} ${v}`).join(' · ')} <button class="lien" id="raz">remettre à zéro</button></p>`:''}`;
-  $('app').querySelectorAll('[data-dep]').forEach(b=>b.onclick=()=>{S.depart=+b.dataset.dep;sauver();accueil();});
+  $('app').querySelectorAll('[data-dep]').forEach(b=>b.onclick=()=>{const d=b.dataset.dep;S.depart=d==='cricket'?d:+d;sauver();accueil();});
   $('app').querySelectorAll('input[data-i]').forEach(inp=>inp.oninput=()=>{S.noms[+inp.dataset.i]=inp.value;sauver();});
   $('app').querySelectorAll('[data-suppr]').forEach(b=>b.onclick=()=>{S.noms.splice(+b.dataset.suppr,1);sauver();accueil();});
   $('app').querySelectorAll('[data-monte]').forEach(b=>b.onclick=()=>{const i=+b.dataset.monte;[S.noms[i-1],S.noms[i]]=[S.noms[i],S.noms[i-1]];sauver();accueil();});
@@ -127,6 +140,11 @@ function accueil(){
 }
 
 function nouvellePartie(noms){
+  if (S.depart === 'cricket'){
+    S.partie = {mode:'cricket', etat:'jeu', depart:'cricket', joueurs:noms.map(n=>({nom:n, m:{20:0,19:0,18:0,17:0,16:0,15:0,25:0}, pts:0, fl:0, tours:[]})),
+                cur:0, flech:[], tourNo:1, gagnant:null};
+    pile = []; mult = 1; sauver(); return afficher();
+  }
   S.partie = {etat:'jeu', depart:S.depart, joueurs:noms.map(n=>({nom:n, score:S.depart, fl:0, tours:[]})),
               cur:0, flech:[], tourNo:1, finis:[], gagnant:null};
   pile = []; mult = 1; sauver(); afficher();
@@ -234,13 +252,13 @@ function flecheOr(){
 /* ---------- Fin ---------- */
 function fin(){
   const p = S.partie, g = p.joueurs[p.gagnant];
-  const autres = p.joueurs.filter((_,i)=>i!==p.gagnant).sort((a,b)=>a.score-b.score);
+  const autres = p.joueurs.filter((_,i)=>i!==p.gagnant).sort((a,b)=>p.mode==='cricket'?b.pts-a.pts:a.score-b.score);
   $('app').innerHTML = `
   <div class="carte or">
     <div class="big">🏆</div>
     <h1>${esc(g.nom)} gagne !</h1>
-    <p class="sous">${p.depart} en ${g.tours.length} tours (${g.fl} fléchettes)${S.victoires[g.nom]>1?` · ${S.victoires[g.nom]} victoires`:''}</p>
-    ${autres.length?`<p>${autres.map(x=>`${esc(x.nom)} : ${x.score}`).join(' · ')}</p>`:''}
+    <p class="sous">${p.mode==='cricket'?`Cricket · ${g.pts} pts`:p.depart} en ${g.tours.length} tours (${g.fl} fléchettes)${S.victoires[g.nom]>1?` · ${S.victoires[g.nom]} victoires`:''}</p>
+    ${autres.length?`<p>${autres.map(x=>`${esc(x.nom)} : ${p.mode==='cricket'?x.pts+' pts':x.score}`).join(' · ')}</p>`:''}
     <button class="prim" id="revanche">Revanche (le suivant commence)</button>
     <button id="nouvelle">Nouvelle partie</button>
     <div class="actions"><button id="annule">↶ Annuler la dernière flèche</button></div>
@@ -248,6 +266,57 @@ function fin(){
   $('revanche').onclick=()=>{ const n=p.joueurs.map(x=>x.nom); n.push(n.shift()); S.depart=p.depart; nouvellePartie(n); };
   $('nouvelle').onclick=()=>{ S.partie=null; sauver(); afficher(); };
   $('annule').onclick=annuler;
+}
+
+/* ---------- Cricket ---------- */
+const CN = [20,19,18,17,16,15,25];
+const marque = n => n >= 3 ? 'Ⓧ' : n === 2 ? '✕' : n === 1 ? '/' : '';
+function jeuCricket(msg){
+  const p = S.partie, j = p.joueurs[p.cur];
+  const mort = c => p.joueurs.every(x => x.m[c] >= 3);
+  $('app').innerHTML = `
+  <table class="cri"><tr><th></th>${p.joueurs.map((x,i)=>`<th class="${i===p.cur?'actif':''}">${esc(x.nom)}${S.victoires[x.nom]?` 🏆${S.victoires[x.nom]}`:''}</th>`).join('')}</tr>
+  ${CN.map(c=>`<tr><td class="num ${mort(c)?'mort':''}">${c===25?'Bull':c}</td>${p.joueurs.map((x,i)=>`<td class="mk ${i===p.cur?'actif':''}">${marque(x.m[c])}</td>`).join('')}</tr>`).join('')}
+  <tr class="pts"><td class="num">Pts</td>${p.joueurs.map((x,i)=>`<td class="${i===p.cur?'actif':''}">${x.pts}</td>`).join('')}</tr></table>
+  <div class="tour"><div class="qui">🎯 ${esc(j.nom)}</div>
+    ${[0,1,2].map(k=>`<div class="fl ${p.flech[k]?'ok':''}">${p.flech[k]?p.flech[k].t:''}</div>`).join('')}</div>
+  ${msg ? `<div class="msg ${msg.c}">${msg.t}</div>` : `<div class="reste">Tour ${p.tourNo}</div>`}
+  <div class="mult">${[[1,'Simple'],[2,'Double'],[3,'Triple']].map(([m,t])=>`<button data-m="${m}" class="${mult===m?'on':''}">${t}</button>`).join('')}</div>
+  <div class="pave cri-pave">${[20,19,18,17,16,15].map(n=>`<button data-n="${n}">${n}</button>`).join('')}
+    <button class="spe" data-n="25">Bull 25</button><button class="spe" data-n="50">Bull 50</button>
+    <button class="spe z" data-n="0" style="grid-column:span 4">Raté / autre numéro</button></div>
+  <div class="actions"><button id="annule" ${pile.length?'':'disabled'}>↶ Annuler</button><button id="quitte">Arrêter la partie</button></div>`;
+  $('app').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{mult=mult===+b.dataset.m&&mult!==1?1:+b.dataset.m;jeuCricket(msg);});
+  $('app').querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>flecheCricket(+b.dataset.n));
+  $('annule').onclick=annuler;
+  $('quitte').onclick=()=>{ if(confirm('Arrêter cette partie ?')){S.partie=null;sauver();afficher();} };
+}
+
+function flecheCricket(n){
+  const p = S.partie; if (p.etat!=='jeu') return;
+  snap();
+  let m = mult; mult = 1;
+  let c = n, touches = m;
+  if (n === 25){ c = 25; touches = 1; } else if (n === 50){ c = 25; touches = 2; } else if (n === 0){ c = 0; touches = 0; }
+  const t = n===0 ? '0' : n===50 ? 'Bull' : n===25 ? '25' : (m===3?'T':m===2?'D':'')+n;
+  const j = p.joueurs[p.cur]; j.fl++;
+  let gain = 0;
+  if (c){
+    const avant = j.m[c]; j.m[c] = Math.min(3, avant + touches);
+    const enTrop = avant + touches - 3;
+    // Les touches en plus marquent seulement si un adversaire n'a pas fermé ce numéro.
+    if (enTrop > 0 && p.joueurs.some(x => x !== j && x.m[c] < 3)) gain = Math.min(enTrop, touches) * c;
+    j.pts += gain;
+  }
+  p.flech.push({t, gain});
+  const ferme = CN.every(x => j.m[x] >= 3);
+  if (ferme && p.joueurs.every(x => x === j || j.pts >= x.pts)){ j.tours.push(1); return gagne(p.cur); }
+  if (p.flech.length === 3){
+    j.tours.push(1); p.flech = [];
+    p.cur = (p.cur + 1) % p.joueurs.length; if (p.cur === 0) p.tourNo++;
+    sauver(); return jeuCricket();
+  }
+  sauver(); jeuCricket(gain ? {c:'zero', t:`+${gain} pts pour ${esc(j.nom)}`} : null);
 }
 
 afficher();

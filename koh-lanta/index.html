@@ -260,7 +260,7 @@ details.arch[open] summary{border-bottom:1px solid var(--line)}
 <div class="toast" id="toast" hidden><span id="toast-msg"></span><button id="toast-undo">Annuler</button></div>
 
 <script>
-const ROSTER = {jaune:[], vert:[], bleu:[], rouge:[]};
+const ROSTER = (() => { try { const r = JSON.parse(localStorage.getItem('kl-listes-v1')); if (r && Array.isArray(r.jaune)) return r; } catch(e){} return {jaune:[], vert:[], bleu:[], rouge:[]}; })();
 const GLABEL = {jaune:'Jaune', vert:'Vert', bleu:'Bleu', rouge:'Rouge'};
 const KEY = 'kl-arene-v1';
 const $ = id => document.getElementById(id);

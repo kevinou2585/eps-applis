@@ -58,6 +58,49 @@ li{margin:4px 0}
   <li>Pense au bouton 💾 Sauvegarde de temps en temps (fichier à garder dans Fichiers, Drive ou OneDrive). Il sert aussi à passer sur un nouveau téléphone.</li>
   <li>Les nouvelles versions arrivent toutes seules à l'ouverture, sans effacer tes données.</li>
 </ul>
+<div id="porte" hidden>
+  <form id="porte-f">
+    <img src="icones/eps-192.png" alt="">
+    <b>Applis EPS</b>
+    <span>Entre le code de l'école. Il n'est demandé qu'une fois sur ce téléphone.</span>
+    <input id="porte-i" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code de l'école">
+    <button type="submit">Entrer</button>
+    <span id="porte-m" class="err"></span>
+  </form>
+</div>
+<style>
+#porte{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:16px}
+#porte[hidden]{display:none}
+#porte form{display:grid;gap:12px;max-width:340px;width:100%;text-align:center;justify-items:center}
+#porte img{width:72px;height:72px;border-radius:18px}
+#porte b{font-size:22px}
+#porte span{color:var(--muted);font-size:15px}
+#porte input{width:100%;border:1px solid var(--line);border-radius:12px;padding:14px;font:inherit;font-size:17px;background:var(--surface);color:var(--fg);text-align:center}
+#porte button{width:100%;border:0;border-radius:12px;padding:14px;font:inherit;font-weight:700;background:var(--accent);color:#fff}
+#porte .err{color:#c92a2a;min-height:1.2em}
+</style>
+<script>
+// Code d'ecole : debloque les listes d'eleves (chiffrees dans eleves.chiffre.json), une fois par appareil.
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function ouvrirListes(code){
+  const C = await (await fetch('eleves.chiffre.json', {cache: 'no-cache'})).json();
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']);
+  const cle = await crypto.subtle.deriveKey({name: 'PBKDF2', salt: b64(C.s), iterations: 250000, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
+  const txt = new TextDecoder().decode(await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64(C.i)}, cle, b64(C.d)));
+  localStorage.setItem('kl-listes-v1', txt);
+  localStorage.setItem('eps-code', code);
+  localStorage.setItem('eps-listes-v', C.v);
+}
+let codeGarde = null; try { codeGarde = localStorage.getItem('eps-code'); } catch(e){}
+if (!codeGarde) document.getElementById('porte').hidden = false;
+else if (navigator.onLine) ouvrirListes(codeGarde).catch(() => {}); // listes mises a jour
+document.getElementById('porte-f').onsubmit = async e => {
+  e.preventDefault();
+  const m = document.getElementById('porte-m'); m.textContent = 'Vérification…';
+  try { await ouvrirListes(document.getElementById('porte-i').value.trim().toLowerCase()); document.getElementById('porte').hidden = true; m.textContent = ''; }
+  catch(err){ m.textContent = navigator.onLine ? 'Code incorrect, réessaie.' : 'Connecte-toi à internet pour la première ouverture.'; }
+};
+</script>
 <script>
 if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) document.body.classList.add('installe');
 if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.register('sw.js').catch(() => {});

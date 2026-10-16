@@ -2,7 +2,11 @@
 
 Usage : python3 outils/construire.py <Tournoi comptage.html> <Koh-Lanta appli collegues.html> <Carnet EPS.html>
 """
+import base64
+import json
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -67,6 +71,25 @@ def carnet(src):
     return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + PIED
 
 
+LISTES_JS = ("const ROSTER = (() => { try { const r = JSON.parse(localStorage.getItem('kl-listes-v1')); "
+             "if (r && Array.isArray(r.jaune)) return r; } catch(e){} return {jaune:[], vert:[], bleu:[], rouge:[]}; })();")
+
+
+def chiffrer(listes):
+    """AES-GCM avec une cle tiree du code d'ecole (PBKDF2). Le code est lu dans la variable KL_CODE."""
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    code = os.environ.get("KL_CODE", "").strip().lower()
+    if not code:
+        sys.exit("Donne le code d'ecole dans la variable KL_CODE")
+    sel, iv = os.urandom(16), os.urandom(12)
+    cle = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=sel, iterations=250000).derive(code.encode())
+    donnees = AESGCM(cle).encrypt(iv, json.dumps(listes, ensure_ascii=False).encode(), None)
+    b64 = lambda x: base64.b64encode(x).decode()
+    return {"v": b64(iv)[:8], "s": b64(sel), "i": b64(iv), "d": b64(donnees)}
+
+
 def koh_lanta(src):
     t = Path(src).read_text(encoding="utf-8")
     # On garde le style de base de l'enveloppe, mais on remplace le debut du document.
@@ -83,9 +106,14 @@ def koh_lanta(src):
     corps = corps.replace("💾 Sauvegarde · 🌐", "💾 Sauvegarde")
     # Les "preconnect" ouvrent une connexion internet meme hors ligne (alerte mode avion sur iPhone).
     corps = re.sub(r'<link rel="preconnect"[^>]*>\n?', "", corps)
-    # Version publique : pas de noms d'eleves, chacun ajoute les siens.
-    corps = re.sub(r"const ROSTER = \{.*?\n\};", "const ROSTER = {jaune:[], vert:[], bleu:[], rouge:[]};", corps, count=1, flags=re.S)
-    if "Abdelhakim" in corps:
+    # Version publique : les listes d'eleves ne sont pas dans la page. Elles sont chiffrees dans
+    # eleves.chiffre.json et l'accueil les dechiffre avec le code d'ecole (stockees dans kl-listes-v1).
+    m_r = re.search(r"const ROSTER = (\{.*?\n\});", corps, re.S)
+    sortie = subprocess.run(["node", "-e", "process.stdout.write(JSON.stringify(" + m_r.group(1) + "))"],
+                            capture_output=True, text=True, check=True).stdout
+    (RACINE / "eleves.chiffre.json").write_text(json.dumps(chiffrer(json.loads(sortie))), encoding="utf-8")
+    corps = corps[:m_r.start()] + LISTES_JS + corps[m_r.end():]
+    if "jaune:['" in corps:
         sys.exit("Koh-Lanta : noms d'eleves restants")
     if "copy-link" in corps or "claude.ai" in corps:
         sys.exit("Reste un lien claude.ai dans Koh-Lanta")

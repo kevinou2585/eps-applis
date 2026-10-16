@@ -134,7 +134,7 @@ def carnet(src):
     if "connecté à ton compte Claude" in corps:
         sys.exit("Carnet : texte Claude restant")
     retour = RETOUR.replace('</a>\n', '<span style="font-weight:500">· Version bêta, pas encore finie</span></a>\n')
-    return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + PIED
+    return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + DRIVE_JS + PIED
 
 
 def classeur(src):
@@ -164,6 +164,137 @@ def classeur(src):
     haut = '<a class="eps-retour eps-larg" href="../" style="position:fixed;top:0;right:0;z-index:40;background:var(--panel);border-radius:0 0 0 12px;padding:8px 14px">‹ Mes applis</a>\n'
     css = "<style>@media (max-width:860px){.eps-larg{display:none!important}}</style>\n"
     return tete("Classeur EPS", "classeur", "#14211d") + css + "</head>\n<body>\n" + haut + t + PIED
+
+# Carnet : sauvegarde automatique dans le Google Drive de l'enseignant (son propre script Apps Script).
+DRIVE_JS = r"""
+<style>
+#drv .etat{display:block;margin:6px 0 2px;font-weight:600}
+#drv .code{font:700 1.05rem ui-monospace,monospace;letter-spacing:.06em;background:var(--surface2);padding:2px 8px;border-radius:6px}
+#drv ol{margin:6px 0 4px;padding-left:20px;font-size:.88rem;color:var(--muted)}
+#drv ol li{margin:2px 0}
+</style>
+<script>
+(() => {
+  const CLE = 'carnet-drive';
+  const lire = () => { try { return JSON.parse(localStorage.getItem(CLE)) || {}; } catch(e){ return {}; } };
+  const ecrire = o => { try { localStorage.setItem(CLE, JSON.stringify(o)); } catch(e){} };
+  const heure = ts => { const d = new Date(ts), z = n => String(n).padStart(2, '0'); return `${d.getDate()}/${d.getMonth() + 1} à ${z(d.getHours())}h${z(d.getMinutes())}`; };
+  let minuteur = null, enCours = false;
+
+  function feuilles(){
+    const out = [];
+    S.classes.forEach(c => {
+      try {
+        const per = periodsOf(c).filter(p => { const x = compute(c, p); return x.lessons.length || x.evals.length; });
+        const sh = per.map(p => periodSheet(c, p)); if (per.length) sh.push(yearSheet(c));
+        sh.forEach(f => out.push({nom: f.name, lignes: f.rows.map(r => ({h: r.h, c: r.cells.map(x => x ? [x.v === '' ? null : x.v, x.s] : null)})), fusions: f.merges, largeurs: f.cols, figer: f.freeze}));
+      } catch(e){}
+    });
+    return out;
+  }
+  async function appel(o, corps){
+    const r = corps ? await fetch(o.url, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(corps)})
+                    : await fetch(o.url + (o.url.includes('?') ? '&' : '?') + 'cle=' + encodeURIComponent(o.cle));
+    return r.json();
+  }
+  async function envoyer(){
+    const o = lire(); if (!o.url || !o.cle || !o.attente) return;
+    if (enCours){ planifier(4000); return; }
+    if (!navigator.onLine){ etat(); return; }
+    enCours = true; const debut = Date.now();
+    try {
+      const rep = await appel(o, {cle: o.cle, copie: {app: 'carnet-eps', v: 1, at: Date.now(), state: S}, feuilles: feuilles()});
+      const n = lire();
+      if (rep.ok){ n.dernier = Date.now(); n.err = ''; if ((n.modif || 0) <= debut) n.attente = false; }
+      else n.err = rep.err === 'code' ? 'Le code ne correspond pas à ce tableau.' : 'Le tableau a refusé l\'envoi (' + rep.err + ').';
+      ecrire(n);
+    } catch(e){ const n = lire(); n.err = 'Pas de réponse de Google : nouvel essai tout seul.'; ecrire(n); }
+    enCours = false; etat();
+    if (lire().attente && !lire().err) planifier(4000);
+  }
+  function planifier(ms){ clearTimeout(minuteur); minuteur = setTimeout(envoyer, ms); }
+  // Chaque enregistrement du carnet sur le telephone declenche un envoi quelques secondes plus tard.
+  const avant = window.persistLocal;
+  window.persistLocal = function(){ avant.apply(this, arguments); const o = lire(); if (!o.url) return; o.attente = true; o.modif = Date.now(); ecrire(o); planifier(6000); etat(); };
+  window.addEventListener('online', () => planifier(1000));
+  document.addEventListener('visibilitychange', () => { if (lire().attente) planifier(document.visibilityState === 'hidden' ? 0 : 1500); });
+  if (lire().attente) planifier(3000);
+
+  function nouveauCode(){ const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let s = ''; for (let i = 0; i < 8; i++) s += a[Math.floor(Math.random() * a.length)]; return s.slice(0, 4) + '-' + s.slice(4); }
+
+  function etat(){
+    const el = document.getElementById('drv-etat'); if (!el) return;
+    const o = lire();
+    el.textContent = o.err ? '⚠️ ' + o.err : o.attente ? (navigator.onLine ? '⏳ Envoi en cours…' : '📶 Pas d\'internet : envoi dès que possible.') : o.dernier ? '✅ Sauvegardé dans ton Drive le ' + heure(o.dernier) : '✅ Lié à ton Drive.';
+  }
+  function restaurer(copie, box){
+    const d = new Date(copie.at), n = copie.state.classes.length;
+    box.innerHTML = `<div class="confirm"><b>Remplacer tout le carnet par la sauvegarde Drive du ${heure(copie.at)} ?</b><span class="small">${n} classe${n > 1 ? 's' : ''}. Ce qui est noté sur ce téléphone sera remplacé (les photos de certificats restent).</span><div class="row2"><button class="btn" type="button" id="drv-no">Annuler</button><button class="btn pri" type="button" id="drv-yes">Remplacer</button></div></div>`;
+    box.querySelector('#drv-no').onclick = () => box.innerHTML = '';
+    box.querySelector('#drv-yes').onclick = () => {
+      const now = Date.now();
+      S.classes.forEach(c => { if (!copie.state.classes.some(x => x.id === c.id)) S.deleted.push(c.id); });
+      S = {...S, ...copie.state, settings: {...DEF_SET, ...(copie.state.settings || {})}, deleted: S.deleted.filter(id => !copie.state.classes.some(x => x.id === id))};
+      S.classes.forEach(c => { c.ts = now; dirty.add(c.id); }); S.deleted.forEach(id => dirty.add(id));
+      save(); render(); toast('Carnet restauré depuis Drive');
+    };
+  }
+  function carte(){
+    const bk = document.getElementById('s-bk'); if (!bk || document.getElementById('drv')) return;
+    const d = document.createElement('div'); d.id = 'drv'; d.className = 'card sec'; d.style.paddingBlock = '14px';
+    bk.closest('.card').after(d); dessiner(d);
+  }
+  function dessiner(d){
+    const o = lire();
+    if (o.url){
+      d.innerHTML = `<h3>☁️ Google Drive</h3>
+        <p class="small muted" style="margin:0">Chaque changement est copié dans ton tableau Google, avec un onglet lisible par classe et par période.</p>
+        <span class="etat" id="drv-etat"></span>
+        <p class="small muted" style="margin:0">Code du carnet : <span class="code">${o.cle}</span> (il est aussi écrit dans l'onglet « Lisez-moi » du tableau).</p>
+        <div class="row2"><button class="btn" type="button" id="drv-go">Sauvegarder maintenant</button><button class="btn" type="button" id="drv-rs">Restaurer depuis Drive</button></div>
+        <button class="btn" type="button" id="drv-off" style="margin-top:4px">Délier ce téléphone</button>
+        <div id="drv-box"></div>`;
+      etat();
+      d.querySelector('#drv-go').onclick = () => { const n = lire(); n.attente = true; n.err = ''; n.modif = Date.now(); ecrire(n); etat(); envoyer(); };
+      d.querySelector('#drv-rs').onclick = async () => {
+        const box = d.querySelector('#drv-box'); box.innerHTML = '<span class="small muted">Lecture du Drive…</span>';
+        try { const r = await appel(lire()); if (r.ok) restaurer(r.copie, box); else box.innerHTML = `<div class="confirm"><b>${r.err === 'vide' ? 'Rien n\'est encore sauvegardé dans ce tableau.' : 'Le code ne correspond pas à ce tableau.'}</b></div>`; }
+        catch(e){ box.innerHTML = '<div class="confirm"><b>Google ne répond pas. Vérifie internet et réessaie.</b></div>'; }
+      };
+      d.querySelector('#drv-off').onclick = () => { const n = lire(); ecrire({cle: n.cle}); dessiner(d); toast('Ce téléphone n\'envoie plus rien au Drive'); };
+      return;
+    }
+    d.innerHTML = `<h3>☁️ Google Drive</h3>
+      <p class="small muted" style="margin:0">Une copie de ton carnet dans ton Google Drive, mise à jour toute seule à chaque changement. Tu peux la lire comme un Excel et tout récupérer si tu changes de téléphone.</p>
+      <ol><li>Prépare ton tableau Google avec le script (une seule fois, sur ordinateur).</li><li>Colle ici l'adresse du script (elle finit par /exec).</li><li>Garde le code : il protège ta sauvegarde.</li></ol>
+      <label class="f">Adresse du script<input class="inp" id="drv-url" placeholder="https://script.google.com/macros/s/…/exec" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+      <label class="f">Code du carnet (nouveau téléphone : mets le code de l'onglet « Lisez-moi »)<input class="inp" id="drv-cle" value="${o.cle || nouveauCode()}" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+      <button class="btn pri" type="button" id="drv-lier">Lier à mon Google Drive</button>
+      <div id="drv-box"></div>`;
+    d.querySelector('#drv-lier').onclick = async () => {
+      const url = d.querySelector('#drv-url').value.trim(), cle = d.querySelector('#drv-cle').value.trim().toLowerCase(), box = d.querySelector('#drv-box');
+      if (!/^https:\/\/script\.google(usercontent)?\.com\/.+/.test(url)){ box.innerHTML = '<div class="confirm"><b>Colle l\'adresse complète du script (elle commence par https://script.google.com).</b></div>'; return; }
+      if (cle.length < 6){ box.innerHTML = '<div class="confirm"><b>Le code doit faire au moins 6 caractères.</b></div>'; return; }
+      box.innerHTML = '<span class="small muted">Vérification…</span>';
+      let r; try { r = await appel({url, cle}); } catch(e){ box.innerHTML = '<div class="confirm"><b>Pas de réponse. Vérifie l\'adresse, le déploiement « Tout le monde » et internet.</b></div>'; return; }
+      if (!r.ok && r.err === 'code'){ box.innerHTML = '<div class="confirm"><b>Ce tableau est déjà lié avec un autre code. Mets le code de l\'onglet « Lisez-moi ».</b></div>'; return; }
+      if (!r.ok && r.err !== 'vide'){ box.innerHTML = '<div class="confirm"><b>Ce n\'est pas le script du Carnet.</b></div>'; return; }
+      ecrire({url, cle, attente: true, modif: Date.now()});
+      dessiner(d);
+      if (r.ok && r.copie){
+        const b2 = d.querySelector('#drv-box');
+        b2.innerHTML = `<div class="confirm"><b>Ce tableau contient déjà une sauvegarde du ${heure(r.copie.at)}.</b><span class="small">Tu veux la récupérer sur ce téléphone, ou la remplacer par ce qu'il y a ici ?</span><div class="row2"><button class="btn" type="button" id="drv-ici">Garder ce téléphone</button><button class="btn pri" type="button" id="drv-la">Récupérer le Drive</button></div></div>`;
+        const n = lire(); n.attente = false; ecrire(n); etat();
+        b2.querySelector('#drv-ici').onclick = () => { b2.innerHTML = ''; const n = lire(); n.attente = true; n.modif = Date.now(); ecrire(n); envoyer(); };
+        b2.querySelector('#drv-la').onclick = () => restaurer(r.copie, b2);
+      } else envoyer();
+    };
+  }
+  new MutationObserver(carte).observe(document.body, {childList: true, subtree: true});
+  carte();
+})();
+</script>
+"""
 
 
 LISTES_JS = ("const ROSTER = (() => { try { const r = JSON.parse(localStorage.getItem('kl-listes-v1')); "

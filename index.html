@@ -41,6 +41,11 @@ body:not(.installe) .app-seul{display:none}
 .accueil img{width:120px;height:120px;border-radius:28px;box-shadow:0 6px 20px rgba(0,0,0,.15)}
 .accueil h1{font-size:30px;margin-top:8px}
 .accueil p{color:var(--muted);margin:0;max-width:30em}
+.ios{margin-top:18px;background:var(--surface);border:2px solid var(--accent);border-radius:16px;padding:14px 16px}
+.ios[hidden]{display:none}
+.ios ol{margin:10px 0 0;padding-left:22px}
+.ios li{margin:8px 0}
+.ios .k{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:0 5px;background:var(--bg)}
 #installer{margin-top:10px;border:0;border-radius:14px;padding:15px 22px;font:inherit;font-weight:700;font-size:17px;background:var(--accent);color:#fff}
 </style>
 </head>
@@ -62,6 +67,14 @@ body:not(.installe) .app-seul{display:none}
   <h1>Appli EPS</h1>
   <p>Une seule appli à installer sur ton téléphone. Elle contient le Carnet EPS (bêta), Tournoi et Koh-Lanta Arène.</p>
   <button id="installer" type="button" hidden>Installer l'appli EPS</button>
+</div>
+<div id="ios" class="ios" hidden>
+  <b>📲 Sur iPhone, l'installation se fait par le menu Partager</b>
+  <ol>
+    <li><b>Safari</b> : touche <span class="k">⬆️</span> en bas de l'écran.<br><b>Brave</b> : touche <span class="k">⋯</span> puis <b>Partager</b>.<br><b>Chrome</b> : touche <span class="k">⬆️</span> dans la barre d'adresse.</li>
+    <li>Fais défiler et choisis <b>« Sur l'écran d'accueil »</b>.</li>
+    <li>Touche <b>Ajouter</b>. L'icône verte <b>EPS</b> apparaît sur ton écran d'accueil.</li>
+  </ol>
 </div>
 <h2>Comment l'installer</h2>
 <details><summary>iPhone (Safari, Chrome, Brave, Firefox, Edge…)</summary><ol><li>Touche le bouton Partager (carré avec une flèche). Dans Brave ou Chrome, il est parfois dans le menu ⋯.</li><li>Choisis « Sur l'écran d'accueil ».</li><li>Touche « Ajouter ».</li></ol></details>
@@ -102,6 +115,8 @@ body:not(.installe) .app-seul{display:none}
 let modeNav = false; try { modeNav = sessionStorage.getItem('eps-navigateur') === '1'; } catch(e){}
 if (matchMedia('(display-mode: standalone)').matches || navigator.standalone || modeNav) document.body.classList.add('installe');
 document.getElementById('sans-installer').onclick = e => { e.preventDefault(); try { sessionStorage.setItem('eps-navigateur', '1'); } catch(err){} location.reload(); };
+const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if (iOS) document.getElementById('ios').hidden = false;
 let invite = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); invite = e; document.getElementById('installer').hidden = false; });
 document.getElementById('installer').onclick = async () => { if (!invite) return; invite.prompt(); await invite.userChoice; invite = null; document.getElementById('installer').hidden = true; };

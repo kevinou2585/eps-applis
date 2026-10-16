@@ -473,7 +473,7 @@ render(); if(S) wake();
 </script>
 
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(() => {});
+if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.register('../sw.js').catch(() => {});
 </script>
 </body>
 </html>

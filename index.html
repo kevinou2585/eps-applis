@@ -46,7 +46,7 @@ li{margin:4px 0}
   <li>Les nouvelles versions arrivent toutes seules à l'ouverture, sans effacer tes données.</li>
 </ul>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>
 </html>

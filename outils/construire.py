@@ -28,7 +28,7 @@ def tete(titre, dossier, couleur):
 
 PIED = """
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(() => {});
+if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.register('../sw.js').catch(() => {});
 </script>
 </body>
 </html>
@@ -55,6 +55,8 @@ def koh_lanta(src):
     corps = re.sub(r'\s*<span class="empty" id="link-msg">.*?</span>', "", corps, count=1, flags=re.S)
     corps = re.sub(r"\$\('copy-link'\)\.onclick = .*?else fb\(\); \};\n", "", corps, count=1, flags=re.S)
     corps = corps.replace("💾 Sauvegarde · 🌐", "💾 Sauvegarde")
+    # Les "preconnect" ouvrent une connexion internet meme hors ligne (alerte mode avion sur iPhone).
+    corps = re.sub(r'<link rel="preconnect"[^>]*>\n?', "", corps)
     if "copy-link" in corps or "claude.ai" in corps:
         sys.exit("Reste un lien claude.ai dans Koh-Lanta")
     return (tete("Koh-Lanta Arène", "koh-lanta", "#e8590c") + style_base + "\n</head>\n<body>\n"

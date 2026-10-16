@@ -127,7 +127,8 @@ body:not(.sur-installer) .etape2,.sur-installer .etape1{display:none}
 </style>
 <script>
 // Dans le navigateur : seulement la page d'installation. Dans l'appli installee : les tuiles.
-let modeNav = false; try { modeNav = sessionStorage.getItem('eps-navigateur') === '1'; } catch(e){}
+// ?ordi dans l'adresse (favori sur l'ordinateur) : les tuiles directement, sans installer.
+let modeNav = /[?&]ordi\b/.test(location.search); try { modeNav = modeNav || sessionStorage.getItem('eps-navigateur') === '1'; } catch(e){}
 if (matchMedia('(display-mode: standalone)').matches || navigator.standalone || modeNav) document.body.classList.add('installe');
 // L'installation se fait depuis installer/ (copie de cette page) : sur iPhone, certains navigateurs
 // n'offrent « Sur l'écran d'accueil » que sur une sous-page. Une fois installee, l'appli revient ici.

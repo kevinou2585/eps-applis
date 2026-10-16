@@ -36,9 +36,16 @@ summary{font-weight:600;cursor:pointer}
 li{margin:4px 0}
 .note{color:var(--muted);font-size:14px;padding-left:20px}
 .installe .web-seul{display:none}
+body:not(.installe) .app-seul{display:none}
+.accueil{text-align:center;display:grid;justify-items:center;gap:8px;padding-top:12px}
+.accueil img{width:120px;height:120px;border-radius:28px;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.accueil h1{font-size:30px;margin-top:8px}
+.accueil p{color:var(--muted);margin:0;max-width:30em}
+#installer{margin-top:10px;border:0;border-radius:14px;padding:15px 22px;font:inherit;font-weight:700;font-size:17px;background:var(--accent);color:#fff}
 </style>
 </head>
 <body>
+<div class="app-seul">
 <div class="top"><img src="icones/eps-192.png" alt=""><div><h1>Applis EPS</h1><p class="sub">Gratuites, sans compte, même sans internet.</p></div></div>
 <div class="tuiles">
   <a class="tuile" href="carnet/"><img src="icones/carnet-192.png" alt=""><b>Carnet EPS <small class="beta">bêta</small></b><span>Présences, tenue, attitude, évaluations, bulletins</span></a>
@@ -47,14 +54,21 @@ li{margin:4px 0}
   <a class="tuile" id="tuile-classement" href="tableau/" hidden><span class="ph">🏆</span><b>Classement Koh-Lanta</b><span>Tous les résultats envoyés en fin de leçon</span></a>
   <a class="tuile" id="tuile-tableau" hidden target="_blank" rel="noopener"><span class="ph">📊</span><b>Tableau Koh-Lanta</b><span>Le classement général sur Google Drive</span></a>
 </div>
-
-<div class="web-seul">
-<h2>Installer l'appli EPS sur ton téléphone</h2>
-<p class="note" style="padding:0">Une seule appli à installer, elle contient toutes les autres.</p>
-<details><summary>iPhone (Safari, Chrome, Brave, Firefox, Edge…)</summary><ol><li>Touche le bouton Partager (carré avec une flèche). Dans Brave ou Chrome, il est parfois dans le menu ⋯.</li><li>Choisis « Sur l'écran d'accueil ».</li><li>Touche « Ajouter ».</li></ol></details>
-<details><summary>Android (Chrome, Brave, Samsung Internet, Edge, Firefox…)</summary><ol><li>Ouvre le menu du navigateur (⋮ ou ☰).</li><li>Choisis « Installer l'application » ou « Ajouter à l'écran d'accueil ».</li></ol></details>
 </div>
 
+<div class="web-seul">
+<div class="accueil">
+  <img src="icones/eps-512.png" alt="">
+  <h1>Appli EPS</h1>
+  <p>Une seule appli à installer sur ton téléphone. Elle contient le Carnet EPS (bêta), Tournoi et Koh-Lanta Arène.</p>
+  <button id="installer" type="button" hidden>Installer l'appli EPS</button>
+</div>
+<h2>Comment l'installer</h2>
+<details><summary>iPhone (Safari, Chrome, Brave, Firefox, Edge…)</summary><ol><li>Touche le bouton Partager (carré avec une flèche). Dans Brave ou Chrome, il est parfois dans le menu ⋯.</li><li>Choisis « Sur l'écran d'accueil ».</li><li>Touche « Ajouter ».</li></ol></details>
+<details><summary>Android (Chrome, Brave, Samsung Internet, Edge, Firefox…)</summary><ol><li>Ouvre le menu du navigateur (⋮ ou ☰).</li><li>Choisis « Installer l'application » ou « Ajouter à l'écran d'accueil ».</li></ol></details>
+<p class="note" style="padding:0;margin-top:16px">Ensuite, ferme ce navigateur et ouvre l'appli <b>EPS</b> depuis ton écran d'accueil. Le code de l'école te sera demandé une seule fois.</p>
+<p style="text-align:center;margin:18px 0 0"><a href="#" id="sans-installer" style="color:var(--muted);font-size:14px">Utiliser sans installer (ordinateur)</a></p>
+</div>
 <h2>Bon à savoir</h2>
 <ul class="note">
   <li>Tes données restent uniquement sur ton téléphone. Personne d'autre ne les voit.</li>
@@ -84,6 +98,15 @@ li{margin:4px 0}
 #porte .err{color:#c92a2a;min-height:1.2em}
 </style>
 <script>
+// Dans le navigateur : seulement la page d'installation. Dans l'appli installee : les tuiles.
+let modeNav = false; try { modeNav = sessionStorage.getItem('eps-navigateur') === '1'; } catch(e){}
+if (matchMedia('(display-mode: standalone)').matches || navigator.standalone || modeNav) document.body.classList.add('installe');
+document.getElementById('sans-installer').onclick = e => { e.preventDefault(); try { sessionStorage.setItem('eps-navigateur', '1'); } catch(err){} location.reload(); };
+let invite = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); invite = e; document.getElementById('installer').hidden = false; });
+document.getElementById('installer').onclick = async () => { if (!invite) return; invite.prompt(); await invite.userChoice; invite = null; document.getElementById('installer').hidden = true; };
+</script>
+<script>
 // Code d'ecole : debloque les listes d'eleves (chiffrees dans eleves.chiffre.json), une fois par appareil.
 function montrerTableau(){
   let u = null; try { u = localStorage.getItem('eps-tableau'); } catch(e){}
@@ -108,7 +131,8 @@ async function ouvrirListes(code){
   localStorage.setItem('eps-listes-v', C.v);
 }
 let codeGarde = null; try { codeGarde = localStorage.getItem('eps-code'); } catch(e){}
-if (!codeGarde) document.getElementById('porte').hidden = false;
+const installe = document.body.classList.contains('installe');
+if (!codeGarde && installe) document.getElementById('porte').hidden = false;
 else if (navigator.onLine) ouvrirListes(codeGarde).catch(() => {}); // listes mises a jour
 document.getElementById('porte-f').onsubmit = async e => {
   e.preventDefault();
@@ -118,7 +142,6 @@ document.getElementById('porte-f').onsubmit = async e => {
 };
 </script>
 <script>
-if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) document.body.classList.add('installe');
 if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>

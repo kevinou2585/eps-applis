@@ -1588,6 +1588,8 @@ connectCloud();
   window.addEventListener('online', () => planifier(1000));
   document.addEventListener('visibilitychange', () => { if (lire().attente) planifier(document.visibilityState === 'hidden' ? 0 : 1500); });
   if (lire().attente) planifier(3000);
+  // Reseau revenu sans que le telephone le signale (gare, train) : nouvel essai chaque minute tant que c'est en attente.
+  setInterval(() => { if (lire().attente && !enCours && !document.hidden) envoyer(); }, 60000);
 
   function nouveauCode(){ const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let s = ''; for (let i = 0; i < 8; i++) s += a[Math.floor(Math.random() * a.length)]; return s.slice(0, 4) + '-' + s.slice(4); }
 

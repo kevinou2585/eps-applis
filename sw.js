@@ -1,5 +1,5 @@
 // Fait marcher les applis sans internet. Version a changer a chaque mise en ligne pour rafraichir le cache.
-const VERSION = 'eps-v34';
+const VERSION = 'eps-v35';
 const FICHIERS = [
   './', './index.html', './manifest.webmanifest', './eleves.chiffre.json',
   './carnet/', './tournoi/', './koh-lanta/', './tableau/', './le-fist/', './classeur/', './installer/',
@@ -34,17 +34,27 @@ self.addEventListener('fetch', e => {
   }
   const police = url.host === 'fonts.googleapis.com' || url.host === 'fonts.gstatic.com';
   if (police) {
-    e.respondWith(caches.match(req).then(r => r || fetch(req).then(rep => {
+    // Pas encore gardee et reseau trop lent : on continue sans la police plutot que bloquer l'affichage.
+    const vide = () => new Response('', {headers: {'Content-Type': url.host === 'fonts.googleapis.com' ? 'text/css' : 'font/woff2'}});
+    e.respondWith(caches.match(req).then(r => r || Promise.race([fetch(req).then(rep => {
       const copie = rep.clone(); caches.open(VERSION).then(c => c.put(req, copie)); return rep;
-    })));
+    }).catch(vide), new Promise(ok => setTimeout(() => ok(vide()), 2500))])));
     return;
   }
   if (url.origin !== location.origin) return;
   // no-cache : on redemande toujours au site s'il y a du neuf (sinon le telephone garde 10 min l'ancienne page).
-  const reseau = req.mode === 'navigate' ? fetch(req.url, {cache: 'no-cache', credentials: 'same-origin'}) : fetch(req, {cache: 'no-cache'});
-  e.respondWith(reseau.then(rep => {
-    if (rep.redirected && req.mode === 'navigate') return Response.redirect(rep.url, 302);
-    if (rep.ok) { const copie = rep.clone(); caches.open(VERSION).then(c => c.put(req, copie)); }
-    return rep;
-  }).catch(() => caches.match(req, {ignoreSearch: true})));
+  // Reseau faible (gare, train) : si internet ne repond pas en 2,5 s, on ouvre la copie gardee ;
+  // la nouvelle version, si elle arrive ensuite, est gardee pour la prochaine ouverture.
+  const reseau = (req.mode === 'navigate' ? fetch(req.url, {cache: 'no-cache', credentials: 'same-origin'}) : fetch(req, {cache: 'no-cache'}))
+    .then(rep => {
+      if (rep.ok && !rep.redirected) { const copie = rep.clone(); caches.open(VERSION).then(c => c.put(req, copie)); }
+      return rep;
+    });
+  e.respondWith(caches.match(req, {ignoreSearch: true}).then(copie => {
+    const viaReseau = reseau.then(rep => (rep.redirected && req.mode === 'navigate') ? Response.redirect(rep.url, 302) : rep);
+    if (!copie) return viaReseau;
+    const delai = new Promise(ok => setTimeout(() => ok(copie), 2500));
+    return Promise.race([viaReseau.catch(() => copie), delai]);
+  }));
+  e.waitUntil(reseau.catch(() => {}));
 });

@@ -583,7 +583,7 @@ function renderRecap(){
     sec('🚫 Absents', '', d.abs.map(x => li(esc(x.n), ''))) +
     ($('sync')?.dataset.st === 'ok' ? '' : `<div class="savewarn"><b>💾 Pense à sauvegarder !</b><span class="empty">Sur ce téléphone, la séance n'est pas enregistrée en ligne. Télécharge une sauvegarde avant de fermer l'appli.</span><button class="btn btn-main" id="warn-save">💾 Sauvegarde</button></div>`) +
     `<div class="actions">
-       <button class="btn btn-main" id="copy">Copier le récap</button>
+       <button class="btn btn-main" id="copy" hidden>Copier le récap</button>
        <textarea id="recap-text" readonly hidden aria-label="Texte du récap"></textarea>
        ${confirmReset
          ? `<div class="confirm"><b>Remettre tout le groupe ${G} à 0 ?</b><span class="empty">Points, capitaines, absents, fair-play et cartons seront effacés pour ce groupe.</span><button class="btn btn-danger" id="reset-yes">Oui, nouvelle leçon</button><button class="btn btn-ghost" id="reset-no">Non, garder</button></div>`

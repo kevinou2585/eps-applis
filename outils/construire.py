@@ -162,6 +162,10 @@ def koh_lanta(src):
     corps = re.sub(r'\s*<span class="empty" id="link-msg">.*?</span>', "", corps, count=1, flags=re.S)
     corps = re.sub(r"\$\('copy-link'\)\.onclick = .*?else fb\(\); \};\n", "", corps, count=1, flags=re.S)
     corps = corps.replace("💾 Sauvegarde · 🌐", "💾 Sauvegarde")
+    # Kevin : plus besoin de "Copier le recap" depuis l'envoi au classement general (cache, le code de l'appli reste).
+    if '<button class="btn btn-main" id="copy">' not in corps:
+        sys.exit("Koh-Lanta : bouton Copier le recap introuvable")
+    corps = corps.replace('<button class="btn btn-main" id="copy">', '<button class="btn btn-main" id="copy" hidden>', 1)
     # Les "preconnect" ouvrent une connexion internet meme hors ligne (alerte mode avion sur iPhone).
     corps = re.sub(r'<link rel="preconnect"[^>]*>\n?', "", corps)
     # Version publique : les listes d'eleves ne sont pas dans la page. Elles sont chiffrees dans

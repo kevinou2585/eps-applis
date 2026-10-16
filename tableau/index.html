@@ -56,6 +56,35 @@ tbody tr+tr td{border-top:1px solid var(--line)}td.n{text-align:center;font-weig
 .stats b{display:block;font-size:20px}.stats span{color:var(--muted);font-size:12px}
 .rouge{border-color:var(--red)!important}
 .bareme{color:var(--muted);font-size:13px;text-align:center;margin-top:18px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:18px 0 4px}
+.actions button{border:0;border-radius:12px;padding:13px 8px;font:inherit;font-weight:700;background:var(--ink);color:var(--bg)}
+.actions button+button{background:var(--surface);color:var(--ink);border:2px solid var(--line)}
+#impression{display:none}
+@page{size:A4;margin:12mm}
+@media print{
+  body{max-width:none;padding:0;background:#fff;color:#000}
+  body>*:not(#impression){display:none!important}
+  #impression{display:block;color:#000;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+  .pg{page-break-after:always;break-after:page;height:270mm;display:flex;flex-direction:column;gap:5mm}
+  .pg:last-child{page-break-after:auto;break-after:auto}
+  .bandeau{background:#000;color:#fff;text-align:center;padding:4mm;border-radius:3mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .bandeau b{display:block;font-size:26pt}.bandeau span{font-size:12pt}
+  .ip-titre{background:#333;color:#fff;font-weight:800;font-size:15pt;padding:2.5mm 4mm;border-radius:2mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ip-pod{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4mm;align-items:end}
+  .ip-pod div{border:0.6mm solid #000;border-radius:3mm;text-align:center;padding:3mm;display:grid;gap:1mm}
+  .ip-pod .m{font-size:28pt}.ip-pod b{font-size:15pt}.ip-pod small{font-size:11pt}
+  .ip-pod .p1{padding-top:12mm;background:#ddd;-webkit-print-color-adjust:exact;print-color-adjust:exact}.ip-pod .p2{padding-top:7mm}
+  .ip-t{width:100%;border-collapse:collapse;font-size:13pt;border:0.4mm solid #000}
+  .ip-t th{background:#000;color:#fff;text-align:left;padding:2mm 3mm;font-size:10pt;text-transform:uppercase;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ip-t td{padding:2.2mm 3mm;border-top:0.3mm solid #999}.ip-t td.n{text-align:center;font-weight:800}
+  .ip-t tr:nth-child(even) td{background:#eee;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ip-gr{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
+  .ip-gr div{border:0.5mm solid #000;border-radius:2mm;padding:3mm;font-size:12pt;display:grid;gap:1mm}
+  .ip-gr b{font-size:13pt}.ip-gr p{margin:0;display:flex;justify-content:space-between}
+  .ip-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;text-align:center}
+  .ip-stats div{border:0.5mm solid #000;border-radius:2mm;padding:3mm}.ip-stats b{display:block;font-size:18pt}
+  .ip-bar{text-align:center;font-size:10pt;margin-top:auto}
+}
 </style>
 </head>
 <body>
@@ -65,6 +94,7 @@ tbody tr+tr td{border-top:1px solid var(--line)}td.n{text-align:center;font-weig
   <div class="onglets" id="onglets"></div>
 </header>
 <main id="vue"></main>
+<div id="impression"></div>
 <script>
 const GR = [['top','Fiche','tout'],['Jaune','Jaune','jaune'],['Vert','Vert','vert'],['Bleu','Bleu','bleu'],['Rouge','Rouge','rouge']];
 const CLE = {Jaune:'jaune', Vert:'vert', Bleu:'bleu', Rouge:'rouge'};
@@ -123,13 +153,47 @@ function fiche(T){
   h += `<p class="bareme">Barème : 1er = 5 pts · 2e = 3 pts · 3e = 1 pt<br>Fair-play / meilleur coéquipier = +3 pts · Carton rouge = −3 pts</p>`;
   return h;
 }
+// Affiche noir et blanc, 2 pages A4, comme les onglets « Affiche N&B » de l'Excel.
+function imprimer(T){
+  const auj = new Date().toLocaleDateString('fr-BE');
+  const tri = xs => xs.sort((a, b) => b.p - a.p || a.n.localeCompare(b.n, 'fr'));
+  const marques = tri(T.filter(x => x.p > 0)), top = rangs(marques).slice(0, 10);
+  const pod = [top[1], top[0], top[2]].map((x, i) => `<div class="${['p2','p1','p3'][i]}"><span class="m">${['🥈','🥇','🥉'][i]}</span><b>${x ? esc(x.n) : '—'}</b><small>${x ? esc(x.g) + ' · ' + x.p + ' pts' : ''}</small></div>`).join('');
+  const t10 = `<table class="ip-t"><thead><tr><th>Rang</th><th>Élève</th><th>Groupe</th><th>Points</th></tr></thead><tbody>${top.map(x => `<tr><td class="n">${x.rg}</td><td>${esc(x.n)}</td><td>${esc(x.g)}</td><td class="n">${x.p}</td></tr>`).join('') || '<tr><td colspan="4">Personne n\'a encore de points.</td></tr>'}</tbody></table>`;
+  const grp = Object.keys(CLE).map(g => { const tous = T.filter(x => x.g === g), m = rangs(tri(tous.filter(x => x.p > 0))).slice(0, 3);
+    return `<div><b>GROUPE ${g.toUpperCase()}</b><small>${tous.filter(x => x.p > 0).length} / ${tous.length} ont marqué</small>${m.map(x => `<p><span>${MED[x.rg - 1] || x.rg + '.'} ${esc(x.n)}</span><span>${x.p} pts</span></p>`).join('') || '<p>—</p>'}</div>`; }).join('');
+  const fp = T.filter(x => x.f > 0).sort((a, b) => b.f - a.f || a.n.localeCompare(b.n, 'fr')), fpr = fp.map(x => ({...x, rg: fp.filter(y => y.f > x.f).length + 1})).slice(0, 3);
+  const mx = Math.max(0, ...T.map(x => x.r)), rc = T.filter(x => mx > 0 && x.r === mx).sort((a, b) => a.n.localeCompare(b.n, 'fr'));
+  const total = T.reduce((t, x) => t + x.p, 0);
+  document.getElementById('impression').innerHTML =
+    `<section class="pg"><div class="bandeau"><b>🏝️ KOH-LANTA EPS</b><span>Classement au ${auj}</span></div><div class="ip-pod">${pod}</div><div class="ip-titre">🏆 TOP 10 GÉNÉRAL</div>${t10}</section>` +
+    `<section class="pg"><div class="ip-titre">🔥 LE TOP 3 DE CHAQUE GROUPE</div><div class="ip-gr">${grp}</div>` +
+    `<div class="ip-titre">🤝 TOP 3 FAIR-PLAY & MEILLEUR COÉQUIPIER</div><table class="ip-t"><thead><tr><th>Rang</th><th>Élève</th><th>Groupe</th><th>Distinctions</th></tr></thead><tbody>${fpr.map(x => `<tr><td class="n">${x.rg}</td><td>${esc(x.n)}</td><td>${esc(x.g)}</td><td class="n">${x.f}</td></tr>`).join('') || '<tr><td colspan="4">Pas encore de distinction fair-play : à vous de jouer !</td></tr>'}</tbody></table>` +
+    `<div class="ip-stats"><div><b>${total}</b>points distribués</div><div><b>${marques.length} / ${T.length}</b>élèves ont déjà marqué</div><div><b>${marques.length < 10 ? 0 : top[top.length - 1].p} pts</b>pour entrer dans le Top 10</div></div>` +
+    `<div class="ip-titre">⛔ CARTON ROUGE : IL FAUT SE RESSAISIR !</div><table class="ip-t"><thead><tr><th>Groupe</th><th>Élève</th><th>Cartons rouges</th></tr></thead><tbody>${rc.slice(0, 3).map(x => `<tr><td>${esc(x.g)}</td><td>${esc(x.n)}</td><td class="n">${x.r}</td></tr>`).join('') || '<tr><td colspan="3">Aucun carton rouge. Bravo !</td></tr>'}${rc.length > 3 ? `<tr><td colspan="3">… et ${rc.length - 3} autre${rc.length - 3 > 1 ? 's' : ''}</td></tr>` : ''}</tbody></table>` +
+    `<p class="ip-bar">Barème : 1er = 5 pts · 2e = 3 pts · 3e = 1 pt · Fair-play / meilleur coéquipier = +3 pts · Carton rouge = −3 pts</p></section>`;
+  setTimeout(() => window.print(), 50);
+}
+// Tableau général en fichier pour Excel (une ligne par élève).
+function sauver(T){
+  const lignes = [['Groupe','Élève','Points','1er','2e','3e','Fair-play','Cartons rouges']];
+  Object.keys(CLE).forEach(g => T.filter(x => x.g === g).sort((a, b) => b.p - a.p || a.n.localeCompare(b.n, 'fr')).forEach(x => lignes.push([g, x.n, x.p, x.o, x.a, x.b, x.f, x.r])));
+  const csv = '﻿' + lignes.map(l => l.map(v => /[;"\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : v).join(';')).join('\r\n');
+  const d = new Date(), nom = `Classement Koh-Lanta ${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}.csv`;
+  const f = new File([csv], nom, {type: 'text/csv'});
+  if (navigator.canShare && navigator.canShare({files: [f]})) { navigator.share({files: [f], title: nom}).catch(() => {}); return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = nom; document.body.appendChild(a); a.click(); a.remove();
+}
 function rendre(){
   document.getElementById('onglets').innerHTML = GR.map(([id, l, c]) => `<button type="button" data-o="${id}" style="--c:var(--${c});--ci:var(--${c}-ink)" aria-pressed="${onglet === id}">${l}</button>`).join('');
   document.querySelectorAll('#onglets button').forEach(b => b.onclick = () => { onglet = b.dataset.o; try { localStorage.setItem('kl-tableau-onglet', onglet); } catch(e){} rendre(); window.scrollTo(0, 0); });
   const v = document.getElementById('vue');
   if (!D){ v.innerHTML = '<p class="vide">Pas encore de résultats. Ils arrivent quand un prof touche « 📤 Envoyer au tableau général » en fin de leçon Koh-Lanta.</p>'; return; }
   const T = totaux();
-  if (onglet === 'top'){ v.innerHTML = fiche(T); return; }
+  if (onglet === 'top'){ v.innerHTML = fiche(T) + `<div class="actions"><button type="button" id="imprimer">🖨️ Imprimer l'affiche</button><button type="button" id="sauver">💾 Sauvegarder</button></div><p class="note" style="text-align:center">Affiche noir et blanc sur 2 pages A4. Pour un PDF, choisis « Enregistrer en PDF » dans la fenêtre d'impression.</p>`;
+    document.getElementById('imprimer').onclick = () => imprimer(T);
+    document.getElementById('sauver').onclick = () => sauver(T);
+    return; }
   const tous = T.filter(x => x.g === onglet);
   v.innerHTML = `<p class="note" style="margin:4px 0 10px">${tous.filter(x => x.p > 0).length} / ${tous.length} ont marqué · 🥇🥈🥉 places · 🤝 fair-play · 🟥 cartons</p>` + (liste(tous, false) || '<p class="vide">Aucun élève.</p>');
   const lec = {}; D.lignes.filter(l => l.groupe === onglet).forEach(l => { lec[l.date] = (lec[l.date] || 0) + 1; });

@@ -1,5 +1,5 @@
 // Fait marcher les applis sans internet. Version a changer a chaque mise en ligne pour rafraichir le cache.
-const VERSION = 'eps-v19';
+const VERSION = 'eps-v20';
 const FICHIERS = [
   './', './index.html', './manifest.webmanifest', './eleves.chiffre.json',
   './carnet/', './tournoi/', './koh-lanta/', './tableau/', './le-fist/', './installer/',
@@ -39,7 +39,9 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin !== location.origin) return;
-  e.respondWith(fetch(req).then(rep => {
+  // no-cache : on redemande toujours au site s'il y a du neuf (sinon le telephone garde 10 min l'ancienne page).
+  const reseau = req.mode === 'navigate' ? fetch(req.url, {cache: 'no-cache', credentials: 'same-origin'}) : fetch(req, {cache: 'no-cache'});
+  e.respondWith(reseau.then(rep => {
     if (rep.ok) { const copie = rep.clone(); caches.open(VERSION).then(c => c.put(req, copie)); }
     return rep;
   }).catch(() => caches.match(req, {ignoreSearch: true})));

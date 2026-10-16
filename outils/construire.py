@@ -141,8 +141,9 @@ def carnet(src):
         "function decalAnnee(){ try { const a = parseInt(localStorage.getItem('carnet-eps-annee'), 10); return a ? a - 2026 : 0; } catch(e){ return 0; } }\n"
         "function defaultPeriods(){", 1)
     corps = certificats(corps)
+    corps = commentaires(corps)
     retour = RETOUR.replace('</a>\n', '<span style="font-weight:500">· Version bêta, pas encore finie</span></a>\n')
-    return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + ANNEES_JS + DRIVE_JS + PIED
+    return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + COMMENTAIRES_JS + ANNEES_JS + DRIVE_JS + PIED
 
 
 def certificats(corps):
@@ -189,6 +190,153 @@ def certificats(corps):
         """save(c.id); openPupil(c, p.id); toast(`🩺 Dispensé jusqu'au ${fmtD(to)}${zone === 'tout' ? '' : ' (' + zoneTxt(x) + ')'}`);""")
     scan = (RACINE / "outils/scan-certificat.js").read_text(encoding="utf-8")
     return corps.replace("</body>", "", 0) + "\n<script>\n" + scan + "</script>\n"
+
+
+def commentaires(corps):
+    """Commentaires de bulletin : bouton dans l'onglet Bulletin de la classe et reglage marche/arret."""
+    def rep(a, b):
+        nonlocal corps
+        if corps.count(a) != 1:
+            sys.exit("Carnet commentaires : motif introuvable : " + a[:60])
+        corps = corps.replace(a, b)
+    rep("""<button class="btn block" type="button" id="r-csv">Bulletin Excel (prêt à imprimer)</button>""",
+        """<button class="btn pri block" type="button" id="r-com">📝 Commentaires bulletin</button>
+    <button class="btn block" type="button" id="r-csv">Bulletin Excel (prêt à imprimer)</button>""")
+    rep("""  $('r-csv').onclick = () => exportXlsx([[c, vp]]""",
+        """  $('r-com').onclick = () => openComments(c, vp);
+  $('r-csv').onclick = () => exportXlsx([[c, vp]]""")
+    rep(""">À la piscine, « ne participe pas » retire aussi un point de tenue</label>
+    </div>""",
+        """>À la piscine, « ne participe pas » retire aussi un point de tenue</label>
+    </div>
+    <div class="card sec" style="padding-block:14px">
+      <h3>Bulletin</h3>
+      <label class="toggle"><input type="checkbox" id="s-com" ${st.comAuto !== false ? 'checked' : ''}>📝 Commentaire de bulletin automatique</label>
+      <p class="small muted" style="margin:0">Activé : chaque élève reçoit un commentaire tout prêt (note, évaluations, oublis, attitude) que tu peux modifier. Désactivé : les cases restent vides et tu écris toi-même, le bouton ✨ Proposer un texte reste là au besoin.</p>
+    </div>""")
+    rep("""  $('s-np').onchange = e => { st.npCounts = e.target.checked; save(); };""",
+        """  $('s-np').onchange = e => { st.npCounts = e.target.checked; save(); };
+  $('s-com').onchange = e => { st.comAuto = e.target.checked; save(); };""")
+    return corps
+
+
+# Carnet : commentaire de bulletin par eleve (en « tu »), genere a partir des points, evals et oublis.
+# Les textes retouches sont gardes dans la classe : c.com[periodId | 'year'][pupilId] (synchro avec le reste).
+COMMENTAIRES_JS = r"""
+<style>
+.com-it{display:flex; flex-direction:column; gap:8px}
+.com-it .hd{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.com-it .hd b{flex:1; min-width:0}
+.com-it textarea{font:15px/1.4 var(--body); min-height:96px; resize:vertical; overflow:hidden}
+.com-it .row2 > .btn{flex:1 1 120px; min-height:40px; padding:8px 12px}
+.tag.com-man{background:var(--accent-soft); color:var(--accent)}
+.tag.com-man[hidden]{display:none}
+.tag.com-low{background:var(--bad-soft); color:var(--bad)}
+</style>
+<script>
+/* Seuils par categorie : 1 = rien, 2 = attention, 3 = c'est trop, 4+ = inacceptable (exclusion : des la 1re). */
+function comCounts(c, X, p){
+  const o = {abs: 0, gym: 0, pool: 0, np: 0, d: 0, x: 0};
+  X.lessons.forEach(l => {
+    const a = effA(p, l); if (a === 'A'){ o.abs++; return; }
+    const m = l.m[p.id] || {};
+    if (m.k){ if (l.type === 'piscine') o.pool++; else o.gym++; }
+    if (m.np) o.np++;
+    if (m.x) o.x++; else if (m.d) o.d++;
+  });
+  return o;
+}
+function comText(c, vp, X, p){
+  const r = X.res[p.id], seP = +S.settings.se, n0 = v => fr(v, 0), year = vp === 'year';
+  const out = [], name = year ? 'Année' : vp.name;
+  if (r.total != null) out.push(`${name} : ${n0(r.total)} % (savoir-être ${n0(r.se)}/${seP}, savoir-faire ${n0(r.sf)}/${100 - seP}).`);
+  else if (r.se != null) out.push(`${name} : savoir-être ${n0(r.se)}/${seP}.`);
+  const ev = (r.evals.length ? r.evals : X.evals.map(e => ({e, s: e.s[p.id]}))).filter(o => typeof o.s === 'number');
+  if (ev.length) out.push('Évaluations : ' + ev.map(o => `${o.e.name.trim() || 'évaluation'} ${fr(o.s, 2)}/${fr(+o.e.max, 2)}`).join(', ') + '.');
+  const k = comCounts(c, X, p);
+  if (k.abs) out.push(`${k.abs} absence${k.abs > 1 ? 's' : ''}.`);
+  const pl = (n, s, pp) => n + ' ' + (n > 1 ? pp : s);
+  const cats = [
+    ['gym', k.gym, pl(k.gym, 'oubli de tenue en salle', 'oublis de tenue en salle'),
+      ['attention, pense à ta tenue à chaque cours', 'c\'est trop, ça te coûte des points de tenue', 'c\'est inacceptable, il faut te ressaisir et venir en tenue']],
+    ['pool', k.pool, pl(k.pool, 'oubli d\'affaires de piscine', 'oublis d\'affaires de piscine'),
+      ['attention, prépare ton sac de piscine la veille', 'c\'est trop, ça te coûte des points', 'c\'est inacceptable, il faut te ressaisir']],
+    ['np', k.np, pl(k.np, 'cours de piscine sans nager', 'cours de piscine sans nager'),
+      ['attention, il faudra te mettre à l\'eau', 'c\'est trop, ça te coûte des points', 'c\'est inacceptable, il faut te ressaisir et participer']],
+    ['d', k.d, pl(k.d, 'perturbation du cours', 'perturbations du cours'),
+      ['attention, il faudra améliorer ton attitude', 'c\'est trop, ça te coûte des points d\'attitude', 'c\'est inacceptable, il faut te ressaisir']],
+    ['x', k.x, pl(k.x, 'exclusion du cours', 'exclusions du cours'),
+      ['attention, ton comportement doit changer', 'c\'est trop, ça te coûte des points', 'c\'est inacceptable, il faut te ressaisir']],
+  ].map(([key, n, txt, tails]) => ({key, n, txt, tails, lvl: Math.min(3, Math.max(0, (key === 'x' ? n + 1 : n) - 1))}));
+  const gen = ['attention, il faudra t\'améliorer', 'c\'est trop, ça te coûte des points', 'c\'est inacceptable, il faut te ressaisir'];
+  let worst = 0;
+  [3, 2, 1].forEach(L => {
+    const g = cats.filter(x => x.lvl === L); if (!g.length) return;
+    worst = Math.max(worst, L);
+    const list = g.map(x => x.txt), joined = list.length > 1 ? list.slice(0, -1).join(', ') + ' et ' + list[list.length - 1] : list[0];
+    const s = joined + ' : ' + (g.length === 1 ? g[0].tails[L - 1] : gen[L - 1]) + '.';
+    out.push(s[0].toUpperCase() + s.slice(1));
+  });
+  const any = k.gym + k.pool + k.np + k.d + k.x;
+  if (!worst) out.push(any ? 'Bonne attitude dans l\'ensemble.' : 'Toujours en ordre, très bonne attitude.');
+  const pct = r.total != null ? r.total : r.se != null && seP ? r.se / seP * 100 : null;
+  if (pct != null){
+    if (pct < 50) out.push(year ? 'Tu es actuellement en échec sur l\'année, il faut te ressaisir.'
+      : worst === 3 ? 'Tu es actuellement en échec : redresse la barre pour la prochaine période.'
+      : 'Tu es actuellement en échec : il faut te ressaisir pour la prochaine période.');
+    else if (pct >= 80) out.push('Excellent travail, continue comme ça !');
+    else out.push('Bon travail, continue tes efforts.');
+  }
+  return out.join(' ');
+}
+function comCopy(txt, ok){
+  const done = () => toast(ok || 'Copié');
+  const old = () => { const t = document.createElement('textarea'); t.value = txt; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(t); t.select(); let r = false; try { r = document.execCommand('copy'); } catch(e){} t.remove(); r ? done() : toast('Copie impossible, sélectionne le texte à la main'); };
+  try { if (navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(txt).then(done, old); return; } } catch(e){}
+  old();
+}
+function openComments(c, vp){
+  const X = vp === 'year' ? computeYear(c) : compute(c, vp), key = vp === 'year' ? 'year' : vp.id;
+  const auto = S.settings.comAuto !== false;
+  const store = () => { if (!c.com) c.com = {}; if (!c.com[key]) c.com[key] = {}; return c.com[key]; };
+  const man = pid => (c.com && c.com[key] && typeof c.com[key][pid] === 'string') ? c.com[key][pid] : null;
+  const ps = pupilsOf(c), gen = {};
+  ps.forEach(p => gen[p.id] = comText(c, vp, X, p));
+  const cur = pid => { const v = man(pid); return v != null ? v : auto ? gen[pid] : ''; };
+  const pct = p => { const r = X.res[p.id]; return r.total; };
+  openSheet(`Commentaires · ${vp === 'year' ? 'Année' : vp.name}`, `
+    <p class="small muted" style="margin:0">${auto ? 'Texte écrit tout seul d\'après les points, les évaluations et les oublis. Tu peux le modifier : ta version est gardée.' : 'Commentaire automatique désactivé (Réglages) : écris ton texte, ou touche ✨ Proposer un texte.'}</p>
+    <button class="btn pri block" type="button" id="com-all">📋 Tout copier (${esc(c.name)})</button>
+    ${ps.map(p => { const t = pct(p);
+      return `<div class="card com-it" data-cpid="${p.id}"><div class="hd"><b>${esc(p.n)}</b>${t != null ? `<span class="tag ${t < 50 ? 'com-low' : ''}" style="${t < 50 ? '' : 'background:var(--surface2)'}">${t < 50 ? '⚠ ' : ''}${fr(t, 0)} %</span>` : ''}<span class="tag com-man" data-man ${man(p.id) != null ? '' : 'hidden'}>✎ modifié</span></div>
+        <textarea class="inp" rows="4" aria-label="Commentaire de ${esc(p.n)}" placeholder="${auto ? '' : 'Écris ton commentaire…'}"></textarea>
+        <div class="row2"><button class="btn" type="button" data-copy>Copier</button><button class="btn" type="button" data-reset>${auto ? '↺ Texte automatique' : '✨ Proposer un texte'}</button></div></div>`; }).join('')}`);
+  const sb = document.querySelector('.sheet .sb');
+  sb.querySelectorAll('[data-cpid]').forEach(box => {
+    const pid = box.dataset.cpid, ta = box.querySelector('textarea'), tag = box.querySelector('[data-man]'), rs = box.querySelector('[data-reset]');
+    const sync = () => { const m = man(pid) != null; tag.hidden = !m; if (auto) rs.disabled = !m; };
+    const fit = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
+    ta.value = cur(pid); sync(); requestAnimationFrame(fit);
+    let tm = null;
+    const keep = () => { clearTimeout(tm); tm = null; const v = ta.value, st = store();
+      if (auto ? v === gen[pid] : v.trim() === '') delete st[pid]; else st[pid] = v;
+      if (!Object.keys(st).length) delete c.com[key];
+      save(c.id); sync(); };
+    ta.oninput = () => { fit(); clearTimeout(tm); tm = setTimeout(keep, 400); };
+    ta.onblur = () => { if (tm) keep(); };
+    box.querySelector('[data-copy]').onclick = () => { if (tm) keep(); const v = ta.value.trim(); if (!v){ toast('Commentaire vide'); return; } comCopy(v, 'Commentaire copié'); };
+    rs.onclick = () => { clearTimeout(tm); tm = null; ta.value = gen[pid]; fit(); keep(); if (!auto) toast('Texte proposé, tu peux le modifier'); };
+  });
+  $('com-all').onclick = () => {
+    sb.querySelectorAll('[data-cpid]').forEach(box => box.querySelector('textarea').blur());
+    const lines = ps.map(p => [p.n, cur(p.id).replace(/\s*\n\s*/g, ' ').trim()]).filter(x => x[1]).map(([n, t]) => `${n} : ${t}`);
+    if (!lines.length){ toast('Aucun commentaire à copier'); return; }
+    comCopy(lines.join('\n'), `${lines.length} commentaire${lines.length > 1 ? 's' : ''} copié${lines.length > 1 ? 's' : ''}`);
+  };
+}
+</script>
+"""
 
 
 def classeur(src):

@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Applis EPS</title>
+<title>EPS ultime</title>
 <meta name="theme-color" content="#1f7a4d">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icones/eps-192.png">
 <link rel="apple-touch-icon" href="icones/eps-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="EPS">
+<meta name="apple-mobile-web-app-title" content="EPS ultime">
 <style>
 :root{--bg:#f3f5f1;--surface:#fff;--fg:#18201a;--muted:#5d6a60;--line:#d9ded4;--accent:#1f7a4d}
 @media (prefers-color-scheme:dark){:root{--bg:#111613;--surface:#1a211c;--fg:#e8eee9;--muted:#9aa89e;--line:#2c362f;--accent:#3fbf7f;color-scheme:dark}}
@@ -28,6 +28,14 @@ a.tuile img{width:84px;height:84px;border-radius:20px}
 a.tuile b{font-size:17px}
 a.tuile span{color:var(--muted);font-size:13px;line-height:1.3}
 .tuile[hidden]{display:none}
+/* Le carnet en grand (80 % du temps), les autres plus petits */
+.tuiles{grid-template-columns:repeat(3,1fr);gap:10px}
+a.tuile.principale{grid-column:1/-1;flex-direction:row;text-align:left;gap:16px;padding:18px 16px}
+a.tuile.principale span{font-size:14px}
+a.tuile:not(.principale){padding:12px 6px;gap:6px;border-radius:16px}
+a.tuile:not(.principale) img,a.tuile:not(.principale) .ph{width:56px;height:56px;border-radius:14px;font-size:28px}
+a.tuile:not(.principale) b{font-size:14px;line-height:1.2}
+a.tuile:not(.principale) span{font-size:11.5px}
 .ph{width:84px;height:84px;border-radius:20px;background:var(--line);display:grid;place-items:center;font-size:40px}
 .beta{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:#f2c230;color:#2b2100;border-radius:99px;padding:2px 7px;vertical-align:middle}
 h2{font-size:17px;margin:30px 0 8px}
@@ -51,9 +59,9 @@ body:not(.installe) .app-seul{display:none}
 </head>
 <body>
 <div class="app-seul">
-<div class="top"><img src="icones/eps-192.png" alt=""><div><h1>Applis EPS</h1><p class="sub">Gratuites, sans compte, même sans internet.</p></div></div>
+<div class="top"><img src="icones/eps-192.png" alt=""><div><h1>EPS ultime</h1><p class="sub">Gratuites, sans compte, même sans internet.</p></div></div>
 <div class="tuiles">
-  <a class="tuile" href="carnet/"><img src="icones/carnet-192.png" alt=""><b>Carnet EPS <small class="beta">bêta</small></b><span>Présences, tenue, attitude, évaluations, bulletins</span></a>
+  <a class="tuile principale" href="carnet/"><img src="icones/carnet-192.png" alt=""><div><b>Carnet EPS <small class="beta">bêta</small></b><br><span>Présences, tenue, attitude, évaluations, bulletins</span></div></a>
   <a class="tuile" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><b>Tournoi</b><span>Matchs, scores, arbitres, classement</span></a>
   <a class="tuile" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b><span>Points, équipes, fair-play, fin de leçon</span></a>
   <a class="tuile" id="tuile-classement" href="tableau/" hidden><span class="ph">🏆</span><b>Classement Koh-Lanta</b><span>Tous les résultats envoyés en fin de leçon</span></a>
@@ -88,14 +96,14 @@ body:not(.installe) .app-seul{display:none}
 <h2>Bon à savoir</h2>
 <ul class="note">
   <li>Tes données restent uniquement sur ton téléphone. Personne d'autre ne les voit.</li>
-  <li>Chaque navigateur garde ses propres données, et l'appli installée aussi : utilise toujours l'icône EPS.</li>
+  <li>Chaque navigateur garde ses propres données, et l'appli installée aussi : utilise toujours l'icône EPS ultime.</li>
   <li>Pense au bouton 💾 Sauvegarde de temps en temps (fichier à garder dans Fichiers, Drive ou OneDrive). Il sert aussi à passer sur un nouveau téléphone.</li>
   <li>Les nouvelles versions arrivent toutes seules à l'ouverture, sans effacer tes données.</li>
 </ul>
 <div id="porte" hidden>
   <form id="porte-f">
     <img src="icones/eps-192.png" alt="">
-    <b>Applis EPS</b>
+    <b>EPS ultime</b>
     <span>Entre le code de l'école. Il n'est demandé qu'une fois sur ce téléphone.</span>
     <input id="porte-i" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code de l'école">
     <button type="submit">Entrer</button>

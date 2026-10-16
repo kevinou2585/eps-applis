@@ -900,13 +900,12 @@ body{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
   <div class="info"><span id="eps-m-date"></span><span id="eps-m-sync"></span></div>
   <button data-clic="open-arch">🗂️ Archives</button>
   <button data-clic="backup-top">💾 Sauvegarde</button>
-  <a id="eps-m-drive" target="_blank" rel="noopener" hidden>📊 Tableau Drive</a>
   <button data-clic="reset-top" class="rouge">↺ Remettre à 0</button>
 </div></div>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  let s = null, t = null; try { s = localStorage.getItem('eps-script'); t = localStorage.getItem('eps-tableau'); } catch(e){}
+  let s = null; try { s = localStorage.getItem('eps-script'); } catch(e){}
   // Haut : ‹  Koh-Lanta EPS  ⋯
   const brand = document.querySelector('header .brand'), h1 = brand.querySelector('h1');
   brand.classList.add('eps-haut');
@@ -917,7 +916,6 @@ body{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
   const menu = $('eps-menu');
   plus.onclick = () => { $('eps-m-date').textContent = $('today').textContent; $('eps-m-sync').textContent = $('sync').textContent; menu.hidden = false; };
   menu.onclick = e => { const b = e.target.closest('[data-clic]'); menu.hidden = true; if (b) $(b.dataset.clic).click(); };
-  if (t) { $('eps-m-drive').href = t; $('eps-m-drive').hidden = false; }
   // Onglets en bas, avec le Classement general en 4e.
   const tabs = document.querySelector('header .tabs'); tabs.classList.add('eps-nav');
   const ic = {jeu: '🎯', class: '📋', fin: '✅'};

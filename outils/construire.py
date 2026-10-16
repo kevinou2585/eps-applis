@@ -218,14 +218,14 @@ ENVOI_JS = r"""
     if (!reglage('eps-script')) return;
     let d = document.getElementById('kl-envoi');
     if (d && !force) return;
-    if (!d){ d = document.createElement('div'); d.id = 'kl-envoi'; d.className = 'card'; act.before(d); }
+    if (!d){ d = document.createElement('div'); d.id = 'kl-envoi'; d.className = 'card'; (rc.querySelector('.savewarn') || act).before(d); }
     const p = lecon(), fait = lire(FAITS)[p.id], attente = lire(FILE)[p.id];
-    d.innerHTML = `<button class="btn btn-main" type="button">📤 Envoyer au tableau général</button><span class="empty" id="kl-envoi-m">${attente ? '📶 En attente d\'internet : ce sera envoyé tout seul.' : fait ? '✅ Déjà envoyé aujourd\'hui. Renvoyer remplace l\'envoi précédent.' : 'Envoie la fiche du groupe ' + p.groupe + ' dans le classement général.'}</span>`;
+    d.innerHTML = `<button class="btn btn-main" type="button">📤 Envoyer au classement général</button><span class="empty" id="kl-envoi-m">${attente ? '📶 En attente d\'internet : ce sera envoyé tout seul.' : fait ? '✅ Déjà envoyé aujourd\'hui. Renvoyer remplace l\'envoi précédent.' : 'Envoie la fiche du groupe ' + p.groupe + ' dans le classement général.'}</span>`;
     d.querySelector('button').onclick = async () => {
       const p = lecon(), m = document.getElementById('kl-envoi-m');
       if (!p.lignes.length){ m.textContent = 'Rien à envoyer : personne n\'a de points.'; return; }
       m.textContent = 'Envoi…';
-      try { await envoyer(p); m.textContent = '✅ Envoyé au tableau général (' + p.lignes.length + ' ligne' + (p.lignes.length > 1 ? 's' : '') + ').'; }
+      try { await envoyer(p); m.textContent = '✅ Envoyé au classement général (' + p.lignes.length + ' ligne' + (p.lignes.length > 1 ? 's' : '') + ').'; }
       catch(e){ const a = lire(FILE); a[p.id] = p; ecrire(FILE, a);
         m.textContent = navigator.onLine ? '⚠️ L\'envoi n\'a pas marché. Nouvel essai tout seul à la prochaine ouverture.' : '📶 Pas d\'internet : ce sera envoyé tout seul dès que le téléphone est connecté.'; }
     };

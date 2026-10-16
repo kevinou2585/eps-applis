@@ -66,8 +66,6 @@ body:not(.sur-installer) .etape2,.sur-installer .etape1{display:none}
   <a class="tuile principale" href="carnet/"><img src="icones/carnet-192.png" alt=""><div><b>Carnet EPS <small class="beta">bêta</small></b><br><span>Présences, tenue, attitude, évaluations, bulletins</span></div></a>
   <a class="tuile" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><b>Tournoi</b><span>Matchs, scores, arbitres, classement</span></a>
   <a class="tuile" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b><span>Points, équipes, fair-play, fin de leçon</span></a>
-  <a class="tuile" id="tuile-classement" href="tableau/" hidden><span class="ph">🏆</span><b>Classement Koh-Lanta</b><span>Tous les résultats envoyés en fin de leçon</span></a>
-  <a class="tuile" id="tuile-tableau" hidden target="_blank" rel="noopener"><span class="ph">📊</span><b>Tableau Koh-Lanta</b><span>Le classement général sur Google Drive</span></a>
   <a class="tuile" href="le-fist/"><img src="icones/le-fist-192.png" alt=""><b>Le Fist</b><span>Fléchettes 301 ou 101 entre collègues</span></a>
 </div>
 </div>
@@ -147,9 +145,9 @@ document.getElementById('installer').onclick = async () => { if (!invite) return
 function montrerTableau(){
   let u = null; try { u = localStorage.getItem('eps-tableau'); } catch(e){}
   const t = document.getElementById('tuile-tableau');
-  if (u){ t.href = u; t.hidden = false; } else t.hidden = true;
+  if (t){ if (u){ t.href = u; t.hidden = false; } else t.hidden = true; }
   let s = null; try { s = localStorage.getItem('eps-script'); } catch(e){}
-  document.getElementById('tuile-classement').hidden = !s;
+  const c = document.getElementById('tuile-classement'); if (c) c.hidden = !s;
 }
 montrerTableau();
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));

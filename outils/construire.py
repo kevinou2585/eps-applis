@@ -37,6 +37,16 @@ html,body,button,a,input,label,select{{touch-action:manipulation}}
 
 RETOUR = '<a class="eps-retour" href="../"><span style="white-space:nowrap">‹ Mes applis</span></a>\n'
 
+# Koh-Lanta : acces au classement general (et au tableau Drive) depuis l'appli elle-meme.
+KL_LIENS = """<div class="eps-kl-liens" id="eps-kl-liens" hidden><a href="../tableau/">🏆 Classement général</a><a id="eps-kl-drive" target="_blank" rel="noopener" hidden>📊 Tableau Drive</a></div>
+<style>.eps-kl-liens{display:flex;gap:8px;flex-wrap:wrap;max-width:680px;margin:0 auto;padding:8px 16px 0}.eps-kl-liens[hidden],.eps-kl-liens a[hidden]{display:none}
+.eps-kl-liens a{flex:1;text-align:center;padding:10px 12px;border-radius:12px;background:#e8590c;color:#fff;font:700 15px system-ui,-apple-system,sans-serif;text-decoration:none;white-space:nowrap}
+.eps-kl-liens a#eps-kl-drive{background:transparent;color:#e8590c;border:2px solid #e8590c}</style>
+<script>(()=>{let s=null,t=null;try{s=localStorage.getItem('eps-script');t=localStorage.getItem('eps-tableau');}catch(e){}
+const b=document.getElementById('eps-kl-liens');if(s||t)b.hidden=false;if(!s)b.firstChild.hidden=true;
+if(t){const d=document.getElementById('eps-kl-drive');d.href=t;d.hidden=false;}})();</script>
+"""
+
 PIED = """
 <script>
 if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.register('../sw.js').catch(() => {});
@@ -121,7 +131,7 @@ def koh_lanta(src):
     if "copy-link" in corps or "claude.ai" in corps:
         sys.exit("Reste un lien claude.ai dans Koh-Lanta")
     return (tete("Koh-Lanta Arène", "koh-lanta", "#e8590c") + style_base + "\n</head>\n<body>\n"
-            + RETOUR + corps + ENVOI_JS + PIED)
+            + RETOUR + KL_LIENS + corps + ENVOI_JS + PIED)
 
 
 # Bouton "Envoyer au tableau general" sous la fiche fin de lecon. L'adresse du script Google et le code

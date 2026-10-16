@@ -38,6 +38,24 @@ h1{margin:0;font-size:22px}
 h2{font-size:15px;margin:18px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .lecons{display:grid;gap:4px;font-size:14px}
 .lecons div{display:flex;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+h3{margin:22px 0 8px;font-size:17px}
+.titre{text-align:center;margin:6px 0 4px}.titre b{font-size:22px;display:block}.titre span{color:var(--muted);font-size:14px}
+.podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end;margin-top:12px}
+.marche{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center;display:grid;gap:2px}
+.marche .m{font-size:28px}.marche b{font-size:14px;overflow-wrap:anywhere}.marche small{color:var(--muted);font-size:12px}
+.marche.p1{padding-top:22px;border-color:var(--gold)}.marche.p2{padding-top:14px}.marche.p3{padding-top:8px}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:14px}
+th,td{padding:8px 6px;text-align:left}th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--line)}
+tbody tr+tr td{border-top:1px solid var(--line)}td.n{text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.gr{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gc{background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--c);border-radius:12px;padding:10px;font-size:14px;display:grid;gap:4px}
+.gc b{font-size:13px;text-transform:uppercase;letter-spacing:.04em}.gc small{color:var(--muted);font-size:12px}
+.gc div{display:flex;justify-content:space-between;gap:6px}.gc div span:first-child{overflow-wrap:anywhere;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.stats div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center}
+.stats b{display:block;font-size:20px}.stats span{color:var(--muted);font-size:12px}
+.rouge{border-color:var(--red)!important}
+.bareme{color:var(--muted);font-size:13px;text-align:center;margin-top:18px}
 </style>
 </head>
 <body>
@@ -48,7 +66,7 @@ h2{font-size:15px;margin:18px 0 8px;color:var(--muted);text-transform:uppercase;
 </header>
 <main id="vue"></main>
 <script>
-const GR = [['top','Top 10','tout'],['Jaune','Jaune','jaune'],['Vert','Vert','vert'],['Bleu','Bleu','bleu'],['Rouge','Rouge','rouge']];
+const GR = [['top','Fiche','tout'],['Jaune','Jaune','jaune'],['Vert','Vert','vert'],['Bleu','Bleu','bleu'],['Rouge','Rouge','rouge']];
 const CLE = {Jaune:'jaune', Vert:'vert', Bleu:'bleu', Rouge:'rouge'};
 const lire = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
 let onglet = lire('kl-tableau-onglet') || 'top';
@@ -75,21 +93,48 @@ function liste(xs, avecGroupe){
   return xs.map(x => { const rg = xs.filter(y => y.p > x.p).length + 1;
     return `<div class="ligne ${x.p > 0 && rg <= 3 ? 'r' + rg : ''}"><span class="rg">${rg}</span><span class="nm">${esc(x.n)}<small>${avecGroupe ? esc(x.g) + (detail(x) ? ' · ' : '') : ''}${detail(x)}</small></span><span class="pt">${x.p}</span></div>`; }).join('');
 }
+const MED = ['🥇','🥈','🥉'];
+const rangs = xs => xs.map(x => ({...x, rg: xs.filter(y => y.p > x.p).length + 1}));
+function fiche(T){
+  const auj = new Date().toLocaleDateString('fr-BE');
+  const marques = T.filter(x => x.p > 0).sort((a, b) => b.p - a.p || a.n.localeCompare(b.n, 'fr'));
+  const top = rangs(marques).slice(0, 10);
+  let h = `<div class="titre"><b>🏝️ KOH-LANTA EPS</b><span>Classement au ${auj}</span></div>`;
+  // podium general
+  const pod = [top[1], top[0], top[2]];
+  h += `<div class="podium">${pod.map((x, i) => { const cl = ['p2','p1','p3'][i], m = ['🥈','🥇','🥉'][i];
+    return x ? `<div class="marche ${cl}"><span class="m">${m}</span><b>${esc(x.n)}</b><small>${esc(x.g)} · ${x.p} pts</small></div>` : `<div class="marche ${cl}"><span class="m">${m}</span><small>—</small></div>`; }).join('')}</div>`;
+  // top 10
+  h += `<h3>🏆 Top 10 général</h3>` + (top.length ? `<table><thead><tr><th>Rang</th><th>Élève</th><th>Groupe</th><th>Pts</th></tr></thead><tbody>${top.map(x => `<tr><td class="n">${x.rg}</td><td>${esc(x.n)}</td><td>${esc(x.g)}</td><td class="n">${x.p}</td></tr>`).join('')}</tbody></table>` : '<p class="vide">Personne n\'a encore de points.</p>');
+  // top 3 de chaque groupe
+  h += `<h3>🔥 Le top 3 de chaque groupe</h3><div class="gr">${Object.keys(CLE).map(g => {
+    const tous = T.filter(x => x.g === g), m = rangs(tous.filter(x => x.p > 0).sort((a, b) => b.p - a.p || a.n.localeCompare(b.n, 'fr'))).slice(0, 3);
+    return `<div class="gc" style="--c:var(--${CLE[g]})"><b>Groupe ${g}</b><small>${tous.filter(x => x.p > 0).length} / ${tous.length} ont marqué</small>${m.map(x => `<div><span>${MED[x.rg - 1] || x.rg + '.'} ${esc(x.n)}</span><span>${x.p}</span></div>`).join('') || '<small>—</small>'}</div>`; }).join('')}</div>`;
+  // fair-play
+  const fp = T.filter(x => x.f > 0).sort((a, b) => b.f - a.f || a.n.localeCompare(b.n, 'fr'));
+  const fpr = fp.map(x => ({...x, rg: fp.filter(y => y.f > x.f).length + 1})).slice(0, 3);
+  h += `<h3>🤝 Top 3 fair-play & meilleur coéquipier</h3>` + (fpr.length ? `<table><thead><tr><th>Rang</th><th>Élève</th><th>Groupe</th><th>Distinctions</th></tr></thead><tbody>${fpr.map(x => `<tr><td class="n">${x.rg}</td><td>${esc(x.n)}</td><td>${esc(x.g)}</td><td class="n">${x.f}</td></tr>`).join('')}</tbody></table>` : '<p class="vide">Pas encore de distinction fair-play : à vous de jouer !</p>');
+  // chiffres
+  const total = T.reduce((t, x) => t + x.p, 0);
+  h += `<div class="stats"><div><b>${total}</b><span>points distribués</span></div><div><b>${marques.length} / ${T.length}</b><span>élèves ont déjà marqué</span></div><div><b>${marques.length < 10 ? 0 : top[top.length - 1].p} pts</b><span>pour entrer dans le Top 10</span></div></div>`;
+  // cartons rouges : tous ceux au maximum
+  const mx = Math.max(0, ...T.map(x => x.r)), rc = T.filter(x => mx > 0 && x.r === mx).sort((a, b) => a.n.localeCompare(b.n, 'fr'));
+  h += `<h3>⛔ Carton rouge : il faut se ressaisir !</h3>` + (rc.length ? `<table class="rouge"><thead><tr><th>Groupe</th><th>Élève</th><th>Cartons</th></tr></thead><tbody>${rc.slice(0, 3).map(x => `<tr><td>${esc(x.g)}</td><td>${esc(x.n)}</td><td class="n">${x.r}</td></tr>`).join('')}</tbody></table>${rc.length > 3 ? `<p class="note">… et ${rc.length - 3} autre${rc.length - 3 > 1 ? 's' : ''}</p>` : ''}` : '<p class="vide">Aucun carton rouge. Bravo !</p>');
+  h += `<p class="bareme">Barème : 1er = 5 pts · 2e = 3 pts · 3e = 1 pt<br>Fair-play / meilleur coéquipier = +3 pts · Carton rouge = −3 pts</p>`;
+  return h;
+}
 function rendre(){
   document.getElementById('onglets').innerHTML = GR.map(([id, l, c]) => `<button type="button" data-o="${id}" style="--c:var(--${c});--ci:var(--${c}-ink)" aria-pressed="${onglet === id}">${l}</button>`).join('');
-  document.querySelectorAll('#onglets button').forEach(b => b.onclick = () => { onglet = b.dataset.o; try { localStorage.setItem('kl-tableau-onglet', onglet); } catch(e){} rendre(); });
+  document.querySelectorAll('#onglets button').forEach(b => b.onclick = () => { onglet = b.dataset.o; try { localStorage.setItem('kl-tableau-onglet', onglet); } catch(e){} rendre(); window.scrollTo(0, 0); });
   const v = document.getElementById('vue');
   if (!D){ v.innerHTML = '<p class="vide">Pas encore de résultats. Ils arrivent quand un prof touche « 📤 Envoyer au tableau général » en fin de leçon Koh-Lanta.</p>'; return; }
   const T = totaux();
-  if (onglet === 'top'){
-    const top = T.filter(x => x.p > 0).sort((a, b) => b.p - a.p).slice(0, 10);
-    v.innerHTML = top.length ? liste(top, true) : '<p class="vide">Personne n\'a encore de points.</p>';
-  } else {
-    v.innerHTML = liste(T.filter(x => x.g === onglet), false) || '<p class="vide">Aucun élève.</p>';
-    const lec = {}; D.lignes.filter(l => l.groupe === onglet).forEach(l => { lec[l.date] = (lec[l.date] || 0) + 1; });
-    const jours = Object.keys(lec).sort().reverse();
-    if (jours.length) v.innerHTML += `<h2>Leçons envoyées</h2><div class="lecons">${jours.map(j => `<div><span>${new Date(j + 'T12:00').toLocaleDateString('fr-BE', {weekday:'long', day:'numeric', month:'long'})}</span><span>${lec[j]} ligne${lec[j] > 1 ? 's' : ''}</span></div>`).join('')}</div>`;
-  }
+  if (onglet === 'top'){ v.innerHTML = fiche(T); return; }
+  const tous = T.filter(x => x.g === onglet);
+  v.innerHTML = `<p class="note" style="margin:4px 0 10px">${tous.filter(x => x.p > 0).length} / ${tous.length} ont marqué · 🥇🥈🥉 places · 🤝 fair-play · 🟥 cartons</p>` + (liste(tous, false) || '<p class="vide">Aucun élève.</p>');
+  const lec = {}; D.lignes.filter(l => l.groupe === onglet).forEach(l => { lec[l.date] = (lec[l.date] || 0) + 1; });
+  const jours = Object.keys(lec).sort().reverse();
+  if (jours.length) v.innerHTML += `<h2>Leçons envoyées</h2><div class="lecons">${jours.map(j => `<div><span>${new Date(j + 'T12:00').toLocaleDateString('fr-BE', {weekday:'long', day:'numeric', month:'long'})}</span><span>${lec[j]} ligne${lec[j] > 1 ? 's' : ''}</span></div>`).join('')}</div>`;
 }
 async function charger(){
   const u = lire('eps-script'), c = lire('eps-code'), etat = document.getElementById('etat');

@@ -822,7 +822,9 @@ setSync('local');
     r.podium.forEach(o => o.who.forEach(x => lignes.push({eleve: x.n, place: PL[o.r][0], points: PL[o.r][1]})));
     r.fair.forEach(x => { for (let i = 0; i < x.fair; i++) lignes.push({eleve: x.n, place: 'Fair-play', points: 3}); });
     r.red.forEach(x => { for (let i = 0; i < x.red; i++) lignes.push({eleve: x.n, place: 'Perturbateur', points: -3}); });
-    return {id: jour() + '-' + g, date: jour(), groupe: GLABEL[g], lignes};
+    let tel = reglage('kl-appareil');
+    if (!tel){ tel = Math.random().toString(36).slice(2, 8); try { localStorage.setItem('kl-appareil', tel); } catch(e){} }
+    return {id: jour() + '-' + g + '-' + tel, date: jour(), groupe: GLABEL[g], lignes};
   }
   async function envoyer(p){
     const u = reglage('eps-script'), c = reglage('eps-code');

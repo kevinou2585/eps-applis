@@ -13,8 +13,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="EPS ultime">
 <style>
-:root{--bg:#f3f5f1;--surface:#fff;--fg:#18201a;--muted:#5d6a60;--line:#d9ded4;--accent:#1f7a4d}
-@media (prefers-color-scheme:dark){:root{--bg:#111613;--surface:#1a211c;--fg:#e8eee9;--muted:#9aa89e;--line:#2c362f;--accent:#3fbf7f;color-scheme:dark}}
+:root{--bg:#f3f5f1;--surface:#fff;--fg:#18201a;--muted:#5d6a60;--line:#d9ded4;--accent:#0b7fc4}
+@media (prefers-color-scheme:dark){:root{--bg:#111613;--surface:#1a211c;--fg:#e8eee9;--muted:#9aa89e;--line:#2c362f;--accent:#1c8fd6;color-scheme:dark}}
 *{box-sizing:border-box}
 html,body,a,button{touch-action:manipulation}
 body{margin:0 auto;max-width:640px;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(40px + env(safe-area-inset-bottom,0px));background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -55,6 +55,8 @@ body:not(.installe) .app-seul{display:none}
 .ios ol{margin:10px 0 0;padding-left:22px}
 .ios li{margin:8px 0}
 .ios .k{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:0 5px;background:var(--bg)}
+.gros-bouton{display:inline-block;margin-top:14px;border-radius:14px;padding:16px 24px;font-weight:700;font-size:18px;background:var(--accent);color:#fff;text-decoration:none}
+body:not(.sur-installer) .etape2,.sur-installer .etape1{display:none}
 #installer{margin-top:10px;border:0;border-radius:14px;padding:15px 22px;font:inherit;font-weight:700;font-size:17px;background:var(--accent);color:#fff}
 </style>
 </head>
@@ -74,24 +76,26 @@ body:not(.installe) .app-seul{display:none}
 <div class="web-seul">
 <div class="accueil">
   <img src="icones/eps-512.png" alt="">
-  <h1>Appli EPS</h1>
-  <p>Une seule appli à installer sur ton téléphone. Elle contient le Carnet EPS (bêta), Tournoi et Koh-Lanta Arène.</p>
+  <h1>EPS ultime</h1>
+  <p>Une seule appli à installer sur ton téléphone. Elle contient le Carnet EPS (bêta), Tournoi, Koh-Lanta Arène et Le Fist.</p>
+  <a id="ouvrir" class="gros-bouton etape1" href="installer/">① Ouvrir l'appli EPS ultime</a>
+  <p class="etape1" style="font-size:14px">Touche ce bouton, puis suis l'étape ② sur la page qui s'ouvre.</p>
   <button id="installer" type="button" hidden>Installer l'appli EPS</button>
 </div>
-<div id="ios" class="ios" hidden>
-  <b>📲 Sur iPhone : menu Partager › « Sur l'écran d'accueil »</b>
+<div id="ios" class="ios etape2" hidden>
+  <b>② Maintenant, ajoute-la à ton écran d'accueil</b>
   <p style="margin:6px 0 0;color:var(--muted);font-size:14px">Si tu as ouvert ce lien depuis WhatsApp, un mail ou une autre appli, ouvre-le d'abord dans ton navigateur (Safari, Brave ou Chrome).</p>
   <ol>
     <li><b>Safari</b> : touche <span class="k">⬆️</span> en bas.<br><b>Brave</b> : touche <span class="k">⋯</span> puis <b>Partager</b>.<br><b>Chrome</b> : touche <span class="k">⬆️</span> dans la barre d'adresse.</li>
     <li>Fais défiler et choisis <b>« Sur l'écran d'accueil »</b>.</li>
-    <li>Touche <b>Ajouter</b>. L'icône verte <b>EPS</b> apparaît sur ton écran d'accueil.</li>
+    <li>Touche <b>Ajouter</b>. L'icône turquoise <b>EPS ultime</b> apparaît sur ton écran d'accueil.</li>
   </ol>
   <p style="margin:6px 0 0;color:var(--muted);font-size:14px">Pas de « Sur l'écran d'accueil » dans la liste ? Tout en bas, touche <b>« Modifier les actions… »</b> et active-le.</p>
 </div>
 <h2>Comment l'installer</h2>
 <details><summary>iPhone (Safari, Chrome, Brave, Firefox, Edge…)</summary><ol><li>Touche le bouton Partager (carré avec une flèche). Dans Brave ou Chrome, il est parfois dans le menu ⋯.</li><li>Choisis « Sur l'écran d'accueil ».</li><li>Touche « Ajouter ».</li></ol></details>
 <details><summary>Android (Chrome, Brave, Samsung Internet, Edge, Firefox…)</summary><ol><li>Ouvre le menu du navigateur (⋮ ou ☰).</li><li>Choisis « Installer l'application » ou « Ajouter à l'écran d'accueil ».</li></ol></details>
-<p class="note" style="padding:0;margin-top:16px">Ensuite, ferme ce navigateur et ouvre l'appli <b>EPS</b> depuis ton écran d'accueil. Le code de l'école te sera demandé une seule fois.</p>
+<p class="note" style="padding:0;margin-top:16px">Ensuite, ferme ce navigateur et ouvre l'appli <b>EPS ultime</b> depuis ton écran d'accueil. Le code de l'école te sera demandé une seule fois.</p>
 <p style="text-align:center;margin:18px 0 0"><a href="#" id="sans-installer" style="color:var(--muted);font-size:14px">Utiliser sans installer (ordinateur)</a></p>
 </div>
 <h2>Bon à savoir</h2>
@@ -129,7 +133,8 @@ if (matchMedia('(display-mode: standalone)').matches || navigator.standalone || 
 // L'installation se fait depuis installer/ (copie de cette page) : sur iPhone, certains navigateurs
 // n'offrent « Sur l'écran d'accueil » que sur une sous-page. Une fois installee, l'appli revient ici.
 const pageInstaller = location.pathname.endsWith('/installer/') || location.pathname.endsWith('/installer/index.html');
-if (!document.body.classList.contains('installe') && !pageInstaller) location.replace('installer/');
+// Pas de redirection automatique : le bouton ① ouvre installer/, et c'est là qu'on fait Partager (Brave sur iPhone).
+if (pageInstaller) document.body.classList.add('sur-installer');
 if (document.body.classList.contains('installe') && pageInstaller) location.replace('./');
 document.getElementById('sans-installer').onclick = e => { e.preventDefault(); try { sessionStorage.setItem('eps-navigateur', '1'); } catch(err){} location.reload(); };
 const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);

@@ -137,6 +137,35 @@ def carnet(src):
     return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + PIED
 
 
+def classeur(src):
+    """Classeur EPS (leçons) en version equipe : l'annexe des livrets ne garde que les titres."""
+    t = Path(src).read_text(encoding="utf-8")
+    debut = t.index("<!--EPS-START-->")
+    t = t[debut:].replace("<!--EPS-START-->", "", 1)
+    t = re.sub(r"^\s*<title>.*?</title>\s*", "", t, count=1)
+    t = re.sub(r'<meta name="viewport"[^>]*>\n?', "", t, count=1)
+    t = t.replace("</head>\n<body>\n", "", 1)
+    t = re.sub(r"\s*</body>\s*</html>\s*$", "\n", t)
+    m = re.search(r'(<script id="data" type="application/json">)(.*?)(</script>)', t, re.S)
+    if not m:
+        sys.exit("Classeur : donnees introuvables")
+    d = json.loads(m.group(2))
+    d["share"] = True
+    for a in d["acts"]:
+        a.pop("body", None)
+    d["intros"] = {k: "" for k in d["intros"]}
+    donnees = json.dumps(d, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    t = t[:m.start(2)] + donnees + t[m.end(2):]
+    # Retour vers EPS ultime : dans la barre du haut sur telephone, au-dessus du menu sur ordinateur.
+    retour = '<a href="../" aria-label="Mes applis" style="color:inherit;text-decoration:none;font:700 24px system-ui,sans-serif;padding:0 4px">‹</a>'
+    if '<div id="top">' not in t:
+        sys.exit("Classeur : barre du haut introuvable")
+    t = t.replace('<div id="top">', '<div id="top">' + retour, 1)
+    haut = '<a class="eps-retour eps-larg" href="../" style="position:fixed;top:0;right:0;z-index:40;background:var(--panel);border-radius:0 0 0 12px;padding:8px 14px">‹ Mes applis</a>\n'
+    css = "<style>@media (max-width:860px){.eps-larg{display:none!important}}</style>\n"
+    return tete("Classeur EPS", "classeur", "#14211d") + css + "</head>\n<body>\n" + haut + t + PIED
+
+
 LISTES_JS = ("const ROSTER = (() => { try { const r = JSON.parse(localStorage.getItem('kl-listes-v1')); "
              "if (r && Array.isArray(r.jaune)) return r; } catch(e){} return {jaune:[], vert:[], bleu:[], rouge:[]}; })();")
 
@@ -255,6 +284,8 @@ if __name__ == "__main__":
     (RACINE / "tournoi/index.html").write_text(tournoi(sys.argv[1]), encoding="utf-8")
     (RACINE / "koh-lanta/index.html").write_text(koh_lanta(sys.argv[2]), encoding="utf-8")
     (RACINE / "carnet/index.html").write_text(carnet(sys.argv[3]), encoding="utf-8")
+    (RACINE / "classeur").mkdir(exist_ok=True)
+    (RACINE / "classeur/index.html").write_text(classeur(sys.argv[4] if len(sys.argv) > 4 else "/mnt/project-files/eps-site/index.html"), encoding="utf-8")
     # Page d'installation = l'accueil, servi depuis une sous-page (liens relatifs ramenes a la racine).
     accueil = (RACINE / "index.html").read_text(encoding="utf-8")
     (RACINE / "installer").mkdir(exist_ok=True)

@@ -183,4 +183,8 @@ if __name__ == "__main__":
     (RACINE / "tournoi/index.html").write_text(tournoi(sys.argv[1]), encoding="utf-8")
     (RACINE / "koh-lanta/index.html").write_text(koh_lanta(sys.argv[2]), encoding="utf-8")
     (RACINE / "carnet/index.html").write_text(carnet(sys.argv[3]), encoding="utf-8")
+    # Page d'installation = l'accueil, servi depuis une sous-page (liens relatifs ramenes a la racine).
+    accueil = (RACINE / "index.html").read_text(encoding="utf-8")
+    (RACINE / "installer").mkdir(exist_ok=True)
+    (RACINE / "installer/index.html").write_text(accueil.replace("<head>\n", '<head>\n<base href="../">\n', 1), encoding="utf-8")
     print("ok")

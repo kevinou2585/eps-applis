@@ -69,10 +69,10 @@ body:not(.installe) .app-seul{display:none}
   <button id="installer" type="button" hidden>Installer l'appli EPS</button>
 </div>
 <div id="ios" class="ios" hidden>
-  <b>📲 Sur iPhone, installe avec Safari</b>
-  <p style="margin:6px 0 0;color:var(--muted);font-size:14px">Brave, Firefox et les liens ouverts depuis WhatsApp ou une autre appli n'ont souvent pas l'option. Ouvre l'appli <b>Safari</b> et tape l'adresse <b>kevinou2585.github.io/eps-applis</b>.</p>
+  <b>📲 Sur iPhone : menu Partager › « Sur l'écran d'accueil »</b>
+  <p style="margin:6px 0 0;color:var(--muted);font-size:14px">Si tu as ouvert ce lien depuis WhatsApp, un mail ou une autre appli, ouvre-le d'abord dans ton navigateur (Safari, Brave ou Chrome).</p>
   <ol>
-    <li>Dans Safari, touche <span class="k">⬆️</span> en bas de l'écran.</li>
+    <li><b>Safari</b> : touche <span class="k">⬆️</span> en bas.<br><b>Brave</b> : touche <span class="k">⋯</span> puis <b>Partager</b>.<br><b>Chrome</b> : touche <span class="k">⬆️</span> dans la barre d'adresse.</li>
     <li>Fais défiler et choisis <b>« Sur l'écran d'accueil »</b>.</li>
     <li>Touche <b>Ajouter</b>. L'icône verte <b>EPS</b> apparaît sur ton écran d'accueil.</li>
   </ol>
@@ -116,6 +116,11 @@ body:not(.installe) .app-seul{display:none}
 // Dans le navigateur : seulement la page d'installation. Dans l'appli installee : les tuiles.
 let modeNav = false; try { modeNav = sessionStorage.getItem('eps-navigateur') === '1'; } catch(e){}
 if (matchMedia('(display-mode: standalone)').matches || navigator.standalone || modeNav) document.body.classList.add('installe');
+// L'installation se fait depuis installer/ (copie de cette page) : sur iPhone, certains navigateurs
+// n'offrent « Sur l'écran d'accueil » que sur une sous-page. Une fois installee, l'appli revient ici.
+const pageInstaller = location.pathname.endsWith('/installer/') || location.pathname.endsWith('/installer/index.html');
+if (!document.body.classList.contains('installe') && !pageInstaller) location.replace('installer/');
+if (document.body.classList.contains('installe') && pageInstaller) location.replace('./');
 document.getElementById('sans-installer').onclick = e => { e.preventDefault(); try { sessionStorage.setItem('eps-navigateur', '1'); } catch(err){} location.reload(); };
 const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 if (iOS) document.getElementById('ios').hidden = false;

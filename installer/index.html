@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<base href="../">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Applis EPS</title>
+<meta name="theme-color" content="#1f7a4d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icones/eps-192.png">
+<link rel="apple-touch-icon" href="icones/eps-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EPS">
+<style>
+:root{--bg:#f3f5f1;--surface:#fff;--fg:#18201a;--muted:#5d6a60;--line:#d9ded4;--accent:#1f7a4d}
+@media (prefers-color-scheme:dark){:root{--bg:#111613;--surface:#1a211c;--fg:#e8eee9;--muted:#9aa89e;--line:#2c362f;--accent:#3fbf7f;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body,a,button{touch-action:manipulation}
+body{margin:0 auto;max-width:640px;padding:calc(20px + env(safe-area-inset-top,0px)) 16px calc(40px + env(safe-area-inset-bottom,0px));background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.top img{width:48px;height:48px;border-radius:12px}
+h1{font-size:26px;margin:0;line-height:1.1}
+.sub{color:var(--muted);margin:2px 0 0;font-size:14px}
+.tuiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+a.tuile{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 10px;background:var(--surface);border:1px solid var(--line);border-radius:18px;color:inherit;text-decoration:none;text-align:center}
+a.tuile:active{transform:scale(.97)}
+a.tuile img{width:84px;height:84px;border-radius:20px}
+a.tuile b{font-size:17px}
+a.tuile span{color:var(--muted);font-size:13px;line-height:1.3}
+.tuile[hidden]{display:none}
+.ph{width:84px;height:84px;border-radius:20px;background:var(--line);display:grid;place-items:center;font-size:40px}
+.beta{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:#f2c230;color:#2b2100;border-radius:99px;padding:2px 7px;vertical-align:middle}
+h2{font-size:17px;margin:30px 0 8px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}
+summary{font-weight:600;cursor:pointer}
+li{margin:4px 0}
+.note{color:var(--muted);font-size:14px;padding-left:20px}
+.installe .web-seul{display:none}
+body:not(.installe) .app-seul{display:none}
+.accueil{text-align:center;display:grid;justify-items:center;gap:8px;padding-top:12px}
+.accueil img{width:120px;height:120px;border-radius:28px;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+.accueil h1{font-size:30px;margin-top:8px}
+.accueil p{color:var(--muted);margin:0;max-width:30em}
+.ios{margin-top:18px;background:var(--surface);border:2px solid var(--accent);border-radius:16px;padding:14px 16px}
+.ios[hidden]{display:none}
+.ios ol{margin:10px 0 0;padding-left:22px}
+.ios li{margin:8px 0}
+.ios .k{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:0 5px;background:var(--bg)}
+#installer{margin-top:10px;border:0;border-radius:14px;padding:15px 22px;font:inherit;font-weight:700;font-size:17px;background:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+<div class="app-seul">
+<div class="top"><img src="icones/eps-192.png" alt=""><div><h1>Applis EPS</h1><p class="sub">Gratuites, sans compte, même sans internet.</p></div></div>
+<div class="tuiles">
+  <a class="tuile" href="carnet/"><img src="icones/carnet-192.png" alt=""><b>Carnet EPS <small class="beta">bêta</small></b><span>Présences, tenue, attitude, évaluations, bulletins</span></a>
+  <a class="tuile" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><b>Tournoi</b><span>Matchs, scores, arbitres, classement</span></a>
+  <a class="tuile" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b><span>Points, équipes, fair-play, fin de leçon</span></a>
+  <a class="tuile" id="tuile-classement" href="tableau/" hidden><span class="ph">🏆</span><b>Classement Koh-Lanta</b><span>Tous les résultats envoyés en fin de leçon</span></a>
+  <a class="tuile" id="tuile-tableau" hidden target="_blank" rel="noopener"><span class="ph">📊</span><b>Tableau Koh-Lanta</b><span>Le classement général sur Google Drive</span></a>
+</div>
+</div>
+
+<div class="web-seul">
+<div class="accueil">
+  <img src="icones/eps-512.png" alt="">
+  <h1>Appli EPS</h1>
+  <p>Une seule appli à installer sur ton téléphone. Elle contient le Carnet EPS (bêta), Tournoi et Koh-Lanta Arène.</p>
+  <button id="installer" type="button" hidden>Installer l'appli EPS</button>
+</div>
+<div id="ios" class="ios" hidden>
+  <b>📲 Sur iPhone : menu Partager › « Sur l'écran d'accueil »</b>
+  <p style="margin:6px 0 0;color:var(--muted);font-size:14px">Si tu as ouvert ce lien depuis WhatsApp, un mail ou une autre appli, ouvre-le d'abord dans ton navigateur (Safari, Brave ou Chrome).</p>
+  <ol>
+    <li><b>Safari</b> : touche <span class="k">⬆️</span> en bas.<br><b>Brave</b> : touche <span class="k">⋯</span> puis <b>Partager</b>.<br><b>Chrome</b> : touche <span class="k">⬆️</span> dans la barre d'adresse.</li>
+    <li>Fais défiler et choisis <b>« Sur l'écran d'accueil »</b>.</li>
+    <li>Touche <b>Ajouter</b>. L'icône verte <b>EPS</b> apparaît sur ton écran d'accueil.</li>
+  </ol>
+  <p style="margin:6px 0 0;color:var(--muted);font-size:14px">Pas de « Sur l'écran d'accueil » dans la liste ? Tout en bas, touche <b>« Modifier les actions… »</b> et active-le.</p>
+</div>
+<h2>Comment l'installer</h2>
+<details><summary>iPhone (Safari, Chrome, Brave, Firefox, Edge…)</summary><ol><li>Touche le bouton Partager (carré avec une flèche). Dans Brave ou Chrome, il est parfois dans le menu ⋯.</li><li>Choisis « Sur l'écran d'accueil ».</li><li>Touche « Ajouter ».</li></ol></details>
+<details><summary>Android (Chrome, Brave, Samsung Internet, Edge, Firefox…)</summary><ol><li>Ouvre le menu du navigateur (⋮ ou ☰).</li><li>Choisis « Installer l'application » ou « Ajouter à l'écran d'accueil ».</li></ol></details>
+<p class="note" style="padding:0;margin-top:16px">Ensuite, ferme ce navigateur et ouvre l'appli <b>EPS</b> depuis ton écran d'accueil. Le code de l'école te sera demandé une seule fois.</p>
+<p style="text-align:center;margin:18px 0 0"><a href="#" id="sans-installer" style="color:var(--muted);font-size:14px">Utiliser sans installer (ordinateur)</a></p>
+</div>
+<h2>Bon à savoir</h2>
+<ul class="note">
+  <li>Tes données restent uniquement sur ton téléphone. Personne d'autre ne les voit.</li>
+  <li>Chaque navigateur garde ses propres données, et l'appli installée aussi : utilise toujours l'icône EPS.</li>
+  <li>Pense au bouton 💾 Sauvegarde de temps en temps (fichier à garder dans Fichiers, Drive ou OneDrive). Il sert aussi à passer sur un nouveau téléphone.</li>
+  <li>Les nouvelles versions arrivent toutes seules à l'ouverture, sans effacer tes données.</li>
+</ul>
+<div id="porte" hidden>
+  <form id="porte-f">
+    <img src="icones/eps-192.png" alt="">
+    <b>Applis EPS</b>
+    <span>Entre le code de l'école. Il n'est demandé qu'une fois sur ce téléphone.</span>
+    <input id="porte-i" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code de l'école">
+    <button type="submit">Entrer</button>
+    <span id="porte-m" class="err"></span>
+  </form>
+</div>
+<style>
+#porte{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:16px}
+#porte[hidden]{display:none}
+#porte form{display:grid;gap:12px;max-width:340px;width:100%;text-align:center;justify-items:center}
+#porte img{width:72px;height:72px;border-radius:18px}
+#porte b{font-size:22px}
+#porte span{color:var(--muted);font-size:15px}
+#porte input{width:100%;border:1px solid var(--line);border-radius:12px;padding:14px;font:inherit;font-size:17px;background:var(--surface);color:var(--fg);text-align:center}
+#porte button{width:100%;border:0;border-radius:12px;padding:14px;font:inherit;font-weight:700;background:var(--accent);color:#fff}
+#porte .err{color:#c92a2a;min-height:1.2em}
+</style>
+<script>
+// Dans le navigateur : seulement la page d'installation. Dans l'appli installee : les tuiles.
+let modeNav = false; try { modeNav = sessionStorage.getItem('eps-navigateur') === '1'; } catch(e){}
+if (matchMedia('(display-mode: standalone)').matches || navigator.standalone || modeNav) document.body.classList.add('installe');
+// L'installation se fait depuis installer/ (copie de cette page) : sur iPhone, certains navigateurs
+// n'offrent « Sur l'écran d'accueil » que sur une sous-page. Une fois installee, l'appli revient ici.
+const pageInstaller = location.pathname.endsWith('/installer/') || location.pathname.endsWith('/installer/index.html');
+if (!document.body.classList.contains('installe') && !pageInstaller) location.replace('installer/');
+if (document.body.classList.contains('installe') && pageInstaller) location.replace('./');
+document.getElementById('sans-installer').onclick = e => { e.preventDefault(); try { sessionStorage.setItem('eps-navigateur', '1'); } catch(err){} location.reload(); };
+const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if (iOS) document.getElementById('ios').hidden = false;
+let invite = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); invite = e; document.getElementById('installer').hidden = false; });
+document.getElementById('installer').onclick = async () => { if (!invite) return; invite.prompt(); await invite.userChoice; invite = null; document.getElementById('installer').hidden = true; };
+</script>
+<script>
+// Code d'ecole : debloque les listes d'eleves (chiffrees dans eleves.chiffre.json), une fois par appareil.
+function montrerTableau(){
+  let u = null; try { u = localStorage.getItem('eps-tableau'); } catch(e){}
+  const t = document.getElementById('tuile-tableau');
+  if (u){ t.href = u; t.hidden = false; } else t.hidden = true;
+  let s = null; try { s = localStorage.getItem('eps-script'); } catch(e){}
+  document.getElementById('tuile-classement').hidden = !s;
+}
+montrerTableau();
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function ouvrirListes(code){
+  const C = await (await fetch('eleves.chiffre.json', {cache: 'no-cache'})).json();
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']);
+  const cle = await crypto.subtle.deriveKey({name: 'PBKDF2', salt: b64(C.s), iterations: 250000, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
+  const txt = new TextDecoder().decode(await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64(C.i)}, cle, b64(C.d)));
+  const o = JSON.parse(txt);
+  localStorage.setItem('kl-listes-v1', JSON.stringify(o.listes || o));
+  if (o.tableau) localStorage.setItem('eps-tableau', o.tableau); else localStorage.removeItem('eps-tableau');
+  if (o.script) localStorage.setItem('eps-script', o.script); else localStorage.removeItem('eps-script');
+  montrerTableau();
+  localStorage.setItem('eps-code', code);
+  localStorage.setItem('eps-listes-v', C.v);
+}
+let codeGarde = null; try { codeGarde = localStorage.getItem('eps-code'); } catch(e){}
+const installe = document.body.classList.contains('installe');
+if (!codeGarde && installe) document.getElementById('porte').hidden = false;
+else if (navigator.onLine) ouvrirListes(codeGarde).catch(() => {}); // listes mises a jour
+document.getElementById('porte-f').onsubmit = async e => {
+  e.preventDefault();
+  const m = document.getElementById('porte-m'); m.textContent = 'Vérification…';
+  try { await ouvrirListes(document.getElementById('porte-i').value.trim().toLowerCase()); document.getElementById('porte').hidden = true; m.textContent = ''; }
+  catch(err){ m.textContent = navigator.onLine ? 'Code incorrect, réessaie.' : 'Connecte-toi à internet pour la première ouverture.'; }
+};
+</script>
+<script>
+if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

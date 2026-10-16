@@ -215,7 +215,15 @@ async function charger(){
 }
 document.getElementById('maj').onclick = charger;
 rendre(); charger();
-if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.register('../sw.js').catch(() => {});
+// Mise a jour automatique : on verifie a chaque ouverture et a chaque retour dans l'appli,
+// et on recharge une fois quand la nouvelle version est prete (les donnees restent sur le telephone).
+if ('serviceWorker' in navigator) {
+  const dejaPilote = !!navigator.serviceWorker.controller; let recharge = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (dejaPilote && !recharge) { recharge = true; location.reload(); } });
+  if (navigator.onLine) navigator.serviceWorker.register('../sw.js').then(reg => {
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && navigator.onLine) reg.update().catch(() => {}); });
+  }).catch(() => {});
+}
 </script>
 <nav class="eps-nav" aria-label="Koh-Lanta">
   <a href="../koh-lanta/#jeu"><b>🎯</b>Épreuves</a><a href="../koh-lanta/#class"><b>📋</b>Classement</a><a href="../koh-lanta/#fin"><b>✅</b>Fin de leçon</a><a class="on" aria-current="page"><b>🏆</b>Général</a>

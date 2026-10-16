@@ -235,8 +235,10 @@ COMMENTAIRES_JS = r"""
 </style>
 <script>
 /* Seuils par categorie : 1 = rien, 2 = attention, 3 = c'est trop, 4+ = inacceptable (exclusion : des la 1re). */
-function comCounts(c, X, p){
-  const o = {abs: 0, gym: 0, pool: 0, np: 0, d: 0, x: 0};
+function comCounts(c, X, p, vp){
+  const o = {abs: 0, gym: 0, pool: 0, np: 0, d: 0, x: 0, adjT: 0};
+  // points retires avant l'appli (releve de l'ecole) : tenue -> oublis, comportement -> perturbations
+  (vp === 'year' ? (X.periods || []) : [vp]).forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (a){ o.adjT += +a.t || 0; o.d += +a.c || 0; } });
   X.lessons.forEach(l => {
     const a = effA(p, l); if (a === 'A'){ o.abs++; return; }
     const m = l.m[p.id] || {};
@@ -253,11 +255,11 @@ function comText(c, vp, X, p){
   else if (r.se != null) out.push(`${name} : savoir-être ${n0(r.se)}/${seP}.`);
   const ev = (r.evals.length ? r.evals : X.evals.map(e => ({e, s: e.s[p.id]}))).filter(o => typeof o.s === 'number');
   if (ev.length) out.push('Évaluations : ' + ev.map(o => `${o.e.name.trim() || 'évaluation'} ${fr(o.s, 2)}/${fr(+o.e.max, 2)}`).join(', ') + '.');
-  const k = comCounts(c, X, p);
+  const k = comCounts(c, X, p, vp);
   if (k.abs) out.push(`${k.abs} absence${k.abs > 1 ? 's' : ''}.`);
   const pl = (n, s, pp) => n + ' ' + (n > 1 ? pp : s);
   const cats = [
-    ['gym', k.gym, pl(k.gym, 'oubli de tenue en salle', 'oublis de tenue en salle'),
+    ['gym', k.gym + k.adjT, k.adjT ? pl(k.gym + k.adjT, 'oubli de tenue', 'oublis de tenue') : pl(k.gym, 'oubli de tenue en salle', 'oublis de tenue en salle'),
       ['attention, pense à ta tenue à chaque cours', 'c\'est trop, ça te coûte des points de tenue', 'c\'est inacceptable, il faut te ressaisir et venir en tenue']],
     ['pool', k.pool, pl(k.pool, 'oubli d\'affaires de piscine', 'oublis d\'affaires de piscine'),
       ['attention, prépare ton sac de piscine la veille', 'c\'est trop, ça te coûte des points', 'c\'est inacceptable, il faut te ressaisir']],
@@ -277,8 +279,9 @@ function comText(c, vp, X, p){
     const s = joined + ' : ' + (g.length === 1 ? g[0].tails[L - 1] : gen[L - 1]) + '.';
     out.push(s[0].toUpperCase() + s.slice(1));
   });
-  const any = k.gym + k.pool + k.np + k.d + k.x;
-  if (!worst) out.push(any ? 'Bonne attitude dans l\'ensemble.' : 'Toujours en ordre, très bonne attitude.');
+  const any = k.gym + k.adjT + k.pool + k.np + k.d + k.x;
+  const plein = year || ((r.t == null || r.t >= (+S.settings.T || 0)) && (r.c == null || r.c >= (+S.settings.C || 0)));
+  if (!worst) out.push(!any && plein ? 'Toujours en ordre, très bonne attitude.' : 'Bonne attitude dans l\'ensemble, reste attentif.');
   const pct = r.total != null ? r.total : r.se != null && seP ? r.se / seP * 100 : null;
   if (pct != null){
     if (pct < 50) out.push(year ? 'Tu es actuellement en échec sur l\'année, il faut te ressaisir.'

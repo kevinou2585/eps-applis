@@ -14,12 +14,12 @@
 <style>/* Pas de zoom quand on tape vite deux fois sur un bouton (iPhone) */
 html,body,button,a,input,label,select{touch-action:manipulation}
 /* Retour vers l'accueil de l'appli EPS */
-.eps-retour{display:flex;align-items:center;gap:6px;max-width:680px;margin:0 auto;padding:10px 16px 0;font:600 14px system-ui,-apple-system,sans-serif;color:#5d6a60;text-decoration:none}
+.eps-retour{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;max-width:680px;margin:0 auto;padding:10px 16px 0;font:600 14px system-ui,-apple-system,sans-serif;color:#5d6a60;text-decoration:none}
 @media (prefers-color-scheme:dark){.eps-retour{color:#9aa89e}}</style>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 </head>
 <body>
-<a class="eps-retour" href="../">‹ Mes applis</a>
+<a class="eps-retour" href="../"><span style="white-space:nowrap">‹ Mes applis</span></a>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
 /* Layout : appli une colonne pour téléphone — barre de groupe collante, onglets, liste d'aventuriers tactile */
@@ -260,12 +260,7 @@ details.arch[open] summary{border-bottom:1px solid var(--line)}
 <div class="toast" id="toast" hidden><span id="toast-msg"></span><button id="toast-undo">Annuler</button></div>
 
 <script>
-const ROSTER = {
- jaune:['Abdelhakim Sealiti','Ali Khokhar','Davina Mwanampulu Bi-Mukufu','Dubno Ahmed Nur Gease','Erina Sadiki','Imran Temsamani','Ishak Laouti','Issam El Khallouki','Lyn Bukens','Mario Louis Cioaca','Mathys Gary Nyandjou Joao','Mehdi Moussaid','Mohtadi Zemzem','Muhammad Misam Raza',"Raihane M'Rabet",'Saidou Sow','Warda Nihal Chabane'],
- vert:['Abdoulaye Bah','Aissata Diallo','Ayoub Boumediene','Enes Kiliç','Fiona Ajdini','Imran Yaagoubi','Melissa Sandu','Nizar Bouzizoua','Othman Haddaoui Nour',"Pierre N'Diaye",'Ruqaya Haddouten','Safwane Bouali','Sefer Kaan Yilmaz','Yasin Taskin','Zeinab Harouna'],
- bleu:['Abdourahamane Bah','Adam Zarioh','Aichabente Diallo','Alalli Alassane Bah Diallo','Amara Dore Soumaoroh','Bilal Zaian','Bradley François Quintino Landeut','Fatoumata Kaba','Mamadou Diouhé Diallo','Maryam Diallo','Mohamed Amchich','Naila Abajadi','Nathan Amini Nyembo','Rayan Azzouz Ben Ayad','Rodayna Azzouzi Amri','Russel-David Fernandez Tchamba','Walid Zian Marzgui Kanfoud'],
- rouge:['Adam Bekhti','Amer Said Ibrahim','Buglem Baytoz','Daniel Fidel Marquez Fuentes Mpemba','Denis Mocanu','Fatoumata Binta Sow','Gouanwou Chloé Noumbissi Noumbissi','Islam El Guenouni','Jonaid Bouzaid','Mariam Sow',"M'Mahsaran Toure",'Mohammed Khlifi','Mouhamed Bah','Naïm Kouimen Lamarti','Pranjal Shresta','Rayan El Bouziani']
-};
+const ROSTER = {jaune:[], vert:[], bleu:[], rouge:[]};
 const GLABEL = {jaune:'Jaune', vert:'Vert', bleu:'Bleu', rouge:'Rouge'};
 const KEY = 'kl-arene-v1';
 const $ = id => document.getElementById(id);

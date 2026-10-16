@@ -14,11 +14,11 @@
 <style>/* Pas de zoom quand on tape vite deux fois sur un bouton (iPhone) */
 html,body,button,a,input,label,select{touch-action:manipulation}
 /* Retour vers l'accueil de l'appli EPS */
-.eps-retour{display:flex;align-items:center;gap:6px;max-width:680px;margin:0 auto;padding:10px 16px 0;font:600 14px system-ui,-apple-system,sans-serif;color:#5d6a60;text-decoration:none}
+.eps-retour{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;max-width:680px;margin:0 auto;padding:10px 16px 0;font:600 14px system-ui,-apple-system,sans-serif;color:#5d6a60;text-decoration:none}
 @media (prefers-color-scheme:dark){.eps-retour{color:#9aa89e}}</style>
 </head>
 <body>
-<a class="eps-retour" href="../">‹ Mes applis</a>
+<a class="eps-retour" href="../"><span style="white-space:nowrap">‹ Mes applis</span></a>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: one-column pitch-side tool — sticky header with tabs, match cards with big score steppers, standings and bonus lists. */

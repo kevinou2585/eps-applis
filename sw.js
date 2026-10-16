@@ -42,6 +42,7 @@ self.addEventListener('fetch', e => {
   // no-cache : on redemande toujours au site s'il y a du neuf (sinon le telephone garde 10 min l'ancienne page).
   const reseau = req.mode === 'navigate' ? fetch(req.url, {cache: 'no-cache', credentials: 'same-origin'}) : fetch(req, {cache: 'no-cache'});
   e.respondWith(reseau.then(rep => {
+    if (rep.redirected && req.mode === 'navigate') return Response.redirect(rep.url, 302);
     if (rep.ok) { const copie = rep.clone(); caches.open(VERSION).then(c => c.put(req, copie)); }
     return rep;
   }).catch(() => caches.match(req, {ignoreSearch: true})));

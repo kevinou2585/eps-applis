@@ -105,7 +105,7 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
     <div class="etat" id="etat"></div>
     <h2>Top 5 des collègues</h2>
     <ol class="top" id="top5"></ol>
-    <p class="aide">Touche à gauche = flipper gauche · à droite = flipper droit.<br>Maintiens <b>LANCER</b> et lâche au bon moment.<br>Passe 3 fois par la <b>Salle des profs</b> : récré multiballe !</p>
+    <p class="aide">Touche à gauche = flipper gauche · à droite = flipper droit.<br>Maintiens <b>LANCER</b> et lâche au bon moment.<br>Vise la <b>RAMPE</b> au centre : 3 paniers ouvrent la cage → récré multiballe !<br>Gare au trou de <b>COLLE</b> en bas à gauche…</p>
   </div>
 </section>
 
@@ -194,7 +194,11 @@ const SON = {
   combo(n) { ton('square', 500 + n * 120, 900 + n * 160, 0.12, 0.12, 0, 3000); },
   fin() { [392, 370, 349, 330].forEach((f, i) => ton('sawtooth', f, i === 3 ? f * 0.92 : f, i === 3 ? 0.9 : 0.32, 0.18, i * 0.36, 1100)); },
   fanfare() { [[523, 0], [659, .12], [784, .24], [1047, .36], [784, .6], [1047, .72]].forEach(([f, d]) => { ton('square', f, f, d === .72 ? 0.7 : 0.14, 0.12, d, 3000); ton('triangle', f / 2, f / 2, 0.2, 0.15, d); }); },
-  clic() { ton('triangle', 900, 600, 0.05, 0.15); }
+  clic() { ton('triangle', 900, 600, 0.05, 0.15); },
+  rampe() { ton('sawtooth', 220, 880, 0.45, 0.08, 0, 1800); bruit(1.0, 0.18, 700, 0.6); },
+  panier() { bruit(0.35, 0.55, 4200, 0.6); bruit(0.3, 0.35, 2200, 0.8, 0.06); [784, 988, 1175, 1568].forEach((f, i) => ton('triangle', f, f, 0.14, 0.2, 0.12 + i * 0.08)); },
+  rate() { ton('square', 260, 120, 0.18, 0.18, 0, 1500); ton('square', 200, 90, 0.22, 0.14, 0.12, 1200); bruit(0.05, 0.4, 900, 1.5); },
+  colle() { ton('sine', 500, 90, 0.5, 0.35); bruit(0.4, 0.3, 300, 0.7); ton('sawtooth', 140, 70, 0.4, 0.1, 0.15, 600); }
 };
 function vib(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
 
@@ -225,13 +229,39 @@ function sling(m) {
 const SL = [sling(false), sling(true)];
 // cibles E P S : touchables seulement par-dessous (pas de corniche où la balle se pose)
 const EPS = ['E', 'P', 'S'].map((l, i) => { const cx = 152 + i * 47; return seg(cx - 21, 446, cx + 21, 446, { type: 'eps', lettre: l, cx, oneWay: true, nx: 0, ny: 1, epais: 6, e: 0.3, rail: false, bas: false }); });
-const BUMP = [
-  { x: 135, y: 215, r: 28, type: 'basket', teinte: 28, c: ['#ffc98a', '#f07a12', '#8a3d00'] },
-  { x: 255, y: 215, r: 28, type: 'foot', teinte: 200, c: ['#ffffff', '#e4e9f1', '#6f7a8c'] },
-  { x: 195, y: 318, r: 28, type: 'sifflet', teinte: 355, c: ['#ff9aa3', '#e52b3c', '#7a0f19'] }
+const BUMP = [ // petits bumpers regroupés en haut à droite
+  { x: 245, y: 112, r: 20, type: 'basket', teinte: 28, c: ['#ffc98a', '#f07a12', '#8a3d00'] },
+  { x: 310, y: 124, r: 20, type: 'foot', teinte: 200, c: ['#ffffff', '#e4e9f1', '#6f7a8c'] },
+  { x: 275, y: 178, r: 20, type: 'sifflet', teinte: 355, c: ['#ff9aa3', '#e52b3c', '#7a0f19'] }
 ].map(b => Object.assign(b, { flash: 0, cd: 0 }));
 const TROU = { x: 305, y: 335, r: 17 };
 const ORBITE_Y = 300;
+// cage en haut à gauche : 2 balles prisonnières, libérées par les paniers (récré multiballe)
+const CAGE = { ax: 84, ay: 122, bx: 112, by: 100 };
+seg(CAGE.ax, CAGE.ay, CAGE.bx, CAGE.by, { epais: 14, e: 0.4, rail: false });
+// rampe (rail métallique) : entrée au centre, toit en pointe (rien où se poser), couloir d'accès
+seg(163, 252, 191, 232, { epais: 2 }); seg(191, 232, 219, 252, { epais: 2 });
+seg(163, 252, 157, 294); seg(219, 252, 225, 294);
+const RAMPE_PTS = [[191, 266], [191, 222], [187, 186], [170, 160], [142, 150], [110, 158], [78, 172], [52, 198], [34, 236], [26, 282], [25, 330], [28, 372]];
+const RAMPE = (() => {
+  const P = RAMPE_PTS, pts = [], cr = (a, b, c, d, t) => 0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (3 * b - a - 3 * c + d) * t * t * t);
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
+    for (let k = 0; k < 8; k++) pts.push([cr(p0[0], p1[0], p2[0], p3[0], k / 8), cr(p0[1], p1[1], p2[1], p3[1], k / 8)]);
+  }
+  pts.push(P[P.length - 1]);
+  const L = [0]; for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  return { pts, L, total: L[L.length - 1] };
+})();
+function surRampe(d) {
+  const { pts, L } = RAMPE; let i = 1; while (i < L.length - 1 && L[i] < d) i++;
+  const k = Math.min(1, Math.max(0, (d - L[i - 1]) / (L[i] - L[i - 1] || 1)));
+  return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k];
+}
+const PANIER = { x: 36, y: 414 };       // cercle du panier de basket, au bout de la rampe (au-dessus du couloir gauche)
+const CHANCE_PANIER = 0.5, VIT_RAMPE = 400;
+// trou de colle (en bas à gauche) : la balle y reste collée jusqu'à la fin de la balle en cours
+const COLLE = { x: 104, y: 452, r: 12, prise: 8, vmax: 500, balle: null }; // seule une balle assez lente (vmax) près du centre (prise) tombe dedans
 const A_REPOS = 0.55, A_HAUT = -0.42;
 function flipper(px, py, cote) { return { px, py, cote, L: 64, a: A_REPOS, w: 0, appui: false }; }
 const FL = [flipper(106, 638, 1), flipper(264, 638, -1)];
@@ -242,13 +272,15 @@ let etat = 'accueil';
 let balles = [], score = 0, balleNo = 1, mult = 1, bulletin = 0, multiball = false;
 let sauveT = 0, temps = 0, comboN = 0, comboT = -9, basketHits = [], attenteBalle = 0, tilts = 0;
 let popups = [], particules = [], grandMsg = null, secousse = 0, flash = 0, chaseT = 0;
-let epsReset = 0, orbites = 0, spectacleT = 0, derniereAction = 0;
+let epsReset = 0, spectacleT = 0, derniereAction = 0;
+let paniers = 0, besoin = 3, cagePleine = true, cageFlash = 0, filetT = 0, forcePanier = null;
 const charge = { src: {}, actif: false, t0: 0 };
 
-function balleNeuve(x, y, vx, vy, neuve, auto = false) { return { x, y, vx, vy, tient: 0, ignoreTrou: 0, neuve, auto, lance: 0, ax: x, ay: y, at: temps }; }
-function nouvelleBalle(nouvelle = true, auto = false) { balles.push(balleNeuve(375, 697, 0, 0, nouvelle, auto)); }
+function balleNeuve(x, y, vx, vy, neuve) { return { x, y, vx, vy, tient: 0, ignoreTrou: 0, neuve, lance: 0, ax: x, ay: y, at: temps, rampe: null }; }
+function nouvelleBalle(nouvelle = true) { balles.push(balleNeuve(375, 697, 0, 0, nouvelle)); }
 function nouvellePartie() {
-  balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; orbites = 0; spectacleT = 0; derniereAction = temps;
+  balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps;
+  paniers = 0; besoin = 3; cagePleine = true; cageFlash = 0; filetT = 0; COLLE.balle = null;
   popups = []; particules = []; grandMsg = null; EPS.forEach(c => { c.bas = false; c.on = true; }); epsReset = 0; attenteBalle = 0;
   FL.forEach(f => { f.a = A_REPOS; f.w = 0; f.appui = false; });
   nouvelleBalle(true); etat = 'jeu'; $('pause').style.display = 'block';
@@ -267,12 +299,14 @@ function tir(nom, x, y) {
 function etincelles(x, y, n, coul) { for (let i = 0; i < n; i++) { const a = rnd(0, 6.28), v = rnd(60, 220); particules.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, age: 0, vie: rnd(0.25, 0.5), coul }); } }
 
 const TXT = {
-  basket: ['Panier !', 'Smash !', 'Air ball !', 'Dunk !'],
+  basket: ['Dribble !', 'Smash !', 'Écran !', 'Dunk !'],
   foot: ['Carton rouge !', 'Gooool !', 'Hors-jeu !', 'Petit pont !', 'Main !'],
   sifflet: ['Pas de dispense !', 'Faute !', 'Coup de sifflet !', 'En rang !'],
   perdu: ['Mot dans le carnet', 'Convocation chez le CPE', 'Oubli de tenue', 'Copie à rendre demain', 'Encore une heure de colle'],
   cantine: ['Rab de frites !', 'Hachis parmentier !', 'Poisson pané !', 'Yaourt nature…'],
-  orbite: ['Salle des profs ! ☕', 'Pause café !', 'Photocopieuse en panne !']
+  orbite: ['Salle des profs ! ☕', 'Pause café !', 'Photocopieuse en panne !'],
+  rate: ['Raté !', 'Air ball !', 'Brique !', 'Même pas le cercle !', 'Retourne t’échauffer !'],
+  colle: ['Heure de colle !', 'Collé jusqu’à la sonnerie !', 'Retenue du mercredi !']
 };
 
 // ---------------------------------------------------------------- Physique
@@ -320,6 +354,12 @@ function collBump(b, c) {
   b.vx = nx * KICK_BUMP + tx * vt; b.vy = ny * KICK_BUMP + ty * vt;
   return true;
 }
+function collPlot(b, x, y, r, e = 0.4) { // obstacle rond sans éjection (balle collée)
+  let nx = b.x - x, ny = b.y - y; const d2 = nx * nx + ny * ny, rr = R + r;
+  if (d2 >= rr * rr) return; const d = Math.sqrt(d2) || 1; nx /= d; ny /= d;
+  b.x = x + nx * rr; b.y = y + ny * rr; const vn = b.vx * nx + b.vy * ny;
+  if (vn < 0) { b.vx -= (1 + e) * vn * nx; b.vy -= (1 + e) * vn * ny; }
+}
 function pas(h) {
   for (const f of FL) {
     const cible = f.appui ? A_HAUT : A_REPOS, vit = f.appui ? 22 : 12, old = f.a;
@@ -328,29 +368,29 @@ function pas(h) {
   }
   const amort = 1 - 0.06 * h;
   for (const b of balles) {
-    if (b.tient > 0) continue;
+    if (b.tient > 0 || b.rampe || b.collee) continue;
     const py = b.y;
     b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
+    // entrée de la rampe : la balle qui monte dans le couloir central est prise par le rail (une seule à la fois)
+    if (b.vy < 0 && b.y < 274 && b.y > 236 && b.x > 160 && b.x < 222 && !balles.some(o => o.rampe)) { entrerRampe(b); continue; }
     for (const s of segs) { if (!s.on) continue; const imp = collSeg(b, s); if (imp > 50) touche(s, b, imp); }
+    if (COLLE.balle) collPlot(b, COLLE.x, COLLE.y, R);
     for (const c of BUMP) if (collBump(b, c)) toucheBumper(c, b);
     for (const f of FL) collFlip(b, f);
     const v2 = b.vx * b.vx + b.vy * b.vy; if (v2 > VMAX * VMAX) { const k = VMAX / Math.sqrt(v2); b.vx *= k; b.vy *= k; }
     if (b.x < 72 && py > ORBITE_Y && b.y <= ORBITE_Y && b.vy < 0) {
       points(5000, 36, ORBITE_Y - 20); SON.orbite(); vib(20); tir('orbite', 130, ORBITE_Y);
-      if (multiball) { points(25000); blague('JACKPOT ! ☕', 130, ORBITE_Y - 30, '#7cf'); }
-      else if (spectacleT <= 0) {
-        orbites++;
-        if (orbites >= 3) recreGenerale();
-        else blague(pick(TXT.orbite) + ' ' + orbites + '/3', 130, ORBITE_Y - 30, '#9ef');
-      }
+      if (multiball) { points(10000); blague('Pause café x2 ! ☕', 130, ORBITE_Y - 30, '#7cf'); }
+      else blague(pick(TXT.orbite), 130, ORBITE_Y - 30, '#9ef');
     }
+    if (!COLLE.balle && Math.hypot(b.x - COLLE.x, b.y - COLLE.y) < COLLE.prise && b.vx * b.vx + b.vy * b.vy < COLLE.vmax * COLLE.vmax) { coller(b); continue; }
     if (b.ignoreTrou <= 0 && Math.hypot(b.x - TROU.x, b.y - TROU.y) < 13) {
       b.tient = 1.3; b.x = TROU.x; b.y = TROU.y; b.vx = b.vy = 0;
       points(10000, TROU.x, TROU.y - 20); blague('Cantine ! ' + pick(TXT.cantine), TROU.x - 60, TROU.y - 40, '#ffb86b'); SON.cantine(); vib([20, 40, 20]); tir('cantine', TROU.x, TROU.y);
     }
   }
   for (let i = 0; i < balles.length; i++) for (let j = i + 1; j < balles.length; j++) {
-    const a = balles[i], c = balles[j]; if (a.tient > 0 || c.tient > 0) continue;
+    const a = balles[i], c = balles[j]; if (a.tient > 0 || c.tient > 0 || a.rampe || c.rampe || a.collee || c.collee) continue;
     let nx = c.x - a.x, ny = c.y - a.y; const d = Math.hypot(nx, ny);
     if (d > 0 && d < 2 * R) {
       nx /= d; ny /= d; const p = (2 * R - d) / 2; a.x -= nx * p; a.y -= ny * p; c.x += nx * p; c.y += ny * p;
@@ -382,12 +422,12 @@ function toucheBumper(c, b) {
   points(1000, c.x, c.y - 42); SON.bumper(); vib(8); etincelles(b.x, b.y, 7, `hsl(${c.teinte},100%,70%)`);
   if (c.type === 'basket') {
     basketHits = basketHits.filter(t => temps - t < 3); basketHits.push(temps);
-    if (basketHits.length >= 3) { basketHits = []; points(3000); blague('Panier à 3 points !', c.x, c.y - 60, '#ff8c2a'); SON.combo(3); return; }
+    if (basketHits.length >= 3) { basketHits = []; points(3000); blague('Triple dribble !', c.x, c.y - 60, '#ff8c2a'); SON.combo(3); return; }
   }
   if (Math.random() < 0.18) blague(pick(TXT[c.type]), c.x, c.y - 60, c.type === 'foot' ? '#ff6b6b' : undefined);
 }
 function berce(b) { return FL.some(f => { if (!f.appui) return false; const p = distFlip(b, f); return Math.hypot(b.x - p.cx, b.y - p.cy) < R + 14; }); }
-function enAttente(b) { return b.tient <= 0 && b.x > 362 && b.y > 560 && Math.abs(b.vx) + Math.abs(b.vy) < 40; }
+function enAttente(b) { return b.tient <= 0 && !b.rampe && b.x > 362 && b.y > 560 && Math.abs(b.vx) + Math.abs(b.vy) < 40; }
 function lancer(b, p) {
   b.vy = -(LANCE_MIN + (LANCE_MAX - LANCE_MIN) * p); b.vx = 0; b.lance = 0; SON.lance(); vib(25);
   if (b.neuve) { b.neuve = false; sauveT = 8; }
@@ -402,15 +442,75 @@ function charger(on, src) {
   const b = balles.find(enAttente); if (b) lancer(b, puissance());
 }
 function recreGenerale() {
-  orbites = 0; spectacleT = 1.8; chaseT = 2.6; flash = 0.7; secousse = 0.25;
+  spectacleT = 1.8; chaseT = 2.6; flash = 0.7; secousse = 0.25;
   annonce('RÉCRÉ GÉNÉRALE !', 'MULTIBALLE', '#ff8fab', 30, 2.8);
   sifflet(0, 0.18); sifflet(0.25, 0.5, 2700); SON.multi(); setTimeout(() => SON.fanfare(), 700); vib([60, 40, 60, 40, 60, 40, 200]);
 }
 function finRecre() {
-  multiball = true; points(20000);
-  balles.push(balleNeuve(165, 70, -140, 80, false), balleNeuve(225, 70, 140, 80, false));
-  sauveT = Math.max(sauveT, 10); flash = 0.3;
+  // les 2 balles de la cage sortent par l'avant de la cage ; aucune balle de secours pendant la multiballe
+  multiball = true; cagePleine = false; paniers = 0; points(20000);
+  balles.push(balleNeuve(101, 143, 170, 40, false), balleNeuve(129, 121, 210, 10, false));
+  sauveT = 0; flash = 0.3;
   for (const b of balles) { b.ax = b.x; b.ay = b.y; b.at = temps; }
+}
+function finMulti() { // fin de la récré : les 2 balles retournent en cage, il faudra un panier de plus
+  if (!multiball) return;
+  multiball = false; cagePleine = true; cageFlash = 1.2; paniers = 0; besoin = Math.min(5, besoin + 1);
+}
+// ---- rampe + panier de basket
+function entrerRampe(b) {
+  b.rampe = { d: 0, t: 0, phase: 'rail', reussi: false }; b.vx = b.vy = 0;
+  points(5000, 191, 236); SON.rampe(); vib(15); tir('rampe', 191, 230); chaseT = Math.max(chaseT, 0.5);
+  if (!multiball) blague('Rampe ! Tire au panier…', 191, 300, '#ffb347');
+}
+function majRampe(b, dt) {
+  const r = b.rampe;
+  if (r.phase === 'rail') {
+    r.d += VIT_RAMPE * dt; [b.x, b.y] = surRampe(Math.min(r.d, RAMPE.total));
+    if (r.d >= RAMPE.total) { r.phase = 'tir'; r.t = 0; r.reussi = forcePanier != null ? forcePanier : Math.random() < CHANCE_PANIER; }
+    return;
+  }
+  r.t += dt; const [sx, sy] = RAMPE_PTS[RAMPE_PTS.length - 1];
+  if (r.t < 0.3) { // chute vers le cercle (au centre si réussi, sur l'arceau sinon)
+    const k = r.t / 0.3, cx = r.reussi ? PANIER.x : PANIER.x + 12;
+    b.x = sx + (cx - sx) * k; b.y = sy + (PANIER.y - 4 - sy) * k * k; return;
+  }
+  if (!r.fait) {
+    r.fait = true;
+    if (r.reussi) {
+      filetT = 0.7; SON.panier(); vib([20, 30, 40]); etincelles(PANIER.x, PANIER.y, 22, '#ff8c1a');
+      if (multiball) { points(40000, PANIER.x + 30, PANIER.y - 30); annonce('JACKPOT PANIER !', 'Swish pendant la récré', '#ff8c1a', 30, 1.6); }
+      else {
+        points(20000, PANIER.x + 30, PANIER.y - 30); paniers = Math.min(besoin, paniers + 1);
+        annonce('PANIER !', paniers >= besoin ? 'La cage s’ouvre…' : 'Encore ' + (besoin - paniers) + ' pour la récré', '#ff8c1a', 40, 1.4);
+      }
+    } else { SON.rate(); vib(10); blague(pick(TXT.rate), 130, PANIER.y - 30, '#ff6b6b'); }
+  }
+  if (r.reussi) { // à travers le filet
+    const k = Math.min(1, (r.t - 0.3) / 0.3); b.x = PANIER.x; b.y = PANIER.y - 4 + 44 * k;
+    if (r.t >= 0.6) relacherRampe(b, 0, 150);
+  } else { // rebond sur l'arceau puis chute dans le couloir gauche
+    const k = Math.min(1, (r.t - 0.3) / 0.45); b.x = PANIER.x + 12 + (46 - PANIER.x - 12) * k; b.y = PANIER.y - 4 + 44 * k - 46 * Math.sin(Math.PI * k);
+    if (r.t >= 0.75) relacherRampe(b, -30, 160);
+  }
+}
+function relacherRampe(b, vx, vy) {
+  b.rampe = null; b.vx = vx; b.vy = vy; b.ax = b.x; b.ay = b.y; b.at = temps;
+  if (!multiball && cagePleine && paniers >= besoin && spectacleT <= 0) recreGenerale();
+}
+// ---- trou de colle
+function coller(b) {
+  b.collee = true; b.x = COLLE.x; b.y = COLLE.y; b.vx = b.vy = 0; COLLE.balle = b;
+  SON.colle(); vib([60, 30, 60]); secousse = 0.15; etincelles(COLLE.x, COLLE.y, 14, '#fff');
+  const reste = balles.filter(o => !o.collee).length;
+  annonce(pick(TXT.colle), reste ? 'Une balle de moins…' : 'Balle offerte : elle ne compte pas', '#d9b3ff', 30, 2);
+}
+function apresPerte(drain) {
+  if (balles.length === 0) {
+    if (!drain) { finMulti(); if (attenteBalle <= 0) attenteBalle = 1.4; } // collée : nouvelle balle gratuite, le compteur ne bouge pas
+    else if (sauveT > 0) { nouvelleBalle(false); annonce('Pas de dispense !', 'On remet la balle', '#7cf'); SON.sauve(); sauveT = 3; }
+    else perdreBalle();
+  } else if (balles.length === 1 && multiball) { finMulti(); blague('Fin de la récré… balles en cage', 185, 300, '#fff'); }
 }
 function debloquer(b) {
   tilts++; b.vy = -420; b.vx = b.x < 185 ? 140 : -140; b.y -= 2;
@@ -424,6 +524,7 @@ function maj(dt) {
   chaseT = Math.max(0, chaseT - dt);
   if (epsReset > 0) { epsReset -= dt; if (epsReset <= 0) { const libre = balles.every(b => Math.abs(b.y - 446) > 24 || b.x < 115 || b.x > 280); if (libre) EPS.forEach(c => { c.bas = false; c.on = true; }); else epsReset = 0.3; } }
   if (sauveT > 0) sauveT -= dt;
+  cageFlash = Math.max(0, cageFlash - dt); filetT = Math.max(0, filetT - dt);
   secousse = Math.max(0, secousse - dt); flash = Math.max(0, flash - dt);
   if (etat !== 'jeu') return;
   if (spectacleT > 0) { // la table se fige pendant le spectacle de la récré
@@ -435,6 +536,8 @@ function maj(dt) {
   }
   const N = 4, h = dt / N; for (let i = 0; i < N; i++) pas(h);
   for (const b of balles) {
+    if (b.rampe) { majRampe(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
+    if (b.collee) continue;
     if (b.tient > 0) {
       b.tient -= dt; b.ax = b.x; b.ay = b.y; b.at = temps;
       if (b.tient <= 0) { b.vx = -230; b.vy = 170; b.ignoreTrou = 1; SON.ejecte(); }
@@ -442,30 +545,26 @@ function maj(dt) {
     }
     b.ignoreTrou -= dt;
     const attend = enAttente(b);
-    if (attend) { // lancement manuel ; balles de secours de la multiballe, ou joueur inactif 10 s : lancement doux automatique
+    if (attend) { // lancement manuel ; joueur inactif 10 s : lancement doux automatique
       b.lance += dt;
-      if ((b.auto && b.lance > 0.6) || (!charge.actif && b.lance > 10 && temps - derniereAction > 10)) lancer(b, b.auto ? 0.7 : 0.5);
+      if (!charge.actif && b.lance > 10 && temps - derniereAction > 10) lancer(b, 0.5);
     } else b.lance = 0;
     // sécurité anti-blocage : si la balle ne bouge presque plus pendant 2 s (hors balle bercée sur un flipper levé ou en attente au lanceur)
     if (attend || Math.hypot(b.x - b.ax, b.y - b.ay) > 6 || berce(b)) { b.ax = b.x; b.ay = b.y; b.at = temps; }
     else if (temps - b.at > 2) { debloquer(b); b.ax = b.x; b.ay = b.y; b.at = temps; }
   }
+  if (balles.some(b => b.collee)) { balles = balles.filter(b => !b.collee); apresPerte(false); }
   const avant = balles.length;
   balles = balles.filter(b => b.y < TH + 30);
-  if (balles.length < avant) {
-    if (balles.length === 0) {
-      if (sauveT > 0) { nouvelleBalle(false); annonce('Pas de dispense !', 'On remet la balle', '#7cf'); SON.sauve(); sauveT = 3; }
-      else perdreBalle();
-    } else if (balles.length === 1 && multiball) { multiball = false; blague('Fin de la récré…', 185, 300, '#fff'); }
-    else if (sauveT > 0 && multiball) nouvelleBalle(false, true);
-  }
+  if (balles.length < avant) apresPerte(true);
   if (attenteBalle > 0) { attenteBalle -= dt; if (attenteBalle <= 0) { if (balleNo > 3) finPartie(); else nouvelleBalle(true); } }
   for (const p of popups) p.age += dt; popups = popups.filter(p => p.age < p.vie);
   for (const p of particules) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; } particules = particules.filter(p => p.age < p.vie);
   if (grandMsg) { grandMsg.age += dt; if (grandMsg.age > grandMsg.vie) grandMsg = null; }
 }
 function perdreBalle() {
-  multiball = false; charge.src = {}; charge.actif = false; SON.perdu(); vib([80, 50, 120]); secousse = 0.3;
+  finMulti(); charge.src = {};
+  if (COLLE.balle) { COLLE.balle = null; blague('Fin de la colle', COLLE.x, COLLE.y - 30, '#d9b3ff'); } charge.actif = false; SON.perdu(); vib([80, 50, 120]); secousse = 0.3;
   balleNo++; annonce('Retenue !', pick(TXT.perdu), '#ff6b6b');
   if (attenteBalle <= 0) attenteBalle = 1.8;
   if (balleNo > 3) grandMsg = { t: 'Fin du cours !', sous: fmt(score) + ' points', age: 0, vie: 3, coul: '#ffd23f' };
@@ -524,7 +623,8 @@ function corpsBumper(c, b) {
   // dessus bombé
   g = c.createRadialGradient(-r * 0.35, -r * 0.45, r * 0.1, 0, 0, r * 1.05); g.addColorStop(0, clair); g.addColorStop(0.55, base); g.addColorStop(1, fonce);
   c.beginPath(); c.arc(0, 0, r, 0, 7); c.fillStyle = g; c.fill();
-  c.save(); c.beginPath(); c.arc(0, 0, r, 0, 7); c.clip();
+  c.save(); c.beginPath(); c.arc(0, 0, r, 0, 7); c.clip(); c.save();
+  if (b.type !== 'basket') c.scale(r / 28, r / 28); // motifs dessinés pour r = 28
   if (b.type === 'basket') {
     c.strokeStyle = '#3b1d05'; c.lineWidth = 2.2; c.beginPath(); c.moveTo(-r, 0); c.lineTo(r, 0); c.moveTo(0, -r); c.lineTo(0, r); c.stroke();
     c.beginPath(); c.arc(-r * 1.25, 0, r * 0.9, -0.85, 0.85); c.stroke(); c.beginPath(); c.arc(r * 1.25, 0, r * 0.9, Math.PI - 0.85, Math.PI + 0.85); c.stroke();
@@ -537,6 +637,7 @@ function corpsBumper(c, b) {
     c.fillStyle = '#3a404c'; c.fillRect(-3, -7, 8, 4); c.beginPath(); c.arc(4, 4, 4, 0, 7); c.fill();
     c.strokeStyle = '#ffd23f'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(-21, -1); c.quadraticCurveTo(-26, 18, -9, 21); c.stroke();
   }
+  c.restore();
   // ombrage du bas + reflet
   g = c.createLinearGradient(0, -r, 0, r); g.addColorStop(0.55, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.35)'); c.fillStyle = g; c.fillRect(-r, -r, 2 * r, 2 * r);
   c.restore();
@@ -550,7 +651,7 @@ function dessinerFond() {
   c.setTransform(k, 0, 0, k, OX * DPR, OY * DPR);
   c.textAlign = 'center'; c.textBaseline = 'middle';
   // parquet du gymnase
-  c.save(); cheminTable(c); c.clip();
+  let g; c.save(); cheminTable(c); c.clip();
   c.fillStyle = '#d59f5c'; c.fillRect(0, 0, 400, 740);
   let graine = 7; const alea = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
   for (let x = 0; x < 400; x += 18) for (let y = -((x * 37) % 140); y < 740; y += 140) {
@@ -565,16 +666,26 @@ function dessinerFond() {
   // couloir salle des profs
   let gl = c.createLinearGradient(10, 0, 62, 0); gl.addColorStop(0, '#173a8a'); gl.addColorStop(1, '#2b5fd0');
   c.fillStyle = gl; c.beginPath(); c.moveTo(10, 215); c.lineTo(62, 255); c.lineTo(95, 380); c.lineTo(10, 380); c.closePath(); c.fill();
-  c.save(); c.translate(40, 318); c.rotate(-Math.PI / 2); c.font = '900 14px system-ui,sans-serif'; c.fillStyle = '#fff'; c.fillText('SALLE DES PROFS', 0, 0); c.restore();
+  c.save(); c.translate(54, 322); c.rotate(-Math.PI / 2); c.font = '900 12px system-ui,sans-serif'; c.fillStyle = '#fff'; c.fillText('SALLE DES PROFS', 0, 0); c.restore();
   c.font = '18px system-ui,sans-serif'; c.fillText('☕', 64, 370);
   c.strokeStyle = '#ffd23f'; c.lineWidth = 2; c.setLineDash([5, 4]); c.beginPath(); c.moveTo(12, ORBITE_Y); c.lineTo(72, ORBITE_Y); c.stroke(); c.setLineDash([]);
+  // couloir d'accès de la rampe
+  c.fillStyle = 'rgba(255,140,26,.35)'; c.beginPath(); c.moveTo(163, 252); c.lineTo(191, 232); c.lineTo(219, 252); c.lineTo(225, 294); c.lineTo(157, 294); c.closePath(); c.fill();
+  c.save(); c.translate(191, 285); c.font = '900 12px system-ui,sans-serif'; c.fillStyle = '#fff'; c.strokeStyle = '#5a2a00'; c.lineWidth = 3; c.strokeText('RAMPE', 0, 0); c.fillText('RAMPE', 0, 0); c.restore();
+  // trou de colle : bord rayé jaune / noir (danger), plaque violette
+  c.save(); c.translate(COLLE.x, COLLE.y);
+  for (let i = 0; i < 12; i++) { c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, COLLE.r + 6, i * Math.PI / 6, (i + 1) * Math.PI / 6); c.closePath(); c.fillStyle = i % 2 ? '#111' : '#ffd23f'; c.fill(); }
+  g = c.createRadialGradient(0, -4, 1, 0, 0, COLLE.r); g.addColorStop(0, '#000'); g.addColorStop(0.8, '#140a1e'); g.addColorStop(1, '#3a2350');
+  c.beginPath(); c.arc(0, 0, COLLE.r, 0, 7); c.fillStyle = g; c.fill(); c.restore();
+  rrect(c, COLLE.x - 24, COLLE.y + 20, 48, 16, 5); c.fillStyle = '#2b0f45'; c.fill(); c.strokeStyle = '#d9b3ff'; c.lineWidth = 1.5; c.stroke();
+  c.font = '900 11px system-ui,sans-serif'; c.fillStyle = '#fff'; c.fillText('COLLE', COLLE.x, COLLE.y + 28.5);
   // couloir du lanceur
   c.fillStyle = 'rgba(10,15,40,.55)'; c.fillRect(360, 230, 30, 480);
   c.save(); c.translate(375, 600); c.rotate(-Math.PI / 2); c.font = '800 12px system-ui,sans-serif'; c.fillStyle = 'rgba(255,255,255,.75)'; c.fillText('LANCEUR ▶', 0, 0); c.restore();
   // ombres portées des bumpers
   for (const b of BUMP) { const g = c.createRadialGradient(b.x + 6, b.y + 10, b.r * 0.5, b.x + 6, b.y + 10, b.r + 16); g.addColorStop(0, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.arc(b.x + 6, b.y + 10, b.r + 16, 0, 7); c.fill(); }
   // trou cantine
-  let g = c.createRadialGradient(TROU.x + 4, TROU.y + 6, 10, TROU.x + 4, TROU.y + 6, 32); g.addColorStop(0, 'rgba(0,0,0,.4)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.arc(TROU.x + 4, TROU.y + 6, 32, 0, 7); c.fill();
+  g = c.createRadialGradient(TROU.x + 4, TROU.y + 6, 10, TROU.x + 4, TROU.y + 6, 32); g.addColorStop(0, 'rgba(0,0,0,.4)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.arc(TROU.x + 4, TROU.y + 6, 32, 0, 7); c.fill();
   g = c.createLinearGradient(TROU.x - 24, TROU.y - 24, TROU.x + 24, TROU.y + 24); g.addColorStop(0, '#fff3c4'); g.addColorStop(0.5, '#e0a72b'); g.addColorStop(1, '#7a4f00');
   c.beginPath(); c.arc(TROU.x, TROU.y, TROU.r + 6, 0, 7); c.fillStyle = g; c.fill();
   g = c.createRadialGradient(TROU.x, TROU.y - 6, 2, TROU.x, TROU.y, TROU.r); g.addColorStop(0, '#000'); g.addColorStop(0.8, '#1c1208'); g.addColorStop(1, '#4a3013');
@@ -607,6 +718,26 @@ function dessinerFond() {
   g = c.createLinearGradient(366, 0, 384, 0); g.addColorStop(0, '#5b6272'); g.addColorStop(0.4, '#f2f5fa'); g.addColorStop(1, '#4a505e');
   c.fillStyle = g; c.fillRect(366, 710, 18, 18); c.strokeStyle = '#30343e'; c.lineWidth = 1.2;
   for (let y = 713; y < 728; y += 3) { c.beginPath(); c.moveTo(366, y); c.lineTo(384, y + 1.5); c.stroke(); }
+  dessinerRampe();
+}
+// rail métallique surélevé (dessiné par-dessus les balles du plateau)
+let rampeCv = null;
+function dessinerRampe() {
+  rampeCv = document.createElement('canvas'); rampeCv.width = cv.width; rampeCv.height = cv.height;
+  const c = rampeCv.getContext('2d'), k = S * DPR, P = RAMPE.pts;
+  c.setTransform(k, 0, 0, k, OX * DPR, OY * DPR); c.lineCap = 'round'; c.lineJoin = 'round';
+  const fil = (off, dx, dy) => { c.beginPath(); P.forEach((p, i) => { const q = P[Math.min(P.length - 1, i + 1)], o = P[Math.max(0, i - 1)], tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1, x = p[0] - ty / l * off + dx, y = p[1] + tx / l * off + dy; i ? c.lineTo(x, y) : c.moveTo(x, y); }); };
+  for (const off of [-8, 8]) { fil(off, 6, 10); c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 4; c.stroke(); }
+  // traverses
+  c.strokeStyle = '#2a2f3a'; c.lineWidth = 3;
+  for (let d = 6; d < RAMPE.total; d += 16) {
+    const [x, y] = surRampe(d), [x2, y2] = surRampe(d + 1), tx = x2 - x, ty = y2 - y, l = Math.hypot(tx, ty) || 1;
+    c.beginPath(); c.moveTo(x - ty / l * 10, y + tx / l * 10); c.lineTo(x + ty / l * 10, y - tx / l * 10); c.stroke();
+  }
+  for (const off of [-8, 8]) {
+    fil(off, 0, 0); c.strokeStyle = '#2a2f3a'; c.lineWidth = 4.5; c.stroke();
+    fil(off, 0, 0); c.strokeStyle = '#eef2f8'; c.lineWidth = 2.2; c.stroke();
+  }
 }
 
 // lampes (inserts) du plateau
@@ -614,8 +745,7 @@ const LAMPES = [
   ...EPS.map(c => ({ x: c.cx, y: 484, r: 13, h: 48, txt: c.lettre, t: 15, on: () => c.bas })),
   ...[2, 3, 4, 5].map((m, i) => ({ x: 125 + i * 40, y: 530, r: 15, h: 195, txt: 'x' + m, t: 13, on: () => mult >= m })),
   ...[0, 1, 2, 3, 4].map(i => ({ x: 322, y: 476 - i * 20, r: 7, h: 185, on: () => bulletin > i })),
-  { x: 36, y: 460, r: 12, forme: 'fleche', ang: 0, h: 320, on: () => Math.floor(temps * (orbites ? 6 : 2)) % 2 === 0 },
-  ...[1, 2, 3].map(n => ({ x: 36, y: 462 + n * 26, r: 11, h: 320, txt: n + '/3', t: 9, on: () => multiball || spectacleT > 0 || orbites >= n })),
+  { x: 191, y: 318, r: 13, forme: 'fleche', ang: 0, h: 28, on: () => Math.floor(temps * (!multiball && paniers + 1 >= besoin ? 7 : 2)) % 2 === 0 },
   { x: 262, y: 352, r: 11, forme: 'fleche', ang: 1.15, h: 32, on: () => Math.floor(temps * 2 + 1) % 2 === 0 },
   { x: 185, y: 704, forme: 'pilule', w: 76, hh: 18, h: 195, txt: 'SAUVÉE', t: 11, on: () => sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
 ];
@@ -702,6 +832,13 @@ function rendu() {
     ctx.drawImage(b.spr, b.x - s, b.y - s, 2 * s, 2 * s);
     if (f > 0) { ctx.globalAlpha = Math.min(1, f / 0.22) * 0.55; ctx.beginPath(); ctx.arc(b.x, b.y, b.r * k, 0, 7); ctx.fillStyle = hsla(h, 1, 75); ctx.fill(); ctx.globalAlpha = 1; }
   }
+  dessinerCage(); dessinerJauge();
+  // balle collée dans le trou de colle
+  if (COLLE.balle) {
+    const tb0 = 2 * R + 4; ctx.drawImage(SPR.balle, COLLE.x - tb0 * 0.45, COLLE.y - tb0 * 0.45, tb0 * 0.9, tb0 * 0.9);
+    ctx.fillStyle = 'rgba(230,215,255,.55)'; ctx.beginPath(); ctx.ellipse(COLLE.x, COLLE.y + 4, 11, 6, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = Math.floor(temps * 3) % 2 ? '#d9b3ff' : '#fff'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(COLLE.x, COLLE.y, COLLE.r + 8, 0, 7); ctx.stroke();
+  }
   // trou en action
   if (balles.some(b => b.tient > 0)) { ctx.strokeStyle = `hsl(${temps * 600 % 360},90%,60%)`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(TROU.x, TROU.y, TROU.r + 10 + Math.sin(temps * 20) * 3, 0, 7); ctx.stroke(); }
   // piston tiré + jauge de puissance
@@ -724,11 +861,22 @@ function rendu() {
   }
   // balles : ombre portée puis bille chromée
   const tb = 2 * R + 4, to = 2 * R + 14;
-  for (const b of balles) if (b.tient <= 0) ctx.drawImage(SPR.ombre, b.x + 3 - to / 2, b.y + 6 - to / 2, to, to);
+  for (const b of balles) if (b.tient <= 0 && !b.rampe) ctx.drawImage(SPR.ombre, b.x + 3 - to / 2, b.y + 6 - to / 2, to, to);
   for (const b of balles) {
+    if (b.rampe) continue;
     if (b.tient > 0) { ctx.globalAlpha = 0.55; ctx.drawImage(SPR.balle, b.x - tb * 0.4, b.y - tb * 0.4, tb * 0.8, tb * 0.8); ctx.globalAlpha = 1; }
     else ctx.drawImage(SPR.balle, b.x - tb / 2, b.y - tb / 2, tb, tb);
   }
+  // rampe surélevée, panier de basket, balle sur le rail (au-dessus de tout le plateau)
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, sx * DPR, sy * DPR); ctx.drawImage(rampeCv, 0, 0); ctx.restore();
+  const surRail = balles.filter(b => b.rampe);
+  dessinerPanier(false);
+  for (const b of surRail) {
+    const haut = b.rampe.phase === 'rail' ? 1.15 : 1.1;
+    ctx.drawImage(SPR.ombre, b.x + 7 - to / 2, b.y + 11 - to / 2, to, to);
+    ctx.drawImage(SPR.balle, b.x - tb * haut / 2, b.y - tb * haut / 2, tb * haut, tb * haut);
+  }
+  dessinerPanier(true);
   // particules
   ctx.globalCompositeOperation = 'lighter';
   for (const p of particules) { ctx.globalAlpha = 1 - p.age / p.vie; ctx.fillStyle = p.coul; ctx.fillRect(p.x - 2, p.y - 2, 4, 4); }
@@ -758,6 +906,46 @@ function rendu() {
   ctx.textAlign = 'center';
   const etiq = (multiball ? 'MULTIBALLE ' : 'MULTIPLICATEUR ') + 'x' + (mult * (multiball ? 2 : 1));
   texte(etiq, CW / 2, hy + 23, 11, multiball ? '#ff8fab' : (mult > 1 ? '#9ef' : '#9aa6c4'));
+}
+
+function dessinerCage() {
+  const cx = (CAGE.ax + CAGE.bx) / 2, cy = (CAGE.ay + CAGE.by) / 2, ang = Math.atan2(CAGE.by - CAGE.ay, CAGE.bx - CAGE.ax), tb = 2 * R + 4;
+  const pret = !multiball && cagePleine && paniers + 1 >= besoin;
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(ang);
+  rrect(ctx, -26, -11, 60, 30, 12); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill();
+  rrect(ctx, -30, -14, 60, 28, 12); ctx.fillStyle = '#141a2c'; ctx.fill();
+  if (cagePleine) for (const d of [-14, 14]) ctx.drawImage(SPR.balle, d - tb / 2, -tb / 2, tb, tb);
+  ctx.strokeStyle = '#d7dde8'; ctx.lineWidth = 2; ctx.beginPath(); for (let x = -22; x <= 22; x += 7.3) { ctx.moveTo(x, -13); ctx.lineTo(x, 13); } ctx.stroke();
+  const clign = pret && Math.floor(temps * 6) % 2 === 0;
+  rrect(ctx, -30, -14, 60, 28, 12); ctx.strokeStyle = cageFlash > 0 || clign ? '#ffffff' : '#ff8c1a'; ctx.lineWidth = cageFlash > 0 || clign ? 4 : 3; ctx.stroke();
+  texte(cagePleine ? 'RÉCRÉ 🔒' : 'RÉCRÉ !', 0, -24, 11, cagePleine ? '#ffb347' : '#fff');
+  ctx.restore();
+}
+function dessinerJauge() { // jauge des paniers en haut de la table
+  const n = besoin, x0 = 175 - (n - 1) * 9.5;
+  rrect(ctx, 124, 30, 102, 40, 10); ctx.fillStyle = 'rgba(16,26,54,.85)'; ctx.fill(); ctx.strokeStyle = '#ff8c1a'; ctx.lineWidth = 2; ctx.stroke();
+  texte(multiball ? 'RÉCRÉ EN COURS' : 'PANIERS ' + paniers + '/' + n, 175, 42, 11, multiball ? '#fff' : '#ffb347');
+  for (let i = 0; i < n; i++) {
+    const x = x0 + i * 19, y = 58, plein = multiball || i < paniers;
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, 7); ctx.fillStyle = plein ? '#ff8c1a' : '#2a2f3a'; ctx.fill();
+    ctx.strokeStyle = plein ? '#3b1d05' : '#9aa6c4'; ctx.lineWidth = 1.5; ctx.stroke();
+    if (plein) { ctx.beginPath(); ctx.moveTo(x - 7, y); ctx.lineTo(x + 7, y); ctx.moveTo(x, y - 7); ctx.lineTo(x, y + 7); ctx.stroke(); }
+  }
+}
+function dessinerPanier(devant) { // panneau + cercle + filet, vus de face ; devant = arceau avant et filet
+  const { x, y } = PANIER, w = filetT > 0 ? Math.sin(filetT * 30) * filetT * 6 : 0;
+  if (!devant) {
+    rrect(ctx, x - 22 + 3, y - 34 + 5, 44, 30, 3); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill();
+    rrect(ctx, x - 22, y - 34, 44, 30, 3); ctx.fillStyle = '#f7f9fc'; ctx.fill(); ctx.strokeStyle = '#2a2f3a'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.strokeStyle = '#e8471c'; ctx.lineWidth = 2; ctx.strokeRect(x - 9, y - 22, 18, 14);
+    ctx.beginPath(); ctx.ellipse(x, y, 14, 5, 0, Math.PI, 2 * Math.PI); ctx.strokeStyle = '#a32a00'; ctx.lineWidth = 3; ctx.stroke();
+    return;
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1.2; ctx.beginPath();
+  for (let i = 0; i <= 4; i++) { const a = -14 + i * 7, b = -7 + i * 3.5; ctx.moveTo(x + a, y); ctx.lineTo(x + b + w, y + 24); }
+  for (let j = 1; j <= 2; j++) { const yy = y + j * 8, l = 14 - j * 2.3; ctx.moveTo(x - l + w * j / 3, yy); ctx.lineTo(x + l + w * j / 3, yy); }
+  ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(x, y, 14, 5, 0, 0, Math.PI); ctx.strokeStyle = filetT > 0 ? '#ffd23f' : '#ff5a1f'; ctx.lineWidth = 3.5; ctx.stroke();
 }
 
 let dernier = 0, acc = 0; const PAS = 1 / 120;
@@ -1014,8 +1202,11 @@ function confettis(n = 140) {
 // Pour les tests automatisés
 window.__battle = {
   get etat() { return etat; }, get balles() { return balles; }, get score() { return score; }, get flippers() { return FL; },
-  get temps() { return temps; }, get tilts() { return tilts; }, get orbites() { return orbites; }, get multiball() { return multiball; }, get spectacle() { return spectacleT; },
-  PAS: 1 / 120, maj, nouvellePartie, enAttente, berce, lancer, recreGenerale, segs, FL,
+  get temps() { return temps; }, get tilts() { return tilts; }, get multiball() { return multiball; }, get spectacle() { return spectacleT; },
+  get paniers() { return paniers; }, get besoin() { return besoin; }, get cagePleine() { return cagePleine; }, get balleNo() { return balleNo; },
+  get colle() { return COLLE.balle; }, get attente() { return attenteBalle; },
+  set forcePanier(v) { forcePanier = v; }, get forcePanier() { return forcePanier; },
+  PAS: 1 / 120, maj, nouvellePartie, enAttente, berce, lancer, recreGenerale, entrerRampe, coller, segs, FL, COLLE, RAMPE, PANIER,
   finir(s) { score = s; balleNo = 4; balles = []; attenteBalle = 0; finPartie(); }
 };
 

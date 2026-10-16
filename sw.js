@@ -1,5 +1,5 @@
 // Fait marcher les applis sans internet. Version a changer a chaque mise en ligne pour rafraichir le cache.
-const VERSION = 'eps-v3';
+const VERSION = 'eps-v4';
 const FICHIERS = [
   './', './index.html',
   './tournoi/', './tournoi/manifest.webmanifest',

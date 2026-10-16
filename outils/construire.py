@@ -23,6 +23,8 @@ def tete(titre, dossier, couleur):
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="{titre}">
+<style>/* Pas de zoom quand on tape vite deux fois sur un bouton (iPhone) */
+html,body,button,a,input,label,select{{touch-action:manipulation}}</style>
 """
 
 

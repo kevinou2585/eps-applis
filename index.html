@@ -42,6 +42,7 @@ li{margin:4px 0}
   <a class="tuile" href="carnet/"><img src="icones/carnet-192.png" alt=""><b>Carnet EPS <small class="beta">bêta</small></b><span>Présences, tenue, attitude, évaluations, bulletins</span></a>
   <a class="tuile" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><b>Tournoi</b><span>Matchs, scores, arbitres, classement</span></a>
   <a class="tuile" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b><span>Points, équipes, fair-play, fin de leçon</span></a>
+  <a class="tuile" id="tuile-tableau" hidden target="_blank" rel="noopener"><span class="ph">📊</span><b>Tableau Koh-Lanta</b><span>Le classement général sur Google Drive</span></a>
 </div>
 
 <div class="web-seul">
@@ -81,13 +82,22 @@ li{margin:4px 0}
 </style>
 <script>
 // Code d'ecole : debloque les listes d'eleves (chiffrees dans eleves.chiffre.json), une fois par appareil.
+function montrerTableau(){
+  let u = null; try { u = localStorage.getItem('eps-tableau'); } catch(e){}
+  const t = document.getElementById('tuile-tableau');
+  if (u){ t.href = u; t.hidden = false; } else t.hidden = true;
+}
+montrerTableau();
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 async function ouvrirListes(code){
   const C = await (await fetch('eleves.chiffre.json', {cache: 'no-cache'})).json();
   const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(code), 'PBKDF2', false, ['deriveKey']);
   const cle = await crypto.subtle.deriveKey({name: 'PBKDF2', salt: b64(C.s), iterations: 250000, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
   const txt = new TextDecoder().decode(await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64(C.i)}, cle, b64(C.d)));
-  localStorage.setItem('kl-listes-v1', txt);
+  const o = JSON.parse(txt);
+  localStorage.setItem('kl-listes-v1', JSON.stringify(o.listes || o));
+  if (o.tableau) localStorage.setItem('eps-tableau', o.tableau); else localStorage.removeItem('eps-tableau');
+  montrerTableau();
   localStorage.setItem('eps-code', code);
   localStorage.setItem('eps-listes-v', C.v);
 }

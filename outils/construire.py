@@ -111,7 +111,9 @@ def koh_lanta(src):
     m_r = re.search(r"const ROSTER = (\{.*?\n\});", corps, re.S)
     sortie = subprocess.run(["node", "-e", "process.stdout.write(JSON.stringify(" + m_r.group(1) + "))"],
                             capture_output=True, text=True, check=True).stdout
-    (RACINE / "eleves.chiffre.json").write_text(json.dumps(chiffrer(json.loads(sortie))), encoding="utf-8")
+    # Le lien du tableau des scores (Drive) est chiffre avec les listes : il n'apparait pas en clair sur le site.
+    secret = {"listes": json.loads(sortie), "tableau": os.environ.get("KL_TABLEAU", "")}
+    (RACINE / "eleves.chiffre.json").write_text(json.dumps(chiffrer(secret)), encoding="utf-8")
     corps = corps[:m_r.start()] + LISTES_JS + corps[m_r.end():]
     if "jaune:['" in corps:
         sys.exit("Koh-Lanta : noms d'eleves restants")

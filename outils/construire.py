@@ -37,14 +37,59 @@ html,body,button,a,input,label,select{{touch-action:manipulation}}
 
 RETOUR = '<a class="eps-retour" href="../"><span style="white-space:nowrap">‹ Mes applis</span></a>\n'
 
-# Koh-Lanta : acces au classement general (et au tableau Drive) depuis l'appli elle-meme.
-KL_LIENS = """<div class="eps-kl-liens" id="eps-kl-liens" hidden><a href="../tableau/">🏆 Classement général</a><a id="eps-kl-drive" target="_blank" rel="noopener" hidden>📊 Tableau Drive</a></div>
-<style>.eps-kl-liens{display:flex;gap:8px;flex-wrap:wrap;max-width:680px;margin:0 auto;padding:8px 16px 0}.eps-kl-liens[hidden],.eps-kl-liens a[hidden]{display:none}
-.eps-kl-liens a{flex:1;text-align:center;padding:10px 12px;border-radius:12px;background:#e8590c;color:#fff;font:700 15px system-ui,-apple-system,sans-serif;text-decoration:none;white-space:nowrap}
-.eps-kl-liens a#eps-kl-drive{background:transparent;color:#e8590c;border:2px solid #e8590c}</style>
-<script>(()=>{let s=null,t=null;try{s=localStorage.getItem('eps-script');t=localStorage.getItem('eps-tableau');}catch(e){}
-const b=document.getElementById('eps-kl-liens');if(s||t)b.hidden=false;if(!s)b.firstChild.hidden=true;
-if(t){const d=document.getElementById('eps-kl-drive');d.href=t;d.hidden=false;}})();</script>
+# Koh-Lanta, mise en page B (choisie par Kevin) : haut epure (‹ titre ⋯), onglets en bas sous le pouce,
+# Classement general en 4e onglet. On ne touche pas a l'appli : on deplace ses elements apres coup.
+KL_MISE_EN_PAGE = """
+<style>
+.eps-haut{display:flex;align-items:center;gap:10px}
+.eps-haut h1{flex:1;min-width:0}
+.eps-ic{flex:none;width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;font:700 20px system-ui,sans-serif;text-decoration:none;padding:0}
+.brand .archbtn,.brand .right,.tbrow{display:none!important}
+.eps-menu{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.25)}
+.eps-menu[hidden]{display:none}
+.eps-menu>div{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);width:min(260px,calc(100% - 24px));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:6px;display:grid}
+.eps-menu .info{padding:8px 12px 6px;color:var(--muted);font-size:.82rem;display:grid;gap:2px}
+.eps-menu button,.eps-menu a{all:unset;box-sizing:border-box;padding:12px;border-radius:10px;font-weight:600;color:var(--ink);cursor:pointer;border-top:1px solid var(--line)}
+.eps-menu .rouge{color:var(--red,#c92a2a)}
+.eps-menu [hidden]{display:none}
+.tabs.eps-nav{position:fixed;left:0;right:0;bottom:0;z-index:18;margin:0;border-radius:0;border:0;border-top:1px solid var(--line);grid-template-columns:repeat(var(--n,3),1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));background:var(--surface)}
+.eps-nav .tab,.eps-nav .eps-gen{display:grid;justify-items:center;gap:1px;padding:4px 2px;border-radius:10px;font-size:.74rem;font-weight:700;color:var(--muted);background:transparent;text-decoration:none}
+.eps-nav .tab b,.eps-nav .eps-gen b{font-size:1.35rem;line-height:1.2}
+.eps-nav .tab[aria-selected="true"]{background:transparent;color:var(--torch)}
+.eps-nav .eps-gen[hidden]{display:none}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+.toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+</style>
+<div class="eps-menu" id="eps-menu" hidden><div>
+  <div class="info"><span id="eps-m-date"></span><span id="eps-m-sync"></span></div>
+  <button data-clic="open-arch">🗂️ Archives</button>
+  <button data-clic="backup-top">💾 Sauvegarde</button>
+  <a id="eps-m-drive" target="_blank" rel="noopener" hidden>📊 Tableau Drive</a>
+  <button data-clic="reset-top" class="rouge">↺ Remettre à 0</button>
+</div></div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let s = null, t = null; try { s = localStorage.getItem('eps-script'); t = localStorage.getItem('eps-tableau'); } catch(e){}
+  // Haut : ‹  Koh-Lanta EPS  ⋯
+  const brand = document.querySelector('header .brand'), h1 = brand.querySelector('h1');
+  brand.classList.add('eps-haut');
+  const ret = document.createElement('a'); ret.className = 'eps-ic'; ret.href = '../'; ret.textContent = '‹'; ret.setAttribute('aria-label', 'Mes applis');
+  const plus = document.createElement('button'); plus.className = 'eps-ic'; plus.type = 'button'; plus.textContent = '⋯'; plus.setAttribute('aria-label', 'Menu');
+  brand.insertBefore(ret, h1); brand.appendChild(plus);
+  // Menu ⋯ : les boutons d'origine restent dans l'appli (caches), le menu les declenche.
+  const menu = $('eps-menu');
+  plus.onclick = () => { $('eps-m-date').textContent = $('today').textContent; $('eps-m-sync').textContent = $('sync').textContent; menu.hidden = false; };
+  menu.onclick = e => { const b = e.target.closest('[data-clic]'); menu.hidden = true; if (b) $(b.dataset.clic).click(); };
+  if (t) { $('eps-m-drive').href = t; $('eps-m-drive').hidden = false; }
+  // Onglets en bas, avec le Classement general en 4e.
+  const tabs = document.querySelector('header .tabs'); tabs.classList.add('eps-nav');
+  const ic = {jeu: '🎯', class: '📋', fin: '✅'};
+  tabs.querySelectorAll('.tab').forEach(b => { const i = document.createElement('b'); i.textContent = ic[b.dataset.tab] || '•'; b.prepend(i); });
+  if (s) { const g = document.createElement('a'); g.className = 'eps-gen'; g.href = '../tableau/'; g.innerHTML = '<b>🏆</b>Général'; tabs.appendChild(g); tabs.style.setProperty('--n', 4); }
+  document.body.appendChild(tabs);
+})();
+</script>
 """
 
 PIED = """
@@ -131,7 +176,7 @@ def koh_lanta(src):
     if "copy-link" in corps or "claude.ai" in corps:
         sys.exit("Reste un lien claude.ai dans Koh-Lanta")
     return (tete("Koh-Lanta Arène", "koh-lanta", "#e8590c") + style_base + "\n</head>\n<body>\n"
-            + RETOUR + KL_LIENS + corps + ENVOI_JS + PIED)
+            + corps + ENVOI_JS + KL_MISE_EN_PAGE + PIED)
 
 
 # Bouton "Envoyer au tableau general" sous la fiche fin de lecon. L'adresse du script Google et le code

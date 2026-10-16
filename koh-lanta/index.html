@@ -905,8 +905,11 @@ body{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
   const tabs = document.querySelector('header .tabs'); tabs.classList.add('eps-nav');
   const ic = {jeu: '🎯', class: '📋', fin: '✅'};
   tabs.querySelectorAll('.tab').forEach(b => { const i = document.createElement('b'); i.textContent = ic[b.dataset.tab] || '•'; b.prepend(i); });
-  if (s) { const g = document.createElement('a'); g.className = 'eps-gen'; g.href = '../tableau/'; g.innerHTML = '<b>🏆</b>Général'; tabs.appendChild(g); tabs.style.setProperty('--n', 4); }
+  if (s) { const g = document.createElement('a'); g.className = 'eps-gen'; g.href = '../tableau/'; g.onclick = e => { e.preventDefault(); location.replace(g.href); }; g.innerHTML = '<b>🏆</b>Général'; tabs.appendChild(g); tabs.style.setProperty('--n', 4); }
   document.body.appendChild(tabs);
+  // Retour depuis la page Général : ../koh-lanta/#class ouvre directement le bon onglet.
+  const h = location.hash.slice(1);
+  if (h) { const b = tabs.querySelector('.tab[data-tab="' + h + '"]'); history.replaceState(null, '', location.pathname); if (b) b.click(); }
 })();
 </script>
 

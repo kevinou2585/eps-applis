@@ -217,5 +217,17 @@ document.getElementById('maj').onclick = charger;
 rendre(); charger();
 if ('serviceWorker' in navigator && navigator.onLine) navigator.serviceWorker.register('../sw.js').catch(() => {});
 </script>
+<nav class="eps-nav" aria-label="Koh-Lanta">
+  <a href="../koh-lanta/#jeu"><b>🎯</b>Épreuves</a><a href="../koh-lanta/#class"><b>📋</b>Classement</a><a href="../koh-lanta/#fin"><b>✅</b>Fin de leçon</a><a class="on" aria-current="page"><b>🏆</b>Général</a>
+</nav>
+<style>
+.eps-nav{position:fixed;left:0;right:0;bottom:0;z-index:18;display:grid;grid-template-columns:repeat(4,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line)}
+.eps-nav a{display:grid;justify-items:center;gap:1px;padding:4px 2px;font-size:.74rem;font-weight:700;color:var(--muted);text-decoration:none}
+.eps-nav a b{font-size:1.35rem;line-height:1.2}
+.eps-nav a.on{color:var(--torch)}
+body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+@media print{.eps-nav{display:none!important}}
+</style>
+<script>document.querySelectorAll('.eps-nav a[href]').forEach(a => a.onclick = e => { e.preventDefault(); location.replace(a.href); });</script>
 </body>
 </html>

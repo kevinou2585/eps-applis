@@ -1564,12 +1564,43 @@ connectCloud();
                     : await fetch(o.url + (o.url.includes('?') ? '&' : '?') + 'cle=' + encodeURIComponent(o.cle) + '&annee=' + encodeURIComponent(annee()));
     return r.json();
   }
+  // Plusieurs appareils sur le meme tableau (telephone + ordinateur) : on reprend ce que l'autre a change.
+  // Classe par classe, la version la plus recente gagne ; une classe supprimee ailleurs est supprimee ici.
+  const occupe = () => { const a = document.activeElement; return !!(document.getElementById('sheetroot')?.innerHTML || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && !a.closest('#drv'))); };
+  function fusionner(copie){
+    const R = copie && copie.state; if (!R || !Array.isArray(R.classes)) return false;
+    const del = new Set([...(S.deleted || []), ...(R.deleted || [])]), loc = new Map(S.classes.map(c => [c.id, c])), out = [];
+    let change = false;
+    R.classes.forEach(rc => {
+      if (del.has(rc.id)) return;
+      const lc = loc.get(rc.id); loc.delete(rc.id);
+      if (!lc || (rc.ts || 0) > (lc.ts || 0)){ out.push(rc); change = true; } else out.push(lc);
+    });
+    loc.forEach(lc => { if (del.has(lc.id)) change = true; else out.push(lc); });
+    let settings = S.settings;
+    if ((R.ts || 0) > (S.ts || 0) && JSON.stringify(R.settings) !== JSON.stringify(S.settings)){ settings = {...DEF_SET, ...(R.settings || {})}; change = true; }
+    if (!change) return false;
+    S = {...S, classes: out, deleted: [...del], settings, ts: Math.max(S.ts || 0, R.ts || 0)};
+    if (S.cur && !S.classes.some(c => c.id === S.cur)) S.cur = null;
+    avant(); render();
+    return true;
+  }
+  async function tirer(){
+    const o = lire(); if (!o.url || !o.cle || !navigator.onLine || window.carnetChangeAnnee || occupe()) return false;
+    try { const r = await appel(o); if (r.ok && !window.carnetChangeAnnee && !occupe() && fusionner(r.copie)){ toast('Carnet mis à jour depuis ton Drive'); return true; } } catch(e){}
+    return false;
+  }
   async function envoyer(){
     const o = lire(); if (!o.url || !o.cle || !o.attente || window.carnetChangeAnnee) return;
     if (enCours){ planifier(4000); return; }
     if (!navigator.onLine){ etat(); return; }
+    // on ne remplace jamais le Drive sans avoir d'abord repris les changements faits sur un autre appareil
+    if (occupe()){ planifier(5000); return; }
     enCours = true; const debut = Date.now();
     try {
+      const r0 = await appel(o);
+      if (r0.ok && !occupe()) fusionner(r0.copie);
+      else if (!r0.ok && r0.err !== 'vide') throw new Error(r0.err);
       const rep = await appel(o, {cle: o.cle, annee: annee(), copie: {app: 'carnet-eps', v: 1, at: Date.now(), state: S}, feuilles: feuilles()});
       const n = lire();
       if (rep.ok){ n.dernier = Date.now(); n.err = ''; if ((n.modif || 0) <= debut) n.attente = false; }
@@ -1586,10 +1617,15 @@ connectCloud();
   const avant = window.persistLocal;
   window.persistLocal = function(){ avant.apply(this, arguments); const o = lire(); if (!o.url) return; o.attente = true; o.modif = Date.now(); ecrire(o); planifier(6000); etat(); };
   window.addEventListener('online', () => planifier(1000));
-  document.addEventListener('visibilitychange', () => { if (lire().attente) planifier(document.visibilityState === 'hidden' ? 0 : 1500); });
+  document.addEventListener('visibilitychange', () => {
+    if (lire().attente) planifier(document.visibilityState === 'hidden' ? 0 : 1500);
+    else if (document.visibilityState === 'visible') setTimeout(tirer, 800);
+  });
   if (lire().attente) planifier(3000);
   // Reseau revenu sans que le telephone le signale (gare, train) : nouvel essai chaque minute tant que c'est en attente.
-  setInterval(() => { if (lire().attente && !enCours && !document.hidden) envoyer(); }, 60000);
+  // Chaque minute : envoi en attente, sinon on regarde si un autre appareil a change quelque chose.
+  setInterval(() => { if (enCours || document.hidden) return; if (lire().attente) envoyer(); else tirer(); }, 60000);
+  if (lire().url && !lire().attente) setTimeout(tirer, 1500);
 
   function nouveauCode(){ const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let s = ''; for (let i = 0; i < 8; i++) s += a[Math.floor(Math.random() * a.length)]; return s.slice(0, 4) + '-' + s.slice(4); }
 
@@ -1619,7 +1655,7 @@ connectCloud();
     const o = lire();
     if (o.url){
       d.innerHTML = `<h3>☁️ Google Drive</h3>
-        <p class="small muted" style="margin:0">Chaque changement est copié dans ton tableau Google, avec un onglet lisible par classe et par période.</p>
+        <p class="small muted" style="margin:0">Chaque changement est copié dans ton tableau Google, avec un onglet lisible par classe et par période. Sur un autre appareil (ordinateur, tablette), ouvre le Carnet, colle la même adresse et le même code : tes notes suivent partout.</p>
         <span class="etat" id="drv-etat"></span>
         <p class="small muted" style="margin:0">Code du carnet : <span class="code">${o.cle}</span> (il est aussi écrit dans l'onglet « Lisez-moi » du tableau).</p>
         <div class="row2"><button class="btn" type="button" id="drv-go">Sauvegarder maintenant</button><button class="btn" type="button" id="drv-rs">Restaurer depuis Drive</button></div>
@@ -1652,13 +1688,9 @@ connectCloud();
       if (!r.ok && r.err !== 'vide'){ box.innerHTML = '<div class="confirm"><b>Ce n\'est pas le script du Carnet.</b></div>'; return; }
       ecrire({url, cle, attente: true, modif: Date.now()});
       dessiner(d);
-      if (r.ok && r.copie){
-        const b2 = d.querySelector('#drv-box');
-        b2.innerHTML = `<div class="confirm"><b>Ce tableau contient déjà une sauvegarde du ${heure(r.copie.at)}.</b><span class="small">Tu veux la récupérer sur ce téléphone, ou la remplacer par ce qu'il y a ici ?</span><div class="row2"><button class="btn" type="button" id="drv-ici">Garder ce téléphone</button><button class="btn pri" type="button" id="drv-la">Récupérer le Drive</button></div></div>`;
-        const n = lire(); n.attente = false; ecrire(n); etat();
-        b2.querySelector('#drv-ici').onclick = () => { b2.innerHTML = ''; const n = lire(); n.attente = true; n.modif = Date.now(); ecrire(n); envoyer(); };
-        b2.querySelector('#drv-la').onclick = () => restaurer(r.copie, b2);
-      } else envoyer();
+      // Tableau deja utilise (autre appareil) : on reunit les deux carnets, classe par classe.
+      if (r.ok && r.copie){ fusionner(r.copie); toast('Ton carnet est relié au Drive et à tes autres appareils'); }
+      envoyer();
     };
   }
   new MutationObserver(carte).observe(document.body, {childList: true, subtree: true});

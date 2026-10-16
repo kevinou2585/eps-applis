@@ -142,8 +142,55 @@ def carnet(src):
         "// Annee scolaire choisie (bouton a cote du titre) : les dates proposees suivent l'annee.\n"
         "function decalAnnee(){ try { const a = parseInt(localStorage.getItem('carnet-eps-annee'), 10); return a ? a - 2026 : 0; } catch(e){ return 0; } }\n"
         "function defaultPeriods(){", 1)
+    corps = certificats(corps)
     retour = RETOUR.replace('</a>\n', '<span style="font-weight:500">· Version bêta, pas encore finie</span></a>\n')
     return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + ANNEES_JS + DRIVE_JS + PIED
+
+
+def certificats(corps):
+    """Certificats medicaux : zone (tout / piscine / salle), icone 🩺 dans l'appel, scan du document."""
+    def rep(a, b, n=1):
+        nonlocal corps
+        if corps.count(a) != n:
+            sys.exit("Carnet certificats : motif introuvable : " + a[:60])
+        corps = corps.replace(a, b)
+    rep("const certOn = (p, date) => (p.certs || []).find(x => x.from <= date && date <= x.to) || null;",
+        "// type de lecon ('salle' ou 'piscine') : un certificat « piscine seulement » ne dispense pas en salle, et inversement.\n"
+        "const certOn = (p, date, type) => (p.certs || []).find(x => x.from <= date && date <= x.to && (!type || !x.zone || x.zone === 'tout' || x.zone === type)) || null;\n"
+        "const zoneTxt = x => x.zone === 'piscine' ? 'piscine seulement' : x.zone === 'salle' ? 'salle seulement' : '';")
+    rep("certOn(p, L.date)", "certOn(p, L.date, L.type)", 4)
+    rep(""">Dispensé jusqu'au ${cert.to.slice(8)}/${cert.to.slice(5, 7)}</span>""",
+        """>🩺 Certificat · dispensé jusqu'au ${cert.to.slice(8)}/${cert.to.slice(5, 7)}</span>""")
+    rep("""<b>Dispensé du ${esc(fmtD(x.from))} au ${esc(fmtD(x.to))}</b>""",
+        """<b>🩺 Dispensé du ${esc(fmtD(x.from))} au ${esc(fmtD(x.to))}</b>${zoneTxt(x) ? ` <span class="tag">${zoneTxt(x)}</span>` : ''}""")
+    rep("""Dispensé du ${esc(fmtDL(x.from))} au ${esc(fmtDL(x.to))}${x.note""",
+        """Dispensé du ${esc(fmtDL(x.from))} au ${esc(fmtDL(x.to))}${zoneTxt(x) ? ' · ' + zoneTxt(x) : ''}${x.note""")
+    # formulaire : scanner ou choisir, et zone couverte
+    rep("""    <button class="btn block" type="button" id="cf-pick">${IC.cam} Prendre ou choisir la photo</button>
+    <div id="cf-prev"></div>""",
+        """    <div class="row2"><button class="btn pri" type="button" id="cf-scan" style="flex:1">${IC.cam} Scanner le certificat</button><button class="btn" type="button" id="cf-pick" style="flex:1">Choisir une photo</button></div>
+    <div id="cf-prev"></div>
+    <span class="small muted">Le certificat couvre</span>
+    <div class="row2" id="cf-zone">${[['tout', 'Tout'], ['piscine', 'Piscine seulement'], ['salle', 'Salle seulement']].map(([k, l]) => `<button class="chip" type="button" data-zone="${k}" aria-pressed="${k === 'tout'}">${l}</button>`).join('')}</div>""")
+    rep("""  $('cf-pick').onclick = () => { $('certin').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    try { img = await shrinkDoc(f);""",
+        """  let zone = 'tout';
+  document.querySelectorAll('[data-zone]').forEach(b => b.onclick = () => { zone = b.dataset.zone; document.querySelectorAll('[data-zone]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  // Scanner : l'appareil photo s'ouvre, on place les coins, la feuille sort redressee en noir et blanc.
+  $('cf-scan').onclick = () => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.setAttribute('capture', 'environment');
+    inp.onchange = async () => { const f = inp.files[0]; if (!f) return;
+      try { const d = await scanDoc(f, $('cf-prev')); if (!d){ $('cf-prev').innerHTML = ''; toast('Le scan n\\'a pas marché, réessaie'); return; } img = d;
+        $('cf-prev').innerHTML = `<img src="${img}" alt="Certificat scanné" style="width:100%;max-height:340px;object-fit:contain;border-radius:10px;border:1px solid var(--line);background:#fff">`; }
+      catch(err){ toast('Cette image n\\'a pas pu être lue'); } };
+    inp.click(); };
+  $('cf-pick').onclick = () => { $('certin').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    try { img = await scanDoc(f, $('cf-prev')); if (!img) throw new Error('scan');""")
+    rep("""    const x = {id: nid('m'), from, to, note: $('cf-note').value.trim()};""",
+        """    const x = {id: nid('m'), from, to, zone, note: $('cf-note').value.trim()};""")
+    rep("""save(c.id); openPupil(c, p.id); toast(`Dispensé jusqu'au ${fmtD(to)}`);""",
+        """save(c.id); openPupil(c, p.id); toast(`🩺 Dispensé jusqu'au ${fmtD(to)}${zone === 'tout' ? '' : ' (' + zoneTxt(x) + ')'}`);""")
+    scan = (RACINE / "outils/scan-certificat.js").read_text(encoding="utf-8")
+    return corps.replace("</body>", "", 0) + "\n<script>\n" + scan + "</script>\n"
 
 
 def classeur(src):

@@ -143,6 +143,7 @@ def carnet(src):
     corps = certificats(corps)
     corps = commentaires(corps)
     corps = agenda(corps)
+    corps = evaluations(corps)
     retour = RETOUR.replace('</a>\n', '<span style="font-weight:500">· Version bêta, pas encore finie</span></a>\n')
     return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + COMMENTAIRES_JS + ANNEES_JS + DRIVE_JS + PIED
 
@@ -213,7 +214,7 @@ def commentaires(corps):
     <div class="card sec" style="padding-block:14px">
       <h3>Bulletin</h3>
       <label class="toggle"><input type="checkbox" id="s-com" ${st.comAuto !== false ? 'checked' : ''}>📝 Commentaire de bulletin automatique</label>
-      <p class="small muted" style="margin:0">Activé : chaque élève reçoit un commentaire tout prêt (note, évaluations, oublis, attitude) que tu peux modifier. Désactivé : les cases restent vides et tu écris toi-même, le bouton ✨ Proposer un texte reste là au besoin.</p>
+      <p class="small muted" style="margin:0">Activé : chaque élève reçoit un récapitulatif neutre tout prêt (note, savoir-être, évaluations, absences, oublis) que tu peux modifier. Désactivé : les cases restent vides et tu écris toi-même, le bouton ✨ Proposer un texte reste là au besoin.</p>
     </div>""")
     rep("""  $('s-np').onchange = e => { st.npCounts = e.target.checked; save(); };""",
         """  $('s-np').onchange = e => { st.npCounts = e.target.checked; save(); };
@@ -263,6 +264,62 @@ def agenda(corps):
     return corps
 
 
+def evaluations(corps):
+    """Evaluations formatives, endurance avec compteur de tours plein ecran, filles et regles a la piscine."""
+    def rep(a, b):
+        nonlocal corps
+        if corps.count(a) != 1:
+            sys.exit("Carnet evaluations : motif introuvable : " + a[:60])
+        corps = corps.replace(a, b)
+    # 1. formatives : hors savoir-faire, bulletin, Excel/Drive et commentaires (tout passe par compute)
+    rep("const evs = c.evals.filter(e => e.periodId === p.id)", "const evs = c.evals.filter(e => e.periodId === p.id && e.kind !== 'form')")
+    rep("const totMax = evs.reduce((a, e) => a + +e.max, 0);", "const totMax = evs.filter(e => e.kind !== 'form').reduce((a, e) => a + +e.max, 0);")
+    rep("Une éval sur 20 pèse donc deux fois plus qu'une sur 10.</p>",
+        "Une éval sur 20 pèse donc deux fois plus qu'une sur 10.${evs.some(e => e.kind === 'form') ? ' Les évaluations FORMATIVES (pour info) ne comptent pas.' : ''}</p>")
+    rep("""<b>${esc(e.name)}</b><span class="small muted">${e.date ?""", """<b>${esc(e.name)}${evTags(e)}</b><span class="small muted">${e.date ?""")
+    # formulaire : type (classique / endurance), duree et tours, certificative / formative
+    rep("""    <label class="f">Nom<input class="inp" id="ef-name""", """    ${evTypeField(c, e)}
+    <label class="f">Nom<input class="inp" id="ef-name""")
+    rep("""data-max="${n}">/${n}</button>`).join('')}</div>""", """data-max="${n}">/${n}</button>`).join('')}</div>
+    ${evEnduFields(c, e)}
+    ${evKindField(e)}""")
+    rep("  document.querySelectorAll('[data-max]').forEach(b => b.onclick = () => $('ef-max').value = b.dataset.max);",
+        "  document.querySelectorAll('[data-max]').forEach(b => b.onclick = () => $('ef-max').value = b.dataset.max);\n  bindEvForm(c, e);")
+    rep("    const o = e || {id: nid('v'), s: {}};", "    if (!evFormOk()) return;\n    const o = e || {id: nid('v'), s: {}};")
+    rep("o.periodId = $('ef-per').value;", "o.periodId = $('ef-per').value;\n    evFormApply(c, o);")
+    # feuille des notes : bouton du compteur, tours
+    rep("""    <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">${e.date ? esc(fmtDL(e.date)) + ' · ' : ''}sur""",
+        """    ${evScoresHead(c, e)}<div class="row2" style="align-items:center"><span class="small muted" style="flex:1">${e.date ? esc(fmtDL(e.date)) + ' · ' : ''}sur""")
+    rep("""<span class="who">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b></span></span>""", """<span class="who">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b>${evLapsTxt(e, p)}</span></span>""")
+    rep("    $('es-edit').onclick = () => { closeSheet(); openEvalForm(c, null, e); };", "    $('es-edit').onclick = () => { closeSheet(); openEvalForm(c, null, e); };\n    bindEvScoresHead(c, e);")
+    # fiche eleve : formatives a part, garcon / fille
+    rep("""Aucune évaluation dans cette période.</span>'}</div>""", """Aucune évaluation dans cette période.</span>'}${evFormList(c, vp, p)}</div>""")
+    rep("""<label class="f">Nom<input class="inp" id="pp-name" value="${esc(p.n)}"></label>""", """<label class="f">Nom<input class="inp" id="pp-name" value="${esc(p.n)}"></label>
+    ${pgSheet(c, p)}""")
+    rep("  $('pp-name').onchange = e => {", "  bindPupilG(c, p);\n  $('pp-name').onchange = e => {")
+    # 3. regles a la piscine : 2e fois de suite = -1 tenue (meme si « ne participe pas » ne coute rien)
+    rep("    if (m.np){ r.np++; if (st.npCounts) f.push(['t', 'Ne participe pas à la piscine', 'np']); }",
+        "    if (m.np){ r.np++; if (st.npCounts) f.push(['t', 'Ne participe pas à la piscine', 'np']); }\n"
+        "    if (m.rg && l.type === 'piscine' && rgRepeat(c, l, pu)){ r.np++; f.push(['t', 'Règles 2 semaines de suite', 'rg']); }")
+    rep("${mm.x ? 'EXCL.' : IC.down}</button>\n  </div>`;", "${mm.x ? 'EXCL.' : IC.down}</button>${rgChip(c, L, p, pool, off || exempt)}\n  </div>`;")
+    rep("const b = e.target.closest('button'); if (!b) return;", """const b = e.target.closest('[data-act="rg"]') || e.target.closest('button'); if (!b) return;""")
+    rep("    else if (act === 'np'){ if (mm.np) delete mm.np; else mm.np = 1; }",
+        "    else if (act === 'np'){ if (mm.np) delete mm.np; else { mm.np = 1; delete mm.rg; } }\n"
+        "    else if (act === 'rg'){ if (mm.rg) delete mm.rg; else { mm.rg = 1; delete mm.np; } }")
+    rep("if (mm.a === 'A' || mm.a === 'D'){ delete mm.k; delete mm.np; }", "if (mm.a === 'A' || mm.a === 'D'){ delete mm.k; delete mm.np; delete mm.rg; }")
+    # classe : garcons / filles / mixte, G ou F par eleve
+    rep("""Certificat en cours</span>' : ''}</span></button></div>""", """Certificat en cours</span>' : ''}</span></button>${pgBtns(c, p)}</div>""")
+    rep("""      <label class="f">Nom de la classe<input class="inp" id="s-cname" value="${esc(c.name)}"></label>""",
+        """      <label class="f">Nom de la classe<input class="inp" id="s-cname" value="${esc(c.name)}"></label>
+      ${classSexeHTML(c)}""")
+    rep("  $('s-cname').onchange = e => {", "  bindClassSexe(c);\n  $('s-cname').onchange = e => {")
+    css = (RACINE / "outils/evals-carnet.css").read_text(encoding="utf-8")
+    js = (RACINE / "outils/evals-carnet.js").read_text(encoding="utf-8")
+    rep("@media (prefers-reduced-motion: no-preference){ .sheet{", css + "@media (prefers-reduced-motion: no-preference){ .sheet{")
+    rep("/* ====== Démarrage ====== */", js + "\n/* ====== Démarrage ====== */")
+    return corps
+
+
 # Carnet : commentaire de bulletin par eleve (en « tu »), genere a partir des points, evals et oublis.
 # Les textes retouches sont gardes dans la classe : c.com[periodId | 'year'][pupilId] (synchro avec le reste).
 COMMENTAIRES_JS = r"""
@@ -277,7 +334,7 @@ COMMENTAIRES_JS = r"""
 .tag.com-low{background:var(--bad-soft); color:var(--bad)}
 </style>
 <script>
-/* Seuils par categorie : 1 = rien, 2 = attention, 3 = c'est trop, 4+ = inacceptable (exclusion : des la 1re). */
+/* Compteurs du recapitulatif (absences, oublis, pas nage, perturbations, exclusions). */
 function comCounts(c, X, p, vp){
   const o = {abs: 0, gym: 0, pool: 0, np: 0, d: 0, x: 0, adjT: 0};
   // points retires avant l'appli (releve de l'ecole) : tenue -> oublis, comportement -> perturbations
@@ -286,53 +343,35 @@ function comCounts(c, X, p, vp){
     const a = effA(p, l); if (a === 'A'){ o.abs++; return; }
     const m = l.m[p.id] || {};
     if (m.k){ if (l.type === 'piscine') o.pool++; else o.gym++; }
-    if (m.np) o.np++;
+    if (m.np || (m.rg && l.type === 'piscine' && rgRepeat(c, l, p))) o.np++; // regles excusees : jamais comptees
     if (m.x) o.x++; else if (m.d) o.d++;
   });
   return o;
 }
 function comText(c, vp, X, p){
-  const r = X.res[p.id], seP = +S.settings.se, n0 = v => fr(v, 0), year = vp === 'year';
-  const out = [], name = year ? 'Année' : vp.name;
-  if (r.total != null) out.push(`${name} : ${n0(r.total)} % (savoir-être ${n0(r.se)}/${seP}, savoir-faire ${n0(r.sf)}/${100 - seP}).`);
-  else if (r.se != null) out.push(`${name} : savoir-être ${n0(r.se)}/${seP}.`);
-  const ev = (r.evals.length ? r.evals : X.evals.map(e => ({e, s: e.s[p.id]}))).filter(o => typeof o.s === 'number');
-  if (ev.length) out.push('Évaluations : ' + ev.map(o => `${o.e.name.trim() || 'évaluation'} ${fr(o.s, 2)}/${fr(+o.e.max, 2)}`).join(', ') + '.');
-  const k = comCounts(c, X, p, vp);
-  if (k.abs) out.push(`${k.abs} absence${k.abs > 1 ? 's' : ''}.`);
-  const pl = (n, s, pp) => n + ' ' + (n > 1 ? pp : s);
-  const cats = [
-    ['gym', k.gym + k.adjT, k.adjT ? pl(k.gym + k.adjT, 'oubli de tenue', 'oublis de tenue') : pl(k.gym, 'oubli de tenue en salle', 'oublis de tenue en salle'),
-      ['attention, pense à ta tenue à chaque cours', 'c\'est trop, ça te coûte des points de tenue', 'c\'est inacceptable, il faut te ressaisir et venir en tenue']],
-    ['pool', k.pool, pl(k.pool, 'oubli d\'affaires de piscine', 'oublis d\'affaires de piscine'),
-      ['attention, prépare ton sac de piscine la veille', 'c\'est trop, ça te coûte des points', 'c\'est inacceptable, il faut te ressaisir']],
-    ['np', k.np, pl(k.np, 'cours de piscine sans nager', 'cours de piscine sans nager'),
-      ['attention, il faudra te mettre à l\'eau', 'c\'est trop, ça te coûte des points', 'c\'est inacceptable, il faut te ressaisir et participer']],
-    ['d', k.d, pl(k.d, 'perturbation du cours', 'perturbations du cours'),
-      ['attention, il faudra améliorer ton attitude', 'c\'est trop, ça te coûte des points d\'attitude', 'c\'est inacceptable, il faut te ressaisir']],
-    ['x', k.x, pl(k.x, 'exclusion du cours', 'exclusions du cours'),
-      ['attention, ton comportement doit changer', 'c\'est trop, ça te coûte des points', 'c\'est inacceptable, il faut te ressaisir']],
-  ].map(([key, n, txt, tails]) => ({key, n, txt, tails, lvl: Math.min(3, Math.max(0, (key === 'x' ? n + 1 : n) - 1))}));
-  const gen = ['attention, il faudra t\'améliorer', 'c\'est trop, ça te coûte des points', 'c\'est inacceptable, il faut te ressaisir'];
-  let worst = 0;
-  [3, 2, 1].forEach(L => {
-    const g = cats.filter(x => x.lvl === L); if (!g.length) return;
-    worst = Math.max(worst, L);
-    const list = g.map(x => x.txt), joined = list.length > 1 ? list.slice(0, -1).join(', ') + ' et ' + list[list.length - 1] : list[0];
-    const s = joined + ' : ' + (g.length === 1 ? g[0].tails[L - 1] : gen[L - 1]) + '.';
-    out.push(s[0].toUpperCase() + s.slice(1));
-  });
-  const any = k.gym + k.adjT + k.pool + k.np + k.d + k.x;
-  const plein = year || ((r.t == null || r.t >= (+S.settings.T || 0)) && (r.c == null || r.c >= (+S.settings.C || 0)));
-  if (!worst) out.push(!any && plein ? 'Toujours en ordre, très bonne attitude.' : 'Bonne attitude dans l\'ensemble, reste attentif.');
-  const pct = r.total != null ? r.total : r.se != null && seP ? r.se / seP * 100 : null;
-  if (pct != null){
-    if (pct < 50) out.push(year ? 'Tu es actuellement en échec sur l\'année, il faut te ressaisir.'
-      : worst === 3 ? 'Tu es actuellement en échec : redresse la barre pour la prochaine période.'
-      : 'Tu es actuellement en échec : il faut te ressaisir pour la prochaine période.');
-    else if (pct >= 80) out.push('Excellent travail, continue comme ça !');
-    else out.push('Bon travail, continue tes efforts.');
+  // Recap neutre : seulement les chiffres qui expliquent la note (aucun jugement, aucun conseil).
+  const r = X.res[p.id], st = S.settings, seP = +st.se, n0 = v => fr(v, 0), year = vp === 'year', out = [];
+  if (year){
+    const per = (X.periods || []).map(pp => { const t = compute(c, pp).res[p.id].total; return t != null ? `${pp.name} : ${n0(t)} %` : null; }).filter(Boolean);
+    if (per.length) out.push(per.join(', ') + '.');
+    if (r.total != null) out.push(`Moyenne de l'année : ${n0(r.total)} %.`);
+    if (r.se != null) out.push(`Savoir-être moyen ${n0(r.se)}/${seP}` + (r.sf != null ? `, savoir-faire moyen ${n0(r.sf)}/${100 - seP}.` : '.'));
+  } else {
+    const se = `avoir-être ${n0(r.se)}/${seP} (tenue ${r.t}/${+st.T || 0}, attitude ${r.c}/${+st.C || 0})`;
+    if (r.total != null){ out.push(`${vp.name} : ${n0(r.total)} %.`, `S${se}.`); if (r.sf != null) out.push(`Savoir-faire ${n0(r.sf)}/${100 - seP}.`); }
+    else out.push(`${vp.name} : s${se}.`);
+    const ev = r.evals.filter(o => typeof o.s === 'number');
+    if (ev.length) out.push('Évaluations : ' + ev.map(o => `${o.e.name.trim() || 'évaluation'} ${fr(o.s, 2)}/${fr(+o.e.max, 2)}`).join(', ') + '.');
+    const fo = c.evals.filter(e => e.periodId === vp.id && e.kind === 'form' && typeof e.s[p.id] === 'number');
+    if (fo.length) out.push('Formatif : ' + fo.map(e => `${e.name.trim() || 'évaluation'} ${fr(e.s[p.id], 2)}/${fr(+e.max, 2)}`).join(', ') + '.');
   }
+  const k = comCounts(c, X, p, vp), salle = k.gym + k.adjT;
+  if (k.abs) out.push(`Absences : ${k.abs}.`);
+  if (k.pool) out.push(`Oublis de tenue : ${[salle ? salle + ' en salle' : '', k.pool + ' à la piscine'].filter(Boolean).join(', ')}.`);
+  else if (salle) out.push(`Oublis de tenue : ${salle}.`);
+  if (k.np) out.push(`Pas nagé : ${k.np}.`);
+  if (k.d) out.push(`Perturbations : ${k.d}.`);
+  if (k.x) out.push(`Exclusions : ${k.x}.`);
   return out.join(' ');
 }
 function comCopy(txt, ok){
@@ -352,7 +391,7 @@ function openComments(c, vp){
   const cur = pid => { const v = man(pid); return v != null ? v : auto ? gen[pid] : ''; };
   const pct = p => { const r = X.res[p.id]; return r.total; };
   openSheet(`Commentaires · ${vp === 'year' ? 'Année' : vp.name}`, `
-    <p class="small muted" style="margin:0">${auto ? 'Texte écrit tout seul d\'après les points, les évaluations et les oublis. Tu peux le modifier : ta version est gardée.' : 'Commentaire automatique désactivé (Réglages) : écris ton texte, ou touche ✨ Proposer un texte.'}</p>
+    <p class="small muted" style="margin:0">${auto ? 'Récapitulatif écrit tout seul d\'après les points, les évaluations et les oublis. Tu peux le modifier : ta version est gardée.' : 'Commentaire automatique désactivé (Réglages) : écris ton texte, ou touche ✨ Proposer un texte.'}</p>
     <button class="btn pri block" type="button" id="com-all">📋 Tout copier (${esc(c.name)})</button>
     ${ps.map(p => { const t = pct(p);
       return `<div class="card com-it" data-cpid="${p.id}"><div class="hd"><b>${esc(p.n)}</b>${t != null ? `<span class="tag ${t < 50 ? 'com-low' : ''}" style="${t < 50 ? '' : 'background:var(--surface2)'}">${t < 50 ? '⚠ ' : ''}${fr(t, 0)} %</span>` : ''}<span class="tag com-man" data-man ${man(p.id) != null ? '' : 'hidden'}>✎ modifié</span></div>
@@ -546,7 +585,7 @@ DRIVE_JS = r"""
   }
   // Plusieurs appareils sur le meme tableau (telephone + ordinateur) : on reprend ce que l'autre a change.
   // Classe par classe, la version la plus recente gagne ; une classe supprimee ailleurs est supprimee ici.
-  const occupe = () => { const a = document.activeElement; return !!(document.getElementById('sheetroot')?.innerHTML || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && !a.closest('#drv'))); };
+  const occupe = () => { const a = document.activeElement; return !!(document.getElementById('sheetroot')?.innerHTML || document.body.classList.contains('en-open') || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && !a.closest('#drv'))); };
   function fusionner(copie){
     const R = copie && copie.state; if (!R || !Array.isArray(R.classes)) return false;
     const del = new Set([...(S.deleted || []), ...(R.deleted || [])]), loc = new Map(S.classes.map(c => [c.id, c])), out = [];

@@ -1,0 +1,6 @@
+/* Nom / prénom et onglet Évaluation par groupe (outils/groupes-carnet.js) */
+.gr-nom{align-items:flex-end}
+.gr-add{display:flex; flex-direction:column; gap:6px; padding-top:4px}
+.gr-chips .chip.sess[aria-pressed="true"]{outline:2px solid var(--fg); outline-offset:1px}
+.gr-for{display:flex; flex-direction:column; gap:2px; padding:10px 12px; border-radius:12px; border:2px solid var(--fg); background:var(--surface)}
+.tag.gr-only{display:inline-block; margin-top:4px; background:var(--surface); color:var(--fg); border:1.5px dashed var(--muted); font-size:11.5px; padding:1px 8px; width:max-content}

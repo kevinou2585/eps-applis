@@ -144,6 +144,7 @@ def carnet(src):
     corps = commentaires(corps)
     corps = agenda(corps)
     corps = evaluations(corps)
+    corps = groupes(corps)
     retour = RETOUR.replace('</a>\n', '<span style="font-weight:500">· Version bêta, pas encore finie</span></a>\n')
     return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + COMMENTAIRES_JS + ANNEES_JS + DRIVE_JS + PIED
 
@@ -296,9 +297,6 @@ def evaluations(corps):
     rep("    $('es-edit').onclick = () => { closeSheet(); openEvalForm(c, null, e); };", "    $('es-edit').onclick = () => { closeSheet(); openEvalForm(c, null, e); };\n    bindEvScoresHead(c, e);")
     # fiche eleve : formatives a part, garcon / fille
     rep("""Aucune évaluation dans cette période.</span>'}</div>""", """Aucune évaluation dans cette période.</span>'}${evFormList(c, vp, p)}</div>""")
-    rep("""<label class="f">Nom<input class="inp" id="pp-name" value="${esc(p.n)}"></label>""", """<label class="f">Nom<input class="inp" id="pp-name" value="${esc(p.n)}"></label>
-    ${pgSheet(c, p)}""")
-    rep("  $('pp-name').onchange = e => {", "  bindPupilG(c, p);\n  $('pp-name').onchange = e => {")
     # 3. regles a la piscine : 2e fois de suite = -1 tenue (meme si « ne participe pas » ne coute rien)
     rep("    if (m.np){ r.np++; if (st.npCounts) f.push(['t', 'Ne participe pas à la piscine', 'np']); }",
         "    if (m.np){ r.np++; if (st.npCounts) f.push(['t', 'Ne participe pas à la piscine', 'np']); }\n"
@@ -309,14 +307,64 @@ def evaluations(corps):
         "    else if (act === 'np'){ if (mm.np) delete mm.np; else { mm.np = 1; delete mm.rg; } }\n"
         "    else if (act === 'rg'){ if (mm.rg) delete mm.rg; else { mm.rg = 1; delete mm.np; } }")
     rep("if (mm.a === 'A' || mm.a === 'D'){ delete mm.k; delete mm.np; }", "if (mm.a === 'A' || mm.a === 'D'){ delete mm.k; delete mm.np; delete mm.rg; }")
-    # classe : garcons / filles / mixte, G ou F par eleve
-    rep("""Certificat en cours</span>' : ''}</span></button></div>""", """Certificat en cours</span>' : ''}</span></button>${pgBtns(c, p)}</div>""")
+    # classe : garcons ou filles (un seul reglage pour le groupe)
     rep("""      <label class="f">Nom de la classe<input class="inp" id="s-cname" value="${esc(c.name)}"></label>""",
         """      <label class="f">Nom de la classe<input class="inp" id="s-cname" value="${esc(c.name)}"></label>
       ${classSexeHTML(c)}""")
     rep("  $('s-cname').onchange = e => {", "  bindClassSexe(c);\n  $('s-cname').onchange = e => {")
     css = (RACINE / "outils/evals-carnet.css").read_text(encoding="utf-8")
     js = (RACINE / "outils/evals-carnet.js").read_text(encoding="utf-8")
+    rep("@media (prefers-reduced-motion: no-preference){ .sheet{", css + "@media (prefers-reduced-motion: no-preference){ .sheet{")
+    rep("/* ====== Démarrage ====== */", js + "\n/* ====== Démarrage ====== */")
+    return corps
+
+
+def groupes(corps):
+    """Nom et prenom separes (prenom seul a l'appel et au compteur), onglet Evaluation par groupe de classes."""
+    def rep(a, b):
+        nonlocal corps
+        if corps.count(a) != 1:
+            sys.exit("Carnet groupes : motif introuvable : " + a[:60])
+        corps = corps.replace(a, b)
+    # liste collee : nom / prenom (la nouvelle addPupils est dans groupes-carnet.js)
+    rep(r"""function addPupils(c, text){
+  const out = [];
+  text.split(/\r?\n/).map(l => l.replace(/[\t;,]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(Boolean).forEach(n => {
+    if (/^(nom|élève|eleve)\b/i.test(n)) return;
+    const p = {id: nid('e'), n}; c.pupils.push(p); out.push(p);
+  });
+  return out;
+}
+""", "/* addPupils : voir groupes-carnet.js (nom et prénom) */\n")
+    # appel : prenom seul, initiale du nom si deux prenoms pareils (sur toutes les classes de l'appel)
+    rep("  const pool = Ls[0].type === 'piscine';", "  const pool = Ls[0].type === 'piscine';\n  NCOURT = nomsCourts(cls.flatMap(c => c.pupils));")
+    rep("""<span class="nm"><b>${esc(p.n)}</b>${cert ?""", """<span class="nm"><b>${esc(nomCourt(p))}</b>${cert ?""")
+    rep("toast(`${p.n} : exclu du cours`)", "toast(`${nomCourt(p)} : exclu du cours`)")
+    rep("toast(`${p.n} : perturbe`)", "toast(`${nomCourt(p)} : perturbe`)")
+    # fiche eleve : Nom + Prenom
+    rep("""<label class="f">Nom<input class="inp" id="pp-name" value="${esc(p.n)}"></label>""", "${pupilNameFields(p)}")
+    rep("""  $('pp-name').onchange = e => { const v = e.target.value.trim(); if (v){ p.n = v; save(c.id); document.querySelector('.sheet .sh h2').textContent = v; } };""",
+        "  bindPupilName(c, p);")
+    # classe > eleves : ajouter un eleve (deux cases) ou coller une liste
+    rep("""<label class="f">Ajouter des élèves (un par ligne)<textarea class="inp" id="s-add" placeholder="Nom Prénom&#10;Nom Prénom"></textarea></label>""",
+        """${addOneHTML()}
+      <label class="f">Ou colle une liste (un élève par ligne : NOM Prénom)<textarea class="inp" id="s-add" placeholder="DUPONT Léa&#10;Martin Yanis"></textarea></label>
+      <span class="small muted" style="margin-top:-4px">Le nom en MAJUSCULES, sinon le dernier mot est pris comme prénom. Deux colonnes copiées d'Excel : nom puis prénom. Tu peux corriger dans la fiche de l'élève.</span>""")
+    rep("  $('s-addgo').onclick = () => {", "  bindAddOne(c);\n  $('s-addgo').onclick = () => {")
+    rep("""<label class="f">Élèves (un par ligne)<textarea class="inp" id="nc-list" placeholder="Nom Prénom&#10;Nom Prénom"></textarea></label>""",
+        """<label class="f">Élèves (un par ligne : NOM Prénom)<textarea class="inp" id="nc-list" placeholder="DUPONT Léa&#10;Martin Yanis"></textarea></label>""")
+    # 4 onglets : Presences, Evaluation, Classes, Agenda ; plus d'Evals dans la classe
+    rep("grid-template-columns:repeat(3,1fr); max-width:760px", "grid-template-columns:repeat(4,1fr); max-width:760px")
+    rep("const TABS = [['today','Présences','lesson'],['classes','Classes','points'],['agenda','Agenda','cal']];",
+        "const TABS = [['today','Présences','lesson'],['evals','Évaluation','evals'],['classes','Classes','points'],['agenda','Agenda','cal']];")
+    rep("if (!['today','classes','agenda','settings'].includes(UI.tab)) UI.tab = 'today';",
+        "if (!['today','evals','classes','agenda','settings'].includes(UI.tab)) UI.tab = 'today';")
+    rep("  else if (UI.tab === 'agenda') renderAgenda(m);", "  else if (UI.tab === 'agenda') renderAgenda(m);\n  else if (UI.tab === 'evals') renderEvalTab(m);")
+    rep("const CTABS = [['evals','Évals'],['report','Bulletin'],['points','Points'],['pupils','Élèves']];",
+        "const CTABS = [['report','Bulletin'],['points','Points'],['pupils','Élèves']];")
+    rep("const sub = CTABS.some(t => t[0] === UI.ctab) ? UI.ctab : 'evals';", "const sub = CTABS.some(t => t[0] === UI.ctab) ? UI.ctab : 'report';")
+    css = (RACINE / "outils/groupes-carnet.css").read_text(encoding="utf-8")
+    js = (RACINE / "outils/groupes-carnet.js").read_text(encoding="utf-8")
     rep("@media (prefers-reduced-motion: no-preference){ .sheet{", css + "@media (prefers-reduced-motion: no-preference){ .sheet{")
     rep("/* ====== Démarrage ====== */", js + "\n/* ====== Démarrage ====== */")
     return corps

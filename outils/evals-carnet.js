@@ -3,14 +3,17 @@
      (filtrée dans compute()). Sans e.kind = certificative (les anciennes évaluations aussi).
    - e.endu = {min, tours, laps:{pid: n}} : évaluation d'endurance. Note = min(tours / objectif, 1) × max, arrondie au 0,5,
      écrite dans e.s comme une note normale. Dernières valeurs utilisées dans la classe : c.enduLast = {min, tours, max}.
-   - p.g = 'F' | 'G' ; c.sexe = 'G' | 'F' | 'M' (toute la classe d'un coup, sert si p.g est vide).
+   - c.sexe = 'G' | 'F' : les groupes ne sont jamais mixtes, un seul réglage par classe (fiche Élèves). Il met aussi p.g sur
+     chaque élève, et les élèves ajoutés plus tard le reçoivent (pupilNew). Ancien c.sexe = 'M' : p.g de chaque élève sert encore.
+   - Évaluation de groupe (onglet Évaluation, outils/groupes-carnet.js) : une éval par classe, liées par e.gid ;
+     le compteur compte alors toutes les classes du groupe sur un seul écran (run.items = [{cid, eid}]).
    - Leçon piscine : m.rg = 1 (règles) : ne nage pas, pas de point perdu, sauf si à la leçon piscine précédente
      (où elle n'était pas absente) elle avait déjà ses règles : −1 tenue « Règles 2 semaines de suite » (dans compute()).
    - Compteur en cours : localStorage 'carnet-eps-endu' (reprise après un rechargement), enregistré dans la classe à la fin.
    Tout passe par save(c.id) : appareil + Drive. */
 const EN_MINS = [10, 15, 20, 25, 30, 35, 40];
 const enScore = (laps, tours, max) => !tours || !laps ? 0 : Math.round(Math.min(laps / tours, 1) * max * 2) / 2;
-const pupilG = (c, p) => p.g || (c.sexe === 'F' || c.sexe === 'G' ? c.sexe : null);
+const pupilG = (c, p) => c.sexe === 'F' || c.sexe === 'G' ? c.sexe : (p.g || null);
 
 /* --- Règles à la piscine --- */
 const rgKey = l => l.date + String(l.h ? hI(l.h) + 1 : 0).padStart(2, '0');
@@ -27,26 +30,16 @@ function rgChip(c, L, p, pool, off){
     + (rep ? '<span class="rg-warn">⚠ 2e semaine de suite : elle perd des points (non-participation)</span>' : '') + '</div>';
 }
 
-/* --- Filles / garçons --- */
-const pgBtns = (c, p) => { const g = pupilG(c, p);
-  return `<span class="seg pg-seg" role="group" aria-label="Garçon ou fille">${[['G', 'Garçon'], ['F', 'Fille']].map(([k, a]) => `<button type="button" data-pg="${p.id}" data-g="${k}" aria-pressed="${g === k}" aria-label="${a}">${k}</button>`).join('')}</span>`; };
+/* --- Filles / garçons : un réglage pour toute la classe (jamais de groupe mixte) --- */
 function classSexeHTML(c){
-  const sx = c.sexe || '';
-  return `<span class="small muted" style="font-weight:600">Élèves de la classe</span>
-    <div class="seg full" role="group" aria-label="Garçons ou filles" style="margin-top:0">${[['G', 'Garçons'], ['F', 'Filles'], ['M', 'Mixte']].map(([k, l]) => `<button type="button" data-sexe="${k}" aria-pressed="${sx === k}">${l}</button>`).join('')}</div>
-    <span class="small muted">Garçons ou Filles : toute la classe d'un coup. Mixte : touche G ou F à côté de chaque élève (sert pour la piscine).</span>`;
+  const sx = c.sexe === 'G' || c.sexe === 'F' ? c.sexe : '';
+  return `<span class="small muted" style="font-weight:600">Groupe</span>
+    <div class="seg full" role="group" aria-label="Groupe : garçons ou filles" style="margin-top:0">${[['G', '♂ Garçons'], ['F', '♀ Filles']].map(([k, l]) => `<button type="button" data-sexe="${k}" aria-pressed="${sx === k}">${l}${sx === k ? ' ✓' : ''}</button>`).join('')}</div>
+    <span class="small muted">Toute la classe d'un coup, les élèves ajoutés plus tard aussi (sert pour la piscine : bouton « règles » chez les filles).</span>`;
 }
 function bindClassSexe(c){
-  document.querySelectorAll('[data-sexe]').forEach(b => b.onclick = () => { const k = b.dataset.sexe; c.sexe = k; if (k !== 'M') c.pupils.forEach(p => p.g = k); save(c.id); render();
-    toast(k === 'G' ? 'Toute la classe : garçons' : k === 'F' ? 'Toute la classe : filles' : 'Classe mixte : touche G ou F pour chaque élève'); });
-  document.querySelectorAll('[data-pg]').forEach(b => b.onclick = () => { const p = c.pupils.find(x => x.id === b.dataset.pg); if (!p) return;
-    p.g = b.dataset.g; if (c.sexe && c.sexe !== 'M' && c.sexe !== p.g) c.sexe = 'M'; save(c.id); render(); });
-}
-const pgSheet = (c, p) => { const g = pupilG(c, p);
-  return `<div class="seg full" role="group" aria-label="Garçon ou fille" style="margin-top:0">${[['G', 'Garçon'], ['F', 'Fille']].map(([k, l]) => `<button type="button" data-ppg="${k}" aria-pressed="${g === k}">${l}</button>`).join('')}</div>`; };
-function bindPupilG(c, p){
-  document.querySelectorAll('[data-ppg]').forEach(b => b.onclick = () => { p.g = b.dataset.ppg; if (c.sexe && c.sexe !== 'M' && c.sexe !== p.g) c.sexe = 'M'; save(c.id);
-    document.querySelectorAll('[data-ppg]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  document.querySelectorAll('[data-sexe]').forEach(b => b.onclick = () => { const k = b.dataset.sexe; c.sexe = k; c.pupils.forEach(p => p.g = k); save(c.id); render();
+    toast(k === 'G' ? `${c.name} : garçons` : `${c.name} : filles`); });
 }
 
 /* --- Liste et formulaire des évaluations --- */
@@ -109,7 +102,7 @@ function evScoresHead(c, e){
   let h = '';
   if (e.kind === 'form') h += '<div class="ev-formnote"><span class="tag ev-form">FORMATIVE</span><span class="small">Pour info : ne compte pas dans le bulletin.</span></div>';
   if (e.endu){
-    const run = enRunGet(), mine = run && run.eid === e.id, nl = Object.keys(e.endu.laps || {}).length;
+    const run = enRunGet(), mine = run && enKey(run) === c.id + ':' + e.id, nl = Object.keys(e.endu.laps || {}).length;
     h += `<div class="card ev-endu-c"><div><b>🏃 Endurance · ${fr(e.endu.min, 2)} min</b><br><span class="small muted">${e.endu.tours} tours = ${fr(+e.max, 2)}/${fr(+e.max, 2)}${nl ? ` · ${nl} élève${nl > 1 ? 's' : ''} déjà compté${nl > 1 ? 's' : ''}` : ''}</span></div>
       <button class="btn pri block en-go" type="button" id="es-endu">${mine ? '▶ Reprendre le compteur' : '▶ Démarrer l\'évaluation'}</button></div>`;
   }
@@ -127,9 +120,13 @@ const EN_KEY = 'carnet-eps-endu';
 const enRunGet = () => { try { return JSON.parse(localStorage.getItem(EN_KEY)) || null; } catch(e){ return null; } };
 const enRunPut = r => { try { if (r) localStorage.setItem(EN_KEY, JSON.stringify(r)); else localStorage.removeItem(EN_KEY); } catch(e){} };
 let EN = null, EN_AC = null;
-const enPrefs = (() => { try { return JSON.parse(localStorage.getItem('carnet-eps-endu-vue')) || {}; } catch(e){ return {}; } })();
-const enPrefSave = () => { try { localStorage.setItem('carnet-eps-endu-vue', JSON.stringify(enPrefs)); } catch(e){} };
-const enFind = r => { const c = S.classes.find(x => x.id === r.cid), e = c && c.evals.find(x => x.id === r.eid); return e && e.endu ? {c, e} : null; };
+/* un compteur = une ou plusieurs évaluations liées (une par classe du groupe) */
+const enItems = r => r.items || [{cid: r.cid, eid: r.eid}];
+const enKey = r => enItems(r).map(x => x.cid + ':' + x.eid).join(',');
+function enFind(r){
+  const parts = enItems(r).map(({cid, eid}) => { const c = S.classes.find(x => x.id === cid), e = c && c.evals.find(x => x.id === eid); return e && e.endu ? {c, e} : null; }).filter(Boolean);
+  return parts.length ? {parts, c: parts[0].c, e: parts[0].e, name: parts.map(x => x.c.name).join(' + ')} : null;
+}
 const enTot = r => Object.values(r.laps || {}).reduce((a, b) => a + b, 0);
 const mmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
@@ -143,33 +140,41 @@ const enBeep = (n, long) => { for (let i = 0; i < n; i++) enTone(880, long && i 
 const enBuzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch(e){} };
 async function enWake(){ try { if (navigator.wakeLock) EN.wl = await navigator.wakeLock.request('screen'); } catch(e){} }
 
-function enAbsents(c){
-  const ls = c.lessons.filter(l => l.date === today()), s = new Set();
-  if (ls.length) c.pupils.forEach(p => { if (ls.every(l => ['A', 'D'].includes(effA(p, l)))) s.add(p.id); });
-  return {s, roll: ls.length > 0};
+function enAbsents(parts){
+  const s = new Set(); let roll = false;
+  parts.forEach(({c}) => { const ls = c.lessons.filter(l => l.date === today()); if (!ls.length) return; roll = true;
+    c.pupils.forEach(p => { if (ls.every(l => ['A', 'D'].includes(effA(p, l)))) s.add(p.id); }); });
+  return {s, roll};
 }
+/* élèves du compteur : classe par classe, puis par nom */
+const enAll = () => EN.parts.flatMap(({c}) => pupilsOf(c));
 function enIds(){
-  const r = EN.run, ab = enAbsents(EN.c).s;
-  let ps = pupilsOf(EN.c).filter(p => !r.excl || !ab.has(p.id) || (r.laps[p.id] || 0) > 0);
+  const r = EN.run, ab = enAbsents(EN.parts).s;
+  let ps = enAll().filter(p => !r.excl || !ab.has(p.id) || (r.laps[p.id] || 0) > 0);
   if (r.sort) ps = [...ps].sort((a, b) => (r.laps[b.id] || 0) - (r.laps[a.id] || 0) || byName(a, b));
   return ps.map(p => p.id);
 }
-function enName(p){ const w = p.n.trim().split(/\s+/); if (w.length < 2) return [p.n, ''];
-  return enPrefs.big === 'first' ? [w[0], w.slice(1).join(' ')] : [w[w.length - 1], w.slice(0, -1).join(' ')]; }
+/* en grand : le prénom (+ initiale du nom si deux prénoms pareils) ; en petit : la classe quand il y en a plusieurs */
+function enName(p){ return [EN.nc.get(p.id) || nomCourt(p), EN.parts.length > 1 ? (EN.pm.get(p.id) || {}).c?.name || '' : '']; }
+const enP = pid => (EN.pm.get(pid) || {}).p;
 const enEl = () => EN.rt.elapsed();
 
-function enOpen(cid, eid){
-  const old = enRunGet();
-  if (old && (old.cid !== cid || old.eid !== eid) && enFind(old) && (enTot(old) || old.st !== 'idle')){
+/* enOpen(cid, eid) pour une classe, ou enOpen([{cid, eid}, …]) pour toutes les classes d'un groupe */
+function enOpen(items, eid){
+  if (!Array.isArray(items)) items = [{cid: items, eid}];
+  const key = enKey({items}), old = enRunGet();
+  if (old && enKey(old) !== key && enFind(old) && (enTot(old) || old.st !== 'idle')){
     const f = enFind(old);
-    enModal(`<b>Un autre compteur est en cours</b><span class="small">${esc(f.c.name)} · ${esc(f.e.name)} : ${enTot(old)} tours comptés, pas encore enregistrés.</span>`,
-      [['Reprendre celui-là', 'pri', () => enOpen(old.cid, old.eid)], ['Le remplacer (perdu)', 'danger', () => { enRunPut(null); enOpen(cid, eid); }], ['Annuler', '', null]]);
+    enModal(`<b>Un autre compteur est en cours</b><span class="small">${esc(f.name)} · ${esc(f.e.name)} : ${enTot(old)} tours comptés, pas encore enregistrés.</span>`,
+      [['Reprendre celui-là', 'pri', () => enOpen(enItems(old))], ['Le remplacer (perdu)', 'danger', () => { enRunPut(null); enOpen(items); }], ['Annuler', '', null]]);
     return;
   }
-  const c = S.classes.find(x => x.id === cid), e = c && c.evals.find(x => x.id === eid); if (!e || !e.endu) return;
-  let run = old && old.cid === cid && old.eid === eid ? old : null;
-  if (!run) run = {cid, eid, st: 'idle', t0: null, acc: 0, dur: Math.round(e.endu.min * 60000), laps: {}, last: {}, undo: [], w1: 0, sort: false, excl: false};
-  EN = {run, c, e, press: new Map(), k: 0, rt: {elapsed: () => run.acc + (run.st === 'run' ? Date.now() - run.t0 : 0)}};
+  const f = enFind({items}); if (!f) return;
+  items = f.parts.map(({c, e}) => ({cid: c.id, eid: e.id}));
+  let run = old && enKey(old) === key ? old : null;
+  if (!run) run = {items, cid: items[0].cid, eid: items[0].eid, st: 'idle', t0: null, acc: 0, dur: Math.round(f.e.endu.min * 60000), laps: {}, last: {}, undo: [], w1: 0, sort: false, excl: false};
+  const pm = new Map(); f.parts.forEach(({c}) => c.pupils.forEach(p => pm.set(p.id, {c, p})));
+  EN = {run, parts: f.parts, c: f.c, e: f.e, name: f.name, pm, nc: nomsCourts([...pm.values()].map(x => x.p)), press: new Map(), k: 0, rt: {elapsed: () => run.acc + (run.st === 'run' ? Date.now() - run.t0 : 0)}};
   const root = document.createElement('div'); root.className = 'en'; root.id = 'en'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', 'Compteur de tours');
   root.innerHTML = `<div class="en-top">
       <button class="en-ib" type="button" id="en-x" aria-label="Fermer le compteur">✕</button>
@@ -208,8 +213,8 @@ function enClose(){
 
 function enGrid(){
   const g = $('en-grid'); EN.ids = enIds();
-  g.innerHTML = EN.ids.map(pid => { const p = EN.c.pupils.find(x => x.id === pid), [a, b] = enName(p);
-    return `<div class="en-t" data-pid="${pid}" role="button" tabindex="0" aria-label="${esc(p.n)}"><span class="en-nm"><b>${esc(a)}</b><small>${esc(b)}</small></span><span class="en-n num">0</span><span class="en-ago num"></span><span class="en-ok">✓ 100 %</span><span class="en-msg"></span><span class="en-pb"><i></i></span></div>`; }).join('')
+  g.innerHTML = EN.ids.map(pid => { const p = enP(pid), [a, b] = enName(p);
+    return `<div class="en-t" data-pid="${pid}" role="button" tabindex="0" aria-label="${esc(p.n)}"><span class="en-nm"><b>${esc(a)}</b></span>${b ? `<span class="en-cl">${esc(b)}</span>` : ''}<span class="en-n num">0</span><span class="en-ago num"></span><span class="en-ok">✓ 100 %</span><span class="en-msg"></span><span class="en-pb"><i></i></span></div>`; }).join('')
     || '<p class="en-none">Personne à compter : change le réglage des absents (⋯).</p>';
   EN.ids.forEach(enPaint); enLayout(); enInfo();
   g.onpointerdown = ev => { const t = ev.target.closest('.en-t'); if (!t) return; ev.preventDefault(); enAudio();
@@ -229,7 +234,7 @@ function enLayout(){
   for (let cols = 1; cols <= n; cols++){ const rows = Math.ceil(n / cols), tw = (W - gap * (cols - 1)) / cols, th = (H - gap * (rows - 1)) / rows, sc = Math.min(tw, th * 1.25);
     if (!best || sc > best.sc) best = {sc, cols, rows, tw, th}; }
   g.style.gridTemplateColumns = `repeat(${best.cols}, minmax(0, 1fr))`; g.style.gridTemplateRows = `repeat(${best.rows}, minmax(0, 1fr))`;
-  g.style.setProperty('--fn', Math.max(11, Math.min(best.th * .2, best.tw * .16, 30)) + 'px');
+  g.style.setProperty('--fn', Math.max(12, Math.min(best.th * .24, best.tw * .17, 30)) + 'px'); // prénoms courts : un peu plus grands
   g.style.setProperty('--fc', Math.max(16, Math.min(best.th * .42, best.tw * .36, 80)) + 'px');
   g.classList.toggle('tiny', best.th < 66);
 }
@@ -242,7 +247,7 @@ function enPaint(pid){
   t.querySelector('.en-n').textContent = n;
   t.querySelector('.en-pb i').style.width = (tours ? Math.min(1, n / tours) * 100 : 0) + '%';
   t.classList.toggle('full', !!tours && n >= tours);
-  t.setAttribute('aria-label', `${EN.c.pupils.find(x => x.id === pid)?.n || ''}, ${n} tour${n > 1 ? 's' : ''}`);
+  t.setAttribute('aria-label', `${enP(pid)?.n || ''}, ${n} tour${n > 1 ? 's' : ''}`);
   enAgo(pid);
 }
 function enAgo(pid){
@@ -261,7 +266,7 @@ function enInfo(){
   $('en-info').textContent = `${EN.ids.length} élèves · ${enTot(r)} tours · ${full} ✓ 100 %`;
   const u = r.undo[r.undo.length - 1], b = $('en-undo');
   b.disabled = !u || r.st === 'sum';
-  b.textContent = u ? `↶ Annuler ${enName(EN.c.pupils.find(x => x.id === u.pid) || {n: '?'})[0]} ${u.d > 0 ? '+1' : '−1'}` : '↶ Annuler';
+  b.textContent = u ? `↶ Annuler ${(EN.nc.get(u.pid) || '?')} ${u.d > 0 ? '+1' : '−1'}` : '↶ Annuler';
 }
 function enAdd(pid, d){
   const r = EN.run, now = Date.now();
@@ -348,19 +353,16 @@ function enAskClose(){
 function enOptions(){
   const pop = $('en-pop'), b = $('en-opt');
   if (!pop.hidden){ pop.hidden = true; b.setAttribute('aria-expanded', 'false'); return; }
-  const r = EN.run, ab = enAbsents(EN.c);
+  const r = EN.run, ab = enAbsents(EN.parts), plus = EN.parts.length > 1;
   pop.innerHTML = `<label class="toggle"><input type="checkbox" id="eo-sort" ${r.sort ? 'checked' : ''}>Trier par tours</label>
     <span class="small muted" style="margin-top:-6px">Les cases changent de place à chaque tour : attention aux mauvais touchers.</span>
     <span class="small" style="font-weight:700">Absents et dispensés du jour</span>
     <div class="row2"><button class="chip" type="button" data-eo-ex="0" aria-pressed="${!r.excl}">Inclus</button><button class="chip" type="button" data-eo-ex="1" aria-pressed="${r.excl}">Exclus</button></div>
-    <span class="small muted" style="margin-top:-6px">${ab.roll ? `${ab.s.size} absent${ab.s.size > 1 ? 's' : ''} ou dispensé${ab.s.size > 1 ? 's' : ''} à l'appel d'aujourd'hui.` : 'Pas encore d\'appel aujourd\'hui pour cette classe.'}</span>
-    <span class="small" style="font-weight:700">En grand sur les cases</span>
-    <div class="row2"><button class="chip" type="button" data-eo-big="last" aria-pressed="${enPrefs.big !== 'first'}">Dernier mot du nom</button><button class="chip" type="button" data-eo-big="first" aria-pressed="${enPrefs.big === 'first'}">Premier mot</button></div>
+    <span class="small muted" style="margin-top:-6px">${ab.roll ? `${ab.s.size} absent${ab.s.size > 1 ? 's' : ''} ou dispensé${ab.s.size > 1 ? 's' : ''} à l'appel d'aujourd'hui.` : `Pas encore d'appel aujourd'hui pour ${plus ? 'ces classes' : 'cette classe'}.`}</span>
     <button class="en-btn stop" type="button" id="eo-drop">Abandonner ce compteur</button>`;
   pop.hidden = false; b.setAttribute('aria-expanded', 'true');
   $('eo-sort').onchange = e => { r.sort = e.target.checked; enSave(); enGrid(); };
   pop.querySelectorAll('[data-eo-ex]').forEach(x => x.onclick = () => { r.excl = x.dataset.eoEx === '1'; enSave(); enGrid(); pop.hidden = true; enOptions(); });
-  pop.querySelectorAll('[data-eo-big]').forEach(x => x.onclick = () => { enPrefs.big = x.dataset.eoBig; enPrefSave(); enGrid(); pop.hidden = true; enOptions(); });
   $('eo-drop').onclick = () => { pop.hidden = true; enAsk(`<b>Abandonner sans enregistrer ?</b><span class="small">Les ${enTot(r)} tours comptés seront perdus.</span>`, [['Non, garder', 'pri', null], ['Oui, abandonner', 'stop', () => { enRunPut(null); enClose(); render(); toast('Compteur abandonné'); }]]); };
 }
 
@@ -369,11 +371,11 @@ function enSummary(){
   const r = EN.run, e = EN.e, max = +e.max, tours = e.endu.tours;
   $('en-pop').hidden = true;
   if (r.st === 'run'){ r.acc += Date.now() - r.t0; r.t0 = null; r.st = 'pause'; }
-  const ids = pupilsOf(EN.c).map(p => p.id).filter(pid => EN.ids.includes(pid) || (r.laps[pid] || 0) > 0);
+  const ids = enAll().map(p => p.id).filter(pid => EN.ids.includes(pid) || (r.laps[pid] || 0) > 0), plus = EN.parts.length > 1;
   const s = $('en-sum'); s.hidden = false;
-  s.innerHTML = `<div class="en-sh"><b>Résumé · ${esc(e.name)}</b><span class="small muted">${esc(EN.c.name)} · ${tours} tours = ${fr(max, 2)}/${fr(max, 2)} · temps couru ${mmss(enEl())}. Corrige les tours si besoin, puis enregistre.</span></div>
-    <div class="en-slist">${ids.map(pid => { const p = EN.c.pupils.find(x => x.id === pid), n = r.laps[pid] || 0;
-      return `<div class="en-srow" data-spid="${pid}"><span class="nm">${esc(p.n)}</span><span class="en-step"><button type="button" data-sd="-1" aria-label="Un tour de moins">−</button><input class="inp num" inputmode="numeric" value="${n}" aria-label="Tours de ${esc(p.n)}"><button type="button" data-sd="1" aria-label="Un tour de plus">+</button></span><b class="sc num">${fr(enScore(n, tours, max), 1)}<small>/${fr(max, 2)}</small></b></div>`; }).join('')}</div>
+  s.innerHTML = `<div class="en-sh"><b>Résumé · ${esc(e.name)}</b><span class="small muted">${esc(EN.name)} · ${tours} tours = ${fr(max, 2)}/${fr(max, 2)} · temps couru ${mmss(enEl())}. Corrige les tours si besoin, puis enregistre.</span></div>
+    <div class="en-slist">${ids.map((pid, k) => { const p = enP(pid), n = r.laps[pid] || 0, cn = EN.pm.get(pid).c.name;
+      return (plus && (!k || EN.pm.get(ids[k - 1]).c.name !== cn) ? `<div class="en-scl">${esc(cn)}</div>` : '') + `<div class="en-srow" data-spid="${pid}"><span class="nm">${esc(p.n)}</span><span class="en-step"><button type="button" data-sd="-1" aria-label="Un tour de moins">−</button><input class="inp num" inputmode="numeric" value="${n}" aria-label="Tours de ${esc(p.n)}"><button type="button" data-sd="1" aria-label="Un tour de plus">+</button></span><b class="sc num">${fr(enScore(n, tours, max), 1)}<small>/${fr(max, 2)}</small></b></div>`; }).join('')}</div>
     <button class="en-btn pri" type="button" id="en-save">💾 Enregistrer les points</button>
     <div class="row2"><button class="en-btn" type="button" id="en-back">↩ Retour au compteur</button><button class="en-btn stop" type="button" id="en-drop2">Abandonner</button></div>`;
   const put = (row, n) => { n = Math.max(0, Math.min(999, Math.round(n) || 0)); r.laps[row.dataset.spid] = n; row.querySelector('input').value = n;
@@ -388,9 +390,14 @@ function enSummary(){
   $('en-save').onclick = () => {
     s.querySelectorAll('.en-srow input').forEach(inp => { const row = inp.closest('.en-srow'); r.laps[row.dataset.spid] = Math.max(0, Math.round(parseNum(inp.value) || 0)); });
     const f = enFind(r); if (!f){ toast('Évaluation introuvable : rien enregistré'); return; }
-    const {c, e: ev} = f; if (!ev.endu.laps) ev.endu.laps = {};
-    ids.forEach(pid => { if (!c.pupils.some(p => p.id === pid)) return; const n = r.laps[pid] || 0; ev.endu.laps[pid] = n; ev.s[pid] = enScore(n, ev.endu.tours, +ev.max); });
-    save(c.id); enRunPut(null); enClose(); render(); openEvalScores(c, ev); toast(`Points enregistrés pour ${ids.length} élève${ids.length > 1 ? 's' : ''}`);
+    // chaque classe reçoit les tours et les points de ses élèves dans sa propre évaluation
+    let nb = 0;
+    f.parts.forEach(({c, e: ev}) => { if (!ev.endu.laps) ev.endu.laps = {};
+      ids.forEach(pid => { if (!c.pupils.some(p => p.id === pid)) return; const n = r.laps[pid] || 0; ev.endu.laps[pid] = n; ev.s[pid] = enScore(n, ev.endu.tours, +ev.max); nb++; });
+      save(c.id); });
+    enRunPut(null); enClose(); render();
+    if (typeof openGroupScores === 'function') openGroupScores(f.parts); else openEvalScores(f.c, f.e);
+    toast(`Points enregistrés pour ${nb} élève${nb > 1 ? 's' : ''}`);
   };
 }
 
@@ -406,6 +413,6 @@ setTimeout(() => {
   const r = enRunGet(); if (!r || EN) return;
   const f = enFind(r); if (!f || (r.st === 'idle' && !enTot(r))){ enRunPut(null); return; }
   const left = r.dur - (r.acc + (r.st === 'run' ? Date.now() - r.t0 : 0));
-  enModal(`<b>🏃 Compteur d'endurance en cours</b><span class="small">${esc(f.c.name)} · ${esc(f.e.name)} : ${enTot(r)} tours comptés${r.st === 'run' && left > 0 ? `, chrono en marche (${mmss(left)} restantes)` : r.st === 'run' || r.st === 'done' ? ', temps écoulé' : ', en pause'}.</span>`,
-    [['▶ Reprendre', 'pri', () => enOpen(r.cid, r.eid)], ['Plus tard', '', null], ['Abandonner', 'danger', () => enModal('<b>Abandonner sans enregistrer ?</b><span class="small">Les tours comptés seront perdus.</span>', [['Non, garder', 'pri', null], ['Oui, abandonner', 'danger', () => { enRunPut(null); toast('Compteur abandonné'); }]])]]);
+  enModal(`<b>🏃 Compteur d'endurance en cours</b><span class="small">${esc(f.name)} · ${esc(f.e.name)} : ${enTot(r)} tours comptés${r.st === 'run' && left > 0 ? `, chrono en marche (${mmss(left)} restantes)` : r.st === 'run' || r.st === 'done' ? ', temps écoulé' : ', en pause'}.</span>`,
+    [['▶ Reprendre', 'pri', () => enOpen(enItems(r))], ['Plus tard', '', null], ['Abandonner', 'danger', () => enModal('<b>Abandonner sans enregistrer ?</b><span class="small">Les tours comptés seront perdus.</span>', [['Non, garder', 'pri', null], ['Oui, abandonner', 'danger', () => { enRunPut(null); toast('Compteur abandonné'); }]])]]);
 }, 500);

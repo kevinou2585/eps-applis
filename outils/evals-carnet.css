@@ -95,3 +95,6 @@ body.en-open .toast{z-index:95; bottom:calc(16px + env(safe-area-inset-bottom,0p
 .en-ask>div,.en-modal>div{background:var(--surface); color:var(--fg); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px; max-width:440px; width:100%}
 .en-ask .row2>.en-btn{flex:1 1 120px}
 .en-modal{position:fixed; inset:0; z-index:75; background:rgba(8,14,22,.5); display:grid; place-items:center; padding:16px}
+.en-cl{position:absolute; bottom:10px; left:6px; max-width:30%; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; font-size:10.5px; line-height:1.2; font-weight:800; color:var(--muted); letter-spacing:.02em}
+.en-scl{padding:6px 10px; font-size:12.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; background:var(--surface2); border-bottom:1px solid var(--line)}
+.en-t.full .en-cl{bottom:3px}

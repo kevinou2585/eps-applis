@@ -63,7 +63,7 @@ header.top .wrap{display:flex; align-items:center; gap:10px; padding-block:10px}
 
 /* Onglets du bas */
 nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--surface); border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom,0px); padding-left:env(safe-area-inset-left,0px); padding-right:env(safe-area-inset-right,0px)}
-nav.tabs .in{display:grid; grid-template-columns:repeat(3,1fr); max-width:760px; margin:0 auto; height:var(--tab-h)}
+nav.tabs .in{display:grid; grid-template-columns:repeat(4,1fr); max-width:760px; margin:0 auto; height:var(--tab-h)}
 nav.tabs button{border:0; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:11.5px; font-weight:600; color:var(--muted)}
 nav.tabs button svg{width:23px; height:23px}
 nav.tabs button[aria-current="true"]{color:var(--accent)}
@@ -396,6 +396,15 @@ body.en-open .toast{z-index:95; bottom:calc(16px + env(safe-area-inset-bottom,0p
 .en-ask>div,.en-modal>div{background:var(--surface); color:var(--fg); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px; max-width:440px; width:100%}
 .en-ask .row2>.en-btn{flex:1 1 120px}
 .en-modal{position:fixed; inset:0; z-index:75; background:rgba(8,14,22,.5); display:grid; place-items:center; padding:16px}
+.en-cl{position:absolute; bottom:10px; left:6px; max-width:30%; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; font-size:10.5px; line-height:1.2; font-weight:800; color:var(--muted); letter-spacing:.02em}
+.en-scl{padding:6px 10px; font-size:12.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; background:var(--surface2); border-bottom:1px solid var(--line)}
+.en-t.full .en-cl{bottom:3px}
+/* Nom / prénom et onglet Évaluation par groupe (outils/groupes-carnet.js) */
+.gr-nom{align-items:flex-end}
+.gr-add{display:flex; flex-direction:column; gap:6px; padding-top:4px}
+.gr-chips .chip.sess[aria-pressed="true"]{outline:2px solid var(--fg); outline-offset:1px}
+.gr-for{display:flex; flex-direction:column; gap:2px; padding:10px 12px; border-radius:12px; border:2px solid var(--fg); background:var(--surface)}
+.tag.gr-only{display:inline-block; margin-top:4px; background:var(--surface); color:var(--fg); border:1.5px dashed var(--muted); font-size:11.5px; padding:1px 8px; width:max-content}
 @media (prefers-reduced-motion: no-preference){ .sheet{animation:up .18s ease-out} @keyframes up{from{transform:translateY(30px); opacity:.6}} }
 </style>
 
@@ -485,14 +494,7 @@ function newClass(name, names, periods){
   addPupils(c, names || '');
   return c;
 }
-function addPupils(c, text){
-  const out = [];
-  text.split(/\r?\n/).map(l => l.replace(/[\t;,]+/g, ' ').replace(/\s+/g, ' ').trim()).filter(Boolean).forEach(n => {
-    if (/^(nom|élève|eleve)\b/i.test(n)) return;
-    const p = {id: nid('e'), n}; c.pupils.push(p); out.push(p);
-  });
-  return out;
-}
+/* addPupils : voir groupes-carnet.js (nom et prénom) */
 
 /* Certificats médicaux : p.certs = [{id, from, to, note}], photo dans PH['cert_' + id] */
 // type de lecon ('salle' ou 'piscine') : un certificat « piscine seulement » ne dispense pas en salle, et inversement.
@@ -732,10 +734,10 @@ function pickSession(list, date){
 }
 
 /* ====== Rendu général ====== */
-const TABS = [['today','Présences','lesson'],['classes','Classes','points'],['agenda','Agenda','cal']];
+const TABS = [['today','Présences','lesson'],['evals','Évaluation','evals'],['classes','Classes','points'],['agenda','Agenda','cal']];
 function render(){
   const c = C(); if (c && S.cur !== c.id) S.cur = c.id;
-  if (!['today','classes','agenda','settings'].includes(UI.tab)) UI.tab = 'today';
+  if (!['today','evals','classes','agenda','settings'].includes(UI.tab)) UI.tab = 'today';
   $('tabs').innerHTML = TABS.map(([k, l, ic]) => `<button type="button" data-tab="${k}" aria-current="${UI.tab === k}">${IC[ic]}<span>${l}</span></button>`).join('');
   $('gear').setAttribute('aria-pressed', UI.tab === 'settings');
   const m = $('main');
@@ -743,6 +745,7 @@ function render(){
   if (!S.classes.length){ m.innerHTML = welcome(); bindWelcome(); return; }
   if (UI.tab === 'today') renderToday(m);
   else if (UI.tab === 'agenda') renderAgenda(m);
+  else if (UI.tab === 'evals') renderEvalTab(m);
   else if (UI.cview && c) renderClassView(c, m);
   else renderClassList(m);
 }
@@ -850,6 +853,7 @@ function renderToday(m){
   const type0 = (Ls.find(Boolean) || {}).type || 'salle';
   cls.forEach((c, i) => { if (!Ls[i]){ Ls[i] = {id: nid('l'), date, h: s.h || null, h2: s.h2 || s.h || null, type: type0, m: {}}; c.lessons.push(Ls[i]); save(c.id); } });
   const pool = Ls[0].type === 'piscine';
+  NCOURT = nomsCourts(cls.flatMap(c => c.pupils));
   const cnt = {x: 0, P: 0, A: 0, R: 0, D: 0, k: 0, np: 0, d: 0};
   cls.forEach((c, i) => { const L = Ls[i]; c.pupils.forEach(p => { const mm = L.m[p.id] || {}; cnt[effA(p, L)]++; if (mm.k) cnt.k++; if (mm.np) cnt.np++; if (mm.x) cnt.x++; else if (mm.d) cnt.d++; }); });
   h += head + `<div class="row2" style="align-items:center">
@@ -892,7 +896,7 @@ function renderToday(m){
     else if (act === 'kit'){ if (mm.k) delete mm.k; else mm.k = 1; }
     else if (act === 'np'){ if (mm.np) delete mm.np; else { mm.np = 1; delete mm.rg; } }
     else if (act === 'rg'){ if (mm.rg) delete mm.rg; else { mm.rg = 1; delete mm.np; } }
-    else if (act === 'dis'){ if (mm.x){ delete mm.x; delete mm.d; } else if (mm.d){ delete mm.d; mm.x = 1; toast(`${p.n} : exclu du cours`); } else { mm.d = 1; toast(`${p.n} : perturbe`); } }
+    else if (act === 'dis'){ if (mm.x){ delete mm.x; delete mm.d; } else if (mm.d){ delete mm.d; mm.x = 1; toast(`${nomCourt(p)} : exclu du cours`); } else { mm.d = 1; toast(`${nomCourt(p)} : perturbe`); } }
     clean(L, pid); save(c.id); render();
   };
   $('l-del').onclick = () => {
@@ -933,7 +937,7 @@ function lessonRow(c, L, p, r, pool){
   const T = +S.settings.T, Cc = +S.settings.C;
   const pts = r ? `<span class="pts num"><span class="${r.t <= 1 ? 'low' : ''}">Tenue ${r.t}/${T}</span><span class="${r.c <= 1 ? 'low' : ''}">Att. ${r.c}/${Cc}</span></span>` : '';
   return `<div class="prow ${off ? 'isA' : ''}" data-pid="${p.id}" data-cid="${c.id}">
-    <button class="who" type="button">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b>${cert ? `<span class="pts" style="color:var(--warn);font-weight:600">🩺 Certificat · dispensé jusqu'au ${cert.to.slice(8)}/${cert.to.slice(5, 7)}</span>` : pts}</span></button>
+    <button class="who" type="button">${avatar(p)}<span class="nm"><b>${esc(nomCourt(p))}</b>${cert ? `<span class="pts" style="color:var(--warn);font-weight:600">🩺 Certificat · dispensé jusqu'au ${cert.to.slice(8)}/${cert.to.slice(5, 7)}</span>` : pts}</span></button>
     <button class="tb ${a}" type="button" data-act="pres" aria-label="Présence : ${({P:'présent',A:'absent',R:'en retard',D:'dispensé'})[a]}">${a}</button>
     <button class="tb ${mm.k ? 'no' : 'ok'}" type="button" data-act="kit" ${off || exempt ? 'disabled' : ''} aria-label="${pool ? 'Affaires de piscine' : 'Tenue'} : ${mm.k ? 'oubliée' : 'en ordre'}">${pool ? IC.bag : IC.shirt}</button>
     ${pool ? `<button class="tb ${mm.np ? 'no' : 'ok'}" type="button" data-act="np" ${off || exempt ? 'disabled' : ''} aria-label="Participation : ${mm.np ? 'ne nage pas' : 'nage'}">${IC.swim}</button>` : ''}
@@ -1005,9 +1009,9 @@ function renderClassList(m){
   $('cl-new').onclick = openNewClass;
   $('cl-xls').onclick = () => exportXlsx(S.classes.filter(c => !c.act).map(c => [c, periodOf(c, today())]).filter(x => x[1]), 'Bulletins EPS toutes les classes');
 }
-const CTABS = [['evals','Évals'],['report','Bulletin'],['points','Points'],['pupils','Élèves']];
+const CTABS = [['report','Bulletin'],['points','Points'],['pupils','Élèves']];
 function renderClassView(c, m){
-  const sub = CTABS.some(t => t[0] === UI.ctab) ? UI.ctab : 'evals';
+  const sub = CTABS.some(t => t[0] === UI.ctab) ? UI.ctab : 'report';
   m.innerHTML = `<div class="cvh"><button class="ib" type="button" id="cv-back" aria-label="Toutes les classes">${IC.left}</button><span class="cvn">${esc(c.name)}</span><span class="small muted">${c.pupils.length} élèves</span></div>
     <div class="seg full" role="tablist" aria-label="Rubriques de la classe">${CTABS.map(([k, l]) => `<button type="button" data-ct="${k}" aria-pressed="${sub === k}">${l}</button>`).join('')}</div>
     <div id="cv"></div>`;
@@ -1380,8 +1384,7 @@ function openPupil(c, pid){
     <div id="pp-cdelc"></div>
     <button class="btn block" type="button" id="pp-cert">+ Ajouter un certificat médical</button>
     <h3>Élève</h3>
-    <label class="f">Nom<input class="inp" id="pp-name" value="${esc(p.n)}"></label>
-    ${pgSheet(c, p)}
+    ${pupilNameFields(p)}
     <div class="row2">${PH[p.id] ? '<button class="btn" type="button" id="pp-rmph">Enlever la photo</button>' : ''}<button class="btn danger" type="button" id="pp-del">Retirer l'élève</button></div><div id="pp-delc"></div>`;
   openSheet(p.n, h, {prev: ps[i - 1] && (() => openPupil(c, ps[i - 1].id)), next: ps[i + 1] && (() => openPupil(c, ps[i + 1].id)), pos: `${i + 1}/${ps.length}`});
   sheetOnClose = () => render();
@@ -1396,8 +1399,7 @@ function openPupil(c, pid){
     $('cd-no').onclick = () => $('pp-cdelc').innerHTML = '';
     $('cd-yes').onclick = () => { const id = b.dataset.cdel; p.certs = p.certs.filter(x => x.id !== id); if (PH['cert_' + id]){ delete PH['cert_' + id]; phDel.add('cert_' + id); persistPhotos(); } save(c.id); openPupil(c, pid); toast('Certificat supprimé'); };
   });
-  bindPupilG(c, p);
-  $('pp-name').onchange = e => { const v = e.target.value.trim(); if (v){ p.n = v; save(c.id); document.querySelector('.sheet .sh h2').textContent = v; } };
+  bindPupilName(c, p);
   if ($('pp-rmph')) $('pp-rmph').onclick = () => { delete PH[p.id]; phDel.add(p.id); persistPhotos(); schedulePush(); openPupil(c, pid); };
   $('pp-del').onclick = () => {
     $('pp-delc').innerHTML = `<div class="confirm"><b>Retirer ${esc(p.n)} de ${esc(c.name)} ?</b><span class="small">Ses notes, absences et points seront effacés.</span><div class="row2"><button class="btn" type="button" id="pd-no">Garder</button><button class="btn pri" style="background:var(--bad);border-color:var(--bad)" type="button" id="pd-yes">Retirer</button></div></div>`;
@@ -1491,8 +1493,10 @@ function renderManage(c, m){
     <div class="card sec" style="padding-block:14px">
       <h3>Élèves</h3>
       <div class="small muted">${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}. Touche un élève pour son dossier : photo, certificats, notes.</div>
-      <div>${pupilsOf(c).map(p => `<div class="pl"><button class="who" type="button" data-pp="${p.id}">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b>${certOn(p, today()) ? '<span class="pts" style="color:var(--warn);font-weight:600">Certificat en cours</span>' : ''}</span></button>${pgBtns(c, p)}</div>`).join('')}</div>
-      <label class="f">Ajouter des élèves (un par ligne)<textarea class="inp" id="s-add" placeholder="Nom Prénom&#10;Nom Prénom"></textarea></label>
+      <div>${pupilsOf(c).map(p => `<div class="pl"><button class="who" type="button" data-pp="${p.id}">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b>${certOn(p, today()) ? '<span class="pts" style="color:var(--warn);font-weight:600">Certificat en cours</span>' : ''}</span></button></div>`).join('')}</div>
+      ${addOneHTML()}
+      <label class="f">Ou colle une liste (un élève par ligne : NOM Prénom)<textarea class="inp" id="s-add" placeholder="DUPONT Léa&#10;Martin Yanis"></textarea></label>
+      <span class="small muted" style="margin-top:-4px">Le nom en MAJUSCULES, sinon le dernier mot est pris comme prénom. Deux colonnes copiées d'Excel : nom puis prénom. Tu peux corriger dans la fiche de l'élève.</span>
       <button class="btn pri" type="button" id="s-addgo">Ajouter</button>
     </div>
     <div class="card sec" style="padding-block:14px">
@@ -1518,6 +1522,7 @@ function renderManage(c, m){
   bindClassSexe(c);
   $('s-cname').onchange = e => { const v = e.target.value.trim(); if (v){ c.name = v; save(c.id); render(); } };
   m.querySelectorAll('[data-pp]').forEach(b => b.onclick = () => openPupil(c, b.dataset.pp));
+  bindAddOne(c);
   $('s-addgo').onclick = () => { const added = addPupils(c, $('s-add').value); if (!added.length) return; save(c.id); render(); toast(`${added.length} élève${added.length > 1 ? 's' : ''} ajouté${added.length > 1 ? 's' : ''}`); };
   m.querySelectorAll('[data-per]').forEach(row => {
     const p = c.periods.find(x => x.id === row.dataset.per);
@@ -1622,7 +1627,7 @@ function openNewClass(){
   const cur = C();
   openSheet('Nouvelle classe', `
     <label class="f">Nom de la classe<input class="inp" id="nc-name" placeholder="ex. 2B"></label>
-    <label class="f">Élèves (un par ligne)<textarea class="inp" id="nc-list" placeholder="Nom Prénom&#10;Nom Prénom"></textarea></label>
+    <label class="f">Élèves (un par ligne : NOM Prénom)<textarea class="inp" id="nc-list" placeholder="DUPONT Léa&#10;Martin Yanis"></textarea></label>
     ${cur ? `<label class="toggle"><input type="checkbox" id="nc-copy" checked>Reprendre les périodes de ${esc(cur.name)}</label>` : ''}
     <button class="btn pri block" type="button" id="nc-go">Créer la classe</button>`);
   $('nc-go').onclick = () => {
@@ -1969,14 +1974,17 @@ function bindAgSports(){
      (filtrée dans compute()). Sans e.kind = certificative (les anciennes évaluations aussi).
    - e.endu = {min, tours, laps:{pid: n}} : évaluation d'endurance. Note = min(tours / objectif, 1) × max, arrondie au 0,5,
      écrite dans e.s comme une note normale. Dernières valeurs utilisées dans la classe : c.enduLast = {min, tours, max}.
-   - p.g = 'F' | 'G' ; c.sexe = 'G' | 'F' | 'M' (toute la classe d'un coup, sert si p.g est vide).
+   - c.sexe = 'G' | 'F' : les groupes ne sont jamais mixtes, un seul réglage par classe (fiche Élèves). Il met aussi p.g sur
+     chaque élève, et les élèves ajoutés plus tard le reçoivent (pupilNew). Ancien c.sexe = 'M' : p.g de chaque élève sert encore.
+   - Évaluation de groupe (onglet Évaluation, outils/groupes-carnet.js) : une éval par classe, liées par e.gid ;
+     le compteur compte alors toutes les classes du groupe sur un seul écran (run.items = [{cid, eid}]).
    - Leçon piscine : m.rg = 1 (règles) : ne nage pas, pas de point perdu, sauf si à la leçon piscine précédente
      (où elle n'était pas absente) elle avait déjà ses règles : −1 tenue « Règles 2 semaines de suite » (dans compute()).
    - Compteur en cours : localStorage 'carnet-eps-endu' (reprise après un rechargement), enregistré dans la classe à la fin.
    Tout passe par save(c.id) : appareil + Drive. */
 const EN_MINS = [10, 15, 20, 25, 30, 35, 40];
 const enScore = (laps, tours, max) => !tours || !laps ? 0 : Math.round(Math.min(laps / tours, 1) * max * 2) / 2;
-const pupilG = (c, p) => p.g || (c.sexe === 'F' || c.sexe === 'G' ? c.sexe : null);
+const pupilG = (c, p) => c.sexe === 'F' || c.sexe === 'G' ? c.sexe : (p.g || null);
 
 /* --- Règles à la piscine --- */
 const rgKey = l => l.date + String(l.h ? hI(l.h) + 1 : 0).padStart(2, '0');
@@ -1993,26 +2001,16 @@ function rgChip(c, L, p, pool, off){
     + (rep ? '<span class="rg-warn">⚠ 2e semaine de suite : elle perd des points (non-participation)</span>' : '') + '</div>';
 }
 
-/* --- Filles / garçons --- */
-const pgBtns = (c, p) => { const g = pupilG(c, p);
-  return `<span class="seg pg-seg" role="group" aria-label="Garçon ou fille">${[['G', 'Garçon'], ['F', 'Fille']].map(([k, a]) => `<button type="button" data-pg="${p.id}" data-g="${k}" aria-pressed="${g === k}" aria-label="${a}">${k}</button>`).join('')}</span>`; };
+/* --- Filles / garçons : un réglage pour toute la classe (jamais de groupe mixte) --- */
 function classSexeHTML(c){
-  const sx = c.sexe || '';
-  return `<span class="small muted" style="font-weight:600">Élèves de la classe</span>
-    <div class="seg full" role="group" aria-label="Garçons ou filles" style="margin-top:0">${[['G', 'Garçons'], ['F', 'Filles'], ['M', 'Mixte']].map(([k, l]) => `<button type="button" data-sexe="${k}" aria-pressed="${sx === k}">${l}</button>`).join('')}</div>
-    <span class="small muted">Garçons ou Filles : toute la classe d'un coup. Mixte : touche G ou F à côté de chaque élève (sert pour la piscine).</span>`;
+  const sx = c.sexe === 'G' || c.sexe === 'F' ? c.sexe : '';
+  return `<span class="small muted" style="font-weight:600">Groupe</span>
+    <div class="seg full" role="group" aria-label="Groupe : garçons ou filles" style="margin-top:0">${[['G', '♂ Garçons'], ['F', '♀ Filles']].map(([k, l]) => `<button type="button" data-sexe="${k}" aria-pressed="${sx === k}">${l}${sx === k ? ' ✓' : ''}</button>`).join('')}</div>
+    <span class="small muted">Toute la classe d'un coup, les élèves ajoutés plus tard aussi (sert pour la piscine : bouton « règles » chez les filles).</span>`;
 }
 function bindClassSexe(c){
-  document.querySelectorAll('[data-sexe]').forEach(b => b.onclick = () => { const k = b.dataset.sexe; c.sexe = k; if (k !== 'M') c.pupils.forEach(p => p.g = k); save(c.id); render();
-    toast(k === 'G' ? 'Toute la classe : garçons' : k === 'F' ? 'Toute la classe : filles' : 'Classe mixte : touche G ou F pour chaque élève'); });
-  document.querySelectorAll('[data-pg]').forEach(b => b.onclick = () => { const p = c.pupils.find(x => x.id === b.dataset.pg); if (!p) return;
-    p.g = b.dataset.g; if (c.sexe && c.sexe !== 'M' && c.sexe !== p.g) c.sexe = 'M'; save(c.id); render(); });
-}
-const pgSheet = (c, p) => { const g = pupilG(c, p);
-  return `<div class="seg full" role="group" aria-label="Garçon ou fille" style="margin-top:0">${[['G', 'Garçon'], ['F', 'Fille']].map(([k, l]) => `<button type="button" data-ppg="${k}" aria-pressed="${g === k}">${l}</button>`).join('')}</div>`; };
-function bindPupilG(c, p){
-  document.querySelectorAll('[data-ppg]').forEach(b => b.onclick = () => { p.g = b.dataset.ppg; if (c.sexe && c.sexe !== 'M' && c.sexe !== p.g) c.sexe = 'M'; save(c.id);
-    document.querySelectorAll('[data-ppg]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  document.querySelectorAll('[data-sexe]').forEach(b => b.onclick = () => { const k = b.dataset.sexe; c.sexe = k; c.pupils.forEach(p => p.g = k); save(c.id); render();
+    toast(k === 'G' ? `${c.name} : garçons` : `${c.name} : filles`); });
 }
 
 /* --- Liste et formulaire des évaluations --- */
@@ -2075,7 +2073,7 @@ function evScoresHead(c, e){
   let h = '';
   if (e.kind === 'form') h += '<div class="ev-formnote"><span class="tag ev-form">FORMATIVE</span><span class="small">Pour info : ne compte pas dans le bulletin.</span></div>';
   if (e.endu){
-    const run = enRunGet(), mine = run && run.eid === e.id, nl = Object.keys(e.endu.laps || {}).length;
+    const run = enRunGet(), mine = run && enKey(run) === c.id + ':' + e.id, nl = Object.keys(e.endu.laps || {}).length;
     h += `<div class="card ev-endu-c"><div><b>🏃 Endurance · ${fr(e.endu.min, 2)} min</b><br><span class="small muted">${e.endu.tours} tours = ${fr(+e.max, 2)}/${fr(+e.max, 2)}${nl ? ` · ${nl} élève${nl > 1 ? 's' : ''} déjà compté${nl > 1 ? 's' : ''}` : ''}</span></div>
       <button class="btn pri block en-go" type="button" id="es-endu">${mine ? '▶ Reprendre le compteur' : '▶ Démarrer l\'évaluation'}</button></div>`;
   }
@@ -2093,9 +2091,13 @@ const EN_KEY = 'carnet-eps-endu';
 const enRunGet = () => { try { return JSON.parse(localStorage.getItem(EN_KEY)) || null; } catch(e){ return null; } };
 const enRunPut = r => { try { if (r) localStorage.setItem(EN_KEY, JSON.stringify(r)); else localStorage.removeItem(EN_KEY); } catch(e){} };
 let EN = null, EN_AC = null;
-const enPrefs = (() => { try { return JSON.parse(localStorage.getItem('carnet-eps-endu-vue')) || {}; } catch(e){ return {}; } })();
-const enPrefSave = () => { try { localStorage.setItem('carnet-eps-endu-vue', JSON.stringify(enPrefs)); } catch(e){} };
-const enFind = r => { const c = S.classes.find(x => x.id === r.cid), e = c && c.evals.find(x => x.id === r.eid); return e && e.endu ? {c, e} : null; };
+/* un compteur = une ou plusieurs évaluations liées (une par classe du groupe) */
+const enItems = r => r.items || [{cid: r.cid, eid: r.eid}];
+const enKey = r => enItems(r).map(x => x.cid + ':' + x.eid).join(',');
+function enFind(r){
+  const parts = enItems(r).map(({cid, eid}) => { const c = S.classes.find(x => x.id === cid), e = c && c.evals.find(x => x.id === eid); return e && e.endu ? {c, e} : null; }).filter(Boolean);
+  return parts.length ? {parts, c: parts[0].c, e: parts[0].e, name: parts.map(x => x.c.name).join(' + ')} : null;
+}
 const enTot = r => Object.values(r.laps || {}).reduce((a, b) => a + b, 0);
 const mmss = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
@@ -2109,33 +2111,41 @@ const enBeep = (n, long) => { for (let i = 0; i < n; i++) enTone(880, long && i 
 const enBuzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch(e){} };
 async function enWake(){ try { if (navigator.wakeLock) EN.wl = await navigator.wakeLock.request('screen'); } catch(e){} }
 
-function enAbsents(c){
-  const ls = c.lessons.filter(l => l.date === today()), s = new Set();
-  if (ls.length) c.pupils.forEach(p => { if (ls.every(l => ['A', 'D'].includes(effA(p, l)))) s.add(p.id); });
-  return {s, roll: ls.length > 0};
+function enAbsents(parts){
+  const s = new Set(); let roll = false;
+  parts.forEach(({c}) => { const ls = c.lessons.filter(l => l.date === today()); if (!ls.length) return; roll = true;
+    c.pupils.forEach(p => { if (ls.every(l => ['A', 'D'].includes(effA(p, l)))) s.add(p.id); }); });
+  return {s, roll};
 }
+/* élèves du compteur : classe par classe, puis par nom */
+const enAll = () => EN.parts.flatMap(({c}) => pupilsOf(c));
 function enIds(){
-  const r = EN.run, ab = enAbsents(EN.c).s;
-  let ps = pupilsOf(EN.c).filter(p => !r.excl || !ab.has(p.id) || (r.laps[p.id] || 0) > 0);
+  const r = EN.run, ab = enAbsents(EN.parts).s;
+  let ps = enAll().filter(p => !r.excl || !ab.has(p.id) || (r.laps[p.id] || 0) > 0);
   if (r.sort) ps = [...ps].sort((a, b) => (r.laps[b.id] || 0) - (r.laps[a.id] || 0) || byName(a, b));
   return ps.map(p => p.id);
 }
-function enName(p){ const w = p.n.trim().split(/\s+/); if (w.length < 2) return [p.n, ''];
-  return enPrefs.big === 'first' ? [w[0], w.slice(1).join(' ')] : [w[w.length - 1], w.slice(0, -1).join(' ')]; }
+/* en grand : le prénom (+ initiale du nom si deux prénoms pareils) ; en petit : la classe quand il y en a plusieurs */
+function enName(p){ return [EN.nc.get(p.id) || nomCourt(p), EN.parts.length > 1 ? (EN.pm.get(p.id) || {}).c?.name || '' : '']; }
+const enP = pid => (EN.pm.get(pid) || {}).p;
 const enEl = () => EN.rt.elapsed();
 
-function enOpen(cid, eid){
-  const old = enRunGet();
-  if (old && (old.cid !== cid || old.eid !== eid) && enFind(old) && (enTot(old) || old.st !== 'idle')){
+/* enOpen(cid, eid) pour une classe, ou enOpen([{cid, eid}, …]) pour toutes les classes d'un groupe */
+function enOpen(items, eid){
+  if (!Array.isArray(items)) items = [{cid: items, eid}];
+  const key = enKey({items}), old = enRunGet();
+  if (old && enKey(old) !== key && enFind(old) && (enTot(old) || old.st !== 'idle')){
     const f = enFind(old);
-    enModal(`<b>Un autre compteur est en cours</b><span class="small">${esc(f.c.name)} · ${esc(f.e.name)} : ${enTot(old)} tours comptés, pas encore enregistrés.</span>`,
-      [['Reprendre celui-là', 'pri', () => enOpen(old.cid, old.eid)], ['Le remplacer (perdu)', 'danger', () => { enRunPut(null); enOpen(cid, eid); }], ['Annuler', '', null]]);
+    enModal(`<b>Un autre compteur est en cours</b><span class="small">${esc(f.name)} · ${esc(f.e.name)} : ${enTot(old)} tours comptés, pas encore enregistrés.</span>`,
+      [['Reprendre celui-là', 'pri', () => enOpen(enItems(old))], ['Le remplacer (perdu)', 'danger', () => { enRunPut(null); enOpen(items); }], ['Annuler', '', null]]);
     return;
   }
-  const c = S.classes.find(x => x.id === cid), e = c && c.evals.find(x => x.id === eid); if (!e || !e.endu) return;
-  let run = old && old.cid === cid && old.eid === eid ? old : null;
-  if (!run) run = {cid, eid, st: 'idle', t0: null, acc: 0, dur: Math.round(e.endu.min * 60000), laps: {}, last: {}, undo: [], w1: 0, sort: false, excl: false};
-  EN = {run, c, e, press: new Map(), k: 0, rt: {elapsed: () => run.acc + (run.st === 'run' ? Date.now() - run.t0 : 0)}};
+  const f = enFind({items}); if (!f) return;
+  items = f.parts.map(({c, e}) => ({cid: c.id, eid: e.id}));
+  let run = old && enKey(old) === key ? old : null;
+  if (!run) run = {items, cid: items[0].cid, eid: items[0].eid, st: 'idle', t0: null, acc: 0, dur: Math.round(f.e.endu.min * 60000), laps: {}, last: {}, undo: [], w1: 0, sort: false, excl: false};
+  const pm = new Map(); f.parts.forEach(({c}) => c.pupils.forEach(p => pm.set(p.id, {c, p})));
+  EN = {run, parts: f.parts, c: f.c, e: f.e, name: f.name, pm, nc: nomsCourts([...pm.values()].map(x => x.p)), press: new Map(), k: 0, rt: {elapsed: () => run.acc + (run.st === 'run' ? Date.now() - run.t0 : 0)}};
   const root = document.createElement('div'); root.className = 'en'; root.id = 'en'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', 'Compteur de tours');
   root.innerHTML = `<div class="en-top">
       <button class="en-ib" type="button" id="en-x" aria-label="Fermer le compteur">✕</button>
@@ -2174,8 +2184,8 @@ function enClose(){
 
 function enGrid(){
   const g = $('en-grid'); EN.ids = enIds();
-  g.innerHTML = EN.ids.map(pid => { const p = EN.c.pupils.find(x => x.id === pid), [a, b] = enName(p);
-    return `<div class="en-t" data-pid="${pid}" role="button" tabindex="0" aria-label="${esc(p.n)}"><span class="en-nm"><b>${esc(a)}</b><small>${esc(b)}</small></span><span class="en-n num">0</span><span class="en-ago num"></span><span class="en-ok">✓ 100 %</span><span class="en-msg"></span><span class="en-pb"><i></i></span></div>`; }).join('')
+  g.innerHTML = EN.ids.map(pid => { const p = enP(pid), [a, b] = enName(p);
+    return `<div class="en-t" data-pid="${pid}" role="button" tabindex="0" aria-label="${esc(p.n)}"><span class="en-nm"><b>${esc(a)}</b></span>${b ? `<span class="en-cl">${esc(b)}</span>` : ''}<span class="en-n num">0</span><span class="en-ago num"></span><span class="en-ok">✓ 100 %</span><span class="en-msg"></span><span class="en-pb"><i></i></span></div>`; }).join('')
     || '<p class="en-none">Personne à compter : change le réglage des absents (⋯).</p>';
   EN.ids.forEach(enPaint); enLayout(); enInfo();
   g.onpointerdown = ev => { const t = ev.target.closest('.en-t'); if (!t) return; ev.preventDefault(); enAudio();
@@ -2195,7 +2205,7 @@ function enLayout(){
   for (let cols = 1; cols <= n; cols++){ const rows = Math.ceil(n / cols), tw = (W - gap * (cols - 1)) / cols, th = (H - gap * (rows - 1)) / rows, sc = Math.min(tw, th * 1.25);
     if (!best || sc > best.sc) best = {sc, cols, rows, tw, th}; }
   g.style.gridTemplateColumns = `repeat(${best.cols}, minmax(0, 1fr))`; g.style.gridTemplateRows = `repeat(${best.rows}, minmax(0, 1fr))`;
-  g.style.setProperty('--fn', Math.max(11, Math.min(best.th * .2, best.tw * .16, 30)) + 'px');
+  g.style.setProperty('--fn', Math.max(12, Math.min(best.th * .24, best.tw * .17, 30)) + 'px'); // prénoms courts : un peu plus grands
   g.style.setProperty('--fc', Math.max(16, Math.min(best.th * .42, best.tw * .36, 80)) + 'px');
   g.classList.toggle('tiny', best.th < 66);
 }
@@ -2208,7 +2218,7 @@ function enPaint(pid){
   t.querySelector('.en-n').textContent = n;
   t.querySelector('.en-pb i').style.width = (tours ? Math.min(1, n / tours) * 100 : 0) + '%';
   t.classList.toggle('full', !!tours && n >= tours);
-  t.setAttribute('aria-label', `${EN.c.pupils.find(x => x.id === pid)?.n || ''}, ${n} tour${n > 1 ? 's' : ''}`);
+  t.setAttribute('aria-label', `${enP(pid)?.n || ''}, ${n} tour${n > 1 ? 's' : ''}`);
   enAgo(pid);
 }
 function enAgo(pid){
@@ -2227,7 +2237,7 @@ function enInfo(){
   $('en-info').textContent = `${EN.ids.length} élèves · ${enTot(r)} tours · ${full} ✓ 100 %`;
   const u = r.undo[r.undo.length - 1], b = $('en-undo');
   b.disabled = !u || r.st === 'sum';
-  b.textContent = u ? `↶ Annuler ${enName(EN.c.pupils.find(x => x.id === u.pid) || {n: '?'})[0]} ${u.d > 0 ? '+1' : '−1'}` : '↶ Annuler';
+  b.textContent = u ? `↶ Annuler ${(EN.nc.get(u.pid) || '?')} ${u.d > 0 ? '+1' : '−1'}` : '↶ Annuler';
 }
 function enAdd(pid, d){
   const r = EN.run, now = Date.now();
@@ -2314,19 +2324,16 @@ function enAskClose(){
 function enOptions(){
   const pop = $('en-pop'), b = $('en-opt');
   if (!pop.hidden){ pop.hidden = true; b.setAttribute('aria-expanded', 'false'); return; }
-  const r = EN.run, ab = enAbsents(EN.c);
+  const r = EN.run, ab = enAbsents(EN.parts), plus = EN.parts.length > 1;
   pop.innerHTML = `<label class="toggle"><input type="checkbox" id="eo-sort" ${r.sort ? 'checked' : ''}>Trier par tours</label>
     <span class="small muted" style="margin-top:-6px">Les cases changent de place à chaque tour : attention aux mauvais touchers.</span>
     <span class="small" style="font-weight:700">Absents et dispensés du jour</span>
     <div class="row2"><button class="chip" type="button" data-eo-ex="0" aria-pressed="${!r.excl}">Inclus</button><button class="chip" type="button" data-eo-ex="1" aria-pressed="${r.excl}">Exclus</button></div>
-    <span class="small muted" style="margin-top:-6px">${ab.roll ? `${ab.s.size} absent${ab.s.size > 1 ? 's' : ''} ou dispensé${ab.s.size > 1 ? 's' : ''} à l'appel d'aujourd'hui.` : 'Pas encore d\'appel aujourd\'hui pour cette classe.'}</span>
-    <span class="small" style="font-weight:700">En grand sur les cases</span>
-    <div class="row2"><button class="chip" type="button" data-eo-big="last" aria-pressed="${enPrefs.big !== 'first'}">Dernier mot du nom</button><button class="chip" type="button" data-eo-big="first" aria-pressed="${enPrefs.big === 'first'}">Premier mot</button></div>
+    <span class="small muted" style="margin-top:-6px">${ab.roll ? `${ab.s.size} absent${ab.s.size > 1 ? 's' : ''} ou dispensé${ab.s.size > 1 ? 's' : ''} à l'appel d'aujourd'hui.` : `Pas encore d'appel aujourd'hui pour ${plus ? 'ces classes' : 'cette classe'}.`}</span>
     <button class="en-btn stop" type="button" id="eo-drop">Abandonner ce compteur</button>`;
   pop.hidden = false; b.setAttribute('aria-expanded', 'true');
   $('eo-sort').onchange = e => { r.sort = e.target.checked; enSave(); enGrid(); };
   pop.querySelectorAll('[data-eo-ex]').forEach(x => x.onclick = () => { r.excl = x.dataset.eoEx === '1'; enSave(); enGrid(); pop.hidden = true; enOptions(); });
-  pop.querySelectorAll('[data-eo-big]').forEach(x => x.onclick = () => { enPrefs.big = x.dataset.eoBig; enPrefSave(); enGrid(); pop.hidden = true; enOptions(); });
   $('eo-drop').onclick = () => { pop.hidden = true; enAsk(`<b>Abandonner sans enregistrer ?</b><span class="small">Les ${enTot(r)} tours comptés seront perdus.</span>`, [['Non, garder', 'pri', null], ['Oui, abandonner', 'stop', () => { enRunPut(null); enClose(); render(); toast('Compteur abandonné'); }]]); };
 }
 
@@ -2335,11 +2342,11 @@ function enSummary(){
   const r = EN.run, e = EN.e, max = +e.max, tours = e.endu.tours;
   $('en-pop').hidden = true;
   if (r.st === 'run'){ r.acc += Date.now() - r.t0; r.t0 = null; r.st = 'pause'; }
-  const ids = pupilsOf(EN.c).map(p => p.id).filter(pid => EN.ids.includes(pid) || (r.laps[pid] || 0) > 0);
+  const ids = enAll().map(p => p.id).filter(pid => EN.ids.includes(pid) || (r.laps[pid] || 0) > 0), plus = EN.parts.length > 1;
   const s = $('en-sum'); s.hidden = false;
-  s.innerHTML = `<div class="en-sh"><b>Résumé · ${esc(e.name)}</b><span class="small muted">${esc(EN.c.name)} · ${tours} tours = ${fr(max, 2)}/${fr(max, 2)} · temps couru ${mmss(enEl())}. Corrige les tours si besoin, puis enregistre.</span></div>
-    <div class="en-slist">${ids.map(pid => { const p = EN.c.pupils.find(x => x.id === pid), n = r.laps[pid] || 0;
-      return `<div class="en-srow" data-spid="${pid}"><span class="nm">${esc(p.n)}</span><span class="en-step"><button type="button" data-sd="-1" aria-label="Un tour de moins">−</button><input class="inp num" inputmode="numeric" value="${n}" aria-label="Tours de ${esc(p.n)}"><button type="button" data-sd="1" aria-label="Un tour de plus">+</button></span><b class="sc num">${fr(enScore(n, tours, max), 1)}<small>/${fr(max, 2)}</small></b></div>`; }).join('')}</div>
+  s.innerHTML = `<div class="en-sh"><b>Résumé · ${esc(e.name)}</b><span class="small muted">${esc(EN.name)} · ${tours} tours = ${fr(max, 2)}/${fr(max, 2)} · temps couru ${mmss(enEl())}. Corrige les tours si besoin, puis enregistre.</span></div>
+    <div class="en-slist">${ids.map((pid, k) => { const p = enP(pid), n = r.laps[pid] || 0, cn = EN.pm.get(pid).c.name;
+      return (plus && (!k || EN.pm.get(ids[k - 1]).c.name !== cn) ? `<div class="en-scl">${esc(cn)}</div>` : '') + `<div class="en-srow" data-spid="${pid}"><span class="nm">${esc(p.n)}</span><span class="en-step"><button type="button" data-sd="-1" aria-label="Un tour de moins">−</button><input class="inp num" inputmode="numeric" value="${n}" aria-label="Tours de ${esc(p.n)}"><button type="button" data-sd="1" aria-label="Un tour de plus">+</button></span><b class="sc num">${fr(enScore(n, tours, max), 1)}<small>/${fr(max, 2)}</small></b></div>`; }).join('')}</div>
     <button class="en-btn pri" type="button" id="en-save">💾 Enregistrer les points</button>
     <div class="row2"><button class="en-btn" type="button" id="en-back">↩ Retour au compteur</button><button class="en-btn stop" type="button" id="en-drop2">Abandonner</button></div>`;
   const put = (row, n) => { n = Math.max(0, Math.min(999, Math.round(n) || 0)); r.laps[row.dataset.spid] = n; row.querySelector('input').value = n;
@@ -2354,9 +2361,14 @@ function enSummary(){
   $('en-save').onclick = () => {
     s.querySelectorAll('.en-srow input').forEach(inp => { const row = inp.closest('.en-srow'); r.laps[row.dataset.spid] = Math.max(0, Math.round(parseNum(inp.value) || 0)); });
     const f = enFind(r); if (!f){ toast('Évaluation introuvable : rien enregistré'); return; }
-    const {c, e: ev} = f; if (!ev.endu.laps) ev.endu.laps = {};
-    ids.forEach(pid => { if (!c.pupils.some(p => p.id === pid)) return; const n = r.laps[pid] || 0; ev.endu.laps[pid] = n; ev.s[pid] = enScore(n, ev.endu.tours, +ev.max); });
-    save(c.id); enRunPut(null); enClose(); render(); openEvalScores(c, ev); toast(`Points enregistrés pour ${ids.length} élève${ids.length > 1 ? 's' : ''}`);
+    // chaque classe reçoit les tours et les points de ses élèves dans sa propre évaluation
+    let nb = 0;
+    f.parts.forEach(({c, e: ev}) => { if (!ev.endu.laps) ev.endu.laps = {};
+      ids.forEach(pid => { if (!c.pupils.some(p => p.id === pid)) return; const n = r.laps[pid] || 0; ev.endu.laps[pid] = n; ev.s[pid] = enScore(n, ev.endu.tours, +ev.max); nb++; });
+      save(c.id); });
+    enRunPut(null); enClose(); render();
+    if (typeof openGroupScores === 'function') openGroupScores(f.parts); else openEvalScores(f.c, f.e);
+    toast(`Points enregistrés pour ${nb} élève${nb > 1 ? 's' : ''}`);
   };
 }
 
@@ -2372,9 +2384,247 @@ setTimeout(() => {
   const r = enRunGet(); if (!r || EN) return;
   const f = enFind(r); if (!f || (r.st === 'idle' && !enTot(r))){ enRunPut(null); return; }
   const left = r.dur - (r.acc + (r.st === 'run' ? Date.now() - r.t0 : 0));
-  enModal(`<b>🏃 Compteur d'endurance en cours</b><span class="small">${esc(f.c.name)} · ${esc(f.e.name)} : ${enTot(r)} tours comptés${r.st === 'run' && left > 0 ? `, chrono en marche (${mmss(left)} restantes)` : r.st === 'run' || r.st === 'done' ? ', temps écoulé' : ', en pause'}.</span>`,
-    [['▶ Reprendre', 'pri', () => enOpen(r.cid, r.eid)], ['Plus tard', '', null], ['Abandonner', 'danger', () => enModal('<b>Abandonner sans enregistrer ?</b><span class="small">Les tours comptés seront perdus.</span>', [['Non, garder', 'pri', null], ['Oui, abandonner', 'danger', () => { enRunPut(null); toast('Compteur abandonné'); }]])]]);
+  enModal(`<b>🏃 Compteur d'endurance en cours</b><span class="small">${esc(f.name)} · ${esc(f.e.name)} : ${enTot(r)} tours comptés${r.st === 'run' && left > 0 ? `, chrono en marche (${mmss(left)} restantes)` : r.st === 'run' || r.st === 'done' ? ', temps écoulé' : ', en pause'}.</span>`,
+    [['▶ Reprendre', 'pri', () => enOpen(enItems(r))], ['Plus tard', '', null], ['Abandonner', 'danger', () => enModal('<b>Abandonner sans enregistrer ?</b><span class="small">Les tours comptés seront perdus.</span>', [['Non, garder', 'pri', null], ['Oui, abandonner', 'danger', () => { enRunPut(null); toast('Compteur abandonné'); }]])]]);
 }, 500);
+
+/* ====== Nom / prénom, et onglet Évaluation par groupe (les classes qui ont cours ensemble) ======
+   - Élève : p.n = « Nom Prénom » reste le nom complet (bulletin, Excel, Drive, commentaires, tri).
+     p.nom et p.pre sont écrits à la création et quand on modifie la fiche. Pour les anciens élèves (p.n seul),
+     ils sont déduits de p.n à l'affichage, sans rien enregistrer (pas de changement de c.ts, donc rien à synchroniser) :
+       · des mots en MAJUSCULES et d'autres pas : MAJUSCULES = nom (« DUPONT Léa ») ;
+       · sinon le dernier mot = prénom, le reste = nom (« Van Damme Léa ») ;
+       · liste collée avec deux colonnes (tabulation, ; ou ,) : 1re = nom, 2e = prénom.
+     Si p.n a changé ailleurs (ancienne version de l'appli) et ne correspond plus à p.nom + p.pre, p.n gagne.
+   - Nom court (appel, compteur de tours) : le prénom ; deux prénoms pareils dans ce qui est affiché (l'appel peut réunir
+     deux classes) : « Prénom N. », puis plus de lettres du nom si besoin.
+   - Groupes de l'onglet Évaluation : les classes d'un même créneau de l'horaire S.settings.tt (sans les groupes d'activité),
+     plus chaque classe qui n'est jamais en groupe (et un groupe d'activité seulement s'il a des évaluations).
+     Une évaluation de groupe = une évaluation dans chaque classe (c.evals, rien ne change pour bulletin, Excel, Drive),
+     liées par le même e.gid. Les anciennes sans gid sont réunies si nom + date + barème sont pareils.
+   Tout passe par save(c.id) : appareil + Drive. */
+
+/* --- Nom et prénom --- */
+const nomUp = w => w.length > 1 && w === w.toLocaleUpperCase('fr') && w !== w.toLocaleLowerCase('fr');
+const nomClean = s => String(s || '').replace(/\s+/g, ' ').trim();
+function splitNom(n){
+  const w = nomClean(n).split(' ').filter(x => x && !/^\d+$/.test(x));
+  if (w.length < 2) return ['', w[0] || ''];
+  const up = w.filter(nomUp);
+  if (up.length && up.length < w.length) return [up.join(' '), w.filter(x => !nomUp(x)).join(' ')];
+  return [w.slice(0, -1).join(' '), w[w.length - 1]];
+}
+const joinNom = (nom, pre) => [nomClean(nom), nomClean(pre)].filter(Boolean).join(' ');
+function nomPre(p){
+  if ((p.nom != null || p.pre != null) && joinNom(p.nom, p.pre) === nomClean(p.n)) return {nom: nomClean(p.nom), pre: nomClean(p.pre)};
+  const [nom, pre] = splitNom(p.n); return {nom, pre};
+}
+function pupilNew(c, nom, pre){
+  nom = nomClean(nom); pre = nomClean(pre);
+  const p = {id: nid('e'), n: joinNom(nom, pre), nom, pre};
+  if (c.sexe === 'G' || c.sexe === 'F') p.g = c.sexe;
+  c.pupils.push(p); return p;
+}
+/* liste collée (création de classe, Ajouter des élèves) */
+function addPupils(c, text){
+  const out = [];
+  String(text || '').split(/\r?\n/).forEach(l => {
+    const f = l.split(/[\t;,]+/).map(nomClean).filter(x => x && !/^\d+$/.test(x)), n = f.join(' ');
+    if (!n || /^(nom|élève|eleve)\b/i.test(n)) return;
+    const [nom, pre] = f.length === 2 ? f : splitNom(n);
+    out.push(pupilNew(c, nom, pre));
+  });
+  return out;
+}
+
+/* --- Nom court : prénom, + initiale(s) du nom si deux prénoms pareils parmi les élèves affichés --- */
+const nomKey = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+function nomsCourts(ps){
+  const m = new Map(), by = new Map();
+  ps.forEach(p => { const {nom, pre} = nomPre(p), base = pre || nom || p.n, k = nomKey(base);
+    if (!by.has(k)) by.set(k, []); by.get(k).push({p, nom, base}); });
+  by.forEach(list => {
+    if (list.length === 1){ m.set(list[0].p.id, list[0].base); return; }
+    // pour chacun, juste assez de lettres du nom pour le distinguer des autres (au moins l'initiale)
+    const pre = (x, k) => nomKey(x.nom.slice(0, k));
+    list.forEach(x => {
+      if (!x.nom){ m.set(x.p.id, x.base); return; }
+      let k = 1; while (k < x.nom.length && list.some(y => y !== x && pre(y, k) === pre(x, k))) k++;
+      m.set(x.p.id, k >= x.nom.length ? `${x.base} ${x.nom}` : `${x.base} ${x.nom.slice(0, k).trim()}.`);
+    });
+  });
+  return m;
+}
+let NCOURT = new Map();
+const nomCourt = p => NCOURT.get(p.id) || nomPre(p).pre || p.n;
+
+/* --- Fiche élève : deux cases --- */
+function pupilNameFields(p){
+  const {nom, pre} = nomPre(p);
+  return `<div class="row2 gr-nom"><label class="f" style="flex:1 1 150px">Nom<input class="inp" id="pp-nom" value="${esc(nom)}" autocomplete="off" autocapitalize="words" spellcheck="false"></label>
+    <label class="f" style="flex:1 1 120px">Prénom<input class="inp" id="pp-pre" value="${esc(pre)}" autocomplete="off" autocapitalize="words" spellcheck="false"></label></div>
+    <span class="small muted">À l'appel et dans le compteur de tours : le prénom seulement (+ initiale du nom si deux prénoms pareils). Bulletin, Excel et Drive : nom complet.</span>`;
+}
+function bindPupilName(c, p){
+  const upd = () => {
+    const nom = nomClean($('pp-nom').value), pre = nomClean($('pp-pre').value);
+    if (!nom && !pre){ const o = nomPre(p); $('pp-nom').value = o.nom; $('pp-pre').value = o.pre; toast('Il faut au moins un nom ou un prénom'); return; }
+    p.nom = nom; p.pre = pre; p.n = joinNom(nom, pre); save(c.id);
+    const h = document.querySelector('.sheet .sh h2'); if (h) h.textContent = p.n; $('sheetroot').dataset.title = p.n;
+  };
+  $('pp-nom').onchange = upd; $('pp-pre').onchange = upd;
+}
+/* --- Classe › Élèves : ajouter un élève avec ses deux cases --- */
+function addOneHTML(){
+  return `<div class="gr-add"><b class="small">Ajouter un élève</b>
+    <div class="row2"><input class="inp" id="s-nom" placeholder="Nom" aria-label="Nom" autocomplete="off" autocapitalize="words" spellcheck="false" style="flex:1 1 130px">
+    <input class="inp" id="s-pre" placeholder="Prénom" aria-label="Prénom" autocomplete="off" autocapitalize="words" spellcheck="false" style="flex:1 1 110px">
+    <button class="btn pri" type="button" id="s-add1" style="flex:0 0 auto">Ajouter</button></div></div>`;
+}
+function bindAddOne(c){
+  const go = () => { const nom = nomClean($('s-nom').value), pre = nomClean($('s-pre').value);
+    if (!nom && !pre){ $('s-nom').focus(); toast('Écris le nom et le prénom'); return; }
+    const p = pupilNew(c, nom, pre); save(c.id); render(); toast(`${p.n} ajouté${c.sexe === 'F' ? 'e' : ''}`); setTimeout(() => $('s-nom')?.focus(), 50); };
+  $('s-add1').onclick = go;
+  $('s-pre').onkeydown = e => { if (e.key === 'Enter') go(); };
+  $('s-nom').onkeydown = e => { if (e.key === 'Enter') $('s-pre').focus(); };
+}
+
+/* ====== Onglet Évaluation ====== */
+const EVG_KEY = 'carnet-eps-evgroupe';
+function evGroups(){
+  const idx = id => S.classes.findIndex(c => c.id === id), seen = new Map();
+  tt().forEach(s => { const ids = [...new Set(s.cls)].filter(id => idx(id) >= 0 && !isAct(id)).sort((a, b) => idx(a) - idx(b));
+    if (ids.length) seen.set(ids.join(','), ids); });
+  const inMulti = new Set([...seen.values()].filter(x => x.length > 1).flat());
+  const out = [...seen.values()].filter(x => x.length > 1 || !inMulti.has(x[0]));
+  S.classes.forEach(c => { if (out.some(x => x.includes(c.id)) || (c.act && !c.evals.length)) return; out.push([c.id]); });
+  return out.map(ids => ({key: ids.join(','), ids, cls: ids.map(id => S.classes[idx(id)]), name: clsName(ids)}))
+    .sort((a, b) => (a.cls.some(c => c.act) - b.cls.some(c => c.act)) || a.name.localeCompare(b.name, 'fr', {numeric: true}));
+}
+function evSlots(ids){
+  return tt().filter(s => [...new Set(s.cls)].filter(id => !isAct(id) && S.classes.some(c => c.id === id)).sort().join(',') === [...ids].sort().join(','))
+    .sort((a, b) => a.d - b.d || hI(a.h) - hI(b.h)).map(s => DAYS.find(d => d[0] === s.d)[1].slice(0, 2).toLowerCase() + '. ' + slotLabel(s)).join(' · ');
+}
+/* la même période dans chaque classe (même nom, sinon même rang, sinon la date) */
+function evPerMap(cls, vp0){
+  const i0 = periodsOf(cls[0]).findIndex(p => p.id === vp0.id);
+  return new Map(cls.map(c => { const ps = periodsOf(c); return [c.id, c === cls[0] ? vp0 : ps.find(p => p.name === vp0.name) || ps[i0] || periodOf(c, vp0.start)]; }));
+}
+function evBuckets(cls, pm){
+  const out = [];
+  cls.forEach(c => { const vp = pm.get(c.id); if (!vp) return;
+    c.evals.filter(e => e.periodId === vp.id).forEach(e => {
+      const k = e.gid ? 'g:' + e.gid : 'n:' + nomKey(e.name) + '|' + (e.date || '') + '|' + (+e.max);
+      let b = out.find(x => x.k === k && !x.items.some(it => it.c === c));
+      if (!b) out.push(b = {k, items: []});
+      b.items.push({c, e});
+    }); });
+  return out.sort((a, b) => { const x = a.items[0].e.date || '', y = b.items[0].e.date || ''; return x < y ? -1 : x > y ? 1 : 0; });
+}
+function renderEvalTab(m){
+  const gs = evGroups();
+  if (!gs.length){ m.innerHTML = `<section class="sec"><h2>Évaluation</h2><div class="card empty"><p class="muted">Pas encore de classe à évaluer. Crée une classe dans l'onglet Classes.</p></div></section>`; return; }
+  let key = null; try { key = localStorage.getItem(EVG_KEY); } catch(e){}
+  const g = gs.find(x => x.key === key) || gs[0], c0 = g.cls[0], multi = g.cls.length > 1;
+  let vp0 = viewPeriod(c0); if (vp0 === 'year') vp0 = periodOf(c0, today());
+  const chips = `<div class="chips gr-chips" id="evg" role="group" aria-label="Groupe">${gs.map(x => { const sl = evSlots(x.ids);
+    return `<button class="chip sess" type="button" data-evg="${x.key}" aria-pressed="${x === g}"><span class="sh1">${x === g ? '✓ ' : ''}${esc(x.name)}</span><span class="sh2">${esc(sl || (x.cls[0].act ? 'activité' : 'seule'))}</span></button>`; }).join('')}</div>`;
+  if (!vp0){ m.innerHTML = `<section class="sec"><h2>Évaluation</h2>${chips}<div class="card empty"><p>Ajoute une période dans Classes › Élèves.</p></div></section>`; bindEvTab(m, g, null); return; }
+  const pm = evPerMap(g.cls, vp0), bs = evBuckets(g.cls, pm);
+  const tot = g.cls.map(c => { const vp = pm.get(c.id); return vp ? c.evals.filter(e => e.periodId === vp.id && e.kind !== 'form').reduce((a, e) => a + +e.max, 0) : 0; });
+  const totTxt = new Set(tot).size === 1 ? 'total sur ' + fr(tot[0]) : 'total sur ' + g.cls.map((c, i) => `${fr(tot[i])} en ${esc(c.name)}`).join(', ');
+  m.innerHTML = `<section class="sec">
+    <h2>Évaluation</h2>
+    ${chips}
+    <div class="chips" id="egp">${periodsOf(c0).map(p => `<button class="chip" type="button" data-egp="${p.id}" aria-pressed="${p.id === vp0.id}">${esc(p.name)}${p.type === 'piscine' ? ' <span class="tag piscine" style="padding:1px 6px">P</span>' : ''}</button>`).join('')}</div>
+    <p class="small muted" style="margin:0">${multi ? `Une évaluation créée ici est faite pour <b>${esc(g.name)}</b> en même temps (même nom, date et barème). Les notes vont dans le bulletin de chaque classe.` : `Les notes vont dans le bulletin de ${esc(g.name)}.`} Les évaluations certificatives de la période s'additionnent (${totTxt}) et comptent pour ${100 - S.settings.se} % du bulletin. Les formatives (pour info) ne comptent pas.</p>
+    <button class="btn pri block" type="button" id="eg-new">+ Nouvelle évaluation${multi ? ' · ' + esc(g.name) : ''}</button>
+    ${bs.length ? bs.map((b, i) => { const e = b.items[0].e, n = b.items.reduce((a, it) => a + it.c.pupils.length, 0);
+      const vals = b.items.flatMap(({c, e}) => c.pupils.map(p => e.s[p.id]).filter(v => typeof v === 'number')), avg = vals.length ? vals.reduce((a, x) => a + x, 0) / vals.length : null;
+      const part = multi && b.items.length < g.cls.length;
+      return `<button class="ev" type="button" data-eb="${i}"><span class="t"><b>${esc(e.name)}${evTags(e)}</b><span class="small muted">${e.date ? esc(fmtD(e.date)) + ' · ' : ''}${vals.length}/${n} notés · moyenne ${fr(avg)}</span>${part ? `<span class="tag gr-only">${esc(b.items.map(x => x.c.name).join(' + '))} seulement</span>` : ''}</span><span class="sur num">/${fr(+e.max)}</span></button>`; }).join('')
+      : `<div class="card empty"><p class="muted">Pas encore d'évaluation pour ${esc(vp0.name)}.</p></div>`}
+  </section>`;
+  bindEvTab(m, g, vp0);
+  $('eg-new').onclick = () => openGroupEvalForm(g.cls, vp0, null);
+  m.querySelectorAll('[data-eb]').forEach(x => x.onclick = () => openGroupScores(bs[+x.dataset.eb].items));
+}
+function bindEvTab(m, g, vp0){
+  m.querySelectorAll('[data-evg]').forEach(x => x.onclick = () => { try { localStorage.setItem(EVG_KEY, x.dataset.evg); } catch(e){} render(); });
+  m.querySelectorAll('[data-egp]').forEach(x => x.onclick = () => { const p = g.cls[0].periods.find(q => q.id === x.dataset.egp); if (!p) return;
+    evPerMap(g.cls, p).forEach((vp, cid) => { if (vp) UI.period[cid] = vp.id; }); saveUI(); render(); });
+}
+
+/* formulaire : celui des évaluations (type, endurance, formative), enregistré dans chaque classe du groupe */
+function openGroupEvalForm(cls, vp0, items){
+  if (items) cls = items.map(x => x.c);
+  const c0 = cls[0], e0 = items ? items[0].e : null, names = clsName(cls.map(c => c.id)), multi = cls.length > 1;
+  openEvalForm(c0, items ? null : vp0, e0);
+  const sb = document.querySelector('.sheet .sb');
+  if (multi){
+    document.querySelector('.sheet .sh h2').textContent = (items ? 'Modifier · ' : 'Nouvelle évaluation · ') + names;
+    sb.insertAdjacentHTML('afterbegin', `<div class="gr-for"><b>Pour ${esc(names)}</b><span class="small muted">${items ? 'Les changements valent pour les ' + cls.length + ' classes.' : 'Une évaluation dans chaque classe, liées entre elles : modifier ou supprimer change les ' + cls.length + '.'}</span></div>`);
+  }
+  $('ef-ok').onclick = () => {
+    const max = parseNum($('ef-max').value); if (!max || max <= 0){ $('ef-max').focus(); toast('Indique sur combien est l\'évaluation'); return; }
+    if (!evFormOk()) return;
+    const name = $('ef-name').value.trim() || 'Évaluation', date = $('ef-date').value || today();
+    const p0 = c0.periods.find(p => p.id === $('ef-per').value) || periodOf(c0, date), pm = evPerMap(cls, p0);
+    const gid = (items && (items.find(x => x.e.gid) || {}).e?.gid) || nid('g'), out = [];
+    const put = (c, o) => { o.name = name; o.max = max; o.date = date; o.periodId = (pm.get(c.id) || periodOf(c, date)).id; if (multi) o.gid = gid; evFormApply(c, o); };
+    if (items) items.forEach(({c, e}) => { if (EF) EF.max0 = +e.max; put(c, e); out.push({c, e}); });
+    else cls.forEach(c => { const o = {id: nid('v'), s: {}}; put(c, o); c.evals.push(o); out.push({c, e: o}); });
+    cls.forEach(c => { UI.period[c.id] = (pm.get(c.id) || {}).id || UI.period[c.id]; save(c.id); });
+    closeSheet(); render(); openGroupScores(out);
+    if (!items && multi) toast(`Évaluation créée pour ${names}`);
+  };
+  if (items && $('ef-del')) $('ef-del').onclick = () => {
+    $('ef-delc').innerHTML = `<div class="confirm"><b>Supprimer « ${esc(e0.name)} »${multi ? ' de ' + esc(names) : ''} et toutes ses notes ?</b><div class="row2"><button class="btn" type="button" id="ef-no">Garder</button><button class="btn pri" style="background:var(--bad);border-color:var(--bad)" type="button" id="ef-yes">Supprimer</button></div></div>`;
+    $('ef-no').onclick = () => $('ef-delc').innerHTML = '';
+    $('ef-yes').onclick = () => { items.forEach(({c, e}) => { c.evals = c.evals.filter(x => x !== e); save(c.id); }); closeSheet(); render(); toast('Évaluation supprimée'); };
+  };
+}
+
+/* feuille des notes : les élèves de toutes les classes, classe par classe */
+function grHead(items){
+  const e0 = items[0].e; let h = '';
+  if (e0.kind === 'form') h += '<div class="ev-formnote"><span class="tag ev-form">FORMATIVE</span><span class="small">Pour info : ne compte pas dans le bulletin.</span></div>';
+  if (e0.endu){
+    const run = enRunGet(), mine = run && enKey(run) === enKey({items: items.map(({c, e}) => ({cid: c.id, eid: e.id}))});
+    const nl = items.reduce((a, {e}) => a + Object.keys(e.endu?.laps || {}).length, 0), np = items.reduce((a, {c}) => a + c.pupils.length, 0);
+    h += `<div class="card ev-endu-c"><div><b>🏃 Endurance · ${fr(e0.endu.min, 2)} min</b><br><span class="small muted">${e0.endu.tours} tours = ${fr(+e0.max, 2)}/${fr(+e0.max, 2)} · ${np} élèves${items.length > 1 ? ' sur un seul écran' : ''}${nl ? ` · ${nl} déjà compté${nl > 1 ? 's' : ''}` : ''}</span></div>
+      <button class="btn pri block en-go" type="button" id="es-endu">${mine ? '▶ Reprendre le compteur' : '▶ Démarrer l\'évaluation'}</button></div>`;
+  }
+  return h;
+}
+function openGroupScores(items){
+  items = items.filter(({c, e}) => S.classes.includes(c) && c.evals.includes(e)); if (!items.length){ render(); return; }
+  const e0 = items[0].e, multi = items.length > 1, names = items.map(x => x.c.name).join(' + ');
+  const body = () => `${grHead(items)}
+    <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">${multi ? '<b>' + esc(names) + '</b> · ' : ''}${e0.date ? esc(fmtDL(e0.date)) + ' · ' : ''}sur ${fr(+e0.max, 2)}. Laisse vide si pas encore noté.</span><button class="btn" type="button" id="es-edit">Modifier</button></div>
+    <div class="list">${items.map(({c, e}) => (multi ? `<div class="lsub">${esc(c.name)} <span>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}</span></div>` : '') + pupilsOf(c).map(p => { const s = e.s[p.id], abs = s === 'abs';
+      return `<div class="prow" data-pid="${p.id}"><span class="who">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b>${evLapsTxt(e, p)}</span></span>
+        <span class="sin"><input class="inp num" inputmode="decimal" enterkeyhint="next" aria-label="Note de ${esc(p.n)}" data-in="${p.id}" data-cid="${c.id}" value="${typeof s === 'number' ? esc(fr(s, 2)) : ''}" ${abs ? 'disabled' : ''} placeholder="—"><button class="btn abs" type="button" data-abs="${p.id}" data-cid="${c.id}" aria-pressed="${abs}">Abs</button></span></div>`; }).join('')).join('')}</div>`;
+  openSheet(e0.name, body());
+  const sb = document.querySelector('.sheet .sb'), it = cid => items.find(x => x.c.id === cid);
+  const bind = () => {
+    $('es-edit').onclick = () => { closeSheet(); openGroupEvalForm(null, null, items); };
+    if ($('es-endu')) $('es-endu').onclick = () => { closeSheet(); enOpen(items.map(({c, e}) => ({cid: c.id, eid: e.id}))); };
+    sb.querySelectorAll('[data-in]').forEach(inp => {
+      inp.oninput = () => { const v = parseNum(inp.value), pid = inp.dataset.in, {c, e} = it(inp.dataset.cid);
+        if (v == null){ delete e.s[pid]; inp.style.borderColor = ''; }
+        else if (v < 0 || v > +e.max){ inp.style.borderColor = 'var(--bad)'; return; }
+        else { e.s[pid] = v; inp.style.borderColor = ''; }
+        save(c.id); };
+      inp.onkeydown = ev => { if (ev.key === 'Enter'){ const all = [...sb.querySelectorAll('[data-in]:not([disabled])')]; const n = all[all.indexOf(inp) + 1]; if (n) n.focus(); else inp.blur(); } };
+    });
+    sb.querySelectorAll('[data-abs]').forEach(b => b.onclick = () => { const pid = b.dataset.abs, {c, e} = it(b.dataset.cid);
+      if (e.s[pid] === 'abs') delete e.s[pid]; else e.s[pid] = 'abs'; save(c.id); sb.innerHTML = body(); bind(); });
+  };
+  bind();
+  sheetOnClose = () => render();
+}
 
 /* ====== Démarrage ====== */
 try { navigator.wakeLock?.request('screen').catch(() => {}); } catch(e){}

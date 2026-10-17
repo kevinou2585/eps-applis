@@ -324,6 +324,7 @@ const SON = {
   cafe() { for (let i = 0; i < 7; i++) ton('sine', rnd(400, 900), rnd(900, 1500), 0.05, 0.12, i * 0.05); ton('triangle', 1568, 1568, 0.3, 0.2, 0.4); ton('triangle', 2093, 2093, 0.4, 0.15, 0.48); },
   casier() { metal([180, 455, 980], 0.35, 0.4); bruit(0.08, 0.6, 700, 1); for (let i = 0; i < 4; i++) bruit(0.03, 0.25, 1800, 4, 0.12 + i * 0.09); }, // porte de casier claquée
   casierSort() { ton('sine', 140, 650, 0.12, 0.35); bruit(0.06, 0.45, 1000, 1); metal([240, 610], 0.2, 0.15); },
+  finProtection() { sifflet(0, 0.2, 2600); sifflet(0.28, 0.45, 2300); ton('sawtooth', 440, 220, 0.6, 0.1, 0.1, 1500); },
   tilt() { ton('square', 110, 100, 0.4, 0.2, 0, 900); ton('square', 116, 104, 0.4, 0.15, 0, 900); },
   record() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => { ton('triangle', f, f, 0.16, 0.18, i * 0.07); ton('square', f * 2, f * 2, 0.06, 0.04, i * 0.07, 6000); }); enveloppe(1.2, 0.2, 2000, 0.6, 0.3, 0.2); },
   retourJour() { [1047, 784, 659, 523].forEach((f, i) => ton('triangle', f, f, 0.14, 0.16, i * 0.08)); bruit(0.6, 0.25, 3000, 0.8, 0, 400); }
@@ -416,7 +417,7 @@ let sauveT = 0, temps = 0, comboN = 0, comboT = -9, basketHits = [], attenteBall
 let popups = [], particules = [], grandMsg = null, secousse = 0, flash = 0, chaseT = 0;
 let epsReset = 0, spectacleT = 0, derniereAction = 0;
 let paniers = 0, besoin = 3, cagePleine = true, cageFlash = 0, filetT = 0, forcePanier = null;
-let nuit = false, bascule = null, gelT = 0, cibleRecord = 0, recordFait = true, forceSortie = null, forceBonus = null;
+let nuit = false, bascule = null, gelT = 0, protegeT = 0, cageAttente = 0, aServir = 0, PROTECTION = 30, cibleRecord = 0, recordFait = true, forceSortie = null, forceBonus = null;
 const charge = { src: {}, actif: false, t0: 0 };
 
 function balleNeuve(x, y, vx, vy, neuve) { return { x, y, vx, vy, tient: 0, ignoreTrou: 0, ignoreCasier: 0, neuve, lance: 0, ax: x, ay: y, at: temps, rampe: null, tunnel: null, lieu: null }; }
@@ -424,7 +425,7 @@ function nouvelleBalle(nouvelle = true) { balles.push(balleNeuve(375, 697, 0, 0,
 function nouvellePartie() {
   balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps;
   paniers = 0; besoin = 3; cagePleine = true; cageFlash = 0; filetT = 0; COLLE.balle = null;
-  nuit = false; bascule = null; gelT = 0; arreterBeat(); CASIER.balle = null; CASIER.visites = 0; CASIER.ouvert = 0;
+  nuit = false; bascule = null; gelT = 0; protegeT = 0; cageAttente = 0; aServir = 0; arreterBeat(); CASIER.balle = null; CASIER.visites = 0; CASIER.ouvert = 0;
   cibleRecord = Math.max(+lsGet('battle-record', 0) || 0, classement && classement.boss ? +classement.boss.score || 0 : 0); recordFait = cibleRecord <= 0;
   popups = []; particules = []; grandMsg = null; EPS.forEach(c => { c.bas = false; c.on = true; }); epsReset = 0; attenteBalle = 0;
   FL.forEach(f => { f.a = A_REPOS; f.w = 0; f.appui = false; });
@@ -671,12 +672,15 @@ function recreGenerale() {
 function finRecre() {
   // les 2 balles de la cage sortent par l'avant de la cage ; aucune balle de secours pendant la multiballe
   multiball = true; cagePleine = false; paniers = 0; points(20000);
-  balles.push(balleNeuve(101, 143, 170, 40, false), balleNeuve(129, 121, 210, 10, false));
+  // appelé à la fin du spectacle, table déjà retournée : 1re bille tout de suite, 2e un peu après (plus facile à suivre)
+  balles.push(balleNeuve(101, 143, 150, 40, false)); cageAttente = 1.2;
   sauveT = 0; flash = 0.3; nuit = true; SON.cage(); demarrerBeat();
+  protegeT = PROTECTION; annonce('RÉCRÉ PROTÉGÉE !', 'Billes sauvées pendant ' + PROTECTION + ' s', '#00e5ff', 30, 2);
   for (const b of balles) { b.ax = b.x; b.ay = b.y; b.at = temps; }
 }
 function finMulti() { // fin de la récré : les 2 balles retournent en cage, il faudra un panier de plus
   if (!multiball) return;
+  protegeT = 0; cageAttente = 0; aServir = 0;
   multiball = false; cagePleine = true; cageFlash = 1.2; paniers = 0; besoin = Math.min(5, besoin + 1);
   arreterBeat(); SON.retourJour();
   if (nuit) { bascule = { t: 0, dur: 1.0, versNuit: false }; if (balles.some(b => !b.collee)) gelT = 1.0; } // retour au jour (la table se fige le temps du retournement)
@@ -730,11 +734,12 @@ function coller(b) {
   annonce(pick(TXT.colle), reste ? 'Une balle de moins…' : 'Balle offerte : elle ne compte pas', '#d9b3ff', 30, 2);
 }
 function apresPerte(drain) {
+  if (multiball && aServir > 0 && balles.length === 0) return; // une bille sauvée attend d'être servie
   if (balles.length === 0) {
     if (!drain) { finMulti(); if (attenteBalle <= 0) attenteBalle = 1.4; } // collée : nouvelle balle gratuite, le compteur ne bouge pas
     else if (sauveT > 0) { nouvelleBalle(false); annonce('Pas de dispense !', 'On remet la balle', '#7cf'); SON.sauve(); sauveT = 3; }
     else perdreBalle();
-  } else if (balles.length === 1 && multiball) { finMulti(); blague('Fin de la récré… balles en cage', 185, 300, '#fff'); }
+  } else if (balles.length + aServir === 1 && multiball) { finMulti(); blague('Fin de la récré… balles en cage', 185, 300, '#fff'); }
 }
 function debloquer(b) {
   tilts++; b.vy = -420; b.vx = b.x < 185 ? 140 : -140; b.y -= 2;
@@ -780,6 +785,7 @@ function maj(dt) {
     }
     b.ignoreTrou -= dt; b.ignoreCasier -= dt;
     const attend = enAttente(b);
+    if (b.autoLance > 0) { b.autoLance -= dt; if (b.autoLance <= 0) { if (attend) lancer(b, rnd(0.45, 0.65)); else b.autoLance = 0.1; } }
     if (attend) { // lancement manuel ; joueur inactif 10 s : lancement doux automatique
       b.lance += dt;
       if (!charge.actif && b.lance > 10 && temps - derniereAction > 10) lancer(b, 0.5);
@@ -787,6 +793,24 @@ function maj(dt) {
     // sécurité anti-blocage : si la balle ne bouge presque plus pendant 2 s (hors balle bercée sur un flipper levé ou en attente au lanceur)
     if (attend || Math.hypot(b.x - b.ax, b.y - b.ay) > 6 || berce(b)) { b.ax = b.x; b.ay = b.y; b.at = temps; }
     else if (temps - b.at > 2) { debloquer(b); b.ax = b.x; b.ay = b.y; b.at = temps; }
+  }
+  if (multiball && cageAttente > 0) { cageAttente -= dt; if (cageAttente <= 0) { const b = balleNeuve(129, 121, 170, 20, false); balles.push(b); SON.ejecte(); } }
+  if (multiball && protegeT > 0) { // récré protégée : toute bille perdue est aussitôt resservie au lanceur (lancement automatique)
+    const avant = protegeT; protegeT -= dt;
+    if (Math.ceil(protegeT) < Math.ceil(avant) && protegeT > 0 && protegeT <= 5) SON.tic(Math.ceil(protegeT));
+    const perdues = balles.filter(b => b.collee || b.y >= TH + 30).length;
+    if (perdues) {
+      balles = balles.filter(b => !b.collee && b.y < TH + 30);
+      aServir += perdues;
+      blague('Bille sauvée ! 🛟', 185, 600, '#00e5ff'); SON.sauve();
+    }
+    if (protegeT <= 0) {
+      protegeT = 0; SON.finProtection(); annonce('Fin de la protection', 'Une bille perdue est perdue !', '#ff2bd6', 28, 1.8);
+      if (balles.length + aServir <= 1) finMulti();
+    }
+  }
+  if (multiball && aServir > 0 && !balles.some(b => b.x > 355 && b.y > 520)) { // une bille à la fois dans le couloir du lanceur
+    aServir--; const b = balleNeuve(375, 697, 0, 0, false); b.autoLance = 0.35; balles.push(b);
   }
   if (balles.some(b => b.collee)) { balles = balles.filter(b => !b.collee); apresPerte(false); }
   const avant = balles.length;
@@ -1146,7 +1170,7 @@ const LAMPES = [
   ...[0, 1, 2, 3, 4].map(i => ({ x: 322, y: 476 - i * 20, r: 7, h: 185, on: () => bulletin > i })),
   { x: 191, y: 318, r: 13, forme: 'fleche', ang: 0, h: 28, on: () => Math.floor(temps * (!multiball && paniers + 1 >= besoin ? 7 : 2)) % 2 === 0 },
   { x: 262, y: 352, r: 11, forme: 'fleche', ang: 1.15, h: 32, on: () => Math.floor(temps * 2 + 1) % 2 === 0 },
-  { x: 185, y: 704, forme: 'pilule', w: 76, hh: 18, h: 195, txt: 'SAUVÉE', t: 11, on: () => sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
+  { x: 185, y: 704, forme: 'pilule', w: 76, hh: 18, h: 195, txt: 'SAUVÉE', t: 11, on: () => protegeT > 0 || sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
 ];
 function dessinerLampe(L, on, h) {
   ctx.save(); ctx.translate(L.x, L.y);
@@ -1285,6 +1309,14 @@ function rendu() {
   }
   // trou en action
   if (balles.some(b => b.tient > 0)) { ctx.strokeStyle = `hsl(${temps * 600 % 360},90%,60%)`; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(TROU.x, TROU.y, TROU.r + 10 + Math.sin(temps * 20) * 3, 0, 7); ctx.stroke(); }
+  if (protegeT > 0) { // récré protégée : pastille néon + barre
+    const n = Math.ceil(protegeT), urgent = protegeT <= 5, cl = urgent && Math.floor(temps * 4) % 2 === 0;
+    rrect(ctx, 95, 688, 180, 32, 16); ctx.fillStyle = 'rgba(5,3,20,.9)'; ctx.fill();
+    ctx.strokeStyle = cl ? '#ffffff' : NEON.cyan; ctx.lineWidth = 3; ctx.stroke();
+    ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(0,229,255,.35)'; ctx.lineWidth = 9; ctx.stroke(); ctx.globalCompositeOperation = 'source-over';
+    rrect(ctx, 105, 711, 160 * Math.min(1, protegeT / PROTECTION), 4, 2); ctx.fillStyle = urgent ? NEON.rose : NEON.jaune; ctx.fill();
+    texte('🛟 BILLES SAUVÉES ' + n + ' s', 185, 700, 14, urgent ? (cl ? '#fff' : NEON.rose) : NEON.cyan);
+  }
   // piston tiré + jauge de puissance
   const attente = etat === 'jeu' && balles.some(enAttente);
   if (attente || charge.actif) {
@@ -1689,7 +1721,7 @@ window.__battle = {
   set forcePanier(v) { forcePanier = v; }, get forcePanier() { return forcePanier; },
   set forceSortie(v) { forceSortie = v; }, set forceBonus(v) { forceBonus = v; },
   get nuit() { return nuit; }, set nuit(v) { nuit = !!v; }, get bascule() { return bascule ? { t: bascule.t, k: basculeK(), versNuit: bascule.versNuit } : null; }, get css() { return cv.style.transform; },
-  get epsReset() { return epsReset; }, get eps() { return EPS.map(c => c.bas); }, get mult() { return mult; }, get bulletin() { return bulletin; }, get sauveT() { return sauveT; },
+  get epsReset() { return epsReset; }, get protege() { return protegeT; }, get cageAttente() { return cageAttente; }, get eps() { return EPS.map(c => c.bas); }, get mult() { return mult; }, get bulletin() { return bulletin; }, get sauveT() { return sauveT; },
   get audio() { return { etat: AC ? AC.state : 'absent', muet, beat: BEAT.on, voix: VOIX.length, session: navigator.audioSession ? navigator.audioSession.type : null }; },
   SON, rendu, basculerSon, entrerTunnel, entrerCasier, dansCasier, CASIER, TRAPPE, SORTIES, EPS,
   PAS: 1 / 120, maj, nouvellePartie, enAttente, berce, lancer, recreGenerale, entrerRampe, coller, segs, FL, COLLE, RAMPE, PANIER,

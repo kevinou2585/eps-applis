@@ -63,7 +63,7 @@ header.top .wrap{display:flex; align-items:center; gap:10px; padding-block:10px}
 
 /* Onglets du bas */
 nav.tabs{position:fixed; left:0; right:0; bottom:0; z-index:30; background:var(--surface); border-top:1px solid var(--line); padding-bottom:env(safe-area-inset-bottom,0px); padding-left:env(safe-area-inset-left,0px); padding-right:env(safe-area-inset-right,0px)}
-nav.tabs .in{display:grid; grid-template-columns:repeat(2,1fr); max-width:760px; margin:0 auto; height:var(--tab-h)}
+nav.tabs .in{display:grid; grid-template-columns:repeat(3,1fr); max-width:760px; margin:0 auto; height:var(--tab-h)}
 nav.tabs button{border:0; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:11.5px; font-weight:600; color:var(--muted)}
 nav.tabs button svg{width:23px; height:23px}
 nav.tabs button[aria-current="true"]{color:var(--accent)}
@@ -225,6 +225,80 @@ table.bt{border-collapse:collapse; width:100%; font-size:14px}
 .per .r .inp{width:auto; flex:1 1 140px}
 .toggle{display:flex; align-items:center; gap:12px; font-size:14px}
 .toggle input{width:22px; height:22px; flex:none; accent-color:var(--accent)}
+/* Agenda (onglet 3) : jour par jour sur telephone, grille de la semaine en option. Jamais la couleur seule : texte, bordures, motifs. */
+.ag-top{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.ag-top h2{flex:1 0 auto}
+.ag-top .btn{min-height:40px; padding:8px 12px}
+.ag-days{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; padding-top:6px}
+.ag-dchip{position:relative; border:1.5px solid var(--line); background:var(--surface); color:var(--fg); border-radius:12px; padding:7px 2px 6px; display:flex; flex-direction:column; align-items:center; gap:2px; min-height:62px}
+.ag-dchip b{font:700 15px/1 var(--display); text-transform:uppercase; letter-spacing:.05em}
+.ag-dchip span{font:700 21px/1 var(--display)}
+.ag-dchip small{font-size:11px; color:var(--muted); font-weight:600}
+.ag-dchip[aria-pressed="true"]{background:var(--fg); color:var(--bg); border-color:var(--fg)}
+.ag-dchip[aria-pressed="true"] small{color:inherit; opacity:.85}
+.ag-dchip i, .ag-wd i{position:absolute; top:-8px; left:50%; transform:translateX(-50%); font:700 10px/1.4 var(--body); font-style:normal; background:var(--accent); color:var(--accent-ink); border-radius:6px; padding:0 5px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap}
+.ag-dayhd{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+.ag-dayhd b{font:700 22px/1.1 var(--display); text-transform:uppercase; letter-spacing:.02em}
+.ag-day{display:grid; grid-template-columns:50px minmax(0,1fr); column-gap:8px; row-gap:6px}
+.ag-h{grid-column:1; display:flex; flex-direction:column; justify-content:center}
+.ag-h b{font:700 19px/1 var(--display)}
+.ag-h span{font-size:12px; color:var(--muted)}
+.ag-brk{grid-column:1 / -1; display:flex; align-items:center; gap:8px; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.ag-brk::after{content:""; flex:1; border-top:1.5px dashed var(--line)}
+.ag-cell{grid-column:2; display:flex; flex-direction:column; gap:6px; min-width:0; position:relative; z-index:1}
+.ag-slot{flex:1; text-align:left; border:1.5px solid var(--accent); border-left-width:7px; background:var(--accent-soft); color:var(--fg); border-radius:12px; padding:8px 10px; display:flex; flex-direction:column; justify-content:center; gap:4px; min-height:56px; min-width:0}
+.ag-slot.done{border-style:solid; border-color:var(--ok)}
+.ag-l1{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:13px}
+.ag-l1 > b{font:700 16px/1 var(--display); letter-spacing:.03em}
+.ag-blk{font-size:11.5px; font-weight:700; border:1.5px solid currentColor; border-radius:6px; padding:0 5px; line-height:1.4}
+.ag-ok{margin-left:auto; font-size:12px; font-weight:700; background:var(--ok); color:var(--surface); border-radius:999px; padding:2px 8px}
+.ag-who{font:700 21px/1.05 var(--display); text-transform:uppercase; letter-spacing:.02em; overflow-wrap:anywhere}
+.ag-tags{display:flex; flex-wrap:wrap; gap:5px; align-items:center; min-width:0}
+.ag-tags:empty{display:none}
+.tag.ag-sp{background:var(--fg); color:var(--bg)}
+.ag-note{font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; min-width:0}
+.ag-empty{grid-column:2; min-height:50px; border:1.5px dashed var(--line); background:transparent; border-radius:12px; color:var(--muted); font-weight:600; font-size:13.5px; text-align:left; padding:0 12px}
+.ag-off{border-radius:12px; padding:12px; font-size:13px; font-weight:600; color:var(--muted); text-align:center; border:1.5px solid var(--line); background:repeating-linear-gradient(135deg, var(--surface2) 0 7px, transparent 7px 14px)}
+/* grille de la semaine */
+.ag-wk{display:grid; grid-template-columns:34px repeat(5,minmax(0,1fr)); gap:3px}
+.ag-wd{position:relative; border:1.5px solid transparent; background:none; color:var(--fg); font:700 14px/1.1 var(--display); text-transform:uppercase; padding:8px 0 5px; border-radius:8px}
+.ag-wd.sel{border-color:var(--fg)}
+.ag-wh{grid-column:1; display:flex; flex-direction:column; justify-content:center; font-size:10px; color:var(--muted); min-height:52px}
+.ag-wh b{font:700 14px/1 var(--display); color:var(--fg)}
+.ag-wc{display:flex; flex-direction:column; gap:3px; min-width:0}
+.ag-mini{flex:1; min-width:0; border:1.5px solid var(--accent); border-left-width:4px; background:var(--accent-soft); color:var(--fg); border-radius:8px; padding:4px; text-align:left; display:flex; flex-direction:column; gap:2px; font-size:11px; overflow:hidden}
+.ag-mini.done{border-color:var(--ok)}
+.ag-mini b{font:700 13px/1.05 var(--display); text-transform:uppercase; overflow-wrap:anywhere}
+.ag-mini .sp{font-weight:700; background:var(--fg); color:var(--bg); border-radius:4px; padding:0 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ag-mini .ok{font-weight:700}
+.ag-mini svg{width:13px; height:13px; vertical-align:-2px}
+.ag-wempty{border:1px dashed var(--line); background:transparent; border-radius:8px; color:var(--muted); font-size:17px; min-height:52px}
+.ag-wx{border-radius:8px; background:repeating-linear-gradient(135deg, var(--surface2) 0 6px, transparent 6px 12px)}
+/* feuilles */
+.ag-sum{display:flex; flex-direction:column; gap:6px}
+.tag.ag-okt{background:var(--ok); color:var(--surface)}
+.tag.ag-todo{background:var(--surface2); color:var(--fg); border:1.5px dashed var(--muted)}
+.ag-len{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px}
+.ag-lenb{border:1.5px solid var(--line); background:var(--surface); color:var(--fg); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; min-height:58px}
+.ag-lenb b{font-size:15px}
+.ag-lenb span{font-size:12px; opacity:.85}
+.ag-lenb[aria-pressed="true"]{border-color:var(--fg); background:var(--fg); color:var(--bg)}
+.ag-lenb[aria-pressed="true"] b::before{content:"✓ "}
+.ag-lenb:disabled{opacity:.5; border-style:dashed}
+.ag-cls{display:flex; flex-direction:column; border:1px solid var(--line); border-radius:12px; background:var(--surface); overflow:hidden}
+.ag-ck{display:flex; align-items:center; gap:12px; padding:10px 12px; border-bottom:1px solid var(--line); min-height:50px}
+.ag-ck:last-child{border-bottom:0}
+.ag-ck input{width:24px; height:24px; accent-color:var(--accent); flex:none}
+.ag-ck > span{display:flex; flex-direction:column; min-width:0}
+.ag-ck small{color:var(--muted); font-size:12px}
+.ag-ck:has(input:checked){background:var(--accent-soft)}
+.ag-addsp[hidden]{display:none}
+.ag-warn{color:var(--bad); font-weight:600}
+.ag-jr summary{cursor:pointer; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; min-height:28px}
+.ag-jr[open] summary{margin-bottom:6px}
+/* En-tete : sans la police Barlow (premier lancement hors ligne), le titre poussait la page a 426 px de large sur iPhone. */
+header.top .brand{flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis}
+header.top .sync{min-width:0; overflow:hidden}
 @media (prefers-reduced-motion: no-preference){ .sheet{animation:up .18s ease-out} @keyframes up{from{transform:translateY(30px); opacity:.6}} }
 </style>
 
@@ -496,6 +570,7 @@ function migrate(){
 function lessonType(c, date, h){
   const per = periodOf(c, date); if (!per || per.type !== 'piscine') return 'salle';
   const wd = dOf(date).getDay();
+  if (wd !== 2) return 'salle';
   return tt().some(t => t.d === wd && t.h === h && t.cls.includes(c.id) && t.salle) ? 'salle' : 'piscine';
 }
 
@@ -510,7 +585,7 @@ function toast(msg, action, fn){
 }
 
 /* ====== Horaire de l'école ====== */
-const HOURS = [['H1','8h25','9h15'],['H2','9h15','10h05'],['H3','10h05','10h55'],['H4','11h15','12h05'],['H5','12h05','12h55'],['H6','14h00','14h50'],['H7','14h50','15h40']];
+const HOURS = [['H1','8h25','9h15'],['H2','9h15','10h05'],['H3','10h05','10h55'],['H4','11h15','12h05'],['H5','12h05','12h55'],['H6','14h00','14h50'],['H7','14h50','15h40'],['H8','15h40','16h30']];
 const DAYS = [[1,'Lundi'],[2,'Mardi'],[3,'Mercredi'],[4,'Jeudi'],[5,'Vendredi']];
 const hI = k => HOURS.findIndex(h => h[0] === k);
 const mins = t => { const [a, b] = t.split('h').map(Number); return a * 60 + b; };
@@ -559,16 +634,17 @@ function pickSession(list, date){
 }
 
 /* ====== Rendu général ====== */
-const TABS = [['today','Présences','lesson'],['classes','Classes','points']];
+const TABS = [['today','Présences','lesson'],['classes','Classes','points'],['agenda','Agenda','cal']];
 function render(){
   const c = C(); if (c && S.cur !== c.id) S.cur = c.id;
-  if (!['today','classes','settings'].includes(UI.tab)) UI.tab = 'today';
+  if (!['today','classes','agenda','settings'].includes(UI.tab)) UI.tab = 'today';
   $('tabs').innerHTML = TABS.map(([k, l, ic]) => `<button type="button" data-tab="${k}" aria-current="${UI.tab === k}">${IC[ic]}<span>${l}</span></button>`).join('');
   $('gear').setAttribute('aria-pressed', UI.tab === 'settings');
   const m = $('main');
   if (UI.tab === 'settings'){ renderGlobal(m); return; }
   if (!S.classes.length){ m.innerHTML = welcome(); bindWelcome(); return; }
   if (UI.tab === 'today') renderToday(m);
+  else if (UI.tab === 'agenda') renderAgenda(m);
   else if (UI.cview && c) renderClassView(c, m);
   else renderClassList(m);
 }
@@ -662,11 +738,12 @@ function renderToday(m){
     const ptype = lessonType(cls[0], date, s.h), n = cls.reduce((a, c) => a + c.pupils.length, 0);
     h += head + `<div class="card empty">
       <span class="tag ${ptype}">${ptype === 'piscine' ? IC.wave + ' Piscine' : IC.ball + ' Salle'}</span>
-      <p>${n} élève${n > 1 ? 's' : ''}. Tout le monde est présent et en ordre par défaut : tu touches seulement les exceptions.</p>
+      ${agPlanTag(date, s)}<p>${n} élève${n > 1 ? 's' : ''}. Tout le monde est présent et en ordre par défaut : tu touches seulement les exceptions.</p>
       <button class="btn pri block" type="button" id="l-start">Commencer l'appel</button>
     </div></section>`;
     m.innerHTML = h; bindDay(); bindSess(m, list, date); bindPick();
     $('l-start').onclick = () => { cls.forEach(c => { if (!lessonOn(c, date, s.h)){ c.lessons.push({id: nid('l'), date, h: s.h || null, h2: s.h2 || s.h || null, type: lessonType(c, date, s.h), m: {}}); save(c.id); } });
+      agApply(date, s.h, cls);
       if (s.key === 'c'){ const nl = sessionsOn(date).find(x => (x.h || null) === (s.h || null) && x.cls.includes(cls[0].id)); if (nl) UI.sess = {date, key: nl.key}; }
       render(); };
     return;
@@ -698,12 +775,14 @@ function renderToday(m){
         return (cls.length > 1 ? `<div class="lsub">${esc(c.name)} <span>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}</span></div>` : '') + pupilsOf(c).map(p => lessonRow(c, Ls[i], p, X[p.id], pool)).join(''); }).join('')}
     </div>
     <p class="legend">Présence : un toucher = absent, puis retard, puis dispensé, puis présent. ${pool ? 'Affaires' : 'Tenue'} : toucher = oubli (−1 tenue). ${pool ? 'Nage : toucher = ne participe pas. ' : ''}Pouce : 1er toucher = perturbe (−1 attitude), 2e = exclu du cours (−${S.settings.X} attitude), 3e = annuler. Toucher le nom pour le dossier de l'élève.</p>
+    ${agRollBox(Ls)}
     ${pool ? poolRecap(cls.map((c, i) => [c, Ls[i]]), date) : ''}
     <button class="btn danger" type="button" id="l-del">Supprimer cet appel</button>
     <div id="l-delc"></div>
   </section>`;
   m.innerHTML = h; bindDay(); bindSess(m, list, date); bindPick();
   m.querySelectorAll('[data-type]').forEach(b => b.onclick = () => { cls.forEach((c, i) => { Ls[i].type = b.dataset.type; save(c.id); }); render(); });
+  bindAgRoll(cls, Ls);
   if (pool) bindPoolRecap(cls.map((c, i) => [c, Ls[i]]), date);
   m.querySelector('.list').onclick = e => {
     const b = e.target.closest('button'); if (!b) return;
@@ -729,7 +808,7 @@ function bindSess(m, list, date){
 }
 function openOtherSession(date){
   const sel = new Set(), wd = dOf(date).getDay();
-  const nowH = (() => { const n = new Date(), t = n.getHours() * 60 + n.getMinutes(); const f = HOURS.find(h => t <= mins(h[2])); return f ? f[0] : 'H7'; })();
+  const nowH = (() => { const n = new Date(), t = n.getHours() * 60 + n.getMinutes(); const f = HOURS.find(h => t <= mins(h[2])); return f ? f[0] : 'H8'; })();
   openSheet('Faire l\'appel', `
     <label class="f">Classe(s) : touche-en plusieurs pour un groupe mixte</label>
     <div class="row2" id="oc-cls">${S.classes.map(c => `<button class="chip" type="button" data-oc="${c.id}" aria-pressed="false">${esc(c.name)}</button>`).join('')}</div>
@@ -863,7 +942,7 @@ function renderPoints(c, m){
         return `<div class="prow" data-pid="${p.id}"><button class="who" type="button">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b><span class="pts">${r.abs ? r.abs + ' abs. · ' : ''}${r.kit} oubli${r.kit > 1 ? 's' : ''} · ${r.d} pert.${r.x ? ` · ${r.x} excl.` : ''}</span></span></button>
           <span class="grid2">${pipsH(r.t, T, 't')}<span>T</span>${pipsH(r.c, Cc, 'c')}<span>C</span></span>
           <span class="score num ${tot <= (T + Cc) / 2 ? 'bad' : ''}">${tot}<small>/${T + Cc}</small></span></div>`; }).join('')}
-    </div></section>`;
+    </div>${agJournal(lessons)}</section>`;
   bindChips(c);
   m.querySelector('.list').onclick = e => { const r = e.target.closest('.prow'); if (r) openPupil(c, r.dataset.pid); };
 }
@@ -1362,7 +1441,7 @@ function renderGlobal(m){
     <h2>Réglages</h2>
     <div class="card sec" style="padding-block:14px" id="tt-card">
       <h3>Mon horaire</h3>
-      <p class="small muted" style="margin:0">H1 8h25 · H2 9h15 · H3 10h05 · pause · H4 11h15 · H5 12h05 · midi · H6 14h00 · H7 14h50. Pour un groupe mixte, choisis plusieurs classes : l'appel les réunit, le bulletin reste séparé.</p>
+      <p class="small muted" style="margin:0">H1 8h25 · H2 9h15 · H3 10h05 · pause · H4 11h15 · H5 12h05 · midi · H6 14h00 · H7 14h50 · H8 15h40 (le mercredi jusqu'à H5). Tu peux aussi remplir ton horaire dans l'onglet Agenda. Pour un groupe mixte, choisis plusieurs classes : l'appel les réunit, le bulletin reste séparé.</p>
       ${DAYS.map(([d, name]) => { const sl = ttView().filter(s => s.d === d).sort((a, b) => hI(a.h) - hI(b.h)); return sl.length ? `<div><b class="small">${name}</b>${sl.map(s => `<div class="evt"><span class="d" style="width:auto;min-width:64px"><b>${esc(slotLabel(s))}</b></span><span class="l">${s.pick ? '<b>Activité complémentaire</b><br>' + esc(actName(s.cls)) + ' · un groupe par semaine' : esc(clsName(s.cls))}<br><span class="small muted">${esc(slotTime(s))}</span></span><button class="ib" type="button" data-ttdel="${s.ids.join(',')}" aria-label="Retirer de l'horaire">${IC.x}</button></div>`).join('')}</div>` : ''; }).join('') || '<span class="small muted">Rien encore.</span>'}
       ${S.classes.length ? `<div class="sec" style="padding:10px 0 0;border-top:1px solid var(--line)">
         <b class="small">Ajouter un cours</b>
@@ -1373,6 +1452,7 @@ function renderGlobal(m){
         <div class="row2">${S.classes.map(c => `<button class="chip" type="button" data-ttc="${c.id}" aria-pressed="false">${esc(c.name)}</button>`).join('')}</div>
         <button class="btn pri" type="button" id="tt-add">Ajouter à l'horaire</button></div>` : ''}
     </div>
+    ${agSportsCard()}
     <div class="card sec" style="padding-block:14px">
       <h3>Barème (toutes les classes)</h3>
       <div class="row2"><label class="f" style="flex:1">Points de tenue<input class="inp num" id="s-T" inputmode="numeric" value="${st.T}"></label>
@@ -1399,6 +1479,7 @@ function renderGlobal(m){
   if ($('tt-add')) $('tt-add').onclick = () => {
     if (!sel.size){ toast('Choisis au moins une classe'); return; }
     const h = $('tt-h1').value; let h2 = $('tt-h2').value; if (hI(h2) < hI(h)) h2 = h;
+    if (+$('tt-d').value === 3 && hI(h2) > hI('H5')){ toast('Le mercredi s\'arrête à H5'); return; }
     tt().push({id: nid('t'), d: +$('tt-d').value, h, h2, cls: S.classes.filter(c => sel.has(c.id)).map(c => c.id)}); save(); render(); toast('Ajouté à l\'horaire');
   };
   const num = (id, k, lo, hi) => $(id).onchange = e => { const v = Math.round(parseNum(e.target.value)); if (isNaN(v) || v < lo || v > hi){ e.target.value = st[k]; toast(`Entre ${lo} et ${hi}`); return; } st[k] = v; save(); };
@@ -1407,6 +1488,7 @@ function renderGlobal(m){
   $('s-com').onchange = e => { st.comAuto = e.target.checked; save(); };
   $('s-bk').onclick = () => { const d = new Date(); offerFile(`Carnet EPS copie ${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}.json`, new Blob([JSON.stringify({app: 'carnet-eps', v: 1, at: Date.now(), state: S, photos: PH})], {type: 'application/json'}), 'Copie'); };
   $('s-rs').onclick = () => $('restorein').click();
+  bindAgSports();
 }
 
 $('restorein').onchange = async e => {
@@ -1460,6 +1542,317 @@ function closeSheet(){
   const f = sheetOnClose; sheetOnClose = null; if (f) f();
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sheetroot').innerHTML) closeSheet(); });
+
+/* ====== Agenda : la semaine type (= l'horaire S.settings.tt) et ce qui a été fait à chaque cours ======
+   - Horaire : S.settings.tt = [{id, d, h, h2, cls, salle?}] (le même que Réglages › Mon horaire).
+   - Sport et note d'un cours daté : sur les leçons de chaque classe (l.sport, l.note).
+     Avant l'appel (pas encore de leçon) : S.settings.ag['AAAA-MM-JJ|H1'] = {s, n}, repris dans les leçons au début de l'appel.
+   - Sports ajoutés par l'enseignant : S.settings.sports = [noms].
+   Tout passe par save() / save(c.id) : appareil + Drive (réglages par S.ts, classes par c.ts). */
+IC.cal = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7 13.5h2M11 13.5h2M15 13.5h2M7 17h2M11 17h2"/></svg>';
+const SPORTS0 = ['Natation','Badminton','Basket-ball','Volley-ball','Football','Handball','Unihoc (floorball)','Athlétisme','Gymnastique','Acrosport',"Course d'endurance",'Tennis de table','Jeux de raquettes','Danse','Rugby (flag/tag)','Ultimate','Kin-ball','Tchoukball','Baseball/Softball','Jeux collectifs',"Jeux d'opposition / Lutte",'Escalade','Musculation / Renforcement','Condition physique','Orientation','Cirque / Jonglerie','Koh-Lanta','Évaluation'];
+const lastH = d => d === 3 ? 'H5' : 'H8';          // le mercredi s'arrête à H5
+const DAYS2 = ['', 'Lu', 'Ma', 'Me', 'Je', 'Ve'];
+const dayName = d => (DAYS.find(x => x[0] === d) || [0, ''])[1];
+const wdOf = iso => dOf(iso).getDay();
+const mondayOf = iso => { const w = wdOf(iso); return addDays(iso, w === 0 ? -6 : 1 - w); };
+const agToday = () => { const t = today(), w = wdOf(t); return w === 6 ? addDays(t, 2) : w === 0 ? addDays(t, 1) : t; };
+const clsById = id => S.classes.find(c => c.id === id);
+
+/* --- Sports --- */
+const sportsCustom = () => Array.isArray(S.settings.sports) ? S.settings.sports : [];
+const sameTxt = (a, b) => a.localeCompare(b, 'fr', {sensitivity: 'base'}) === 0;
+function sportsList(){
+  const out = [...SPORTS0];
+  [...sportsCustom()].sort((a, b) => a.localeCompare(b, 'fr')).forEach(s => { if (!out.some(x => sameTxt(x, s))) out.push(s); });
+  out.push('Autre'); return out;
+}
+function addSport(name){
+  name = String(name || '').trim().replace(/\s+/g, ' '); if (!name) return null;
+  const f = sportsList().find(x => sameTxt(x, name)); if (f) return f;
+  S.settings.sports = [...sportsCustom(), name]; save(); return name;
+}
+function sportOptions(cur){
+  const l = sportsList(); if (cur && !l.includes(cur)) l.unshift(cur);
+  return '<option value="">— Choisir —</option>' + l.map(s => `<option value="${esc(s)}" ${s === cur ? 'selected' : ''}>${esc(s)}</option>`).join('') + '<option value="__add">➕ Ajouter un sport…</option>';
+}
+function sportField(pre, cur){
+  return `<label class="f">Sport / activité<select class="inp" id="${pre}-sp">${sportOptions(cur)}</select></label>
+    <div class="row2 ag-addsp" id="${pre}-addrow" hidden><input class="inp" id="${pre}-new" placeholder="Nom du nouveau sport" style="flex:1 1 160px" autocomplete="off"><button class="btn" type="button" id="${pre}-newok">Ajouter</button></div>`;
+}
+function bindSportField(pre, onChange){
+  const sel = $(pre + '-sp'), row = $(pre + '-addrow'), inp = $(pre + '-new'); let prev = sel.value;
+  sel.onchange = () => {
+    if (sel.value === '__add'){ sel.value = prev; row.hidden = false; inp.focus(); return; }
+    row.hidden = true; prev = sel.value; onChange(sel.value);
+  };
+  const ok = () => { const n = addSport(inp.value); if (!n){ toast('Écris le nom du sport'); return; }
+    sel.innerHTML = sportOptions(n); sel.value = n; prev = n; inp.value = ''; row.hidden = true; onChange(n); toast(`« ${n} » est dans ta liste`); };
+  $(pre + '-newok').onclick = ok;
+  inp.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); ok(); } };
+}
+
+/* --- Sport et note d'un cours daté --- */
+const agKey = (date, h) => date + '|' + (h || '');
+function agLessons(date, it, ids){
+  return (ids || it.cls).map(id => { const c = clsById(id), l = c && lessonOn(c, date, it.h); return l ? [c, l] : null; }).filter(Boolean);
+}
+function agGet(date, it){
+  const f = agLessons(date, it).find(([, l]) => l.sport || l.note);
+  if (f) return {s: f[1].sport || '', n: f[1].note || ''};
+  const p = (S.settings.ag || {})[agKey(date, it.h)];
+  return p ? {s: p.s || '', n: p.n || '', plan: true} : {s: '', n: ''};
+}
+function agSet(date, it, ids, s, n){
+  const ls = agLessons(date, it, ids), k = agKey(date, it.h);
+  ls.forEach(([c, l]) => { if (s) l.sport = s; else delete l.sport; if (n) l.note = n; else delete l.note; save(c.id); });
+  if (ls.length < ids.length && (s || n)){ if (!S.settings.ag) S.settings.ag = {}; S.settings.ag[k] = {s, n}; }
+  else if (S.settings.ag) delete S.settings.ag[k];
+  save();
+}
+/* au début de l'appel : ce qui avait été prévu dans l'agenda passe dans les leçons */
+function agApply(date, h, cls){
+  const k = agKey(date, h), p = (S.settings.ag || {})[k]; if (!p) return;
+  cls.forEach(c => { const l = lessonOn(c, date, h); if (l && !l.sport && !l.note){ if (p.s) l.sport = p.s; if (p.n) l.note = p.n; save(c.id); } });
+  delete S.settings.ag[k]; save();
+}
+
+/* --- Créneaux d'un jour de la semaine type --- */
+function agItems(d){
+  return ttView().filter(s => s.d === d && s.h && hI(s.h) >= 0).map(s => {
+    const cls = s.cls.filter(id => clsById(id));
+    return {...s, cls, pick: s.pick && cls.length > 1, a: hI(s.h), b: Math.max(hI(s.h), hI(s.h2 || s.h))};
+  }).filter(s => s.cls.length).sort((x, y) => x.a - y.a || x.b - y.b);
+}
+function agClusters(items){
+  const out = [];
+  items.forEach(it => { const c = out.find(k => it.a <= k.b && it.b >= k.a);
+    if (c){ c.items.push(it); c.a = Math.min(c.a, it.a); c.b = Math.max(c.b, it.b); } else out.push({a: it.a, b: it.b, items: [it]}); });
+  return out;
+}
+function agState(date, it){
+  const cl = it.cls.map(clsById).filter(Boolean), ls = cl.map(c => lessonOn(c, date, it.h));
+  const done = it.pick ? ls.some(Boolean) : ls.every(Boolean);
+  const type = (ls.find(Boolean) || {}).type || (cl[0] ? lessonType(cl[0], date, it.h) : 'salle');
+  const who = it.pick ? (done ? cl.filter((c, i) => ls[i]).map(c => c.name).join(' + ') : 'Activité compl.') : clsName(it.cls);
+  return {cl, ls, done, type, who, g: agGet(date, it)};
+}
+
+function agCard(date, it){
+  const st = agState(date, it), n = it.b - it.a + 1;
+  const lab = `${dayName(it.d)} ${slotLabel(it)}, ${st.who}${n > 1 ? ', bloc ' + n + ' heures' : ''}${st.done ? ', appel fait' : ''}${st.g.s ? ', ' + st.g.s : ''}`;
+  return `<button type="button" class="ag-slot${st.done ? ' done' : ''}" data-ag="${it.id}" data-date="${date}" aria-label="${esc(lab)}">
+    <span class="ag-l1"><b>${esc(slotLabel(it))}</b><span class="muted">${esc(slotTime(it))}</span>${n > 1 ? `<span class="ag-blk">Bloc ${n}h</span>` : ''}${st.done ? '<span class="ag-ok">✓ appel fait</span>' : ''}</span>
+    <span class="ag-who">${esc(st.who)}</span>${it.pick && !st.done ? `<span class="small">${esc(actName(it.cls))}</span>` : ''}
+    <span class="ag-tags">${st.type === 'piscine' ? `<span class="tag piscine">${IC.wave} Piscine</span>` : ''}${st.g.s ? `<span class="tag ag-sp">🏷 ${esc(st.g.s)}</span>` : ''}${st.g.n ? `<span class="ag-note">${esc(st.g.n)}</span>` : ''}</span>
+  </button>`;
+}
+function agMini(date, it){
+  const st = agState(date, it), n = it.b - it.a + 1;
+  return `<button type="button" class="ag-mini${st.done ? ' done' : ''}" data-ag="${it.id}" data-date="${date}" aria-label="${esc(`${dayName(it.d)} ${slotLabel(it)}, ${st.who}${st.done ? ', appel fait' : ''}${st.g.s ? ', ' + st.g.s : ''}`)}">
+    <b>${esc(it.pick && !st.done ? 'Act.' : st.who)}</b>${n > 1 ? `<span>${n}h</span>` : ''}${st.type === 'piscine' ? `<span>${IC.wave} pisc.</span>` : ''}${st.g.s ? `<span class="sp">${esc(st.g.s)}</span>` : ''}${st.done ? '<span class="ok">✓ appel</span>' : ''}</button>`;
+}
+
+function agDayHTML(date){
+  const d = wdOf(date), items = agItems(d), last = hI(lastH(d));
+  const end = Math.max(last, ...items.map(it => it.b)), hrs = HOURS.slice(0, end + 1);
+  const rows = [], rowOf = {};
+  hrs.forEach((H, i) => {
+    if (i > 0){ const gap = mins(H[1]) - mins(hrs[i - 1][2]); if (gap > 0) rows.push({brk: gap >= 40 ? 'Midi' : 'Récré'}); }
+    rowOf[i] = rows.length; rows.push({i});
+  });
+  let h = `<div class="ag-day" style="grid-template-rows:${rows.map(r => r.brk ? '20px' : 'minmax(56px,auto)').join(' ')}">`;
+  rows.forEach((r, k) => { h += r.brk ? `<div class="ag-brk" style="grid-row:${k + 1}">${r.brk}</div>`
+    : `<div class="ag-h" style="grid-row:${k + 1}"><b>${hrs[r.i][0]}</b><span>${hrs[r.i][1]}</span></div>`; });
+  const cov = new Set();
+  agClusters(items).forEach(c => { for (let i = c.a; i <= c.b; i++) cov.add(i);
+    h += `<div class="ag-cell" style="grid-row:${rowOf[c.a] + 1} / ${rowOf[c.b] + 2}">${c.items.map(it => agCard(date, it)).join('')}</div>`; });
+  hrs.forEach((H, i) => { if (!cov.has(i) && i <= last) h += `<button type="button" class="ag-empty" style="grid-row:${rowOf[i] + 1}" data-agnew="${H[0]}" data-date="${date}" aria-label="Ajouter un cours le ${esc(dayName(d).toLowerCase())} à ${H[0]}">+ Ajouter un cours</button>`; });
+  h += '</div>';
+  if (d === 3) h += '<div class="ag-off">Mercredi : pas de cours après H5</div>';
+  return h;
+}
+function agWeekHTML(mon){
+  let h = `<div class="ag-wk" style="grid-template-rows:auto repeat(${HOURS.length},minmax(52px,auto))"><div style="grid-row:1;grid-column:1"></div>`;
+  for (let d = 1; d <= 5; d++){ const iso = addDays(mon, d - 1);
+    h += `<button type="button" class="ag-wd${iso === UI.agDate ? ' sel' : ''}" style="grid-row:1;grid-column:${d + 1}" data-agd="${iso}" data-agday="1" aria-label="Voir le ${esc(fmtDL(iso))}">${DAYS2[d]} ${dOf(iso).getDate()}${iso === today() ? '<i>auj.</i>' : ''}</button>`; }
+  HOURS.forEach((H, i) => h += `<div class="ag-wh" style="grid-row:${i + 2}"><b>${H[0]}</b><span>${H[1]}</span></div>`);
+  for (let d = 1; d <= 5; d++){
+    const iso = addDays(mon, d - 1), items = agItems(d), last = hI(lastH(d)), cov = new Set();
+    agClusters(items).forEach(c => { for (let i = c.a; i <= c.b; i++) cov.add(i);
+      h += `<div class="ag-wc" style="grid-row:${c.a + 2} / ${c.b + 3};grid-column:${d + 1}">${c.items.map(it => agMini(iso, it)).join('')}</div>`; });
+    HOURS.forEach((H, i) => { if (cov.has(i)) return;
+      h += i > last ? `<div class="ag-wx" style="grid-row:${i + 2};grid-column:${d + 1}" title="Pas de cours"></div>`
+        : `<button type="button" class="ag-wempty" style="grid-row:${i + 2};grid-column:${d + 1}" data-agnew="${H[0]}" data-date="${iso}" aria-label="Ajouter un cours le ${esc(dayName(d).toLowerCase())} à ${H[0]}">+</button>`; });
+  }
+  return h + '</div>';
+}
+
+let AGM = null; try { AGM = localStorage.getItem('carnet-eps-agenda-vue'); } catch(e){}
+function renderAgenda(m){
+  if (!UI.agDate || [0, 6].includes(wdOf(UI.agDate))) UI.agDate = agToday();
+  const mon = mondayOf(UI.agDate), fri = addDays(mon, 4), mode = AGM || (window.innerWidth >= 720 ? 'week' : 'day');
+  const a = dOf(mon), b = dOf(fri), d = wdOf(UI.agDate);
+  const wl = a.getMonth() === b.getMonth() ? `du ${a.getDate()} au ${b.getDate()} ${MOISL[b.getMonth()]}` : `du ${a.getDate()} ${MOIS[a.getMonth()]} au ${b.getDate()} ${MOIS[b.getMonth()]}`;
+  const isNow = mon === mondayOf(agToday());
+  let h = `<section class="sec">
+    <div class="ag-top"><h2>Agenda</h2><button class="btn" type="button" id="ag-today" ${isNow && UI.agDate === agToday() ? 'disabled' : ''}>Aujourd'hui</button>
+      <div class="seg" role="group" aria-label="Affichage"><button type="button" data-agmode="day" aria-pressed="${mode === 'day'}">Jour</button><button type="button" data-agmode="week" aria-pressed="${mode === 'week'}">Semaine</button></div></div>
+    <div class="daybar"><button class="dnav" type="button" id="ag-prev" aria-label="Semaine précédente">${IC.left}</button>
+      <div class="daypick"><b>${isNow ? 'Cette semaine' : 'Semaine'}</b><span>${esc(wl)}</span><input type="date" id="ag-pick" value="${UI.agDate}" aria-label="Choisir une date"></div>
+      <button class="dnav" type="button" id="ag-next" aria-label="Semaine suivante">${IC.right}</button></div>`;
+  if (mode === 'week') h += agWeekHTML(mon);
+  else {
+    h += `<div class="ag-days">${[1, 2, 3, 4, 5].map(k => { const iso = addDays(mon, k - 1), n = agItems(k).length;
+      return `<button type="button" class="ag-dchip" data-agd="${iso}" aria-pressed="${iso === UI.agDate}" aria-label="${esc(fmtDL(iso))}, ${n} cours">${iso === today() ? '<i>auj.</i>' : ''}<b>${DAYS2[k]}</b><span>${dOf(iso).getDate()}</span><small>${n ? n + ' cours' : 'libre'}</small></button>`; }).join('')}</div>
+      <div class="ag-dayhd"><b>${esc(fmtDL(UI.agDate))}</b>${UI.agDate === today() ? '<span class="tag" style="background:var(--accent);color:var(--accent-ink)">aujourd\'hui</span>' : ''}</div>
+      ${agDayHTML(UI.agDate)}`;
+  }
+  h += `<p class="small muted" style="margin:0">Touche une heure libre pour ajouter un cours à ta semaine type (chaque semaine pareil). Touche un cours pour faire l'appel et noter le sport et ce que tu as fait ce jour-là.</p></section>`;
+  m.innerHTML = h;
+  const go = iso => { const w = wdOf(iso); UI.agDate = w === 6 ? addDays(iso, 2) : w === 0 ? addDays(iso, 1) : iso; render(); };
+  $('ag-prev').onclick = () => go(addDays(UI.agDate, -7));
+  $('ag-next').onclick = () => go(addDays(UI.agDate, 7));
+  $('ag-today').onclick = () => go(agToday());
+  $('ag-pick').onchange = e => { if (e.target.value) go(e.target.value); };
+  m.querySelectorAll('[data-agmode]').forEach(x => x.onclick = () => { AGM = x.dataset.agmode; try { localStorage.setItem('carnet-eps-agenda-vue', AGM); } catch(e){} render(); });
+  m.querySelectorAll('[data-agd]').forEach(x => x.onclick = () => { if (x.dataset.agday){ AGM = 'day'; try { localStorage.setItem('carnet-eps-agenda-vue', AGM); } catch(e){} } go(x.dataset.agd); });
+  m.querySelectorAll('[data-ag]').forEach(x => x.onclick = () => openAgSlot(x.dataset.date, x.dataset.ag));
+  m.querySelectorAll('[data-agnew]').forEach(x => x.onclick = () => openAgEdit(x.dataset.date, x.dataset.agnew, null));
+}
+
+/* --- Feuille d'un cours (date précise) --- */
+function openAgSlot(date, id){
+  const d = wdOf(date), it = agItems(d).find(x => x.id === id); if (!it){ render(); return; }
+  const st = agState(date, it), n = it.b - it.a + 1, g = st.g;
+  let grp = it.pick ? ((st.cl.find((c, i) => st.ls[i]) || {}).id || null) : null;
+  openSheet(`${fmtD(date)} · ${slotLabel(it)}`, `
+    <div class="card ag-sum"><b class="ag-who">${esc(it.pick ? 'Activité complémentaire' : clsName(it.cls))}</b>
+      <span class="small muted">${n > 1 ? `Bloc de ${n} heures (${esc(slotLabel(it))}) · un seul appel` : '1 heure'} · ${esc(slotTime(it))}</span>
+      ${it.pick ? `<span class="small">${esc(actName(it.cls))} · un groupe par semaine</span>` : ''}
+      <div class="row2" style="gap:6px">${st.type === 'piscine' ? `<span class="tag piscine">${IC.wave} Piscine</span>` : `<span class="tag salle">${IC.ball} Salle</span>`}${st.done ? '<span class="tag ag-okt">✓ Appel fait</span>' : '<span class="tag ag-todo">Appel pas encore fait</span>'}</div></div>
+    ${it.pick ? `<span class="small muted">Quel groupe ce jour-là ?</span><div class="row2" id="ag-grp">${it.cls.map((cid, i) => `<button class="chip" type="button" data-grp="${cid}" aria-pressed="${cid === grp}">${esc(clsById(cid)?.name || '')}${st.ls[i] ? ' ✓' : ''}</button>`).join('')}</div>` : ''}
+    <button class="btn pri block" type="button" id="ag-roll">${IC.lesson.replace('<svg', '<svg width="20" height="20"')} ${st.done ? 'Voir l\'appel' : 'Faire l\'appel'}</button>
+    <div class="card sec" style="padding-block:14px"><h3>Ce cours · ${esc(fmtD(date))}</h3>
+      ${sportField('ags', g.s)}
+      <label class="f">Ce que j'ai fait<textarea class="inp" id="ags-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>
+      ${st.done ? '' : '<span class="small muted">Pas encore d\'appel : c\'est gardé et repris dans l\'appel de ce cours.</span>'}
+      <button class="btn block" type="button" id="ags-save">Enregistrer</button></div>
+    <div class="card sec" style="padding-block:14px"><h3>Semaine type · chaque ${esc(dayName(d).toLowerCase())}</h3>
+      <div class="row2"><button class="btn" type="button" id="ag-edit">✏️ Modifier l'horaire</button><button class="btn danger" type="button" id="ag-del">Supprimer</button></div>
+      <div id="ag-delc"></div>
+      <span class="small muted">Même horaire que Réglages › Mon horaire. Les appels déjà faits restent.</span></div>`);
+  let s0 = g.s, n0 = g.n, cur = g.s;
+  const ids = () => it.pick ? (grp ? [grp] : it.cls) : it.cls;
+  const keep = () => { const nv = $('ags-note') ? $('ags-note').value.trim() : n0; if (cur === s0 && nv === n0) return false; agSet(date, it, ids(), cur, nv); s0 = cur; n0 = nv; return true; };
+  bindSportField('ags', v => { cur = v; keep(); });
+  sheetOnClose = () => { keep(); render(); };
+  document.querySelectorAll('[data-grp]').forEach(x => x.onclick = () => { grp = x.dataset.grp; document.querySelectorAll('[data-grp]').forEach(y => y.setAttribute('aria-pressed', y === x)); });
+  $('ags-save').onclick = () => { keep(); closeSheet(); toast('Enregistré'); };
+  $('ag-roll').onclick = () => {
+    keep();
+    UI.tab = 'today'; UI.date = date; UI._moved = date !== today(); UI.sess = {date, key: 's' + it.id};
+    if (it.pick && grp) UI.pick = {date, key: 's' + it.id, id: grp};
+    saveUI(); closeSheet(); window.scrollTo(0, 0);
+  };
+  $('ag-edit').onclick = () => { keep(); openAgEdit(date, it.h, it); };
+  $('ag-del').onclick = () => {
+    $('ag-delc').innerHTML = `<div class="confirm"><b>Retirer ${esc(slotName(it))} du ${esc(dayName(d).toLowerCase())} ${esc(slotLabel(it))} de ton horaire ?</b><span class="small">Toutes les semaines. Les appels déjà faits et leurs notes restent.</span><div class="row2"><button class="btn" type="button" id="agd-no">Garder</button><button class="btn pri" style="background:var(--bad);border-color:var(--bad)" type="button" id="agd-yes">Supprimer</button></div></div>`;
+    $('agd-no').onclick = () => $('ag-delc').innerHTML = '';
+    $('agd-yes').onclick = () => { keep(); S.settings.tt = tt().filter(s => !it.ids.includes(s.id)); save(); closeSheet(); toast('Retiré de l\'horaire'); };
+  };
+}
+
+/* --- Ajouter / modifier un cours de la semaine type --- */
+function openAgEdit(date, h, it){
+  const d = wdOf(date), dn = dayName(d), last = hI(lastH(d));
+  const others = agItems(d).filter(x => !it || x.id !== it.id);
+  const busy = i => others.find(x => i >= x.a && i <= x.b);
+  const orig = it ? tt().find(s => s.id === it.ids[0]) || {} : {};
+  const lens = [1, 2]; if (it && it.b - it.a + 1 > 2) lens.push(it.b - it.a + 1);
+  let start = Math.min(hI(h), last), len = it ? it.b - it.a + 1 : 1;
+  const sel = new Set(it ? it.cls : []);
+  openSheet(it ? `Modifier · ${dn} ${slotLabel(it)}` : `Nouveau cours · ${dn} ${h}`, `
+    <p class="small muted" style="margin:0">Chaque ${esc(dn.toLowerCase())}, toute l'année. Plusieurs classes cochées = un groupe mixte : un seul appel, des bulletins séparés.</p>
+    <label class="f">Heure de début<select class="inp" id="age-h">${HOURS.slice(0, last + 1).map((H, i) => `<option value="${i}" ${i === start ? 'selected' : ''}>${H[0]} · ${H[1]}</option>`).join('')}</select></label>
+    <span class="small muted" style="font-weight:600">Durée</span>
+    <div class="ag-len" id="age-len">${lens.map(k => `<button type="button" class="ag-lenb" data-len="${k}" aria-pressed="${k === len}"><b>${k === 1 ? '1 heure' : `Bloc ${k}h`}</b><span data-lsub></span></button>`).join('')}</div>
+    <span class="small" id="age-hint"></span>
+    <span class="small muted" style="font-weight:600">Classe(s) qui ont cours</span>
+    <div class="ag-cls">${S.classes.map(c => `<label class="ag-ck"><input type="checkbox" value="${c.id}" ${sel.has(c.id) ? 'checked' : ''}><span><b>${esc(c.name)}</b><small>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}${c.act ? ' · groupe d\'activité' : ''}</small></span></label>`).join('')}</div>
+    <label class="toggle"><input type="checkbox" id="age-salle" ${orig.salle ? 'checked' : ''}>Toujours en salle, même en période piscine</label>
+    <button class="btn pri block" type="button" id="age-ok">${it ? 'Enregistrer l\'horaire' : 'Ajouter à l\'horaire'}</button>`);
+  const why = (s, k) => { const e = s + k - 1;
+    if (e > last) return d === 3 ? 'le mercredi finit à H5' : 'la journée finit à H8';
+    for (let i = s; i <= e; i++){ const b = busy(i); if (b) return `${HOURS[i][0]} déjà pris (${slotName(b)})`; }
+    return ''; };
+  const draw = () => {
+    if (why(start, len) && len > 1) len = 1;
+    document.querySelectorAll('[data-len]').forEach(x => { const k = +x.dataset.len, w = why(start, k);
+      x.disabled = !!w; x.setAttribute('aria-pressed', k === len);
+      x.querySelector('[data-lsub]').textContent = w ? 'Impossible : ' + w : HOURS.slice(start, start + k).map(H => H[0]).join(' + ') + ' · ' + HOURS[start][1] + '–' + HOURS[start + k - 1][2]; });
+    const w = why(start, len); $('age-hint').innerHTML = w ? `<span class="ag-warn">⚠ ${esc(w)}</span>` : '';
+    $('age-ok').disabled = !!w;
+  };
+  $('age-h').onchange = e => { start = +e.target.value; draw(); };
+  document.querySelectorAll('[data-len]').forEach(x => x.onclick = () => { len = +x.dataset.len; draw(); });
+  draw();
+  $('age-ok').onclick = () => {
+    const ids = [...document.querySelectorAll('.ag-ck input:checked')].map(x => x.value);
+    if (!ids.length){ toast('Coche au moins une classe'); return; }
+    if (why(start, len)){ toast(why(start, len)); return; }
+    const e = {...orig, id: it ? it.ids[0] : nid('t'), d, h: HOURS[start][0], h2: HOURS[start + len - 1][0], cls: S.classes.filter(c => ids.includes(c.id)).map(c => c.id)};
+    if ($('age-salle').checked) e.salle = true; else delete e.salle;
+    if (it) S.settings.tt = tt().filter(s => !it.ids.includes(s.id));
+    tt().push(e); save(); closeSheet(); render();
+    toast(it ? 'Horaire modifié' : `Ajouté : chaque ${dn.toLowerCase()} ${slotLabel(e)}`);
+  };
+}
+
+/* --- Dans l'appel : sport + ce que j'ai fait --- */
+function agRollBox(Ls){
+  const f = Ls.find(l => l && (l.sport || l.note)) || {};
+  return `<div class="card sec" style="padding-block:14px" id="ag-rc"><h3>📝 Ce cours</h3>${sportField('rc', f.sport || '')}
+    <label class="f">Ce que j'ai fait<textarea class="inp" id="rc-note" rows="3" style="min-height:80px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(f.note || '')}</textarea></label>
+    <span class="small muted" style="margin:0">Visible aussi dans l'onglet Agenda et le journal des leçons de la classe.</span></div>`;
+}
+function bindAgRoll(cls, Ls){
+  if (!$('ag-rc')) return;
+  const put = (k, v) => cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; if (v) l[k] = v; else delete l[k]; save(c.id); });
+  bindSportField('rc', v => { put('sport', v); toast(v ? 'Sport : ' + v : 'Sport retiré'); });
+  const ta = $('rc-note'); let tm = null;
+  const keep = () => { clearTimeout(tm); tm = null; put('note', ta.value.trim()); };
+  ta.oninput = () => { clearTimeout(tm); tm = setTimeout(keep, 500); };
+  ta.onblur = () => { if (tm) keep(); };
+}
+function agPlanTag(date, s){
+  const g = agGet(date, s); if (!g.s && !g.n) return '';
+  return `<span class="small" style="font-weight:600">Prévu dans l'agenda : ${g.s ? `<span class="tag ag-sp">🏷 ${esc(g.s)}</span>` : ''} ${g.n ? esc(g.n) : ''}</span>`;
+}
+
+/* --- Journal des leçons (onglet Points de la classe) --- */
+function agJournal(ls){
+  if (!ls.length) return '';
+  const w = ls.filter(l => l.sport || l.note).length;
+  return `<details class="card ag-jr"><summary><b>📅 Journal des leçons</b><span class="small muted">${ls.length} leçon${ls.length > 1 ? 's' : ''}${w ? ` · ${w} avec sport ou note` : ''}</span></summary>
+    ${[...ls].reverse().map(l => `<div class="evt"><span class="d">${esc(fmtD(l.date))}${l.h ? '<br>' + esc(slotLabel(l)) : ''}</span><span class="l">${l.sport ? `<b>${esc(l.sport)}</b>` : '<span class="muted">Sport non noté</span>'}${l.type === 'piscine' ? ' <span class="small muted">· piscine</span>' : ''}${l.note ? `<br><span class="small">${esc(l.note)}</span>` : ''}</span></div>`).join('')}</details>`;
+}
+
+/* --- Réglages : sports ajoutés --- */
+function agSportsCard(){
+  const cu = sportsCustom();
+  return `<div class="card sec" style="padding-block:14px" id="sp-card"><h3>Sports de l'agenda</h3>
+    <p class="small muted" style="margin:0">La liste de base (${SPORTS0.length} sports + Autre) est toujours là. Tes sports ajoutés :</p>
+    ${cu.length ? cu.map((s, i) => `<div class="evt"><span class="l"><b>${esc(s)}</b></span><button class="ib" type="button" data-spdel="${i}" aria-label="Retirer ${esc(s)}">${IC.x}</button></div>`).join('') : '<span class="small muted">Aucun pour l\'instant.</span>'}
+    <div class="row2"><input class="inp" id="sp-new" placeholder="Nouveau sport" style="flex:1 1 160px" autocomplete="off"><button class="btn" type="button" id="sp-add" style="flex:0 0 auto">Ajouter</button></div>
+    <span class="small muted">Retirer un sport de la liste ne change pas les cours déjà notés.</span></div>`;
+}
+function bindAgSports(){
+  document.querySelectorAll('[data-spdel]').forEach(b => b.onclick = () => { const cu = [...sportsCustom()], s = cu.splice(+b.dataset.spdel, 1)[0]; S.settings.sports = cu; save(); render(); toast(`« ${s} » retiré de la liste`); });
+  const add = () => { const v = $('sp-new').value.trim(); if (!v) return; const ex = sportsList().find(x => sameTxt(x, v)); if (ex){ toast(`« ${ex} » est déjà dans la liste`); return; } addSport(v); render(); toast(`« ${v} » ajouté`); };
+  $('sp-add').onclick = add; $('sp-new').onkeydown = e => { if (e.key === 'Enter') add(); };
+}
+
 
 /* ====== Démarrage ====== */
 try { navigator.wakeLock?.request('screen').catch(() => {}); } catch(e){}
@@ -1784,7 +2177,7 @@ function openComments(c, vp){
     let st, ph = {};
     if (cleArch){ const o = JSON.parse(get(cleArch)); st = o.state; ph = o.photos || {}; }
     else {
-      const keep = {...S.settings}; delete keep.tt;
+      const keep = {...S.settings}; delete keep.tt; delete keep.ag;
       st = {v: 1, ts: Date.now(), cur: null, settings: {...keep, tt: []}, classes: [], deleted: []};
     }
     try {
@@ -1816,11 +2209,21 @@ function openComments(c, vp){
 
   function feuilles(){
     const out = [];
+    // Un onglet par classe : les 4 periodes a la suite (vides si pas encore commencees), puis l'annee.
     S.classes.forEach(c => {
       try {
-        const per = periodsOf(c).filter(p => { const x = compute(c, p); return x.lessons.length || x.evals.length; });
-        const sh = per.map(p => periodSheet(c, p)); if (per.length) sh.push(yearSheet(c));
-        sh.forEach(f => out.push({nom: f.name, lignes: f.rows.map(r => ({h: r.h, c: r.cells.map(x => x ? [x.v === '' ? null : x.v, x.s] : null)})), fusions: f.merges, largeurs: f.cols, figer: f.freeze}));
+        const per = periodsOf(c), aDes = per.some(p => { const x = compute(c, p); return x.lessons.length || x.evals.length; });
+        if (c.act && !aDes) return;
+        const parts = per.map(p => periodSheet(c, p)).concat([yearSheet(c)]);
+        const lignes = [], fusions = [], largeurs = [];
+        parts.forEach((f, i) => {
+          if (i) { lignes.push({h: 14, c: []}); lignes.push({h: 14, c: []}); }
+          const dec = lignes.length;
+          f.rows.forEach(r => lignes.push({h: r.h, c: r.cells.map(x => x ? [x.v === '' ? null : x.v, x.s] : null)}));
+          (f.merges || []).forEach(m => fusions.push(m.replace(/([A-Z]+)(\d+)/g, (t, col, n) => col + (+n + dec))));
+          (f.cols || []).forEach((w, j) => largeurs[j] = Math.max(largeurs[j] || 0, w));
+        });
+        out.push({nom: c.name, lignes, fusions, largeurs, figer: 0});
       } catch(e){}
     });
     return out;

@@ -142,6 +142,7 @@ def carnet(src):
         "function defaultPeriods(){", 1)
     corps = certificats(corps)
     corps = commentaires(corps)
+    corps = agenda(corps)
     retour = RETOUR.replace('</a>\n', '<span style="font-weight:500">· Version bêta, pas encore finie</span></a>\n')
     return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + COMMENTAIRES_JS + ANNEES_JS + DRIVE_JS + PIED
 
@@ -217,6 +218,48 @@ def commentaires(corps):
     rep("""  $('s-np').onchange = e => { st.npCounts = e.target.checked; save(); };""",
         """  $('s-np').onchange = e => { st.npCounts = e.target.checked; save(); };
   $('s-com').onchange = e => { st.comAuto = e.target.checked; save(); };""")
+    return corps
+
+
+def agenda(corps):
+    """Agenda : 3e onglet (semaine type = horaire, sport et note par cours), H8, sports dans Reglages."""
+    def rep(a, b):
+        nonlocal corps
+        if corps.count(a) != 1:
+            sys.exit("Carnet agenda : motif introuvable : " + a[:60])
+        corps = corps.replace(a, b)
+    # H8 : 50 min apres H7 (lundi, mardi, jeudi, vendredi ; le mercredi s'arrete a H5)
+    rep("['H7','14h50','15h40']];", "['H7','14h50','15h40'],['H8','15h40','16h30']];")
+    rep("return f ? f[0] : 'H7'; })();", "return f ? f[0] : 'H8'; })();")
+    # piscine seulement le mardi : un autre jour, une nouvelle lecon est en salle (le bouton Salle/Piscine de l'appel reste la)
+    rep("  const wd = dOf(date).getDay();\n  return tt().some(", "  const wd = dOf(date).getDay();\n  if (wd !== 2) return 'salle';\n  return tt().some(")
+    rep("H6 14h00 · H7 14h50.", "H6 14h00 · H7 14h50 · H8 15h40 (le mercredi jusqu'à H5). Tu peux aussi remplir ton horaire dans l'onglet Agenda.")
+    rep("const h = $('tt-h1').value; let h2 = $('tt-h2').value; if (hI(h2) < hI(h)) h2 = h;",
+        "const h = $('tt-h1').value; let h2 = $('tt-h2').value; if (hI(h2) < hI(h)) h2 = h;\n"
+        "    if (+$('tt-d').value === 3 && hI(h2) > hI('H5')){ toast('Le mercredi s\\'arrête à H5'); return; }")
+    # 3e onglet
+    rep("grid-template-columns:repeat(2,1fr); max-width:760px", "grid-template-columns:repeat(3,1fr); max-width:760px")
+    rep("const TABS = [['today','Présences','lesson'],['classes','Classes','points']];",
+        "const TABS = [['today','Présences','lesson'],['classes','Classes','points'],['agenda','Agenda','cal']];")
+    rep("if (!['today','classes','settings'].includes(UI.tab)) UI.tab = 'today';",
+        "if (!['today','classes','agenda','settings'].includes(UI.tab)) UI.tab = 'today';")
+    rep("  if (UI.tab === 'today') renderToday(m);", "  if (UI.tab === 'today') renderToday(m);\n  else if (UI.tab === 'agenda') renderAgenda(m);")
+    # appel : sport + note, ce qui etait prevu dans l'agenda passe dans les lecons
+    rep("<p>${n} élève${n > 1 ? 's' : ''}. Tout le monde", "${agPlanTag(date, s)}<p>${n} élève${n > 1 ? 's' : ''}. Tout le monde")
+    rep("      if (s.key === 'c'){ const nl = sessionsOn(date)", "      agApply(date, s.h, cls);\n      if (s.key === 'c'){ const nl = sessionsOn(date)")
+    rep("    ${pool ? poolRecap(cls.map((c, i) => [c, Ls[i]]), date) : ''}", "    ${agRollBox(Ls)}\n    ${pool ? poolRecap(cls.map((c, i) => [c, Ls[i]]), date) : ''}")
+    rep("  if (pool) bindPoolRecap(cls.map((c, i) => [c, Ls[i]]), date);", "  bindAgRoll(cls, Ls);\n  if (pool) bindPoolRecap(cls.map((c, i) => [c, Ls[i]]), date);")
+    # journal des lecons dans l'onglet Points
+    rep("    </div></section>`;\n  bindChips(c);\n  m.querySelector('.list').onclick = e => { const r = e.target.closest('.prow'); if (r) openPupil(c, r.dataset.pid); };",
+        "    </div>${agJournal(lessons)}</section>`;\n  bindChips(c);\n  m.querySelector('.list').onclick = e => { const r = e.target.closest('.prow'); if (r) openPupil(c, r.dataset.pid); };")
+    # Reglages : sports ajoutes
+    rep("    <div class=\"card sec\" style=\"padding-block:14px\">\n      <h3>Barème (toutes les classes)</h3>",
+        "    ${agSportsCard()}\n    <div class=\"card sec\" style=\"padding-block:14px\">\n      <h3>Barème (toutes les classes)</h3>")
+    rep("  $('s-rs').onclick = () => $('restorein').click();", "  $('s-rs').onclick = () => $('restorein').click();\n  bindAgSports();")
+    css = (RACINE / "outils/agenda-carnet.css").read_text(encoding="utf-8")
+    js = (RACINE / "outils/agenda-carnet.js").read_text(encoding="utf-8")
+    rep("@media (prefers-reduced-motion: no-preference){ .sheet{", css + "@media (prefers-reduced-motion: no-preference){ .sheet{")
+    rep("/* ====== Démarrage ====== */", js + "\n/* ====== Démarrage ====== */")
     return corps
 
 
@@ -441,7 +484,7 @@ ANNEES_JS = r"""
     let st, ph = {};
     if (cleArch){ const o = JSON.parse(get(cleArch)); st = o.state; ph = o.photos || {}; }
     else {
-      const keep = {...S.settings}; delete keep.tt;
+      const keep = {...S.settings}; delete keep.tt; delete keep.ag;
       st = {v: 1, ts: Date.now(), cur: null, settings: {...keep, tt: []}, classes: [], deleted: []};
     }
     try {
@@ -477,11 +520,21 @@ DRIVE_JS = r"""
 
   function feuilles(){
     const out = [];
+    // Un onglet par classe : les 4 periodes a la suite (vides si pas encore commencees), puis l'annee.
     S.classes.forEach(c => {
       try {
-        const per = periodsOf(c).filter(p => { const x = compute(c, p); return x.lessons.length || x.evals.length; });
-        const sh = per.map(p => periodSheet(c, p)); if (per.length) sh.push(yearSheet(c));
-        sh.forEach(f => out.push({nom: f.name, lignes: f.rows.map(r => ({h: r.h, c: r.cells.map(x => x ? [x.v === '' ? null : x.v, x.s] : null)})), fusions: f.merges, largeurs: f.cols, figer: f.freeze}));
+        const per = periodsOf(c), aDes = per.some(p => { const x = compute(c, p); return x.lessons.length || x.evals.length; });
+        if (c.act && !aDes) return;
+        const parts = per.map(p => periodSheet(c, p)).concat([yearSheet(c)]);
+        const lignes = [], fusions = [], largeurs = [];
+        parts.forEach((f, i) => {
+          if (i) { lignes.push({h: 14, c: []}); lignes.push({h: 14, c: []}); }
+          const dec = lignes.length;
+          f.rows.forEach(r => lignes.push({h: r.h, c: r.cells.map(x => x ? [x.v === '' ? null : x.v, x.s] : null)}));
+          (f.merges || []).forEach(m => fusions.push(m.replace(/([A-Z]+)(\d+)/g, (t, col, n) => col + (+n + dec))));
+          (f.cols || []).forEach((w, j) => largeurs[j] = Math.max(largeurs[j] || 0, w));
+        });
+        out.push({nom: c.name, lignes, fusions, largeurs, figer: 0});
       } catch(e){}
     });
     return out;

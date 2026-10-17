@@ -1,0 +1,74 @@
+/* Agenda (onglet 3) : jour par jour sur telephone, grille de la semaine en option. Jamais la couleur seule : texte, bordures, motifs. */
+.ag-top{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.ag-top h2{flex:1 0 auto}
+.ag-top .btn{min-height:40px; padding:8px 12px}
+.ag-days{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; padding-top:6px}
+.ag-dchip{position:relative; border:1.5px solid var(--line); background:var(--surface); color:var(--fg); border-radius:12px; padding:7px 2px 6px; display:flex; flex-direction:column; align-items:center; gap:2px; min-height:62px}
+.ag-dchip b{font:700 15px/1 var(--display); text-transform:uppercase; letter-spacing:.05em}
+.ag-dchip span{font:700 21px/1 var(--display)}
+.ag-dchip small{font-size:11px; color:var(--muted); font-weight:600}
+.ag-dchip[aria-pressed="true"]{background:var(--fg); color:var(--bg); border-color:var(--fg)}
+.ag-dchip[aria-pressed="true"] small{color:inherit; opacity:.85}
+.ag-dchip i, .ag-wd i{position:absolute; top:-8px; left:50%; transform:translateX(-50%); font:700 10px/1.4 var(--body); font-style:normal; background:var(--accent); color:var(--accent-ink); border-radius:6px; padding:0 5px; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap}
+.ag-dayhd{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap}
+.ag-dayhd b{font:700 22px/1.1 var(--display); text-transform:uppercase; letter-spacing:.02em}
+.ag-day{display:grid; grid-template-columns:50px minmax(0,1fr); column-gap:8px; row-gap:6px}
+.ag-h{grid-column:1; display:flex; flex-direction:column; justify-content:center}
+.ag-h b{font:700 19px/1 var(--display)}
+.ag-h span{font-size:12px; color:var(--muted)}
+.ag-brk{grid-column:1 / -1; display:flex; align-items:center; gap:8px; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.ag-brk::after{content:""; flex:1; border-top:1.5px dashed var(--line)}
+.ag-cell{grid-column:2; display:flex; flex-direction:column; gap:6px; min-width:0; position:relative; z-index:1}
+.ag-slot{flex:1; text-align:left; border:1.5px solid var(--accent); border-left-width:7px; background:var(--accent-soft); color:var(--fg); border-radius:12px; padding:8px 10px; display:flex; flex-direction:column; justify-content:center; gap:4px; min-height:56px; min-width:0}
+.ag-slot.done{border-style:solid; border-color:var(--ok)}
+.ag-l1{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:13px}
+.ag-l1 > b{font:700 16px/1 var(--display); letter-spacing:.03em}
+.ag-blk{font-size:11.5px; font-weight:700; border:1.5px solid currentColor; border-radius:6px; padding:0 5px; line-height:1.4}
+.ag-ok{margin-left:auto; font-size:12px; font-weight:700; background:var(--ok); color:var(--surface); border-radius:999px; padding:2px 8px}
+.ag-who{font:700 21px/1.05 var(--display); text-transform:uppercase; letter-spacing:.02em; overflow-wrap:anywhere}
+.ag-tags{display:flex; flex-wrap:wrap; gap:5px; align-items:center; min-width:0}
+.ag-tags:empty{display:none}
+.tag.ag-sp{background:var(--fg); color:var(--bg)}
+.ag-note{font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; min-width:0}
+.ag-empty{grid-column:2; min-height:50px; border:1.5px dashed var(--line); background:transparent; border-radius:12px; color:var(--muted); font-weight:600; font-size:13.5px; text-align:left; padding:0 12px}
+.ag-off{border-radius:12px; padding:12px; font-size:13px; font-weight:600; color:var(--muted); text-align:center; border:1.5px solid var(--line); background:repeating-linear-gradient(135deg, var(--surface2) 0 7px, transparent 7px 14px)}
+/* grille de la semaine */
+.ag-wk{display:grid; grid-template-columns:34px repeat(5,minmax(0,1fr)); gap:3px}
+.ag-wd{position:relative; border:1.5px solid transparent; background:none; color:var(--fg); font:700 14px/1.1 var(--display); text-transform:uppercase; padding:8px 0 5px; border-radius:8px}
+.ag-wd.sel{border-color:var(--fg)}
+.ag-wh{grid-column:1; display:flex; flex-direction:column; justify-content:center; font-size:10px; color:var(--muted); min-height:52px}
+.ag-wh b{font:700 14px/1 var(--display); color:var(--fg)}
+.ag-wc{display:flex; flex-direction:column; gap:3px; min-width:0}
+.ag-mini{flex:1; min-width:0; border:1.5px solid var(--accent); border-left-width:4px; background:var(--accent-soft); color:var(--fg); border-radius:8px; padding:4px; text-align:left; display:flex; flex-direction:column; gap:2px; font-size:11px; overflow:hidden}
+.ag-mini.done{border-color:var(--ok)}
+.ag-mini b{font:700 13px/1.05 var(--display); text-transform:uppercase; overflow-wrap:anywhere}
+.ag-mini .sp{font-weight:700; background:var(--fg); color:var(--bg); border-radius:4px; padding:0 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ag-mini .ok{font-weight:700}
+.ag-mini svg{width:13px; height:13px; vertical-align:-2px}
+.ag-wempty{border:1px dashed var(--line); background:transparent; border-radius:8px; color:var(--muted); font-size:17px; min-height:52px}
+.ag-wx{border-radius:8px; background:repeating-linear-gradient(135deg, var(--surface2) 0 6px, transparent 6px 12px)}
+/* feuilles */
+.ag-sum{display:flex; flex-direction:column; gap:6px}
+.tag.ag-okt{background:var(--ok); color:var(--surface)}
+.tag.ag-todo{background:var(--surface2); color:var(--fg); border:1.5px dashed var(--muted)}
+.ag-len{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px}
+.ag-lenb{border:1.5px solid var(--line); background:var(--surface); color:var(--fg); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; min-height:58px}
+.ag-lenb b{font-size:15px}
+.ag-lenb span{font-size:12px; opacity:.85}
+.ag-lenb[aria-pressed="true"]{border-color:var(--fg); background:var(--fg); color:var(--bg)}
+.ag-lenb[aria-pressed="true"] b::before{content:"✓ "}
+.ag-lenb:disabled{opacity:.5; border-style:dashed}
+.ag-cls{display:flex; flex-direction:column; border:1px solid var(--line); border-radius:12px; background:var(--surface); overflow:hidden}
+.ag-ck{display:flex; align-items:center; gap:12px; padding:10px 12px; border-bottom:1px solid var(--line); min-height:50px}
+.ag-ck:last-child{border-bottom:0}
+.ag-ck input{width:24px; height:24px; accent-color:var(--accent); flex:none}
+.ag-ck > span{display:flex; flex-direction:column; min-width:0}
+.ag-ck small{color:var(--muted); font-size:12px}
+.ag-ck:has(input:checked){background:var(--accent-soft)}
+.ag-addsp[hidden]{display:none}
+.ag-warn{color:var(--bad); font-weight:600}
+.ag-jr summary{cursor:pointer; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; min-height:28px}
+.ag-jr[open] summary{margin-bottom:6px}
+/* En-tete : sans la police Barlow (premier lancement hors ligne), le titre poussait la page a 426 px de large sur iPhone. */
+header.top .brand{flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis}
+header.top .sync{min-width:0; overflow:hidden}

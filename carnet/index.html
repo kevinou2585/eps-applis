@@ -954,7 +954,7 @@ function poolStay(pairs){
       if (a === 'A') return;
       if (a === 'D') why.push(cert ? `certificat médical (jusqu'au ${cert.to.slice(8)}/${cert.to.slice(5, 7)})${cert.note ? ', ' + cert.note : ''}` : 'dispensé');
       if (mm.k) why.push('pas ses affaires de piscine');
-      if (mm.np && a !== 'D') why.push('ne participe pas');
+      if ((mm.np || mm.rg) && a !== 'D') why.push('ne nage pas');
       if (why.length) out.push({c, p, why: why.join(', ')});
     }); });
   return out;

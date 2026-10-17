@@ -271,6 +271,8 @@ def evaluations(corps):
         if corps.count(a) != 1:
             sys.exit("Carnet evaluations : motif introuvable : " + a[:60])
         corps = corps.replace(a, b)
+    # filles qui ont leurs regles : restent a l'ecole, raison discrete pour les educateurs
+    rep("if (mm.np && a !== 'D') why.push('ne participe pas');", "if ((mm.np || mm.rg) && a !== 'D') why.push('ne nage pas');")
     # 1. formatives : hors savoir-faire, bulletin, Excel/Drive et commentaires (tout passe par compute)
     rep("const evs = c.evals.filter(e => e.periodId === p.id)", "const evs = c.evals.filter(e => e.periodId === p.id && e.kind !== 'form')")
     rep("const totMax = evs.reduce((a, e) => a + +e.max, 0);", "const totMax = evs.filter(e => e.kind !== 'form').reduce((a, e) => a + +e.max, 0);")

@@ -320,6 +320,10 @@ const SON = {
     o.connect(g); g.connect(MASTER); o.start(t); l.start(t); o.stop(t + dur + 0.02); l.stop(t + dur + 0.02);
     enveloppe(dur, 0.18, 3000, 1.5, 0, dur * 0.5);
   },
+  loopEntree() { bruit(0.4, 0.45, 3000, 1, 0, 600); ton('sawtooth', 160, 520, 0.35, 0.08, 0, 1600); metal([1400, 3100], 0.12, 0.08); enveloppe(LOOP.total / VIT_LOOP, 0.2, 800, 0.8, 0.05, 0.1); },
+  looping(dur) { // « wouuuh » qui monte en haut de la boucle et redescend
+    ton('triangle', 330, 990, dur * 0.5, 0.16); ton('triangle', 990, 300, dur * 0.5, 0.16, dur * 0.5); ton('sine', 165, 495, dur * 0.5, 0.1); ton('sine', 495, 150, dur * 0.5, 0.1, dur * 0.5);
+  },
   atterrit() { ton('sine', 200, 70, 0.12, 0.45); bruit(0.04, 0.4, 1200, 1); },
   cafe() { for (let i = 0; i < 7; i++) ton('sine', rnd(400, 900), rnd(900, 1500), 0.05, 0.12, i * 0.05); ton('triangle', 1568, 1568, 0.3, 0.2, 0.4); ton('triangle', 2093, 2093, 0.4, 0.15, 0.48); },
   casier() { metal([180, 455, 980], 0.35, 0.4); bruit(0.08, 0.6, 700, 1); for (let i = 0; i < 4; i++) bruit(0.03, 0.25, 1800, 4, 0.12 + i * 0.09); }, // porte de casier claquée
@@ -372,8 +376,8 @@ seg(CAGE.ax, CAGE.ay, CAGE.bx, CAGE.by, { epais: 14, e: 0.4, rail: false });
 seg(163, 252, 191, 232, { epais: 2 }); seg(191, 232, 219, 252, { epais: 2 });
 seg(163, 252, 157, 294); seg(219, 252, 225, 294);
 const RAMPE_PTS = [[191, 266], [191, 222], [187, 186], [170, 160], [142, 150], [110, 158], [78, 172], [52, 198], [34, 236], [26, 282], [25, 330], [28, 372]];
-const RAMPE = (() => {
-  const P = RAMPE_PTS, pts = [], cr = (a, b, c, d, t) => 0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (3 * b - a - 3 * c + d) * t * t * t);
+function rail(P) { // chemin lissé (Catmull-Rom) + longueurs cumulées, pour les billes guidées par un rail
+  const pts = [], cr = (a, b, c, d, t) => 0.5 * (2 * b + (c - a) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (3 * b - a - 3 * c + d) * t * t * t);
   for (let i = 0; i < P.length - 1; i++) {
     const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
     for (let k = 0; k < 8; k++) pts.push([cr(p0[0], p1[0], p2[0], p3[0], k / 8), cr(p0[1], p1[1], p2[1], p3[1], k / 8)]);
@@ -381,9 +385,23 @@ const RAMPE = (() => {
   pts.push(P[P.length - 1]);
   const L = [0]; for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
   return { pts, L, total: L[L.length - 1] };
+}
+const RAMPE = rail(RAMPE_PTS);
+function surRampe(d) { return surRail(RAMPE, d); }
+// 2e rampe : LOOPING en haut à droite (entrée à droite de la rampe du panier, visée depuis le flipper gauche),
+// un tour complet de boucle verticale puis descente jusqu'au couloir droit qui ramène au flipper droit
+const LOOP_C = { x: 314, y: 254, r: 22 }, VIT_LOOP = 470;
+const LOOP_PTS = (() => {
+  const P = [[250, 288], [251, 268], [258, 256], [274, 251], [288, 246]], i0 = P.length;
+  for (let a = 225; a <= 720; a += 15) P.push([LOOP_C.x + LOOP_C.r * Math.cos(a * Math.PI / 180), LOOP_C.y + LOOP_C.r * Math.sin(a * Math.PI / 180)]);
+  const i1 = P.length - 1;
+  P.push([339, 292], [341, 330], [338, 372], [334, 420], [332, 465], [332, 494]);
+  P.i0 = i0; P.i1 = i1; return P;
 })();
-function surRampe(d) {
-  const { pts, L } = RAMPE; let i = 1; while (i < L.length - 1 && L[i] < d) i++;
+const LOOP = rail(LOOP_PTS); LOOP.dA = LOOP.L[LOOP_PTS.i0 * 8]; LOOP.dB = LOOP.L[LOOP_PTS.i1 * 8];
+function hauteurLoop(d) { if (d < LOOP.dA || d > LOOP.dB) return 0; const [, y] = surRail(LOOP, d); return Math.max(0, (LOOP_C.y + LOOP_C.r - y) / (2 * LOOP_C.r)); }
+function surRail(RL, d) {
+  const { pts, L } = RL; let i = 1; while (i < L.length - 1 && L[i] < d) i++;
   const k = Math.min(1, Math.max(0, (d - L[i - 1]) / (L[i] - L[i - 1] || 1)));
   return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k];
 }
@@ -417,10 +435,10 @@ let sauveT = 0, temps = 0, comboN = 0, comboT = -9, basketHits = [], attenteBall
 let popups = [], particules = [], grandMsg = null, secousse = 0, flash = 0, chaseT = 0;
 let epsReset = 0, spectacleT = 0, derniereAction = 0;
 let paniers = 0, besoin = 3, cagePleine = true, cageFlash = 0, filetT = 0, forcePanier = null;
-let nuit = false, bascule = null, gelT = 0, protegeT = 0, cageAttente = 0, aServir = 0, PROTECTION = 30, cibleRecord = 0, recordFait = true, forceSortie = null, forceBonus = null;
+let nuit = false, bascule = null, gelT = 0, protegeT = 0, cageAttente = 0, aServir = 0, PROTECTION = 20, cibleRecord = 0, recordFait = true, forceSortie = null, forceBonus = null;
 const charge = { src: {}, actif: false, t0: 0 };
 
-function balleNeuve(x, y, vx, vy, neuve) { return { x, y, vx, vy, tient: 0, ignoreTrou: 0, ignoreCasier: 0, neuve, lance: 0, ax: x, ay: y, at: temps, rampe: null, tunnel: null, lieu: null }; }
+function balleNeuve(x, y, vx, vy, neuve) { return { x, y, vx, vy, tient: 0, ignoreTrou: 0, ignoreCasier: 0, neuve, lance: 0, ax: x, ay: y, at: temps, rampe: null, tunnel: null, boucle: null, lieu: null }; }
 function nouvelleBalle(nouvelle = true) { balles.push(balleNeuve(375, 697, 0, 0, nouvelle)); }
 function nouvellePartie() {
   balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps;
@@ -478,16 +496,31 @@ function distFlip(b, f) {
   let t = ((b.x - f.px) * dx + (b.y - f.py) * dy) / (f.L * f.L); t = t < 0 ? 0 : t > 1 ? 1 : t;
   return { t, cx: f.px + t * dx, cy: f.py + t * dy };
 }
+const FLIP_MIN = 780; // vitesse minimale donnée par un flipper qui se lève (même bille posée tout près du pivot)
 function collFlip(b, f) {
-  const { t, cx, cy } = distFlip(b, f), rr = R + 10 - 4 * t;
-  let nx = b.x - cx, ny = b.y - cy; const d2 = nx * nx + ny * ny;
-  if (d2 >= rr * rr || d2 < 1e-9) return;
-  const d = Math.sqrt(d2); nx /= d; ny /= d;
-  b.x += nx * (rr - d); b.y += ny * (rr - d);
+  const ang = flipAngle(f), ux = Math.cos(ang), uy = Math.sin(ang), tl = ((b.x - f.px) * ux + (b.y - f.py) * uy) / f.L;
+  const monte = f.appui && Math.abs(f.w) > 3;
+  let t, cx, cy, nx, ny, d, rr;
+  if (tl < 0 && tl > -0.5) {
+    // derrière le pivot : surface plate prolongée. Avant, le capuchon rond du pivot formait avec le bout du guide
+    // un creux en V où la bille bercée restait coincée (elle ne roulait plus et le flipper ne la touchait plus)
+    const sp = (b.x - f.px) * -uy + (b.y - f.py) * ux, sg = sp < 0 ? -1 : 1;
+    t = 0; cx = f.px; cy = f.py; nx = -uy * sg; ny = ux * sg; d = Math.abs(sp); rr = R + 10;
+  } else {
+    ({ t, cx, cy } = distFlip(b, f)); rr = R + 10 - 4 * t;
+    nx = b.x - cx; ny = b.y - cy; d = Math.hypot(nx, ny);
+    if (d < 1e-9) return; nx /= d; ny /= d;
+  }
+  const frappe = monte && ny < -0.3; // flipper qui monte, bille dessus (ou juste au-dessus, ex. bille bercée à peine décollée)
+  if (d >= rr + (frappe ? 5 : 0)) return;
+  if (d < rr) { b.x += nx * (rr - d); b.y += ny * (rr - d); }
   // vitesse de la surface du flipper au point de contact : plus on tape loin du pivot, plus ça part fort
   const w = f.cote === 1 ? f.w : -f.w, rx = cx - f.px, ry = cy - f.py, svx = -w * ry, svy = w * rx;
   const vrx = b.vx - svx, vry = b.vy - svy, vn = vrx * nx + vry * ny;
   if (vn < 0) { const e = Math.abs(w) > 1 ? 0.3 : 0.1; b.vx -= (1 + e) * vn * nx; b.vy -= (1 + e) * vn * ny; }
+  if (frappe) { // coup franc garanti, même bille posée près du pivot
+    const vo = b.vx * nx + b.vy * ny; if (vo < FLIP_MIN) { b.vx += (FLIP_MIN - vo) * nx; b.vy += (FLIP_MIN - vo) * ny; }
+  }
 }
 function collBump(b, c) {
   let nx = b.x - c.x, ny = b.y - c.y; const d2 = nx * nx + ny * ny, rr = R + c.r;
@@ -515,11 +548,12 @@ function pas(h) {
   }
   const amort = 1 - 0.06 * h;
   for (const b of balles) {
-    if (b.tient > 0 || b.rampe || b.collee || b.tunnel) continue;
+    if (b.tient > 0 || b.rampe || b.collee || b.tunnel || b.boucle) continue;
     const py = b.y;
     b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
     // entrée de la rampe : la balle qui monte dans le couloir central est prise par le rail (une seule à la fois)
     if (b.vy < 0 && b.y < 274 && b.y > 236 && b.x > 160 && b.x < 222 && !balles.some(o => o.rampe)) { entrerRampe(b); continue; }
+    if (b.vy < -150 && b.y < 292 && b.y > 260 && b.x > 236 && b.x < 266 && !balles.some(o => o.boucle)) { entrerLoop(b); continue; }
     for (const s of segs) { if (!s.on) continue; const imp = collSeg(b, s); if (imp > 50) touche(s, b, imp); }
     if (!CASIER.balle && b.ignoreCasier <= 0 && dansCasier(b)) { entrerCasier(b); continue; }
     if (COLLE.balle) collPlot(b, COLLE.x, COLLE.y, R);
@@ -534,7 +568,7 @@ function pas(h) {
     }
   }
   for (let i = 0; i < balles.length; i++) for (let j = i + 1; j < balles.length; j++) {
-    const a = balles[i], c = balles[j]; if (a.tient > 0 || c.tient > 0 || a.rampe || c.rampe || a.collee || c.collee || a.tunnel || c.tunnel) continue;
+    const a = balles[i], c = balles[j]; if (a.tient > 0 || c.tient > 0 || a.rampe || c.rampe || a.collee || c.collee || a.tunnel || c.tunnel || a.boucle || c.boucle) continue;
     let nx = c.x - a.x, ny = c.y - a.y; const d = Math.hypot(nx, ny);
     if (d > 0 && d < 2 * R) {
       nx /= d; ny /= d; const p = (2 * R - d) / 2; a.x -= nx * p; a.y -= ny * p; c.x += nx * p; c.y += ny * p;
@@ -647,7 +681,7 @@ function toucheBumper(c, b) {
   if (Math.random() < 0.18) blague(pick(TXT[c.type]), c.x, c.y - 60, c.type === 'foot' ? '#ff6b6b' : undefined);
 }
 function berce(b) { return FL.some(f => { if (!f.appui) return false; const p = distFlip(b, f); return Math.hypot(b.x - p.cx, b.y - p.cy) < R + 14; }); }
-function enAttente(b) { return b.tient <= 0 && !b.rampe && !b.tunnel && b.x > 362 && b.y > 560 && Math.abs(b.vx) + Math.abs(b.vy) < 40; }
+function enAttente(b) { return b.tient <= 0 && !b.rampe && !b.tunnel && !b.boucle && b.x > 362 && b.y > 560 && Math.abs(b.vx) + Math.abs(b.vy) < 40; }
 function lancer(b, p) {
   b.vy = -(LANCE_MIN + (LANCE_MAX - LANCE_MIN) * p); b.vx = 0; b.lance = 0; arreterCharge(); SON.lance(); vib(25);
   if (b.neuve) { b.neuve = false; sauveT = 8; }
@@ -684,6 +718,26 @@ function finMulti() { // fin de la récré : les 2 balles retournent en cage, il
   multiball = false; cagePleine = true; cageFlash = 1.2; paniers = 0; besoin = Math.min(5, besoin + 1);
   arreterBeat(); SON.retourJour();
   if (nuit) { bascule = { t: 0, dur: 1.0, versNuit: false }; if (balles.some(b => !b.collee)) gelT = 1.0; } // retour au jour (la table se fige le temps du retournement)
+}
+// ---- rampe LOOPING (haut droite)
+let dernierLoop = -99;
+function entrerLoop(b) {
+  b.boucle = { d: 0, double: temps - dernierLoop < 10, woo: false }; dernierLoop = temps; b.vx = b.vy = 0;
+  points(5000, 250, 262); SON.loopEntree(); vib(15); chaseT = Math.max(chaseT, 0.5);
+  if (!multiball) blague(b.boucle.double ? 'Encore un looping ! x2' : 'Looping !', 250, 300, '#ff5a8a');
+}
+function majLoop(b, dt) {
+  const bo = b.boucle, h = hauteurLoop(bo.d);
+  bo.d += VIT_LOOP * (1 - 0.3 * h) * dt; [b.x, b.y] = surRail(LOOP, Math.min(bo.d, LOOP.total));
+  if (!bo.woo && bo.d >= LOOP.dA) { bo.woo = true; SON.looping((LOOP.dB - LOOP.dA) / (VIT_LOOP * 0.85)); }
+  if (!bo.fait && bo.d >= LOOP.dB) { bo.fait = true; recompenseLoop(bo); }
+  if (bo.d >= LOOP.total) { b.boucle = null; b.vx = -15; b.vy = 170; b.ax = b.x; b.ay = b.y; b.at = temps; SON.atterrit(); }
+}
+function recompenseLoop(bo) {
+  etincelles(LOOP_C.x, LOOP_C.y - LOOP_C.r, 20, '#ff5a8a'); tir('looping', 300, 220);
+  if (multiball) { points(50000, LOOP_C.x, LOOP_C.y - 40); annonce('JACKPOT LOOPING !', 'Salto arrière pendant la récré', '#ff2bd6', 30, 1.6); SON.fanfare(); }
+  else if (bo.double) { points(15000 + 35000, LOOP_C.x, LOOP_C.y - 40); annonce('DOUBLE LOOPING !', 'Bonus +' + fmt(35000 * mult), '#ff5a8a', 32, 1.6); SON.fanfare(); vib([30, 30, 60]); flash = Math.max(flash, 0.12); }
+  else points(15000, LOOP_C.x, LOOP_C.y - 40);
 }
 // ---- rampe + panier de basket
 function entrerRampe(b) {
@@ -756,7 +810,7 @@ function maj(dt) {
     const avant = Math.ceil(epsReset); epsReset -= dt; const apres = Math.ceil(epsReset);
     if (apres < avant && apres >= 1 && apres <= 3) SON.tic(apres);
     if (epsReset <= 0) {
-      const libre = balles.every(b => Math.abs(b.y - 446) > 24 || b.x < 115 || b.x > 280 || b.tunnel || b.rampe);
+      const libre = balles.every(b => Math.abs(b.y - 446) > 24 || b.x < 115 || b.x > 280 || b.tunnel || b.rampe || b.boucle);
       if (libre) { EPS.forEach(c => { c.bas = false; c.on = true; }); SON.epsRetour(); etincelles(199, 440, 18, '#ffd23f'); } else epsReset = 0.3;
     }
   }
@@ -777,6 +831,7 @@ function maj(dt) {
   for (const b of balles) {
     if (b.rampe) { majRampe(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
     if (b.tunnel) { majTunnel(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
+    if (b.boucle) { majLoop(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
     if (b.collee) continue;
     if (b.tient > 0) {
       b.tient -= dt; b.ax = b.x; b.ay = b.y; b.at = temps;
@@ -965,7 +1020,7 @@ function dessinerFond() {
   c.beginPath(); c.arc(TROU.x, TROU.y, TROU.r + 6, 0, 7); c.fillStyle = g; c.fill();
   g = c.createRadialGradient(TROU.x, TROU.y - 6, 2, TROU.x, TROU.y, TROU.r); g.addColorStop(0, '#000'); g.addColorStop(0.8, '#1c1208'); g.addColorStop(1, '#4a3013');
   c.beginPath(); c.arc(TROU.x, TROU.y, TROU.r, 0, 7); c.fillStyle = g; c.fill();
-  rrect(c, TROU.x - 38, TROU.y + 27, 76, 20, 6); c.fillStyle = '#3a1d05'; c.fill(); c.font = '900 14px system-ui,sans-serif'; c.fillStyle = '#ffd27a'; c.fillText('CANTINE', TROU.x, TROU.y + 37.5);
+  rrect(c, TROU.x - 50, TROU.y + 27, 72, 20, 6); c.fillStyle = '#3a1d05'; c.fill(); c.font = '900 13px system-ui,sans-serif'; c.fillStyle = '#ffd27a'; c.fillText('CANTINE', TROU.x - 14, TROU.y + 37.5);
   // éclairage : haut plus sombre (loin), bas plus clair (près)
   g = c.createLinearGradient(0, 0, 0, 740); g.addColorStop(0, 'rgba(5,10,40,.5)'); g.addColorStop(0.45, 'rgba(5,10,40,.08)'); g.addColorStop(0.8, 'rgba(255,240,200,0)'); g.addColorStop(1, 'rgba(255,240,200,.18)');
   c.fillStyle = g; c.fillRect(0, 0, 400, 740);
@@ -993,7 +1048,7 @@ function dessinerFond() {
   g = c.createLinearGradient(366, 0, 384, 0); g.addColorStop(0, '#5b6272'); g.addColorStop(0.4, '#f2f5fa'); g.addColorStop(1, '#4a505e');
   c.fillStyle = g; c.fillRect(366, 710, 18, 18); c.strokeStyle = '#30343e'; c.lineWidth = 1.2;
   for (let y = 713; y < 728; y += 3) { c.beginPath(); c.moveTo(366, y); c.lineTo(384, y + 1.5); c.stroke(); }
-  dessinerTrappes(c, false);
+  dessinerTrappes(c, false); dessinerEntreeLoop(c, false);
   dessinerRampe();
 }
 // trappe de la salle des profs + bouches de sortie (communes jour / nuit)
@@ -1063,7 +1118,7 @@ function dessinerFondNuit() {
   neonTxt('LANCEUR ▶', 375, 600, 12, NEON.cyan, -Math.PI / 2);
   c.beginPath(); c.arc(TROU.x, TROU.y, TROU.r, 0, 7); c.fillStyle = '#000'; c.fill();
   neon(() => { c.beginPath(); c.arc(TROU.x, TROU.y, TROU.r + 5, 0, 7); }, NEON.orange, 3);
-  neonTxt('CANTINE', TROU.x, TROU.y + 37.5, 14, NEON.orange);
+  neonTxt('CANTINE', TROU.x - 14, TROU.y + 37.5, 13, NEON.orange);
   c.restore();
   // rails en néon cyan
   const rails = segs.filter(s => s.rail && !s.oneWay || s.oneWay);
@@ -1076,7 +1131,7 @@ function dessinerFondNuit() {
     forme(); c.fillStyle = '#12082a'; c.fill(); neon(forme, NEON.rose, 2.5);
   }
   c.fillStyle = '#1a1433'; c.fillRect(366, 710, 18, 18); neon(() => { c.beginPath(); c.rect(366, 710, 18, 18); }, NEON.cyan, 1.5);
-  dessinerTrappes(c, true);
+  dessinerTrappes(c, true); dessinerEntreeLoop(c, true);
   // rampe néon (jaune) : dessinée par-dessus les billes du plateau
   rampeNuit = document.createElement('canvas'); rampeNuit.width = cv.width; rampeNuit.height = cv.height;
   const r = rampeNuit.getContext('2d'), P = RAMPE.pts; r.setTransform(k, 0, 0, k, OX * DPR, OY * DPR); r.lineCap = 'round'; r.lineJoin = 'round';
@@ -1084,6 +1139,7 @@ function dessinerFondNuit() {
   r.strokeStyle = 'rgba(255,230,0,.35)'; r.lineWidth = 2;
   for (let d = 6; d < RAMPE.total; d += 16) { const [x, y] = surRampe(d), [x2, y2] = surRampe(d + 1), tx = x2 - x, ty = y2 - y, l = Math.hypot(tx, ty) || 1; r.beginPath(); r.moveTo(x - ty / l * 9, y + tx / l * 9); r.lineTo(x + ty / l * 9, y - tx / l * 9); r.stroke(); }
   for (const off of [-8, 8]) { r.save(); r.shadowColor = NEON.jaune; r.shadowBlur = 10 * k; fil(off); r.strokeStyle = NEON.jaune; r.lineWidth = 3.5; r.stroke(); r.restore(); fil(off); r.strokeStyle = '#fffbe0'; r.lineWidth = 1.2; r.stroke(); }
+  dessinerLooping(r, true, k);
 }
 let lumCv = null;
 function lumieresNuit() { // projecteurs, reflets de boule à facettes, pulsation douce sur le tempo (≈2 par seconde, sans flash plein écran)
@@ -1161,6 +1217,35 @@ function dessinerRampe() {
     fil(off, 0, 0); c.strokeStyle = '#2a2f3a'; c.lineWidth = 4.5; c.stroke();
     fil(off, 0, 0); c.strokeStyle = '#eef2f8'; c.lineWidth = 2.2; c.stroke();
   }
+  dessinerLooping(c, false, k);
+}
+// rampe LOOPING : boucle verticale en pseudo-3D (ombre au sol, pilier, panneau transparent, rails)
+function dessinerLooping(c, n, k) {
+  const P = LOOP.pts, { x: lx, y: ly, r: lr } = LOOP_C, coul = n ? NEON.rose : '#ff5a8a';
+  const fil = (off, dx, dy, d0 = 0, d1 = 1e9) => { c.beginPath(); let premier = true; P.forEach((p, i) => { if (LOOP.L[i] < d0 || LOOP.L[i] > d1) return; const q = P[Math.min(P.length - 1, i + 1)], o = P[Math.max(0, i - 1)], tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1, x = p[0] - ty / l * off + dx, y = p[1] + tx / l * off + dy; premier ? c.moveTo(x, y) : c.lineTo(x, y); premier = false; }); };
+  if (!n) { // ombre portée de la boucle + pilier
+    c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(lx + 9, ly + 16, lr + 8, (lr + 8) * 0.55, 0, 0, 7); c.fill();
+    for (const off of [-7, 7]) { fil(off, 6, 10); c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 4; c.stroke(); }
+  }
+  const g = c.createRadialGradient(lx, ly, 2, lx, ly, lr); g.addColorStop(0, n ? 'rgba(255,43,214,.05)' : 'rgba(255,255,255,.08)'); g.addColorStop(1, n ? 'rgba(255,43,214,.28)' : 'rgba(255,90,138,.3)');
+  c.fillStyle = g; c.beginPath(); c.arc(lx, ly, lr, 0, 7); c.fill();
+  c.strokeStyle = n ? 'rgba(255,43,214,.4)' : 'rgba(42,47,58,.8)'; c.lineWidth = 2;
+  for (let d = 6; d < LOOP.total; d += 14) { const [x, y] = surRail(LOOP, d), [x2, y2] = surRail(LOOP, d + 1), tx = x2 - x, ty = y2 - y, l = Math.hypot(tx, ty) || 1; c.beginPath(); c.moveTo(x - ty / l * 8, y + tx / l * 8); c.lineTo(x + ty / l * 8, y - tx / l * 8); c.stroke(); }
+  for (const off of [-7, 7]) {
+    if (n) { c.save(); c.shadowColor = coul; c.shadowBlur = 10 * k; fil(off, 0, 0); c.strokeStyle = coul; c.lineWidth = 3.5; c.stroke(); c.restore(); fil(off, 0, 0); c.strokeStyle = '#ffe0f7'; c.lineWidth = 1.2; c.stroke(); }
+    else { fil(off, 0, 0); c.strokeStyle = '#5a0f2a'; c.lineWidth = 4.5; c.stroke(); fil(off, 0, 0); c.strokeStyle = '#ffd0de'; c.lineWidth = 2.2; c.stroke(); }
+  }
+  // haut de la boucle plus épais (au premier plan, plus haut)
+  c.beginPath(); c.arc(lx, ly, lr + 7, Math.PI * 1.15, Math.PI * 1.85); c.strokeStyle = n ? coul : '#ff5a8a'; c.lineWidth = 3; c.stroke();
+  c.save(); c.translate(lx, ly + 1); c.font = '900 8px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = n ? coul : '#fff'; c.fillText('LOOP', 0, 0); c.restore();
+}
+// entrée du looping (dessinée sur le plateau)
+function dessinerEntreeLoop(c, n) {
+  c.beginPath(); c.moveTo(236, 296); c.lineTo(264, 296); c.lineTo(259, 274); c.lineTo(241, 274); c.closePath();
+  if (n) { c.fillStyle = 'rgba(255,43,214,.2)'; c.fill(); c.save(); c.shadowColor = NEON.rose; c.shadowBlur = 8 * S * DPR; c.strokeStyle = NEON.rose; c.lineWidth = 2; c.stroke(); c.restore(); }
+  else { const g = c.createLinearGradient(236, 0, 264, 0); g.addColorStop(0, '#9aa3b4'); g.addColorStop(0.5, '#f4f6fa'); g.addColorStop(1, '#6b7384'); c.fillStyle = g; c.fill(); c.strokeStyle = '#5a0f2a'; c.lineWidth = 1.5; c.stroke(); }
+  c.save(); c.translate(250, 304); c.font = '900 9px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  if (!n) { c.strokeStyle = '#5a0f2a'; c.lineWidth = 3; c.strokeText('LOOPING', 0, 0); } c.fillStyle = n ? NEON.rose : '#fff'; c.fillText('LOOPING', 0, 0); c.restore();
 }
 
 // lampes (inserts) du plateau
@@ -1169,7 +1254,7 @@ const LAMPES = [
   ...[2, 3, 4, 5].map((m, i) => ({ x: 125 + i * 40, y: 530, r: 15, h: 195, txt: 'x' + m, t: 13, on: () => mult >= m })),
   ...[0, 1, 2, 3, 4].map(i => ({ x: 322, y: 476 - i * 20, r: 7, h: 185, on: () => bulletin > i })),
   { x: 191, y: 318, r: 13, forme: 'fleche', ang: 0, h: 28, on: () => Math.floor(temps * (!multiball && paniers + 1 >= besoin ? 7 : 2)) % 2 === 0 },
-  { x: 262, y: 352, r: 11, forme: 'fleche', ang: 1.15, h: 32, on: () => Math.floor(temps * 2 + 1) % 2 === 0 },
+  { x: 258, y: 340, r: 11, forme: 'fleche', ang: -0.15, h: 340, on: () => Math.floor(temps * 2 + 1) % 2 === 0 },
   { x: 185, y: 704, forme: 'pilule', w: 76, hh: 18, h: 195, txt: 'SAUVÉE', t: 11, on: () => protegeT > 0 || sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
 ];
 function dessinerLampe(L, on, h) {
@@ -1343,7 +1428,7 @@ function rendu() {
   }
   // balles : ombre portée puis bille chromée
   const tb = 2 * R + 4, to = 2 * R + 14;
-  const auSol = b => !b.rampe && !b.tunnel && !(b.tient > 0 && b.lieu === 'casier');
+  const auSol = b => !b.rampe && !b.tunnel && !b.boucle && !(b.tient > 0 && b.lieu === 'casier');
   if (nuit) { ctx.globalCompositeOperation = 'lighter'; for (const b of balles) if (auSol(b)) ctx.drawImage(SPR.halo, b.x - 26, b.y - 26, 52, 52); ctx.globalCompositeOperation = 'source-over'; }
   else for (const b of balles) if (b.tient <= 0 && auSol(b)) ctx.drawImage(SPR.ombre, b.x + 3 - to / 2, b.y + 6 - to / 2, to, to);
   for (const b of balles) { // bille qui plonge dans la trappe : rétrécit et s'assombrit
@@ -1365,6 +1450,13 @@ function rendu() {
     ctx.drawImage(SPR.balle, b.x - tb * haut / 2, b.y - tb * haut / 2, tb * haut, tb * haut);
   }
   dessinerPanier(true);
+  for (const b of balles) { // bille sur le looping : plus grosse en haut de la boucle (elle est plus haute)
+    if (!b.boucle) continue; const h = hauteurLoop(b.boucle.d), z = 1.15 + 0.3 * h;
+    ctx.globalAlpha = 0.8 - 0.4 * h; ctx.drawImage(SPR.ombre, b.x + 7 + 10 * h - to / 2, b.y + 11 + 16 * h - to / 2, to, to); ctx.globalAlpha = 1;
+    if (nuit) { ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(SPR.halo, b.x - 26 * z, b.y - 26 * z, 52 * z, 52 * z); ctx.globalCompositeOperation = 'source-over'; }
+    ctx.drawImage(SPR.balle, b.x - tb * z / 2, b.y - tb * z / 2, tb * z, tb * z);
+  }
+  if (temps - dernierLoop < 10 && !multiball && etat === 'jeu' && Math.floor(temps * 3) % 2 === 0) texte('LOOP x2 !', 250, 312, 12, '#ff5a8a');
   // bille en salto au-dessus du plateau : traînée lumineuse + ombre au sol
   for (const b of balles) {
     const tu = b.tunnel; if (!tu || tu.phase !== 'salto') continue;
@@ -1721,7 +1813,7 @@ window.__battle = {
   set forcePanier(v) { forcePanier = v; }, get forcePanier() { return forcePanier; },
   set forceSortie(v) { forceSortie = v; }, set forceBonus(v) { forceBonus = v; },
   get nuit() { return nuit; }, set nuit(v) { nuit = !!v; }, get bascule() { return bascule ? { t: bascule.t, k: basculeK(), versNuit: bascule.versNuit } : null; }, get css() { return cv.style.transform; },
-  get epsReset() { return epsReset; }, get protege() { return protegeT; }, get cageAttente() { return cageAttente; }, get eps() { return EPS.map(c => c.bas); }, get mult() { return mult; }, get bulletin() { return bulletin; }, get sauveT() { return sauveT; },
+  get epsReset() { return epsReset; }, LOOP, entrerLoop, FLIP_MIN, get protege() { return protegeT; }, get cageAttente() { return cageAttente; }, get eps() { return EPS.map(c => c.bas); }, get mult() { return mult; }, get bulletin() { return bulletin; }, get sauveT() { return sauveT; },
   get audio() { return { etat: AC ? AC.state : 'absent', muet, beat: BEAT.on, voix: VOIX.length, session: navigator.audioSession ? navigator.audioSession.type : null }; },
   SON, rendu, basculerSon, entrerTunnel, entrerCasier, dansCasier, CASIER, TRAPPE, SORTIES, EPS,
   PAS: 1 / 120, maj, nouvellePartie, enAttente, berce, lancer, recreGenerale, entrerRampe, coller, segs, FL, COLLE, RAMPE, PANIER,

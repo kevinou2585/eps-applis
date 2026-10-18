@@ -64,13 +64,18 @@ body:not(.sur-installer) .etape2,.sur-installer .etape1{display:none}
 <div class="app-seul">
 <div class="top"><img src="icones/eps-192.png" alt=""><div><h1>EPS ultime</h1><p class="sub">Gratuites, sans compte, même sans internet.</p></div></div>
 <div class="tuiles">
-  <a class="tuile principale" href="carnet/"><img src="icones/carnet-192.png" alt=""><div><b>Carnet EPS <small class="beta">bêta</small></b><br><span>Présences, tenue, attitude, évaluations, bulletins</span></div></a>
+  <a class="tuile principale perso" href="carnet/"><img src="icones/carnet-192.png" alt=""><div><b>Carnet EPS <small class="beta">bêta</small></b><br><span>Présences, tenue, attitude, évaluations, bulletins</span></div></a>
   <a class="tuile" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><b>Tournoi</b><span>Matchs, scores, arbitres, classement</span></a>
   <a class="tuile" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b><span>Points, équipes, fair-play, fin de leçon</span></a>
   <a class="tuile" href="le-fist/"><img src="icones/le-fist-192.png" alt=""><b>Le Fist</b><span>Fléchettes 301 ou 101 entre collègues</span></a>
   <a class="tuile" href="classeur/"><img src="icones/classeur-192.png" alt=""><b>Classeur EPS</b><span>Leçons, évaluations, idées par sport</span></a>
-  <a class="tuile" href="battle/"><img src="icones/battle-192.png" alt=""><b>Battle des profs</b><span>Le jeu du mois : bats le boss !</span></a>
+  <a class="tuile perso" href="battle/"><img src="icones/battle-192.png" alt=""><b>Battle des profs</b><span>Le jeu du mois : bats le boss !</span></a>
 </div>
+<script>
+// Carnet et Battle des profs : cadenas tant que le 2e code n'a pas été entré sur cet appareil (voir perso.js).
+try { if (localStorage.getItem('eps-perso-ok') !== '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5')
+  document.querySelectorAll('.tuile.perso b').forEach(b => b.insertAdjacentHTML('afterbegin', '🔒 ')); } catch (e) {}
+</script>
 </div>
 
 <div class="web-seul">

@@ -1045,7 +1045,7 @@ ENVOI_JS = r"""
 if __name__ == "__main__":
     (RACINE / "tournoi/index.html").write_text(tournoi(sys.argv[1]), encoding="utf-8")
     (RACINE / "koh-lanta/index.html").write_text(koh_lanta(sys.argv[2]), encoding="utf-8")
-    (RACINE / "carnet/index.html").write_text(carnet(sys.argv[3]), encoding="utf-8")
+    (RACINE / "carnet/index.html").write_text(carnet(sys.argv[3]).replace("<head>\n", '<head>\n<script src="../perso.js"></script>\n', 1), encoding="utf-8")
     (RACINE / "classeur").mkdir(exist_ok=True)
     (RACINE / "classeur/index.html").write_text(classeur(sys.argv[4] if len(sys.argv) > 4 else "/mnt/project-files/eps-site/index.html"), encoding="utf-8")
     # Page d'installation = l'accueil, servi depuis une sous-page (liens relatifs ramenes a la racine).

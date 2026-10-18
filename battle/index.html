@@ -362,9 +362,9 @@ const BUMP = [ // petits bumpers regroupés en haut à droite
   { x: 245, y: 112, r: 20, type: 'basket', teinte: 28, c: ['#ffc98a', '#f07a12', '#8a3d00'] },
   { x: 310, y: 124, r: 20, type: 'foot', teinte: 200, c: ['#ffffff', '#e4e9f1', '#6f7a8c'] },
   { x: 275, y: 178, r: 20, type: 'sifflet', teinte: 355, c: ['#ff9aa3', '#e52b3c', '#7a0f19'] },
-  // 2 petits bumpers « volley » sur le chemin de la bille qui redescend de l'orbite (entre la rampe et le casier)
-  { x: 100, y: 226, r: 13, type: 'volley', teinte: 220, petit: true, c: ['#a9c8ff', '#1d5bd8', '#0a2a6e'] },
-  { x: 134, y: 200, r: 13, type: 'volley', teinte: 220, petit: true, c: ['#a9c8ff', '#1d5bd8', '#0a2a6e'] }
+  // 2 mini bumpers « volley » sous la sortie de l'orbite : ils renvoient la bille vers le haut du plateau (plus vers le centre)
+  { x: 110, y: 250, r: 7, kick: 150, type: 'volley', teinte: 220, petit: true, c: ['#a9c8ff', '#1d5bd8', '#0a2a6e'] },
+  { x: 140, y: 240, r: 7, kick: 150, type: 'volley', teinte: 220, petit: true, c: ['#a9c8ff', '#1d5bd8', '#0a2a6e'] }
 ].map(b => Object.assign(b, { flash: 0, cd: 0 }));
 const TROU = { x: 305, y: 335, r: 17 };
 const ORBITE_Y = 300;
@@ -538,9 +538,12 @@ function collBump(b, c) {
   const d = Math.sqrt(d2) || 1; nx /= d; ny /= d;
   b.x = c.x + nx * rr; b.y = c.y + ny * rr;
   const vn = b.vx * nx + b.vy * ny;
+  const tx = -ny, ty = nx, vt = (b.vx * tx + b.vy * ty) * 0.8;
+  if (c.petit) { // mini bumper : rebond vif mais qui perd de l'énergie (pas de boucle infinie)
+    if (vn >= 0) return false; const k = Math.max(-vn * 0.75, c.kick); b.vx = nx * k + tx * vt; b.vy = ny * k + ty * vt; return true;
+  }
   if (vn >= KICK_BUMP * 0.9) return false;
   // éjection régulière : même vitesse de sortie à chaque fois, on garde la glisse tangentielle
-  const tx = -ny, ty = nx, vt = (b.vx * tx + b.vy * ty) * 0.8;
   b.vx = nx * KICK_BUMP + tx * vt; b.vy = ny * KICK_BUMP + ty * vt;
   return true;
 }

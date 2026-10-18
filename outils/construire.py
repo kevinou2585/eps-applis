@@ -148,6 +148,7 @@ def carnet(src):
     corps = tenue_piscine(corps)
     corps = suivi(corps)
     corps = reglages(corps)
+    corps = fiche(corps)
     retour = RETOUR.replace('</a>\n', '<span style="font-weight:500">· Version bêta, pas encore finie</span></a>\n')
     return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + COMMENTAIRES_JS + ANNEES_JS + DRIVE_JS + PIED
 
@@ -451,6 +452,45 @@ def reglages(corps):
     corps = corps[:i] + "  bindReg();\n" + corps[j:]
     css = (RACINE / "outils/reglages-carnet.css").read_text(encoding="utf-8")
     js = (RACINE / "outils/reglages-carnet.js").read_text(encoding="utf-8")
+    rep("@media (prefers-reduced-motion: no-preference){ .sheet{", css + "@media (prefers-reduced-motion: no-preference){ .sheet{")
+    rep("/* ====== Démarrage ====== */", js + "\n/* ====== Démarrage ====== */")
+    return corps
+
+
+def fiche(corps):
+    """Classes : onglet Eleve (fiche complete datee + bulletin de l'eleve) puis Bulletin ; Points, Suivi et Gerer
+    deviennent des outils de l'onglet Eleve ; case Regrouper (classes qui ont cours ensemble) ; alerte 3 oublis / perturbations."""
+    def rep(a, b):
+        nonlocal corps
+        if corps.count(a) != 1:
+            sys.exit("Carnet fiche : motif introuvable : " + a[:60])
+        corps = corps.replace(a, b)
+    rep("  else if (UI.cview && c) renderClassView(c, m);\n  else renderClassList(m);",
+        "  else if (UI.cview && c) fiClassView(c, m);\n  else fiClassList(m);")
+    # fiche de l'eleve : alerte, bouton bulletin, historique date
+    rep("""        <div style="font:700 44px/1 var(--display)" class="num ${r.total != null && r.total < 50 ? 'bad' : ''}">${fr(r.total)}<span style="font-size:20px" class="muted"> %</span></div></div>
+    </div>
+    ${periodChips(c, true)}""",
+        """        <div style="font:700 44px/1 var(--display)" class="num ${r.total != null && r.total < 50 ? 'bad' : ''}">${fr(r.total)}<span style="font-size:20px" class="muted"> %</span></div></div>
+    </div>
+    ${fiAlertTxt(c, p, today()) ? `<div class="fi-al fi-al-b">${esc(fiAlertTxt(c, p, today()))}</div>` : ''}
+    <button class="btn pri block" type="button" id="pp-bul">📄 Son bulletin (période en cours et précédentes)</button>
+    ${periodChips(c, true)}""")
+    rep("""${r.x ? ` · ${r.x} exclusion${r.x > 1 ? 's' : ''}` : ''}</div>
+    ${year ? '' : `<h3>Évaluations</h3>""", """${r.x ? ` · ${r.x} exclusion${r.x > 1 ? 's' : ''}` : ''}</div>
+    ${fiHistHTML(c, p, vp)}
+    ${year ? '' : `<h3>Évaluations</h3>""")
+    rep("  bindPupilName(c, p);\n", "  bindPupilName(c, p);\n  $('pp-bul').onclick = () => fiBulletin(c, pid, vp === 'year' ? 'year' : vp.id);\n")
+    # appel : bandeau d'alerte sous l'eleve, et message au 3e oubli / a la 3e perturbation
+    rep("${rgChip(c, L, p, pool, off || exempt)}\n  </div>`;", "${rgChip(c, L, p, pool, off || exempt)}${off ? '' : fiAlertLine(c, p, L.date)}\n  </div>`;")
+    rep("    else if (act === 'kit'){ if (mm.k) delete mm.k; else mm.k = 1; }",
+        "    else if (act === 'kit'){ if (mm.k) delete mm.k; else { mm.k = 1; fiAlertToast(c, p, L.date, 'k'); } }")
+    rep("else { mm.d = 1; toast(`${nomCourt(p)} : perturbe`); } }",
+        "else { mm.d = 1; if (!fiAlertToast(c, p, L.date, 'd')) toast(`${nomCourt(p)} : perturbe`); } }")
+    rep("$('w-go').onclick = () => { const c = newClass($('w-name').value.trim() || 'Ma classe', $('w-list').value); S.classes.push(c); S.cur = c.id; save(c.id); UI.tab = 'classes'; UI.cview = true; UI.ctab = 'pupils'; render(); };",
+        "$('w-go').onclick = () => { const c = newClass($('w-name').value.trim() || 'Ma classe', $('w-list').value); S.classes.push(c); S.cur = c.id; save(c.id); UI.tab = 'classes'; UI.cview = true; UI.ctab = 'eleve'; render(); };")
+    css = (RACINE / "outils/fiche-carnet.css").read_text(encoding="utf-8")
+    js = (RACINE / "outils/fiche-carnet.js").read_text(encoding="utf-8")
     rep("@media (prefers-reduced-motion: no-preference){ .sheet{", css + "@media (prefers-reduced-motion: no-preference){ .sheet{")
     rep("/* ====== Démarrage ====== */", js + "\n/* ====== Démarrage ====== */")
     return corps

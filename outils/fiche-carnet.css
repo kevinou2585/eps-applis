@@ -1,0 +1,40 @@
+/* Classes : onglet Élève, fiche, bulletin d'un élève, groupes, alertes (outils/fiche-carnet.js) */
+.fi-hd{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap}
+.fi-hd h2{margin:0}
+.fi-chk{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; border:2px solid var(--accent); color:var(--accent); border-radius:999px; padding:6px 12px; cursor:pointer}
+.fi-chk input{width:20px; height:20px; accent-color:var(--accent); margin:0}
+.fi-grp{border-left:5px solid var(--accent)}
+.fi-grp-n{font:700 15px var(--body); background:var(--accent); color:var(--accent-ink); border-radius:999px; min-width:30px; height:30px; display:grid; place-items:center}
+.fi-list{display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden}
+.fi-row{display:flex; align-items:center; gap:12px; width:100%; text-align:left; border:0; border-bottom:1px solid var(--line); background:none; color:var(--fg); padding:10px 12px; font:inherit; min-height:56px}
+.fi-row:last-child{border-bottom:0}
+.fi-row .nm{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px}
+.fi-row .pts{font-size:13px; color:var(--muted)}
+.fi-go{flex:none; width:20px; color:var(--muted)}
+.fi-go svg{width:20px; height:20px}
+.fi-cl{margin:6px 0 -4px}
+.fi-cert{font-size:13px; font-weight:600; color:var(--warn)}
+/* alerte : un seul style, fond rouge plein + texte blanc + ⚠ (lisible même sans voir les couleurs) */
+.fi-al{display:inline-block; align-self:flex-start; font-size:13px; line-height:1.3; font-weight:800; color:#fff; background:#c3121b; padding:4px 9px; border-radius:6px}
+.fi-al-b{display:block; font-size:15px; padding:10px 12px; border-radius:10px}
+.fi-al-line{padding-left:49px}
+.fi-tools{display:grid; gap:8px; margin-top:6px}
+.fi-tools .btn{justify-content:flex-start}
+.fi-tool{display:flex; align-items:center; gap:12px; margin:12px 0 0}
+.fi-tool b{font:700 1.05rem var(--body)}
+.fi-mo{font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent); padding:12px 0 2px}
+.fi-ev .fi-ic{flex:none; width:26px; text-align:center; font-weight:800}
+.fi-ev .l{display:flex; flex-direction:column}
+.fi-ev.abs .l{font-weight:700}
+.fi-ev.k .l, .fi-ev.d .l{font-weight:600}
+.fi-bh{display:flex; align-items:center; gap:12px}
+.fi-bh > div:first-child{flex:1; min-width:0}
+.fi-bh b{font:700 1.2rem var(--body)}
+.fi-tot{font:700 40px/1 var(--display)}
+.fi-tot small{font-size:18px; color:var(--muted)}
+.fi-bt{display:flex; flex-direction:column; padding-block:6px}
+.fi-br{display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--line)}
+.fi-br:last-child{border-bottom:0}
+.fi-br small{color:var(--muted); font-weight:500}
+.fi-br.big span{font-weight:700}
+.fi-br.tot b{font-size:1.2rem}

@@ -931,7 +931,7 @@ ENVOI_JS = r"""
     r.red.forEach(x => { for (let i = 0; i < x.red; i++) lignes.push({eleve: x.n, place: 'Perturbateur', points: -3}); });
     let tel = reglage('kl-appareil');
     if (!tel){ tel = Math.random().toString(36).slice(2, 8); try { localStorage.setItem('kl-appareil', tel); } catch(e){} }
-    return {id: jour() + '-' + g + '-' + tel, date: jour(), groupe: GLABEL[g], lignes};
+    return {id: jour() + '-' + g + '-' + tel, date: jour(), groupe: GLABEL[g], g, lignes};
   }
   async function envoyer(p){
     const u = reglage('eps-script'), c = reglage('eps-code');
@@ -939,7 +939,7 @@ ENVOI_JS = r"""
     const rep = await fetch(u, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({...p, code: c})});
     const o = await rep.json(); if (!o.ok) throw new Error(o.err || 'refus');
     const f = lire(FAITS);
-    if (p.lignes.length) f[p.id] = {t: Date.now(), date: p.date, groupe: p.groupe, n: p.lignes.length}; else delete f[p.id];
+    if (p.lignes.length) f[p.id] = {t: Date.now(), date: p.date, groupe: p.groupe, g: p.g, n: p.lignes.length, lignes: p.lignes}; else delete f[p.id];
     ecrire(FAITS, f);
     const a = lire(FILE); delete a[p.id]; ecrire(FILE, a);
   }
@@ -953,34 +953,85 @@ ENVOI_JS = r"""
     if (!d){ d = document.createElement('div'); d.id = 'kl-envoi'; d.className = 'card'; (rc.querySelector('.savewarn') || act).before(d); }
     const p = lecon(), fait = lire(FAITS)[p.id], attente = lire(FILE)[p.id];
     d.innerHTML = `<button class="btn btn-main" type="button">📤 Envoyer au classement général</button><span class="empty" id="kl-envoi-m">${attente ? '📶 En attente d\'internet : ce sera envoyé tout seul.' : fait ? '✅ Déjà envoyé aujourd\'hui. Renvoyer remplace l\'envoi précédent.' : 'Envoie la fiche du groupe ' + p.groupe + ' dans le classement général.'}</span>`;
-    mesEnvois(d);
+    corriger(d);
     d.querySelector('button').onclick = async () => {
       const p = lecon(), m = document.getElementById('kl-envoi-m');
       if (!p.lignes.length){ m.textContent = 'Rien à envoyer : personne n\'a de points.'; return; }
       m.textContent = 'Envoi…';
-      try { await envoyer(p); bouton(true); document.getElementById('kl-envoi-m').textContent = '✅ Envoyé au classement général (' + p.lignes.length + ' ligne' + (p.lignes.length > 1 ? 's' : '') + '). Erreur ? « Mes envois › Annuler ».'; }
+      try { await envoyer(p); bouton(true); document.getElementById('kl-envoi-m').textContent = '✅ Envoyé au classement général (' + p.lignes.length + ' ligne' + (p.lignes.length > 1 ? 's' : '') + '). Erreur ? « ✏️ Corriger un envoi ».'; }
       catch(e){ const a = lire(FILE); a[p.id] = p; ecrire(FILE, a);
         m.textContent = navigator.onLine ? '⚠️ L\'envoi n\'a pas marché. Nouvel essai tout seul à la prochaine ouverture.' : '📶 Pas d\'internet : ce sera envoyé tout seul dès que le téléphone est connecté.'; }
     };
   }
-  // Annuler un envoi : on renvoie la même leçon sans aucune ligne, le tableau retire alors ses points.
+  // Corriger un envoi : on rouvre la fiche envoyée (places, fair-play, cartons) et on renvoie la même leçon,
+  // ce qui remplace l'ancien envoi dans le tableau. Sans aucune ligne, l'envoi est retiré.
   const fmtJ = d => d ? d.slice(8, 10) + '/' + d.slice(5, 7) : '';
-  function mesEnvois(d){
-    const f = lire(FAITS), ids = Object.keys(f).filter(id => typeof f[id] === 'object').sort((a, b) => f[b].t - f[a].t).slice(0, 8);
-    if (!ids.length) return;
-    const box = document.createElement('details'); box.className = 'kl-mes';
-    box.innerHTML = `<summary>↩️ Mes envois (annuler une erreur)</summary>` + ids.map(id => `<div class="kl-mes-l"><span>${fmtJ(f[id].date)} · ${f[id].groupe} · ${f[id].n} ligne${f[id].n > 1 ? 's' : ''}</span><button class="btn" type="button" data-annul="${id}">Annuler</button></div>`).join('') + '<span class="empty" id="kl-mes-m"></span>';
-    d.appendChild(box);
-    box.querySelectorAll('[data-annul]').forEach(b => b.onclick = async () => {
-      const id = b.dataset.annul, x = lire(FAITS)[id], m = box.querySelector('#kl-mes-m');
-      if (b.dataset.ok !== '1'){ b.dataset.ok = '1'; b.textContent = 'Sûr ? Toucher encore'; b.classList.add('kl-rouge'); return; }
-      m.textContent = 'Annulation…';
-      try { await envoyer({id, date: x.date, groupe: x.groupe, lignes: []}); m.textContent = '✅ Envoi du ' + fmtJ(x.date) + ' (' + x.groupe + ') retiré du classement général.'; setTimeout(() => bouton(true), 1500); }
-      catch(e){ m.textContent = navigator.onLine ? '⚠️ L\'annulation n\'a pas marché, réessaie.' : '📶 Pas d\'internet : réessaie quand le téléphone est connecté.'; b.dataset.ok = ''; b.textContent = 'Annuler'; b.classList.remove('kl-rouge'); }
-    });
+  const PTS = {'1er': 5, '2e': 3, '3e': 1, 'Fair-play': 3, 'Perturbateur': -3};
+  const escH = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+  function derniers(){ const f = lire(FAITS); return Object.keys(f).filter(id => f[id] && typeof f[id] === 'object').sort((a, b) => f[b].t - f[a].t).slice(0, 4); }
+  function corriger(d){
+    const ids = derniers();
+    const zone = document.createElement('div'); zone.className = 'kl-cor'; d.appendChild(zone);
+    if (!ids.length){ zone.innerHTML = ''; return; }
+    zone.innerHTML = `<button class="btn kl-cor-b" type="button">✏️ Corriger un envoi</button><div class="kl-cor-l" hidden></div>`;
+    const liste = zone.querySelector('.kl-cor-l');
+    zone.querySelector('.kl-cor-b').onclick = () => { liste.hidden = !liste.hidden; if (!liste.hidden) montrerListe(); };
+    function montrerListe(){
+      const f = lire(FAITS);
+      liste.innerHTML = derniers().map(id => `<button class="kl-cor-e" type="button" data-cor="${id}"><b>${fmtJ(f[id].date)} · ${escH(f[id].groupe)}</b><span>${f[id].n} ligne${f[id].n > 1 ? 's' : ''} ›</span></button>`).join('');
+      liste.querySelectorAll('[data-cor]').forEach(x => x.onclick = () => editer(x.dataset.cor));
+    }
+    function editer(id){
+      const x = lire(FAITS)[id];
+      if (!x.lignes){ liste.innerHTML = `<p class="empty">Cet envoi date d'avant la mise à jour : on ne peut que l'annuler.</p>${pied()}`; brancher(id, null); return; }
+      const g = x.g || Object.keys(GLABEL).find(k => GLABEL[k] === x.groupe);
+      const el = {};
+      ((g && ROSTER[g]) || []).forEach(n => el[n] = {pl: '', fp: 0, ca: 0});
+      x.lignes.forEach(l => { const e = el[l.eleve] || (el[l.eleve] = {pl: '', fp: 0, ca: 0});
+        if (l.place === 'Fair-play') e.fp++; else if (l.place === 'Perturbateur') e.ca++; else e.pl = l.place; });
+      const noms = Object.keys(el).sort((a, b) => a.localeCompare(b, 'fr'));
+      const dess = () => {
+        const tot = noms.reduce((s, n) => s + (PTS[el[n].pl] || 0) + 3 * el[n].fp - 3 * el[n].ca, 0);
+        liste.innerHTML = `<div class="kl-cor-h"><b>${fmtJ(x.date)} · ${escH(x.groupe)}</b><button class="btn" type="button" data-ret>‹ Retour</button></div>
+          <p class="empty" style="margin:4px 0 8px">Touche une place pour la changer. Total de l'envoi : <b>${tot} pts</b></p>` +
+          noms.map((n, i) => `<div class="kl-cor-r"><span class="kl-cor-n">${escH(n)}</span><div class="kl-cor-c">
+            <button type="button" class="kl-pl${el[n].pl ? ' on' : ''}" data-i="${i}" data-k="pl">${el[n].pl ? {'1er': '🥇 1er', '2e': '🥈 2e', '3e': '🥉 3e'}[el[n].pl] : 'Place —'}</button>
+            <span class="kl-st">🤝<button type="button" data-i="${i}" data-k="fp" data-d="-1">−</button><b>${el[n].fp}</b><button type="button" data-i="${i}" data-k="fp" data-d="1">+</button></span>
+            <span class="kl-st">🟥<button type="button" data-i="${i}" data-k="ca" data-d="-1">−</button><b>${el[n].ca}</b><button type="button" data-i="${i}" data-k="ca" data-d="1">+</button></span></div></div>`).join('') + pied();
+        liste.querySelector('[data-ret]').onclick = montrerListe;
+        liste.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+          const e = el[noms[+b.dataset.i]];
+          if (b.dataset.k === 'pl') e.pl = {'': '1er', '1er': '2e', '2e': '3e', '3e': ''}[e.pl];
+          else e[b.dataset.k] = Math.max(0, e[b.dataset.k] + Number(b.dataset.d));
+          dess();
+        });
+        brancher(id, () => { const ls = [];
+          noms.forEach(n => { const e = el[n];
+            if (e.pl) ls.push({eleve: n, place: e.pl, points: PTS[e.pl]});
+            for (let k = 0; k < e.fp; k++) ls.push({eleve: n, place: 'Fair-play', points: 3});
+            for (let k = 0; k < e.ca; k++) ls.push({eleve: n, place: 'Perturbateur', points: -3}); });
+          return ls; });
+      };
+      dess();
+    }
+    const pied = () => `<div class="kl-cor-p"><button class="btn btn-main" type="button" data-renv>✅ Renvoyer la correction</button><button class="btn" type="button" data-annul>🗑 Annuler tout l'envoi</button><span class="empty" id="kl-cor-m"></span></div>`;
+    function brancher(id, lignes){
+      const x = lire(FAITS)[id], m = liste.querySelector('#kl-cor-m'), rv = liste.querySelector('[data-renv]'), an = liste.querySelector('[data-annul]');
+      if (!lignes) rv.hidden = true;
+      const go = async (ls, ok) => { m.textContent = 'Envoi…';
+        try { await envoyer({id, date: x.date, groupe: x.groupe, g: x.g, lignes: ls}); m.textContent = ok; setTimeout(() => bouton(true), 1800); }
+        catch(e){ m.textContent = navigator.onLine ? '⚠️ Ça n\'a pas marché, réessaie.' : '📶 Pas d\'internet : réessaie quand le téléphone est connecté.'; } };
+      rv.onclick = () => { const ls = lignes(); if (!ls.length){ m.textContent = 'Plus aucun point : utilise plutôt « Annuler tout l\'envoi ».'; return; } go(ls, '✅ Correction envoyée : le classement général est à jour.'); };
+      an.onclick = () => { if (an.dataset.ok !== '1'){ an.dataset.ok = '1'; an.textContent = 'Sûr ? Toucher encore'; an.classList.add('kl-rouge'); return; }
+        go([], '✅ Envoi du ' + fmtJ(x.date) + ' (' + x.groupe + ') retiré du classement général.'); };
+    }
   }
   const st = document.createElement('style');
-  st.textContent = '.kl-mes{margin-top:10px}.kl-mes summary{cursor:pointer;font-weight:700;padding:6px 0}.kl-mes-l{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #ddd}.kl-mes-l .btn{flex:0 0 auto;padding:6px 12px}.kl-rouge{background:#d62828!important;border-color:#d62828!important;color:#fff!important}';
+  st.textContent = '.kl-cor{margin-top:12px}.kl-cor-b{width:100%}.kl-cor-l{margin-top:10px}.kl-cor-e{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px;margin:6px 0;border:2px solid #ccc;border-radius:12px;background:#fff;font:inherit;cursor:pointer}'
+    + '.kl-cor-h{display:flex;justify-content:space-between;align-items:center;gap:8px}.kl-cor-r{padding:8px 0;border-top:1px solid #ddd}.kl-cor-n{display:block;font-weight:700;margin-bottom:4px}'
+    + '.kl-cor-c{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.kl-pl{min-width:76px;padding:7px 6px;border:2px solid #bbb;border-radius:10px;background:#fff;font:inherit;font-weight:700}.kl-pl.on{background:#f1c232;border-color:#b8900a;color:#222}'
+    + '.kl-st{display:inline-flex;align-items:center;gap:3px}.kl-st button{width:32px;height:34px;border:2px solid #bbb;border-radius:10px;background:#fff;font-size:20px;font-weight:700;line-height:1}.kl-st b{min-width:14px;text-align:center}'
+    + '.kl-cor-p{display:flex;flex-direction:column;gap:8px;margin-top:12px}.kl-rouge{background:#d62828!important;border-color:#d62828!important;color:#fff!important}';
   document.head.appendChild(st);
   new MutationObserver(() => bouton(false)).observe(document.getElementById('recap'), {childList: true});
   bouton(false);

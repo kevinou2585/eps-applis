@@ -938,7 +938,9 @@ ENVOI_JS = r"""
     if (!u || !c) throw new Error('reglage');
     const rep = await fetch(u, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify({...p, code: c})});
     const o = await rep.json(); if (!o.ok) throw new Error(o.err || 'refus');
-    const f = lire(FAITS); f[p.id] = Date.now(); ecrire(FAITS, f);
+    const f = lire(FAITS);
+    if (p.lignes.length) f[p.id] = {t: Date.now(), date: p.date, groupe: p.groupe, n: p.lignes.length}; else delete f[p.id];
+    ecrire(FAITS, f);
     const a = lire(FILE); delete a[p.id]; ecrire(FILE, a);
   }
   async function viderFile(){ const a = lire(FILE); for (const id of Object.keys(a)){ try { await envoyer(a[id]); } catch(e){ break; } } bouton(true); }
@@ -951,15 +953,35 @@ ENVOI_JS = r"""
     if (!d){ d = document.createElement('div'); d.id = 'kl-envoi'; d.className = 'card'; (rc.querySelector('.savewarn') || act).before(d); }
     const p = lecon(), fait = lire(FAITS)[p.id], attente = lire(FILE)[p.id];
     d.innerHTML = `<button class="btn btn-main" type="button">📤 Envoyer au classement général</button><span class="empty" id="kl-envoi-m">${attente ? '📶 En attente d\'internet : ce sera envoyé tout seul.' : fait ? '✅ Déjà envoyé aujourd\'hui. Renvoyer remplace l\'envoi précédent.' : 'Envoie la fiche du groupe ' + p.groupe + ' dans le classement général.'}</span>`;
+    mesEnvois(d);
     d.querySelector('button').onclick = async () => {
       const p = lecon(), m = document.getElementById('kl-envoi-m');
       if (!p.lignes.length){ m.textContent = 'Rien à envoyer : personne n\'a de points.'; return; }
       m.textContent = 'Envoi…';
-      try { await envoyer(p); m.textContent = '✅ Envoyé au classement général (' + p.lignes.length + ' ligne' + (p.lignes.length > 1 ? 's' : '') + ').'; }
+      try { await envoyer(p); bouton(true); document.getElementById('kl-envoi-m').textContent = '✅ Envoyé au classement général (' + p.lignes.length + ' ligne' + (p.lignes.length > 1 ? 's' : '') + '). Erreur ? « Mes envois › Annuler ».'; }
       catch(e){ const a = lire(FILE); a[p.id] = p; ecrire(FILE, a);
         m.textContent = navigator.onLine ? '⚠️ L\'envoi n\'a pas marché. Nouvel essai tout seul à la prochaine ouverture.' : '📶 Pas d\'internet : ce sera envoyé tout seul dès que le téléphone est connecté.'; }
     };
   }
+  // Annuler un envoi : on renvoie la même leçon sans aucune ligne, le tableau retire alors ses points.
+  const fmtJ = d => d ? d.slice(8, 10) + '/' + d.slice(5, 7) : '';
+  function mesEnvois(d){
+    const f = lire(FAITS), ids = Object.keys(f).filter(id => typeof f[id] === 'object').sort((a, b) => f[b].t - f[a].t).slice(0, 8);
+    if (!ids.length) return;
+    const box = document.createElement('details'); box.className = 'kl-mes';
+    box.innerHTML = `<summary>↩️ Mes envois (annuler une erreur)</summary>` + ids.map(id => `<div class="kl-mes-l"><span>${fmtJ(f[id].date)} · ${f[id].groupe} · ${f[id].n} ligne${f[id].n > 1 ? 's' : ''}</span><button class="btn" type="button" data-annul="${id}">Annuler</button></div>`).join('') + '<span class="empty" id="kl-mes-m"></span>';
+    d.appendChild(box);
+    box.querySelectorAll('[data-annul]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.annul, x = lire(FAITS)[id], m = box.querySelector('#kl-mes-m');
+      if (b.dataset.ok !== '1'){ b.dataset.ok = '1'; b.textContent = 'Sûr ? Toucher encore'; b.classList.add('kl-rouge'); return; }
+      m.textContent = 'Annulation…';
+      try { await envoyer({id, date: x.date, groupe: x.groupe, lignes: []}); m.textContent = '✅ Envoi du ' + fmtJ(x.date) + ' (' + x.groupe + ') retiré du classement général.'; setTimeout(() => bouton(true), 1500); }
+      catch(e){ m.textContent = navigator.onLine ? '⚠️ L\'annulation n\'a pas marché, réessaie.' : '📶 Pas d\'internet : réessaie quand le téléphone est connecté.'; b.dataset.ok = ''; b.textContent = 'Annuler'; b.classList.remove('kl-rouge'); }
+    });
+  }
+  const st = document.createElement('style');
+  st.textContent = '.kl-mes{margin-top:10px}.kl-mes summary{cursor:pointer;font-weight:700;padding:6px 0}.kl-mes-l{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #ddd}.kl-mes-l .btn{flex:0 0 auto;padding:6px 12px}.kl-rouge{background:#d62828!important;border-color:#d62828!important;color:#fff!important}';
+  document.head.appendChild(st);
   new MutationObserver(() => bouton(false)).observe(document.getElementById('recap'), {childList: true});
   bouton(false);
   if (navigator.onLine) viderFile();

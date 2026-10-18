@@ -72,3 +72,7 @@
 /* En-tete : sans la police Barlow (premier lancement hors ligne), le titre poussait la page a 426 px de large sur iPhone. */
 header.top .brand{flex:0 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis}
 header.top .sync{min-width:0; overflow:hidden}
+
+.ag-mic{align-self:flex-start;margin-top:-4px}
+.ag-mic.on{background:#d62828;border-color:#d62828;color:#fff;animation:agmic 1.2s ease-in-out infinite}
+@keyframes agmic{50%{opacity:.6}}

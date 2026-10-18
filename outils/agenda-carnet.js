@@ -190,7 +190,7 @@ function openAgSlot(date, id){
     <button class="btn pri block" type="button" id="ag-roll">${IC.lesson.replace('<svg', '<svg width="20" height="20"')} ${st.done ? 'Voir l\'appel' : 'Faire l\'appel'}</button>
     <div class="card sec" style="padding-block:14px"><h3>Ce cours · ${esc(fmtD(date))}</h3>
       ${sportField('ags', g.s)}
-      <label class="f">Ce que j'ai fait<textarea class="inp" id="ags-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>
+      <label class="f">Ce que j'ai fait<textarea class="inp" id="ags-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>${micBtn('ags-note')}
       ${st.done ? '' : '<span class="small muted">Pas encore d\'appel : c\'est gardé et repris dans l\'appel de ce cours.</span>'}
       <button class="btn block" type="button" id="ags-save">Enregistrer</button></div>
     <div class="card sec" style="padding-block:14px"><h3>Semaine type · chaque ${esc(dayName(d).toLowerCase())}</h3>
@@ -201,7 +201,8 @@ function openAgSlot(date, id){
   const ids = () => it.pick ? (grp ? [grp] : it.cls) : it.cls;
   const keep = () => { const nv = $('ags-note') ? $('ags-note').value.trim() : n0; if (cur === s0 && nv === n0) return false; agSet(date, it, ids(), cur, nv); s0 = cur; n0 = nv; return true; };
   bindSportField('ags', v => { cur = v; keep(); });
-  sheetOnClose = () => { keep(); render(); };
+  bindMic('ags-note');
+  sheetOnClose = () => { micStop(); keep(); render(); };
   document.querySelectorAll('[data-grp]').forEach(x => x.onclick = () => { grp = x.dataset.grp; document.querySelectorAll('[data-grp]').forEach(y => y.setAttribute('aria-pressed', y === x)); });
   $('ags-save').onclick = () => { keep(); closeSheet(); toast('Enregistré'); };
   $('ag-roll').onclick = () => {
@@ -268,7 +269,7 @@ function openAgEdit(date, h, it){
 function agRollBox(Ls){
   const f = Ls.find(l => l && (l.sport || l.note)) || {};
   return `<div class="card sec" style="padding-block:14px" id="ag-rc"><h3>📝 Ce cours</h3>${sportField('rc', f.sport || '')}
-    <label class="f">Ce que j'ai fait<textarea class="inp" id="rc-note" rows="3" style="min-height:80px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(f.note || '')}</textarea></label>
+    <label class="f">Ce que j'ai fait<textarea class="inp" id="rc-note" rows="3" style="min-height:80px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(f.note || '')}</textarea></label>${micBtn('rc-note')}
     <span class="small muted" style="margin:0">Visible aussi dans l'onglet Agenda et le journal des leçons de la classe.</span></div>`;
 }
 function bindAgRoll(cls, Ls){
@@ -279,6 +280,30 @@ function bindAgRoll(cls, Ls){
   const keep = () => { clearTimeout(tm); tm = null; put('note', ta.value.trim()); };
   ta.oninput = () => { clearTimeout(tm); tm = setTimeout(keep, 500); };
   ta.onblur = () => { if (tm) keep(); };
+  bindMic('rc-note');
+}
+
+/* --- Dictée 🎤 : parler, le texte s'ajoute dans la case --- */
+const MicRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let micOn = null;
+function micBtn(id){
+  return `<button class="btn ag-mic" type="button" data-mic="${id}">🎤 Dicter</button>`;
+}
+function micStop(){ if (micOn){ try { micOn.r.stop(); } catch (e) {} } }
+function bindMic(id){
+  const b = document.querySelector(`[data-mic="${id}"]`), ta = $(id); if (!b || !ta) return;
+  if (!MicRec){ b.onclick = () => toast('Dictée pas disponible ici : touche le micro 🎤 du clavier de ton téléphone'); return; }
+  b.onclick = () => {
+    if (micOn){ const was = micOn.id; micStop(); if (was === id) return; }
+    const r = new MicRec(); r.lang = 'fr-FR'; r.continuous = true; r.interimResults = true;
+    const base = ta.value.replace(/\s+$/, ''); let fin = '';
+    const show = extra => { const t = (fin + extra).trim(); ta.value = base + (base && t ? (/[.!?]$/.test(base) ? ' ' : ' ') : '') + t; };
+    r.onresult = ev => { let tmp = ''; for (let i = ev.resultIndex; i < ev.results.length; i++){ const t = ev.results[i][0].transcript; if (ev.results[i].isFinal) fin += (fin && !/^\s/.test(t) ? ' ' : '') + t; else tmp += t; } show(tmp ? ' ' + tmp : ''); };
+    r.onerror = ev => { toast(ev.error === 'not-allowed' || ev.error === 'service-not-allowed' ? 'Micro refusé : autorise le micro, ou utilise le micro 🎤 du clavier' : ev.error === 'no-speech' ? 'Je n\'ai rien entendu' : 'Dictée interrompue'); };
+    r.onend = () => { show(''); ta.dispatchEvent(new Event('input')); if (micOn && micOn.r === r) micOn = null; b.classList.remove('on'); b.textContent = '🎤 Dicter'; };
+    try { r.start(); } catch (e) { toast('Dictée pas disponible ici : touche le micro 🎤 du clavier de ton téléphone'); return; }
+    micOn = {r, id}; b.classList.add('on'); b.textContent = '⏹ Arrêter la dictée';
+  };
 }
 function agPlanTag(date, s){
   const g = agGet(date, s); if (!g.s && !g.n) return '';

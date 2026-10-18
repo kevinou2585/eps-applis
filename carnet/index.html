@@ -872,11 +872,11 @@ function renderToday(m){
     </div>
     <p class="legend" style="margin:0"><b>P</b> présent · <b>A</b> absent · <b>R</b> retard · <b>D</b> dispensé (là mais ne fait pas cours)</p>
     <div class="list">
-      <div class="lhead"><span class="grow">Élève · points restants</span><span class="c">Prés.</span><span class="c">${pool ? 'Affaires' : 'Tenue'}</span>${pool ? '<span class="c">Nage</span>' : ''}<span class="c">Att.</span></div>
+      <div class="lhead"><span class="grow">Élève · points restants</span><span class="c">Prés.</span><span class="c">Tenue</span><span class="c">Att.</span></div>
       ${cls.map((c, i) => { const per = periodOf(c, date), X = per ? compute(c, per).res : {};
         return (cls.length > 1 ? `<div class="lsub">${esc(c.name)} <span>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}</span></div>` : '') + pupilsOf(c).map(p => lessonRow(c, Ls[i], p, X[p.id], pool)).join(''); }).join('')}
     </div>
-    <p class="legend">Présence : un toucher = absent, puis retard, puis dispensé, puis présent. ${pool ? 'Affaires' : 'Tenue'} : toucher = oubli (−1 tenue). ${pool ? 'Nage : toucher = ne participe pas. ' : ''}Pouce : 1er toucher = perturbe (−1 attitude), 2e = exclu du cours (−${S.settings.X} attitude), 3e = annuler. Toucher le nom pour le dossier de l'élève.</p>
+    <p class="legend">Présence : un toucher = absent, puis retard, puis dispensé, puis présent. Tenue (${pool ? 'maillot' : 't-shirt'}) : toucher = oubli (−1 tenue ; plus de points en tenue = −1 attitude). Pouce : 1er toucher = perturbe (−1 attitude), 2e = exclu du cours (−${S.settings.X} attitude), 3e = annuler. Toucher le nom pour le dossier de l'élève.</p>
     ${agRollBox(Ls)}
     ${pool ? poolRecap(cls.map((c, i) => [c, Ls[i]]), date) : ''}
     <button class="btn danger" type="button" id="l-del">Supprimer cet appel</button>
@@ -932,6 +932,10 @@ function openOtherSession(date){
   };
 }
 function clean(L, pid){ const mm = L.m[pid]; if (mm && !Object.keys(mm).length) delete L.m[pid]; }
+// maillot de bain : garcon (short de bain) ou fille (une piece), selon le groupe
+const MAILLOT_G = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 6h18v4.5L19.5 19H14l-2-5.5L10 19H4.5L3 10.5z"/><path d="M3 9.5h18"/></svg>';
+const MAILLOT_F = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M8 2v4.5c0 2.2 1.2 3.3 1.2 5.3 0 1.8-3.2 3-3.2 5.7L9 22h6l3-4.5c0-2.7-3.2-3.9-3.2-5.7 0-2 1.2-3.1 1.2-5.3V2"/><path d="M8 6.5c2 2 6 2 8 0"/></svg>';
+function maillot(c, p){ return ((c && c.sexe) || (p && p.g)) === 'F' ? MAILLOT_F : MAILLOT_G; }
 function lessonRow(c, L, p, r, pool){
   const mm = L.m[p.id] || {}, a = effA(p, L), cert = certOn(p, L.date, L.type), off = a === 'A', exempt = a === 'D';
   const T = +S.settings.T, Cc = +S.settings.C;
@@ -939,8 +943,7 @@ function lessonRow(c, L, p, r, pool){
   return `<div class="prow ${off ? 'isA' : ''}" data-pid="${p.id}" data-cid="${c.id}">
     <button class="who" type="button">${avatar(p)}<span class="nm"><b>${esc(nomCourt(p))}</b>${cert ? `<span class="pts" style="color:var(--warn);font-weight:600">🩺 Certificat · dispensé jusqu'au ${cert.to.slice(8)}/${cert.to.slice(5, 7)}</span>` : pts}</span></button>
     <button class="tb ${a}" type="button" data-act="pres" aria-label="Présence : ${({P:'présent',A:'absent',R:'en retard',D:'dispensé'})[a]}">${a}</button>
-    <button class="tb ${mm.k ? 'no' : 'ok'}" type="button" data-act="kit" ${off || exempt ? 'disabled' : ''} aria-label="${pool ? 'Affaires de piscine' : 'Tenue'} : ${mm.k ? 'oubliée' : 'en ordre'}">${pool ? IC.bag : IC.shirt}</button>
-    ${pool ? `<button class="tb ${mm.np ? 'no' : 'ok'}" type="button" data-act="np" ${off || exempt ? 'disabled' : ''} aria-label="Participation : ${mm.np ? 'ne nage pas' : 'nage'}">${IC.swim}</button>` : ''}
+    <button class="tb ${mm.k ? 'no' : 'ok'}" type="button" data-act="kit" ${off || exempt ? 'disabled' : ''} aria-label="Tenue : ${mm.k ? 'oubliée' : 'en ordre'}">${pool ? maillot(c, p) : IC.shirt}</button>
     <button class="tb dis ${mm.x ? 'ex' : mm.d ? 'on' : ''}" type="button" data-act="dis" ${off ? 'disabled' : ''} aria-label="Attitude : ${mm.x ? 'exclu du cours' : mm.d ? 'perturbe' : 'rien à signaler'}">${mm.x ? 'EXCL.' : IC.down}</button>${rgChip(c, L, p, pool, off || exempt)}
   </div>`;
 }

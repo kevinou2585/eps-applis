@@ -145,6 +145,7 @@ def carnet(src):
     corps = agenda(corps)
     corps = evaluations(corps)
     corps = groupes(corps)
+    corps = tenue_piscine(corps)
     retour = RETOUR.replace('</a>\n', '<span style="font-weight:500">· Version bêta, pas encore finie</span></a>\n')
     return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + COMMENTAIRES_JS + ANNEES_JS + DRIVE_JS + PIED
 
@@ -316,6 +317,27 @@ def evaluations(corps):
     js = (RACINE / "outils/evals-carnet.js").read_text(encoding="utf-8")
     rep("@media (prefers-reduced-motion: no-preference){ .sheet{", css + "@media (prefers-reduced-motion: no-preference){ .sheet{")
     rep("/* ====== Démarrage ====== */", js + "\n/* ====== Démarrage ====== */")
+    return corps
+
+
+def tenue_piscine(corps):
+    """Piscine : un seul bouton Tenue (maillot garcon ou fille une piece), comme le t-shirt en salle : -1 tenue, a 0 -1 attitude."""
+    def rep(a, b):
+        nonlocal corps
+        if corps.count(a) != 1:
+            sys.exit("Carnet tenue piscine : motif introuvable : " + a[:60])
+        corps = corps.replace(a, b)
+    rep("""<span class="c">${pool ? 'Affaires' : 'Tenue'}</span>${pool ? '<span class="c">Nage</span>' : ''}""", """<span class="c">Tenue</span>""")
+    rep("""${pool ? 'Affaires' : 'Tenue'} : toucher = oubli (−1 tenue). ${pool ? 'Nage : toucher = ne participe pas. ' : ''}""",
+        """Tenue (${pool ? 'maillot' : 't-shirt'}) : toucher = oubli (−1 tenue ; plus de points en tenue = −1 attitude). """)
+    rep("""aria-label="${pool ? 'Affaires de piscine' : 'Tenue'} : ${mm.k ? 'oubliée' : 'en ordre'}">${pool ? IC.bag : IC.shirt}</button>""",
+        """aria-label="Tenue : ${mm.k ? 'oubliée' : 'en ordre'}">${pool ? maillot(c, p) : IC.shirt}</button>""")
+    rep("""    ${pool ? `<button class="tb ${mm.np ? 'no' : 'ok'}" type="button" data-act="np" ${off || exempt ? 'disabled' : ''} aria-label="Participation : ${mm.np ? 'ne nage pas' : 'nage'}">${IC.swim}</button>` : ''}\n""", "")
+    rep("function lessonRow(c, L, p, r, pool){", """// maillot de bain : garcon (short de bain) ou fille (une piece), selon le groupe
+const MAILLOT_G = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 6h18v4.5L19.5 19H14l-2-5.5L10 19H4.5L3 10.5z"/><path d="M3 9.5h18"/></svg>';
+const MAILLOT_F = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M8 2v4.5c0 2.2 1.2 3.3 1.2 5.3 0 1.8-3.2 3-3.2 5.7L9 22h6l3-4.5c0-2.7-3.2-3.9-3.2-5.7 0-2 1.2-3.1 1.2-5.3V2"/><path d="M8 6.5c2 2 6 2 8 0"/></svg>';
+function maillot(c, p){ return ((c && c.sexe) || (p && p.g)) === 'F' ? MAILLOT_F : MAILLOT_G; }
+function lessonRow(c, L, p, r, pool){""")
     return corps
 
 

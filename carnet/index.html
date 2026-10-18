@@ -319,7 +319,7 @@ header.top .sync{min-width:0; overflow:hidden}
 .rg-line{flex:1 1 100%; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; padding-left:49px; margin-top:-2px}
 .rg-chip{display:inline-flex; align-items:center; gap:4px; padding:4px 12px; min-height:32px; border:1.5px solid var(--muted); border-radius:999px; font-size:13px; font-weight:700; color:var(--muted); background:var(--surface)}
 .rg-chip.on{background:var(--fg); color:var(--bg); border-color:var(--fg)}
-.rg-warn{flex:1 1 220px; font-size:13px; line-height:1.3; font-weight:700; color:var(--bad); background:var(--bad-soft); border-left:4px solid var(--bad); padding:5px 8px; border-radius:6px}
+.rg-warn{flex:0 1 auto; font-size:13px; line-height:1.3; font-weight:700; color:var(--warn); background:var(--warn-soft); border-left:4px solid var(--warn); padding:5px 8px; border-radius:6px}
 
 /* Compteur de tours plein écran */
 body.en-open{overflow:hidden}
@@ -405,6 +405,57 @@ body.en-open .toast{z-index:95; bottom:calc(16px + env(safe-area-inset-bottom,0p
 .gr-chips .chip.sess[aria-pressed="true"]{outline:2px solid var(--fg); outline-offset:1px}
 .gr-for{display:flex; flex-direction:column; gap:2px; padding:10px 12px; border-radius:12px; border:2px solid var(--fg); background:var(--surface)}
 .tag.gr-only{display:inline-block; margin-top:4px; background:var(--surface); color:var(--fg); border:1.5px dashed var(--muted); font-size:11.5px; padding:1px 8px; width:max-content}
+/* Classes > Suivi (tenue & attitude) */
+.su-f .chip{min-height:38px}
+.su-sheet{background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden}
+.su-hd{display:flex; flex-direction:column; gap:2px; padding:12px 14px; border-bottom:2px solid var(--fg)}
+.su-hd b{font:700 18px/1.15 var(--display); letter-spacing:.02em; text-transform:uppercase}
+.su-hd span{font-size:13px; color:var(--muted)}
+.su-tw{overflow-x:auto}
+.su-t{border-collapse:collapse; width:100%; font-size:14px; font-variant-numeric:tabular-nums}
+.su-t th{font-size:11.5px; line-height:1.15; font-weight:700; color:var(--muted); background:var(--surface2); padding:6px 3px; text-align:center; vertical-align:bottom; min-width:44px; border-bottom:1px solid var(--line)}
+.su-t td{padding:8px 4px; text-align:center; border-bottom:1px solid var(--line); vertical-align:middle}
+.su-t tr:last-child td{border-bottom:0}
+.su-t .su-nm{text-align:left; position:sticky; left:0; background:var(--surface); min-width:104px; max-width:138px; padding-left:10px; border-right:1px solid var(--line); z-index:1}
+.su-t th.su-nm{background:var(--surface2); vertical-align:bottom}
+.su-t .su-nm button{overflow-wrap:anywhere; border:0; background:none; padding:0; font:inherit; font-weight:700; color:var(--fg); text-align:left; display:flex; gap:4px; align-items:baseline; width:100%; line-height:1.2}
+.su-t .su-nm button span{color:var(--muted); margin-left:auto; font-weight:400}
+.su-rel{display:block; font-size:11.5px; color:var(--muted); margin-top:2px; white-space:nowrap}
+.su-ic{display:inline-grid; place-items:center; min-width:20px; height:20px; flex:none}
+.su-t th .su-ic{display:grid; margin:0 auto 3px}
+.su-ic svg{width:18px; height:18px}
+.su-ic-t{font:800 12px/1 var(--body); letter-spacing:0; border:1.5px solid currentColor; border-radius:5px; padding:2px 3px}
+.su-n{display:inline-grid; place-items:center; min-width:28px; height:26px; padding:0 6px; border-radius:7px; background:var(--surface2); color:var(--fg); font-weight:800; border:1.5px solid var(--fg)}
+.su-n.x{background:var(--bad); color:var(--surface); border-color:var(--bad)}
+.su-z{color:var(--muted); opacity:.6}
+.su-st{display:block; font-size:10.5px; font-weight:700; color:var(--warn); margin-top:2px; white-space:nowrap}
+.su-t td.su-pt{font-weight:700; white-space:nowrap; border-left:1px solid var(--line); font-size:13px; line-height:1.35; padding-inline:6px}
+.su-pt span{display:block}
+.su-pt small{font-weight:400; color:var(--muted)}
+.su-pt .zero{color:var(--bad); text-decoration:underline; text-decoration-thickness:2px}
+.su-t th.su-ptl{border-left:1px solid var(--line)}
+.su-none{margin:0; padding:18px 14px; color:var(--muted)}
+.su-quiet{margin:0; padding:9px 14px; font-size:13px; color:var(--muted); border-top:1px solid var(--line); background:var(--surface2)}
+.su-cnts{display:flex; flex-wrap:wrap; gap:6px}
+.su-cnt{display:inline-flex; align-items:center; gap:5px; padding:5px 10px 5px 7px; border:1px solid var(--line); border-radius:999px; font-size:13px; color:var(--muted)}
+.su-cnt.on{color:var(--fg); border-color:var(--fg)}
+.su-cnt b{font-size:14px}
+.su-list{padding:4px 14px}
+.su-ev{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--line)}
+.su-ev:last-child{border-bottom:0}
+.su-d{width:78px; flex:none; font-size:14px; font-weight:700; font-variant-numeric:tabular-nums; display:flex; flex-direction:column}
+.su-d small{font-weight:500; color:var(--muted); font-size:12px}
+.su-l{flex:1; min-width:0; line-height:1.3}
+.su-stt{display:inline-block; font-size:12px; font-weight:700; color:var(--warn); background:var(--warn-soft); border-left:3px solid var(--warn); padding:1px 6px; border-radius:4px; margin-top:2px}
+@media print{ #tabs, .cvh .ib, .seg, .chips, .su .btn, .su > p{display:none !important} .su-sheet{border:0} }
+/* Réglages : sommaire et rubriques */
+.reg-toc{position:sticky; top:0; z-index:5; background:var(--bg); padding:6px 0; margin-block:-4px}
+.reg-toc .chip{min-height:38px}
+.reg-sub{display:block; margin-top:4px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; font-size:12px}
+.card.reg, #tt-card, #sp-card{scroll-margin-top:64px}
+@keyframes regflash{0%{box-shadow:0 0 0 4px var(--accent)} 100%{box-shadow:0 0 0 0 transparent}}
+.reg-flash{animation:regflash 1.6s ease-out}
+.reg .row2 > label.f{flex:1 1 150px}
 @media (prefers-reduced-motion: no-preference){ .sheet{animation:up .18s ease-out} @keyframes up{from{transform:translateY(30px); opacity:.6}} }
 </style>
 
@@ -517,15 +568,15 @@ function compute(c, p){
     if (a === 'A'){ r.abs++; return; }
     r.n++; if (a === 'R') r.late++; if (a === 'D') r.disp++;
     const f = [];
-    if (m.k){ r.kit++; f.push(['t', l.type === 'piscine' ? 'Pas ses affaires de piscine' : 'Pas sa tenue', 'k']); }
-    if (m.np){ r.np++; if (st.npCounts) f.push(['t', 'Ne participe pas à la piscine', 'np']); }
-    if (m.rg && l.type === 'piscine' && rgRepeat(c, l, pu)){ r.np++; f.push(['t', 'Règles 2 semaines de suite', 'rg']); }
+    if (m.k){ r.kit++; for (let i = 0; i < stN('kitPts'); i++) f.push(['t', l.type === 'piscine' ? 'Pas ses affaires de piscine' : 'Pas sa tenue', 'k']); }
+    if (m.np){ r.np++; if (st.npCounts) for (let i = 0; i < stN('npPts'); i++) f.push(['t', 'Ne participe pas à la piscine', 'np']); }
     if (m.x){ r.x++; for (let i = 0; i < (+st.X || 0); i++) f.push(['c', 'Exclu du cours', 'x']); }
-    else if (m.d){ r.d++; f.push(['c', 'Perturbe le cours', 'd']); }
+    else if (m.d){ r.d++; for (let i = 0; i < stN('dPts'); i++) f.push(['c', 'Perturbe le cours', 'd']); }
     f.forEach(([col, label, key]) => {
       let hit = col;
-      if (col === 't'){ if (r.t > 0) r.t--; else if (r.c > 0){ r.c--; hit = 'c'; } else hit = '-'; }
-      else { if (r.c > 0) r.c--; else if (r.t > 0){ r.t--; hit = 't'; } else hit = '-'; }
+      const sp = stB('spill');
+      if (col === 't'){ if (r.t > 0) r.t--; else if (sp && r.c > 0){ r.c--; hit = 'c'; } else hit = '-'; }
+      else { if (r.c > 0) r.c--; else if (sp && r.t > 0){ r.t--; hit = 't'; } else hit = '-'; }
       r.ev.push({date: l.date, label, col, hit, lid: l.id, key});
     });
   }));
@@ -752,7 +803,7 @@ function render(){
 $('tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (!b) return;
   if (b.dataset.tab === 'classes' && UI.tab === 'classes') UI.cview = false;
   UI.tab = b.dataset.tab; saveUI(); render(); window.scrollTo(0, 0); };
-$('gear').onclick = () => { UI.tab = UI.tab === 'settings' ? 'today' : 'settings'; saveUI(); render(); window.scrollTo(0, 0); };
+$('gear').onclick = regGear;
 
 function welcome(){
   return `<section class="sec"><div class="card empty">
@@ -876,7 +927,7 @@ function renderToday(m){
       ${cls.map((c, i) => { const per = periodOf(c, date), X = per ? compute(c, per).res : {};
         return (cls.length > 1 ? `<div class="lsub">${esc(c.name)} <span>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}</span></div>` : '') + pupilsOf(c).map(p => lessonRow(c, Ls[i], p, X[p.id], pool)).join(''); }).join('')}
     </div>
-    <p class="legend">Présence : un toucher = absent, puis retard, puis dispensé, puis présent. Tenue (${pool ? 'maillot' : 't-shirt'}) : toucher = oubli (−1 tenue ; plus de points en tenue = −1 attitude). Pouce : 1er toucher = perturbe (−1 attitude), 2e = exclu du cours (−${S.settings.X} attitude), 3e = annuler. Toucher le nom pour le dossier de l'élève.</p>
+    <p class="legend">Présence : un toucher = absent, puis retard, puis dispensé, puis présent. Tenue (${pool ? 'maillot' : 't-shirt'}) : toucher = oubli (${regKitTxt()}). Pouce : 1er toucher = perturbe (−${fr(stN('dPts'), 2)} attitude), 2e = exclu du cours (−${S.settings.X} attitude), 3e = annuler. Toucher le nom pour le dossier de l'élève.</p>
     ${agRollBox(Ls)}
     ${pool ? poolRecap(cls.map((c, i) => [c, Ls[i]]), date) : ''}
     <button class="btn danger" type="button" id="l-del">Supprimer cet appel</button>
@@ -1012,7 +1063,7 @@ function renderClassList(m){
   $('cl-new').onclick = openNewClass;
   $('cl-xls').onclick = () => exportXlsx(S.classes.filter(c => !c.act).map(c => [c, periodOf(c, today())]).filter(x => x[1]), 'Bulletins EPS toutes les classes');
 }
-const CTABS = [['report','Bulletin'],['points','Points'],['pupils','Élèves']];
+const CTABS = [['report','Bulletin'],['points','Points'],['pupils','Élèves'],['suivi','Suivi']];
 function renderClassView(c, m){
   const sub = CTABS.some(t => t[0] === UI.ctab) ? UI.ctab : 'report';
   m.innerHTML = `<div class="cvh"><button class="ib" type="button" id="cv-back" aria-label="Toutes les classes">${IC.left}</button><span class="cvn">${esc(c.name)}</span><span class="small muted">${c.pupils.length} élèves</span></div>
@@ -1020,7 +1071,7 @@ function renderClassView(c, m){
     <div id="cv"></div>`;
   $('cv-back').onclick = () => { UI.cview = false; render(); window.scrollTo(0, 0); };
   m.querySelectorAll('[data-ct]').forEach(b => b.onclick = () => { UI.ctab = b.dataset.ct; saveUI(); render(); });
-  ({evals: renderEvals, report: renderReport, points: renderPoints, pupils: renderManage})[sub](c, $('cv'));
+  ({evals: renderEvals, report: renderReport, points: renderPoints, pupils: renderManage, suivi: renderSuivi})[sub](c, $('cv'));
 }
 
 /* ====== Sélecteur de période ====== */
@@ -1041,7 +1092,7 @@ function renderPoints(c, m){
   m.innerHTML = `<section class="sec">
     <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><h2>Savoir-être</h2><span class="tag ${vp.type}">${vp.type === 'piscine' ? 'Piscine' : 'Salle'}</span></div>
     ${periodChips(c, false)}
-    <p class="small muted" style="margin:0">${lessons.length} leçon${lessons.length > 1 ? 's' : ''} notée${lessons.length > 1 ? 's' : ''} · ${full} élève${full > 1 ? 's' : ''} avec tous les points · ${low} à la moitié ou moins. Quand une colonne est vide, la faute suivante est retirée dans l'autre.</p>
+    <p class="small muted" style="margin:0">${lessons.length} leçon${lessons.length > 1 ? 's' : ''} notée${lessons.length > 1 ? 's' : ''} · ${full} élève${full > 1 ? 's' : ''} avec tous les points · ${low} à la moitié ou moins. ${stB('spill') ? 'Quand une colonne est vide, la faute suivante est retirée dans l\'autre.' : 'Une colonne vide reste à 0 (rien n\'est retiré dans l\'autre).'}</p>
     <div class="list">
       <div class="lhead"><span class="grow">Élève</span><span>Tenue · Attitude</span><span style="width:60px;text-align:right">/${T + Cc}</span></div>
       ${ps.map(p => { const r = res[p.id], tot = r.t + r.c;
@@ -1077,7 +1128,7 @@ function openEvalForm(c, vp, e){
   openSheet(isNew ? 'Nouvelle évaluation' : 'Modifier l\'évaluation', `
     ${evTypeField(c, e)}
     <label class="f">Nom<input class="inp" id="ef-name" value="${esc(e?.name || '')}" placeholder="ex. Test navette, Parcours gym…"></label>
-    <div class="row2"><label class="f" style="flex:1">Sur combien<input class="inp num" id="ef-max" inputmode="decimal" value="${esc(e ? fr(+e.max, 2) : '10')}"></label>
+    <div class="row2"><label class="f" style="flex:1">Sur combien<input class="inp num" id="ef-max" inputmode="decimal" value="${esc(e ? fr(+e.max, 2) : fr(stN('evMax'), 2))}"></label>
     <label class="f" style="flex:1">Date<input class="inp" type="date" id="ef-date" value="${e?.date || today()}"></label></div>
     <label class="f">Période<select class="inp" id="ef-per">${periodsOf(c).map(p => `<option value="${p.id}" ${(e ? e.periodId : vp.id) === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>
     <div class="row2">${[5, 10, 20, 50].map(n => `<button class="btn" type="button" data-max="${n}">/${n}</button>`).join('')}</div>
@@ -1557,6 +1608,7 @@ function renderGlobal(m){
   const st = S.settings, sel = new Set();
   m.innerHTML = `<section class="sec">
     <h2>Réglages</h2>
+    ${regToc()}
     <div class="card sec" style="padding-block:14px" id="tt-card">
       <h3>Mon horaire</h3>
       <p class="small muted" style="margin:0">H1 8h25 · H2 9h15 · H3 10h05 · pause · H4 11h15 · H5 12h05 · midi · H6 14h00 · H7 14h50 · H8 15h40 (le mercredi jusqu'à H5). Tu peux aussi remplir ton horaire dans l'onglet Agenda. Pour un groupe mixte, choisis plusieurs classes : l'appel les réunit, le bulletin reste séparé.</p>
@@ -1571,20 +1623,14 @@ function renderGlobal(m){
         <button class="btn pri" type="button" id="tt-add">Ajouter à l'horaire</button></div>` : ''}
     </div>
     ${agSportsCard()}
-    <div class="card sec" style="padding-block:14px">
-      <h3>Barème (toutes les classes)</h3>
-      <div class="row2"><label class="f" style="flex:1">Points de tenue<input class="inp num" id="s-T" inputmode="numeric" value="${st.T}"></label>
-      <label class="f" style="flex:1">Points d'attitude<input class="inp num" id="s-C" inputmode="numeric" value="${st.C}"></label></div>
-      <label class="f">Savoir-être en % du bulletin (le reste = savoir-faire)<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
-      <label class="f">Points d'attitude retirés pour une exclusion<input class="inp num" id="s-X" inputmode="numeric" value="${st.X}"></label>
-      <label class="toggle"><input type="checkbox" id="s-np" ${st.npCounts ? 'checked' : ''}>À la piscine, « ne participe pas » retire aussi un point de tenue</label>
-    </div>
-    <div class="card sec" style="padding-block:14px">
-      <h3>Bulletin</h3>
+    ${regCards()}
+    <div class="card sec reg" style="padding-block:14px" id="reg-com">
+      <h3>Commentaires de bulletin</h3>
       <label class="toggle"><input type="checkbox" id="s-com" ${st.comAuto !== false ? 'checked' : ''}>📝 Commentaire de bulletin automatique</label>
       <p class="small muted" style="margin:0">Activé : chaque élève reçoit un récapitulatif neutre tout prêt (note, savoir-être, évaluations, absences, oublis) que tu peux modifier. Désactivé : les cases restent vides et tu écris toi-même, le bouton ✨ Proposer un texte reste là au besoin.</p>
     </div>
-    <div class="card sec" style="padding-block:14px">
+    ${regPerCard()}
+    <div class="card sec reg" style="padding-block:14px" id="reg-save">
       <h3>Sauvegarde</h3>
       <p class="small muted" style="margin:0">${cloud ? 'Tout est enregistré dans ton compte Claude et sur ce téléphone. Ouvre le même lien sur un autre appareil pour retrouver tes notes.' : 'Tout reste sur ce téléphone, rien n\'est envoyé sur internet.'} Une copie de secours en fichier reste une bonne idée en fin de période.</p>
       <div class="row2"><button class="btn" type="button" id="s-bk">Télécharger une copie</button><button class="btn" type="button" id="s-rs">Restaurer une copie</button></div>
@@ -1600,9 +1646,7 @@ function renderGlobal(m){
     if (+$('tt-d').value === 3 && hI(h2) > hI('H5')){ toast('Le mercredi s\'arrête à H5'); return; }
     tt().push({id: nid('t'), d: +$('tt-d').value, h, h2, cls: S.classes.filter(c => sel.has(c.id)).map(c => c.id)}); save(); render(); toast('Ajouté à l\'horaire');
   };
-  const num = (id, k, lo, hi) => $(id).onchange = e => { const v = Math.round(parseNum(e.target.value)); if (isNaN(v) || v < lo || v > hi){ e.target.value = st[k]; toast(`Entre ${lo} et ${hi}`); return; } st[k] = v; save(); };
-  num('s-T', 'T', 0, 20); num('s-X', 'X', 0, 20); num('s-C', 'C', 0, 20); num('s-se', 'se', 0, 100);
-  $('s-np').onchange = e => { st.npCounts = e.target.checked; save(); };
+  bindReg();
   $('s-com').onchange = e => { st.comAuto = e.target.checked; save(); };
   $('s-bk').onclick = () => { const d = new Date(); offerFile(`Carnet EPS copie ${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}.json`, new Blob([JSON.stringify({app: 'carnet-eps', v: 1, at: Date.now(), state: S, photos: PH})], {type: 'application/json'}), 'Copie'); };
   $('s-rs').onclick = () => $('restorein').click();
@@ -1981,12 +2025,17 @@ function bindAgSports(){
      chaque élève, et les élèves ajoutés plus tard le reçoivent (pupilNew). Ancien c.sexe = 'M' : p.g de chaque élève sert encore.
    - Évaluation de groupe (onglet Évaluation, outils/groupes-carnet.js) : une éval par classe, liées par e.gid ;
      le compteur compte alors toutes les classes du groupe sur un seul écran (run.items = [{cid, eid}]).
-   - Leçon piscine : m.rg = 1 (règles) : ne nage pas, pas de point perdu, sauf si à la leçon piscine précédente
-     (où elle n'était pas absente) elle avait déjà ses règles : −1 tenue « Règles 2 semaines de suite » (dans compute()).
+   - Leçon piscine : m.rg = 1 (règles) : ne nage pas, ne coûte JAMAIS de point (ni tenue, ni attitude) et n'apparaît pas
+     dans les commentaires. À l'appel, simple avertissement « ⚠ 2e / 3e… semaine de suite » (rgStreak : leçons piscine
+     précédentes de la classe où elle n'était pas absente et avait m.rg). Le détail est dans l'onglet Classes > Suivi.
    - Compteur en cours : localStorage 'carnet-eps-endu' (reprise après un rechargement), enregistré dans la classe à la fin.
    Tout passe par save(c.id) : appareil + Drive. */
 const EN_MINS = [10, 15, 20, 25, 30, 35, 40];
-const enScore = (laps, tours, max) => !tours || !laps ? 0 : Math.round(Math.min(laps / tours, 1) * max * 2) / 2;
+// arrondi et anti double toucher : Réglages (S.settings.enStep, enGuard ; voir outils/reglages-carnet.js)
+const enStepV = () => { const v = +S.settings.enStep; return v > 0 ? v : 0.5; };
+const enScore = (laps, tours, max) => { if (!tours || !laps) return 0; const st = enStepV(); return Math.round(Math.round(Math.min(laps / tours, 1) * max / st) * st * 1000) / 1000; };
+const enGuardMs = () => { const v = S.settings.enGuard; return v == null || v === '' || isNaN(+v) ? 5000 : +v * 1000; };
+const enLastOn = () => S.settings.enLast !== false;
 const pupilG = (c, p) => c.sexe === 'F' || c.sexe === 'G' ? c.sexe : (p.g || null);
 
 /* --- Règles à la piscine --- */
@@ -1996,12 +2045,17 @@ function rgPrev(c, l, pu){
   c.lessons.forEach(x => { if (x === l || x.type !== 'piscine' || rgKey(x) >= k || effA(pu, x) === 'A') return; if (!best || rgKey(x) > rgKey(best)) best = x; });
   return best;
 }
-function rgRepeat(c, l, pu){ const pv = rgPrev(c, l, pu); return !!(pv && (pv.m[pu.id] || {}).rg); }
+// nombre de semaines de suite (cette leçon comprise) avec ses règles : 0 si pas de règles à cette leçon
+function rgStreak(c, l, pu){
+  let n = 0, x = l;
+  while (x && (x.m[pu.id] || {}).rg){ n++; x = rgPrev(c, x, pu); }
+  return n;
+}
 function rgChip(c, L, p, pool, off){
   if (!pool || off || pupilG(c, p) !== 'F') return '';
-  const on = !!(L.m[p.id] || {}).rg, rep = on && rgRepeat(c, L, p);
+  const on = !!(L.m[p.id] || {}).rg, n = on ? rgStreak(c, L, p) : 0;
   return `<div class="rg-line"><button class="rg-chip${on ? ' on' : ''}" type="button" data-act="rg" aria-pressed="${on}" aria-label="Règles : ${on ? 'oui' : 'non'}">${on ? '✓ ' : ''}R · règles</button>`
-    + (rep ? '<span class="rg-warn">⚠ 2e semaine de suite : elle perd des points (non-participation)</span>' : '') + '</div>';
+    + (n > 1 && S.settings.rgWarn !== false ? `<span class="rg-warn">⚠ ${n}e semaine de suite</span>` : '') + '</div>';
 }
 
 /* --- Filles / garçons : un réglage pour toute la classe (jamais de groupe mixte) --- */
@@ -2030,7 +2084,7 @@ function evEnduFields(c, e){
     <div class="ev-mins">${EN_MINS.map(n => `<button class="chip" type="button" data-emin="${n}" aria-pressed="${n === mn}">${n} min</button>`).join('')}</div>
     <div class="row2"><label class="f" style="flex:1">Autre durée (minutes)<input class="inp num" id="ef-emin" inputmode="decimal" value="${esc(fr(mn, 2))}"></label>
     <label class="f" style="flex:1">Tours pour 100 %<input class="inp num" id="ef-etours" inputmode="numeric" value="${x.tours || ''}" placeholder="à remplir"></label></div>
-    <span class="small muted">Note = tours ÷ objectif × maximum, arrondie au demi-point. Objectif atteint ou dépassé = note maximale.${!e && c.enduLast ? ' Valeurs reprises de la dernière endurance de la classe.' : ''}</span>
+    <span class="small muted">Note = tours ÷ objectif × maximum, arrondie à ${fr(enStepV(), 2)} point près (Réglages). Objectif atteint ou dépassé = note maximale.${!e && c.enduLast ? ' Valeurs reprises de la dernière endurance de la classe.' : ''}</span>
   </div>`;
 }
 function evKindField(e){
@@ -2251,7 +2305,7 @@ function enAdd(pid, d){
   if (r.st === 'done' || r.st === 'sum'){ enMsg(pid, 'Terminé', 'dup'); return; }
   const n = r.laps[pid] || 0;
   if (d > 0){
-    if (r.last[pid] && now - r.last[pid] < 5000){ enMsg(pid, 'déjà compté', 'dup'); enBuzz(60); return; }
+    if (r.last[pid] && now - r.last[pid] < enGuardMs()){ enMsg(pid, 'déjà compté', 'dup'); enBuzz(60); return; }
     r.undo.push({pid, d: 1, last0: r.last[pid] || null}); r.laps[pid] = n + 1; r.last[pid] = now; enMsg(pid, '+1', 'hit'); enClick(); enBuzz(15);
   } else {
     if (!n){ enMsg(pid, '0 tour', 'dup'); return; }
@@ -2297,8 +2351,8 @@ function enUI(){
   p.classList.toggle('paused', r.st === 'run');
   p.setAttribute('aria-label', r.st === 'idle' ? 'Démarrer le chrono' : r.st === 'run' ? 'Mettre en pause' : 'Reprendre le chrono');
   const stop = $('en-stop'); if (!stop.classList.contains('arm')) stop.textContent = r.st === 'done' ? 'Résumé' : '■ Stop';
-  $('en-st').textContent = r.st === 'idle' ? `${fr(r.dur / 60000, 2)} min · touche GO` : r.st === 'pause' ? 'En pause' : r.st === 'done' ? 'Terminé' : rem <= 60000 ? 'Dernière minute' : 'En cours';
-  root.classList.toggle('last', r.st === 'run' && rem <= 60000);
+  $('en-st').textContent = r.st === 'idle' ? `${fr(r.dur / 60000, 2)} min · touche GO` : r.st === 'pause' ? 'En pause' : r.st === 'done' ? 'Terminé' : rem <= 60000 && enLastOn() ? 'Dernière minute' : 'En cours';
+  root.classList.toggle('last', r.st === 'run' && rem <= 60000 && enLastOn());
   root.classList.toggle('done', r.st === 'done');
   $('en-grid').classList.toggle('off', r.st === 'idle' || r.st === 'done');
   $('en-end').hidden = r.st !== 'done'; enInfo();
@@ -2308,7 +2362,7 @@ function enTick(){
   if (!EN) return; const r = EN.run;
   if (r.st === 'run'){
     const rem = r.dur - enEl();
-    if (!r.w1 && rem <= 60000 && rem > 0 && r.dur > 60000){ r.w1 = 1; enSave(); enBeep(2); enBuzz([200, 100, 200]); enFlash('Plus qu\'une minute'); enUI(); }
+    if (!r.w1 && enLastOn() && rem <= 60000 && rem > 0 && r.dur > 60000){ r.w1 = 1; enSave(); enBeep(2); enBuzz([200, 100, 200]); enFlash('Plus qu\'une minute'); enUI(); }
     if (rem <= 0){ r.st = 'done'; r.acc = r.dur; r.t0 = null; enSave(); enBeep(3, true); enBuzz([400, 150, 400, 150, 700]); enFlash('Terminé'); enUI(); }
   }
   $('en-time').textContent = mmss(r.dur - enEl());
@@ -2632,6 +2686,255 @@ function openGroupScores(items){
   sheetOnClose = () => render();
 }
 
+/* ====== Classes > Suivi : tenue et attitude (fiche de suivi pour les parents / l'école) ======
+   Seulement : tenue oubliée en salle (m.k, leçon salle), maillot oublié (m.k, leçon piscine), ne nage pas (m.np),
+   règles (m.rg, avec le nombre de semaines de suite, voir rgStreak), perturbe (m.d), exclu (m.x),
+   et les points repris de l'ancien relevé (c.adj[periodId][pid] = {t, c}, sans date).
+   Jamais de notes d'évaluation : seulement les points de tenue / attitude restants.
+   Nom complet (p.n) : c'est une fiche officielle. Rien n'est enregistré ici (lecture seule). */
+const SU_CATS = [['all', 'Tout'], ['salle', 'Tenue salle'], ['pool', 'Piscine'], ['rg', 'Règles'], ['att', 'Attitude']];
+const SU_R = '<b class="su-ic-t">R</b>', SU_X = '<b class="su-ic-t">EXCL.</b>';
+const SU_COLS = [
+  {k: 'ks', cat: 'salle', l: 'Tenue salle', long: 'Tenue de sport oubliée (salle)', ic: () => IC.shirt},
+  {k: 'kp', cat: 'pool', l: 'Tenue piscine', long: 'Tenue de piscine oubliée', ic: c => typeof maillot === 'function' ? maillot(c) : IC.bag},
+  {k: 'np', cat: 'pool', l: 'Ne nage pas', long: 'Ne nage pas', ic: () => IC.swim},
+  {k: 'rg', cat: 'rg', l: 'Règles', long: 'Règles (ne nage pas)', ic: () => SU_R},
+  {k: 'd', cat: 'att', l: 'Perturbe', long: 'Perturbe le cours', ic: () => IC.down},
+  {k: 'x', cat: 'att', l: 'Exclu', long: 'Exclu du cours', ic: () => SU_X},
+];
+const suD = iso => { const d = dOf(iso); return `${JOURS[d.getDay()]} ${pad(d.getDate())}/${pad(d.getMonth() + 1)}`; };
+const suH = l => l.h ? (l.h2 && l.h2 !== l.h ? `${l.h}–${l.h2}` : l.h) : '';
+const suKey = l => typeof rgKey === 'function' ? rgKey(l) : l.date + (l.h || '');
+function suRange(c, vp){
+  if (vp === 'year') return 'année scolaire';
+  const end = periodEnd(c, vp);
+  return `du ${dFR(vp.start)}${end ? ' au ' + dFR(end) : ''}`;
+}
+/* Données : une ligne par élève, événements datés (les plus récents d'abord) */
+function suData(c, vp){
+  const year = vp === 'year', st = S.settings, T = +st.T || 0, Cc = +st.C || 0;
+  const ls = c.lessons.filter(l => year || periodOf(c, l.date)?.id === vp.id).sort((a, b) => suKey(a) < suKey(b) ? 1 : -1);
+  const pers = year ? periodsOf(c) : [vp];
+  const X = year ? null : compute(c, vp), PX = year ? pers.map(pp => compute(c, pp)) : null;
+  const pool = ls.some(l => l.type === 'piscine'), girls = c.pupils.some(p => pupilG(c, p) === 'F');
+  const rows = pupilsOf(c).map(p => {
+    const ev = [], n = {ks: 0, kp: 0, np: 0, rg: 0, d: 0, x: 0}; let rgMax = 0;
+    ls.forEach(l => {
+      if (effA(p, l) === 'A') return;
+      const m = l.m[p.id] || {}, add = (k, extra) => { n[k]++; ev.push({k, l, ...extra}); };
+      if (m.k) add(l.type === 'piscine' ? 'kp' : 'ks');
+      if (m.np) add('np');
+      if (m.rg && l.type === 'piscine'){ const s = rgStreak(c, l, p); rgMax = Math.max(rgMax, s); add('rg', {s}); }
+      if (m.x) add('x'); else if (m.d) add('d');
+    });
+    const adj = {t: 0, c: 0};
+    pers.forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (a){ adj.t += +a.t || 0; adj.c += +a.c || 0; } });
+    let pts;
+    if (!year){ const r = X.res[p.id]; pts = {t: r.t, c: r.c}; }
+    else pts = {lt: PX.reduce((a, x) => a + (T - x.res[p.id].t), 0), lc: PX.reduce((a, x) => a + (Cc - x.res[p.id].c), 0)};
+    return {p, ev, n, adj, pts, rgMax};
+  });
+  return {ls, rows, pool, girls, year, T, Cc};
+}
+const suColsFor = (D, f) => SU_COLS.filter(o => (o.cat !== 'pool' || D.pool) && (o.cat !== 'rg' || D.girls) && (f === 'all' || o.cat === f));
+const suCount = (r, cols, f) => cols.reduce((a, o) => a + r.n[o.k], 0) + (f === 'all' || f === 'salle' || f === 'att' ? (f !== 'att' ? r.adj.t : 0) + (f !== 'salle' ? r.adj.c : 0) : 0);
+function suVisible(D, f, sort){
+  // colonnes vides (personne dans la période) cachées, sauf si on filtre
+  const cols = suColsFor(D, f).filter((o, i, a) => f !== 'all' || D.rows.some(r => r.n[o.k]));
+  const rows = D.rows.map(r => ({...r, tot: suCount(r, cols, f)})).filter(r => r.tot > 0);
+  if (sort !== 'az') rows.sort((a, b) => b.tot - a.tot || byName(a.p, b.p));
+  return {cols, rows, quiet: D.rows.length - rows.length};
+}
+function suPtsCells(D, r){
+  if (D.year) return `<td class="su-pt"><span>T ${r.pts.lt ? '−' + r.pts.lt : '0'}</span><span>C ${r.pts.lc ? '−' + r.pts.lc : '0'}</span></td>`;
+  const one = (k, v, max) => `<span class="${v === 0 && max ? 'zero' : ''}">${k} ${v}<small>/${max}</small></span>`;
+  return `<td class="su-pt">${one('T', r.pts.t, D.T)}${one('C', r.pts.c, D.Cc)}</td>`;
+}
+function renderSuivi(c, m){
+  const vp = viewPeriod(c);
+  if (!vp){ m.innerHTML = `<section class="sec"><div class="card empty"><p>Ajoute une période dans Réglages.</p></div></section>`; return; }
+  const D = suData(c, vp);
+  let f = UI.suF || 'all'; if (!suColsFor(D, f).length) f = 'all';
+  const sort = UI.suSort === 'az' ? 'az' : 'n';
+  const V = suVisible(D, f, sort);
+  const cats = SU_CATS.filter(([k]) => k === 'all' || suColsFor(D, k).length);
+  m.innerHTML = `<section class="sec su">
+    <h2>Suivi tenue &amp; attitude</h2>
+    ${periodChips(c, true)}
+    <div class="chips su-f" role="group" aria-label="Afficher seulement">${cats.map(([k, l]) => `<button class="chip" type="button" data-suf="${k}" aria-pressed="${f === k}">${f === k ? '✓ ' : ''}${l}</button>`).join('')}</div>
+    <div class="su-sheet">
+      <div class="su-hd"><b>${esc(c.name)} · ${vp === 'year' ? 'Année' : esc(vp.name)}</b><span>${esc(suRange(c, vp))} · ${D.ls.length} leçon${D.ls.length > 1 ? 's' : ''} · ${c.pupils.length} élèves</span></div>
+      ${V.rows.length ? `<div class="su-tw"><table class="su-t">
+        <thead><tr><th class="su-nm">Élève</th>${V.cols.map(o => `<th><span class="su-ic">${o.ic(c)}</span>${o.l.replace(' ', '<br>')}</th>`).join('')}<th class="su-ptl">Points<br>${D.year ? 'perdus' : 'restants'}</th></tr></thead>
+        <tbody>${V.rows.map(r => `<tr data-supid="${r.p.id}"><td class="su-nm"><button type="button">${esc(r.p.n)}<span aria-hidden="true">›</span></button>${r.adj.t || r.adj.c ? `<span class="su-rel">relevé ${[r.adj.t ? '−' + r.adj.t + 'T' : '', r.adj.c ? '−' + r.adj.c + 'C' : ''].filter(Boolean).join(' ')}</span>` : ''}</td>${V.cols.map(o => { const v = r.n[o.k];
+          return `<td>${v ? `<span class="su-n${o.k === 'x' ? ' x' : ''}">${v}</span>${o.k === 'rg' && r.rgMax > 1 ? `<span class="su-st">${r.rgMax} de suite</span>` : ''}` : '<span class="su-z">·</span>'}</td>`; }).join('')}${suPtsCells(D, r)}</tr>`).join('')}</tbody>
+      </table></div>` : `<p class="su-none">Aucune remarque ${f === 'all' ? '' : '(' + esc(SU_CATS.find(x => x[0] === f)[1].toLowerCase()) + ') '}pour cette période.</p>`}
+      ${V.quiet && V.rows.length ? `<p class="su-quiet">✓ ${V.quiet} élève${V.quiet > 1 ? 's' : ''} sans remarque${f === 'all' ? '' : ' dans ce filtre'}</p>` : ''}
+    </div>
+    <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">Trier :</span>
+      <div class="seg" role="group" aria-label="Trier">${[['n', 'Plus de remarques'], ['az', 'A → Z']].map(([k, l]) => `<button type="button" data-susort="${k}" aria-pressed="${sort === k}">${l}</button>`).join('')}</div></div>
+    <p class="small muted" style="margin:0">Touche un élève pour la liste datée. Les règles ne coûtent jamais de point ; « de suite » = semaines de piscine consécutives où elle était présente.</p>
+    <button class="btn pri block" type="button" id="su-copy">📋 Copier le suivi (${esc(c.name)})</button>
+    <button class="btn block" type="button" id="su-xls">Exporter Excel</button>
+  </section>`;
+  bindChips(c);
+  m.querySelectorAll('[data-suf]').forEach(b => b.onclick = () => { UI.suF = b.dataset.suf; render(); });
+  m.querySelectorAll('[data-susort]').forEach(b => b.onclick = () => { UI.suSort = b.dataset.susort; render(); });
+  const tb = m.querySelector('.su-t tbody');
+  if (tb) tb.onclick = e => { const tr = e.target.closest('tr[data-supid]'); if (tr) openSuivi(c, vp, tr.dataset.supid, f, V.rows.map(r => r.p.id)); };
+  $('su-copy').onclick = () => { if (!V.rows.length){ toast('Rien à copier'); return; } comCopy(suClassText(c, vp, D, V, f), 'Suivi de la classe copié'); };
+  $('su-xls').onclick = () => suXlsx(c, vp, D, f);
+}
+/* Liste datée d'un élève */
+function suEvLabel(e){ const o = SU_COLS.find(x => x.k === e.k); return o.long; }
+function openSuivi(c, vp, pid, f, order){
+  const D = suData(c, vp), r = D.rows.find(x => x.p.id === pid); if (!r) return;
+  const cols = suColsFor(D, f), keys = new Set(cols.map(o => o.k)), ev = r.ev.filter(e => keys.has(e.k));
+  const i = order.indexOf(pid), go = k => () => openSuivi(c, vp, order[k], f, order);
+  const showAdj = (f === 'all' || f === 'salle' || f === 'att') && (r.adj.t || r.adj.c);
+  openSheet(r.p.n, `
+    <p class="small muted" style="margin:0">${esc(c.name)} · ${vp === 'year' ? 'Année' : esc(vp.name)} · ${esc(suRange(c, vp))}${f !== 'all' ? ' · filtre : ' + esc(SU_CATS.find(x => x[0] === f)[1]) : ''}</p>
+    <div class="su-cnts">${cols.map(o => `<span class="su-cnt${r.n[o.k] ? ' on' : ''}"><span class="su-ic">${o.ic(c)}</span>${o.l} <b>${r.n[o.k]}</b></span>`).join('')}</div>
+    ${D.year ? `<div class="card small">Points perdus sur l'année : tenue ${r.pts.lt}, attitude ${r.pts.lc}</div>`
+      : `<div class="card small">Points restants : <b>tenue ${r.pts.t}/${D.T}</b> · <b>attitude ${r.pts.c}/${D.Cc}</b></div>`}
+    <div class="card su-list">${ev.length ? ev.map(e => { const o = SU_COLS.find(x => x.k === e.k);
+      return `<div class="su-ev"><span class="su-d">${suD(e.l.date)}${suH(e.l) ? `<small>${suH(e.l)}</small>` : ''}</span><span class="su-ic">${o.ic(c)}</span><span class="su-l">${o.long}${e.k === 'rg' && e.s > 1 ? ` <span class="su-stt">⚠ ${e.s}e semaine de suite</span>` : ''}</span></div>`; }).join('')
+      : '<span class="muted small">Aucun événement daté.</span>'}
+      ${showAdj ? `<div class="su-ev"><span class="su-d">sans date</span><span class="su-ic">📄</span><span class="su-l">Repris du relevé : ${[r.adj.t ? '−' + r.adj.t + ' tenue' : '', r.adj.c ? '−' + r.adj.c + ' attitude' : ''].filter(Boolean).join(', ')}</span></div>` : ''}</div>
+    <button class="btn pri block" type="button" id="su-pcopy">📋 Copier le suivi de ${esc(r.p.n)}</button>`,
+    {prev: i > 0 && go(i - 1), next: i >= 0 && i < order.length - 1 && go(i + 1), pos: i >= 0 ? `${i + 1}/${order.length}` : ''});
+  $('su-pcopy').onclick = () => comCopy(suPupilText(c, vp, D, r, f), 'Suivi copié');
+}
+/* Textes à copier (dates dans l'ordre chronologique) */
+function suEvTxt(e){ return suD(e.l.date) + (suH(e.l) ? ' ' + suH(e.l) : '') + (e.k === 'rg' && e.s > 1 ? ` (${e.s}e semaine de suite)` : ''); }
+function suPtsTxt(D, r){ return D.year ? `Points perdus sur l'année : tenue ${r.pts.lt}, attitude ${r.pts.lc}` : `Points restants : tenue ${r.pts.t}/${D.T}, attitude ${r.pts.c}/${D.Cc}`; }
+function suHead(c, vp, f){
+  return `Suivi EPS – tenue et attitude · ${c.name} · ${vp === 'year' ? 'Année' : vp.name} (${suRange(c, vp)})${f !== 'all' ? ' · ' + SU_CATS.find(x => x[0] === f)[1] : ''}`;
+}
+function suPupilText(c, vp, D, r, f){
+  const cols = suColsFor(D, f), out = [suHead(c, vp, f), `Élève : ${r.p.n}`];
+  cols.forEach(o => { const ev = r.ev.filter(e => e.k === o.k).reverse(); if (ev.length) out.push(`${o.long} : ${ev.length} – ${ev.map(suEvTxt).join(', ')}`); });
+  if ((f === 'all' || f === 'salle' || f === 'att') && (r.adj.t || r.adj.c)) out.push(`Repris du relevé de l'école : ${[r.adj.t ? '−' + r.adj.t + ' tenue' : '', r.adj.c ? '−' + r.adj.c + ' attitude' : ''].filter(Boolean).join(', ')}`);
+  if (out.length === 2) out.push('Aucune remarque.');
+  out.push(suPtsTxt(D, r));
+  return out.join('\n');
+}
+function suClassText(c, vp, D, V, f){
+  const out = [suHead(c, vp, f), ''];
+  [...V.rows].sort((a, b) => byName(a.p, b.p)).forEach(r => {
+    const parts = V.cols.map(o => { const ev = r.ev.filter(e => e.k === o.k).reverse(); return ev.length ? `${o.l} ${ev.length} (${ev.map(suEvTxt).join(', ')})` : ''; }).filter(Boolean);
+    if ((f === 'all' || f === 'salle' || f === 'att') && (r.adj.t || r.adj.c)) parts.push(`relevé ${[r.adj.t ? '−' + r.adj.t + ' tenue' : '', r.adj.c ? '−' + r.adj.c + ' attitude' : ''].filter(Boolean).join(', ')}`);
+    out.push(`${r.p.n} : ${parts.join(' ; ')}. ${suPtsTxt(D, r)}.`);
+  });
+  if (V.quiet) out.push('', `${V.quiet} élève${V.quiet > 1 ? 's' : ''} sans remarque.`);
+  return out.join('\n');
+}
+/* Excel : même mise en page que le bulletin (buildXlsx), tous les élèves */
+async function suXlsx(c, vp, D, f){
+  try {
+    const cols = suColsFor(D, f), lab = vp === 'year' ? 'Année' : vp.name;
+    const hd = [{h: 'N°', w: 5}, {h: 'Élève', w: 28}, ...cols.map(o => ({h: o.l, w: 10})),
+      {h: D.year ? 'Tenue\nperdus' : `Tenue\nrestant /${D.T}`, w: 10}, {h: D.year ? 'Attitude\nperdus' : `Attitude\nrestant /${D.Cc}`, w: 10}, {h: 'Dates', w: 70}];
+    const N = hd.length, last = colL(N - 1), blank = () => Array(N).fill(null), rows = [], merges = [];
+    const r1 = blank(); r1[0] = {v: `Suivi EPS · tenue et attitude · ${c.name} · ${lab}`, s: XS.TITLE}; rows.push({h: 30, cells: r1}); merges.push(`A1:${last}1`);
+    const r2 = blank(); r2[0] = {v: `${suRange(c, vp)} · ${D.ls.length} leçons · ${c.pupils.length} élèves${f !== 'all' ? ' · ' + SU_CATS.find(x => x[0] === f)[1] : ''} · exporté le ${dFR(today())}`, s: XS.SUB}; rows.push({h: 18, cells: r2}); merges.push(`A2:${last}2`);
+    rows.push({h: 8, cells: blank()});
+    rows.push({h: 36, cells: hd.map(o => ({v: o.h, s: XS.HEAD}))});
+    D.rows.forEach((r, i) => {
+      const b = i % 2 === 1, I = b ? XS.INTB : XS.INT;
+      const det = cols.map(o => { const ev = r.ev.filter(e => e.k === o.k).reverse(); return ev.length ? `${o.l} : ${ev.map(suEvTxt).join(', ')}` : ''; }).filter(Boolean);
+      if ((f === 'all' || f === 'salle' || f === 'att') && (r.adj.t || r.adj.c)) det.push(`Repris du relevé : ${[r.adj.t ? '−' + r.adj.t + ' tenue' : '', r.adj.c ? '−' + r.adj.c + ' attitude' : ''].filter(Boolean).join(', ')}`);
+      rows.push({h: Math.max(20, det.length * 15 + 4), cells: [{v: i + 1, s: I}, {v: r.p.n, s: b ? XS.TXTB : XS.TXT}, ...cols.map(o => ({v: r.n[o.k] || '', s: I})),
+        {v: D.year ? r.pts.lt : r.pts.t, s: I}, {v: D.year ? r.pts.lc : r.pts.c, s: I}, {v: det.join('\n'), s: XS.NOTE}]});
+    });
+    const sh = {name: `Suivi ${c.name} ${lab}`, rows, merges, cols: hd.map(o => o.w), freeze: 4, footer: `Carnet EPS · suivi ${c.name} · ${lab}`};
+    await offerFile(`Suivi EPS ${c.name} ${lab}`.replace(/[\\/:*?"<>|]/g, '-') + '.xlsx', buildXlsx([sh]), 'Fichier Excel');
+  } catch(e){ toast('Le fichier Excel n\'a pas pu être créé'); }
+}
+
+/* ====== Réglages : tout le barème et les règles de l'appli au même endroit ======
+   Réglages déjà là (repris, pas dupliqués) : S.settings.T, C (points par période), se (% savoir-être), X (attitude par
+   exclusion), npCounts (« ne nage pas » compte), comAuto (commentaires), work (travail laissé, piscine), tt (horaire), sports.
+   Ajoutés (valeur absente = comportement d'avant) :
+     kitPts (1) points de tenue par oubli · dPts (1) points d'attitude par perturbation · npPts (1) points de tenue par
+     « ne nage pas » (si npCounts) · spill (true) colonne vide → on retire dans l'autre · rgWarn (true) avertissement
+     « Ne semaine de suite » des règles · evMax (10) « sur combien » proposé · enGuard (5) secondes entre deux tours
+     comptés · enStep (0,5) arrondi des notes d'endurance · enLast (true) alerte « plus qu'une minute ».
+   Tout passe par save() : appareil + Drive. La roue dentée ouvre la rubrique qui va avec l'onglet en cours. */
+const REG_DEF = {kitPts: 1, dPts: 1, npPts: 1, spill: true, rgWarn: true, evMax: 10, enGuard: 5, enStep: 0.5, enLast: true};
+const stN = k => { const v = +S.settings[k]; return S.settings[k] == null || S.settings[k] === '' || isNaN(v) ? REG_DEF[k] : v; };
+const stB = k => S.settings[k] == null ? REG_DEF[k] : S.settings[k] !== false;
+const regPl = (n, w) => `${fr(n, 2)} ${w}${n > 1 ? 's' : ''}`;
+function regKitTxt(){
+  return `−${fr(stN('kitPts'), 2)} tenue${stB('spill') ? ' ; plus de points en tenue : retiré en attitude' : ''}`;
+}
+const REG_SECS = [['tt-card', 'Horaire'], ['sp-card', 'Sports'], ['reg-bareme', 'Barème'], ['reg-pool', 'Piscine'], ['reg-evals', 'Évaluations'], ['reg-com', 'Commentaires'], ['reg-per', 'Périodes'], ['reg-save', 'Sauvegarde']];
+const REG_JUMP = {today: 'reg-bareme', evals: 'reg-evals', classes: 'reg-bareme', agenda: 'tt-card'};
+function regJump(id){
+  setTimeout(() => { const el = $(id); if (!el) return; el.scrollIntoView({block: 'start'}); window.scrollBy(0, -12);
+    el.classList.remove('reg-flash'); void el.offsetWidth; el.classList.add('reg-flash'); }, 60);
+}
+function regGear(){
+  if (UI.tab === 'settings'){ UI.tab = UI.regBack && UI.regBack !== 'settings' ? UI.regBack : 'today'; saveUI(); render(); window.scrollTo(0, 0); return; }
+  const id = REG_JUMP[UI.tab] || 'reg-bareme';
+  UI.regBack = UI.tab; UI.tab = 'settings'; saveUI(); render(); window.scrollTo(0, 0); regJump(id);
+}
+function regToc(){
+  return `<nav class="chips reg-toc" aria-label="Rubriques des réglages">${REG_SECS.map(([id, l]) => `<button class="chip" type="button" data-regj="${id}">${l}</button>`).join('')}</nav>`;
+}
+function regCards(){
+  const st = S.settings, n = (id, k, lab, help, mode = 'numeric') => `<label class="f">${lab}<input class="inp num" id="${id}" inputmode="${mode}" value="${esc(fr(stN(k), 2))}" data-regk="${k}">${help ? `<span class="small muted" style="font-weight:400">${help}</span>` : ''}</label>`;
+  const tg = (id, k, lab, help) => `<label class="toggle"><input type="checkbox" id="${id}" data-regb="${k}" ${stB(k) ? 'checked' : ''}>${lab}</label>${help ? `<p class="small muted" style="margin:-6px 0 0">${help}</p>` : ''}`;
+  return `<div class="card sec reg" style="padding-block:14px" id="reg-bareme">
+      <h3>Barème (toutes les classes)</h3>
+      <p class="small muted" style="margin:0">Chaque élève commence chaque période avec tous ses points, puis on retire.</p>
+      <div class="row2"><label class="f" style="flex:1">Points de tenue par période<input class="inp num" id="s-T" inputmode="numeric" value="${st.T}"></label>
+      <label class="f" style="flex:1">Points d'attitude par période<input class="inp num" id="s-C" inputmode="numeric" value="${st.C}"></label></div>
+      <label class="f">Savoir-être en % du bulletin (le reste = savoir-faire)<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
+      <b class="small reg-sub">Points retirés</b>
+      <div class="row2">${n('s-kit', 'kitPts', 'Oubli de tenue (salle ou maillot)', 'en tenue')}${n('s-d', 'dPts', 'Perturbe le cours', 'en attitude')}</div>
+      <label class="f">Exclusion du cours<input class="inp num" id="s-X" inputmode="numeric" value="${st.X}"><span class="small muted" style="font-weight:400">en attitude</span></label>
+      ${tg('s-spill', 'spill', 'Colonne vide : on retire dans l\'autre', 'Activé (comme avant) : plus de points en tenue → l\'oubli suivant retire en attitude, et inversement. Désactivé : une colonne à 0 reste à 0, rien n\'est retiré ailleurs.')}
+    </div>
+    <div class="card sec reg" style="padding-block:14px" id="reg-pool">
+      <h3>Piscine &amp; règles</h3>
+      <label class="toggle"><input type="checkbox" id="s-np" ${st.npCounts ? 'checked' : ''}>« Ne nage pas » retire des points de tenue</label>
+      <div id="s-npw" ${st.npCounts ? '' : 'hidden'}>${n('s-npp', 'npPts', 'Points de tenue par « ne nage pas »', '')}</div>
+      ${tg('s-rgw', 'rgWarn', 'Règles : avertir à l\'appel « ⚠ 2e semaine de suite »', 'Les règles ne coûtent jamais de point et ne sont jamais écrites dans les commentaires ni dans le message aux éducateurs (« ne nage pas »).')}
+      <label class="f">Travail laissé (message aux éducateurs)<input class="inp" id="s-work" value="${esc(st.work ?? 'J\'ai laissé un travail à faire.')}"></label>
+    </div>
+    <div class="card sec reg" style="padding-block:14px" id="reg-evals">
+      <h3>Évaluations &amp; endurance</h3>
+      ${n('s-evmax', 'evMax', '« Sur combien » proposé pour une nouvelle évaluation', '', 'decimal')}
+      ${n('s-eng', 'enGuard', 'Compteur de tours : secondes avant de recompter le même élève', 'contre les doubles touchers (0 = jamais bloqué)', 'decimal')}
+      <label class="f">Arrondi des notes d'endurance<select class="inp" id="s-enstep">${[[0.1, 'au dixième (0,1)'], [0.25, 'au quart de point (0,25)'], [0.5, 'au demi-point (0,5)'], [1, 'au point entier (1)']].map(([v, l]) => `<option value="${v}" ${stN('enStep') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      ${tg('s-enl', 'enLast', 'Compteur : alerte « plus qu\'une minute » (bip, vibration)', '')}
+    </div>`;
+}
+function regPerCard(){
+  const cl = S.classes.filter(c => !c.act);
+  return `<div class="card sec reg" style="padding-block:14px" id="reg-per">
+      <h3>Périodes et dates</h3>
+      <p class="small muted" style="margin:0">Chaque classe a ses périodes (nom, date de début, salle ou piscine). Touche une classe pour les modifier.</p>
+      ${cl.length ? `<div class="row2">${cl.map(c => `<button class="chip" type="button" data-regper="${c.id}">${esc(c.name)} · ${c.periods.length} pér.</button>`).join('')}</div>` : '<span class="small muted">Pas encore de classe.</span>'}
+    </div>`;
+}
+function bindReg(){
+  const st = S.settings;
+  const num = (id, k, lo, hi, int = true) => { const el = $(id); if (!el) return; el.onchange = e => { let v = parseNum(e.target.value); if (v != null && int) v = Math.round(v);
+    if (v == null || isNaN(v) || v < lo || v > hi){ e.target.value = k in REG_DEF ? fr(stN(k), 2) : st[k]; toast(`Entre ${lo} et ${hi}`); return; }
+    st[k] = v; save(); toast('Enregistré'); }; };
+  num('s-T', 'T', 0, 20); num('s-X', 'X', 0, 20); num('s-C', 'C', 0, 20); num('s-se', 'se', 0, 100);
+  num('s-kit', 'kitPts', 0, 10); num('s-d', 'dPts', 0, 10); num('s-npp', 'npPts', 0, 10);
+  num('s-evmax', 'evMax', 1, 1000, false); num('s-eng', 'enGuard', 0, 60, false);
+  $('s-np').onchange = e => { st.npCounts = e.target.checked; $('s-npw').hidden = !st.npCounts; save(); };
+  document.querySelectorAll('[data-regb]').forEach(x => x.onchange = () => { st[x.dataset.regb] = x.checked; save(); toast('Enregistré'); });
+  $('s-enstep').onchange = e => { st.enStep = +e.target.value; save(); toast('Enregistré'); };
+  $('s-work').onchange = e => { st.work = e.target.value; save(); toast('Enregistré'); };
+  document.querySelectorAll('[data-regj]').forEach(b => b.onclick = () => regJump(b.dataset.regj));
+  document.querySelectorAll('[data-regper]').forEach(b => b.onclick = () => { S.cur = b.dataset.regper; UI.tab = 'classes'; UI.cview = true; UI.ctab = 'pupils'; save(); render(); setTimeout(() => $('s-addper')?.scrollIntoView({block: 'center'}), 60); });
+}
+
 /* ====== Démarrage ====== */
 try { navigator.wakeLock?.request('screen').catch(() => {}); } catch(e){}
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && UI.tab === 'today'){ const t = today(); if (UI.date !== t && !UI._moved){ UI.date = t; render(); } } });
@@ -2789,7 +3092,7 @@ function comCounts(c, X, p, vp){
     const a = effA(p, l); if (a === 'A'){ o.abs++; return; }
     const m = l.m[p.id] || {};
     if (m.k){ if (l.type === 'piscine') o.pool++; else o.gym++; }
-    if (m.np || (m.rg && l.type === 'piscine' && rgRepeat(c, l, p))) o.np++; // regles excusees : jamais comptees
+    if (m.np) o.np++; // regles : jamais comptees ni mentionnees
     if (m.x) o.x++; else if (m.d) o.d++;
   });
   return o;

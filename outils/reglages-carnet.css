@@ -1,0 +1,8 @@
+/* Réglages : sommaire et rubriques */
+.reg-toc{position:sticky; top:0; z-index:5; background:var(--bg); padding:6px 0; margin-block:-4px}
+.reg-toc .chip{min-height:38px}
+.reg-sub{display:block; margin-top:4px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; font-size:12px}
+.card.reg, #tt-card, #sp-card{scroll-margin-top:64px}
+@keyframes regflash{0%{box-shadow:0 0 0 4px var(--accent)} 100%{box-shadow:0 0 0 0 transparent}}
+.reg-flash{animation:regflash 1.6s ease-out}
+.reg .row2 > label.f{flex:1 1 150px}

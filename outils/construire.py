@@ -146,6 +146,8 @@ def carnet(src):
     corps = evaluations(corps)
     corps = groupes(corps)
     corps = tenue_piscine(corps)
+    corps = suivi(corps)
+    corps = reglages(corps)
     retour = RETOUR.replace('</a>\n', '<span style="font-weight:500">· Version bêta, pas encore finie</span></a>\n')
     return tete("Carnet EPS", "carnet", "#2f6fd0") + "</head>\n<body>\n" + retour + corps + COMMENTAIRES_JS + ANNEES_JS + DRIVE_JS + PIED
 
@@ -298,10 +300,7 @@ def evaluations(corps):
     rep("    $('es-edit').onclick = () => { closeSheet(); openEvalForm(c, null, e); };", "    $('es-edit').onclick = () => { closeSheet(); openEvalForm(c, null, e); };\n    bindEvScoresHead(c, e);")
     # fiche eleve : formatives a part, garcon / fille
     rep("""Aucune évaluation dans cette période.</span>'}</div>""", """Aucune évaluation dans cette période.</span>'}${evFormList(c, vp, p)}</div>""")
-    # 3. regles a la piscine : 2e fois de suite = -1 tenue (meme si « ne participe pas » ne coute rien)
-    rep("    if (m.np){ r.np++; if (st.npCounts) f.push(['t', 'Ne participe pas à la piscine', 'np']); }",
-        "    if (m.np){ r.np++; if (st.npCounts) f.push(['t', 'Ne participe pas à la piscine', 'np']); }\n"
-        "    if (m.rg && l.type === 'piscine' && rgRepeat(c, l, pu)){ r.np++; f.push(['t', 'Règles 2 semaines de suite', 'rg']); }")
+    # 3. regles a la piscine : ne coutent jamais de point (compute() inchange) ; avertissement « Ne semaine de suite » a l'appel
     rep("${mm.x ? 'EXCL.' : IC.down}</button>\n  </div>`;", "${mm.x ? 'EXCL.' : IC.down}</button>${rgChip(c, L, p, pool, off || exempt)}\n  </div>`;")
     rep("const b = e.target.closest('button'); if (!b) return;", """const b = e.target.closest('[data-act="rg"]') || e.target.closest('button'); if (!b) return;""")
     rep("    else if (act === 'np'){ if (mm.np) delete mm.np; else mm.np = 1; }",
@@ -392,6 +391,71 @@ def groupes(corps):
     return corps
 
 
+def suivi(corps):
+    """Classes > Suivi : tenue oubliee, ne nage pas, regles, perturbe, exclu, points repris du releve (fiche pour les parents)."""
+    def rep(a, b):
+        nonlocal corps
+        if corps.count(a) != 1:
+            sys.exit("Carnet suivi : motif introuvable : " + a[:60])
+        corps = corps.replace(a, b)
+    rep("const CTABS = [['report','Bulletin'],['points','Points'],['pupils','Élèves']];",
+        "const CTABS = [['report','Bulletin'],['points','Points'],['pupils','Élèves'],['suivi','Suivi']];")
+    rep("({evals: renderEvals, report: renderReport, points: renderPoints, pupils: renderManage})[sub](c, $('cv'));",
+        "({evals: renderEvals, report: renderReport, points: renderPoints, pupils: renderManage, suivi: renderSuivi})[sub](c, $('cv'));")
+    css = (RACINE / "outils/suivi-carnet.css").read_text(encoding="utf-8")
+    js = (RACINE / "outils/suivi-carnet.js").read_text(encoding="utf-8")
+    rep("@media (prefers-reduced-motion: no-preference){ .sheet{", css + "@media (prefers-reduced-motion: no-preference){ .sheet{")
+    rep("/* ====== Démarrage ====== */", js + "\n/* ====== Démarrage ====== */")
+    return corps
+
+
+def reglages(corps):
+    """Reglages : bareme complet (points par oubli / perturbation / ne nage pas, report d'une colonne a l'autre),
+    piscine et regles, evaluations et endurance, periodes ; la roue dentee ouvre la rubrique de l'onglet en cours."""
+    def rep(a, b):
+        nonlocal corps
+        if corps.count(a) != 1:
+            sys.exit("Carnet reglages : motif introuvable : " + a[:60])
+        corps = corps.replace(a, b)
+    # calcul des points : nombre de points par faute, report dans l'autre colonne (valeurs par defaut = comme avant)
+    rep("    if (m.k){ r.kit++; f.push(['t', l.type === 'piscine' ? 'Pas ses affaires de piscine' : 'Pas sa tenue', 'k']); }",
+        "    if (m.k){ r.kit++; for (let i = 0; i < stN('kitPts'); i++) f.push(['t', l.type === 'piscine' ? 'Pas ses affaires de piscine' : 'Pas sa tenue', 'k']); }")
+    rep("    if (m.np){ r.np++; if (st.npCounts) f.push(['t', 'Ne participe pas à la piscine', 'np']); }",
+        "    if (m.np){ r.np++; if (st.npCounts) for (let i = 0; i < stN('npPts'); i++) f.push(['t', 'Ne participe pas à la piscine', 'np']); }")
+    rep("    else if (m.d){ r.d++; f.push(['c', 'Perturbe le cours', 'd']); }",
+        "    else if (m.d){ r.d++; for (let i = 0; i < stN('dPts'); i++) f.push(['c', 'Perturbe le cours', 'd']); }")
+    rep("      if (col === 't'){ if (r.t > 0) r.t--; else if (r.c > 0){ r.c--; hit = 'c'; } else hit = '-'; }\n      else { if (r.c > 0) r.c--; else if (r.t > 0){ r.t--; hit = 't'; } else hit = '-'; }",
+        "      const sp = stB('spill');\n      if (col === 't'){ if (r.t > 0) r.t--; else if (sp && r.c > 0){ r.c--; hit = 'c'; } else hit = '-'; }\n      else { if (r.c > 0) r.c--; else if (sp && r.t > 0){ r.t--; hit = 't'; } else hit = '-'; }")
+    rep("toucher = oubli (−1 tenue ; plus de points en tenue = −1 attitude).", "toucher = oubli (${regKitTxt()}).")
+    rep("1er toucher = perturbe (−1 attitude), 2e", "1er toucher = perturbe (−${fr(stN('dPts'), 2)} attitude), 2e")
+    rep("Quand une colonne est vide, la faute suivante est retirée dans l'autre.", "${stB('spill') ? 'Quand une colonne est vide, la faute suivante est retirée dans l\\'autre.' : 'Une colonne vide reste à 0 (rien n\\'est retiré dans l\\'autre).'}")
+    rep("""value="${esc(e ? fr(+e.max, 2) : '10')}">""", """value="${esc(e ? fr(+e.max, 2) : fr(stN('evMax'), 2))}">""")
+    # roue dentee : ouvre la rubrique de l'onglet en cours, et revient a cet onglet
+    rep("$('gear').onclick = () => { UI.tab = UI.tab === 'settings' ? 'today' : 'settings'; saveUI(); render(); window.scrollTo(0, 0); };",
+        "$('gear').onclick = regGear;")
+    # page Reglages : sommaire, rubriques, periodes
+    rep("    <h2>Réglages</h2>\n", "    <h2>Réglages</h2>\n    ${regToc()}\n")
+    debut = '    <div class="card sec" style="padding-block:14px">\n      <h3>Barème (toutes les classes)</h3>'
+    fin = "« ne participe pas » retire aussi un point de tenue</label>\n    </div>\n"
+    if corps.count(debut) != 1 or corps.count(fin) != 1:
+        sys.exit("Carnet reglages : bloc bareme introuvable")
+    i = corps.index(debut); j = corps.index(fin, i) + len(fin)
+    corps = corps[:i] + "    ${regCards()}\n" + corps[j:]
+    rep('    <div class="card sec" style="padding-block:14px">\n      <h3>Bulletin</h3>', '    <div class="card sec reg" style="padding-block:14px" id="reg-com">\n      <h3>Commentaires de bulletin</h3>')
+    rep('    <div class="card sec" style="padding-block:14px">\n      <h3>Sauvegarde</h3>', '    ${regPerCard()}\n    <div class="card sec reg" style="padding-block:14px" id="reg-save">\n      <h3>Sauvegarde</h3>')
+    a = "  const num = (id, k, lo, hi) => $(id).onchange = e => {"
+    b = "  $('s-np').onchange = e => { st.npCounts = e.target.checked; save(); };\n"
+    if corps.count(a) != 1 or corps.count(b) != 1:
+        sys.exit("Carnet reglages : liaisons introuvables")
+    i = corps.index(a); j = corps.index(b, i) + len(b)
+    corps = corps[:i] + "  bindReg();\n" + corps[j:]
+    css = (RACINE / "outils/reglages-carnet.css").read_text(encoding="utf-8")
+    js = (RACINE / "outils/reglages-carnet.js").read_text(encoding="utf-8")
+    rep("@media (prefers-reduced-motion: no-preference){ .sheet{", css + "@media (prefers-reduced-motion: no-preference){ .sheet{")
+    rep("/* ====== Démarrage ====== */", js + "\n/* ====== Démarrage ====== */")
+    return corps
+
+
 # Carnet : commentaire de bulletin par eleve (en « tu »), genere a partir des points, evals et oublis.
 # Les textes retouches sont gardes dans la classe : c.com[periodId | 'year'][pupilId] (synchro avec le reste).
 COMMENTAIRES_JS = r"""
@@ -415,7 +479,7 @@ function comCounts(c, X, p, vp){
     const a = effA(p, l); if (a === 'A'){ o.abs++; return; }
     const m = l.m[p.id] || {};
     if (m.k){ if (l.type === 'piscine') o.pool++; else o.gym++; }
-    if (m.np || (m.rg && l.type === 'piscine' && rgRepeat(c, l, p))) o.np++; // regles excusees : jamais comptees
+    if (m.np) o.np++; // regles : jamais comptees ni mentionnees
     if (m.x) o.x++; else if (m.d) o.d++;
   });
   return o;

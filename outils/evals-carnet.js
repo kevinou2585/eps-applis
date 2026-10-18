@@ -7,12 +7,17 @@
      chaque élève, et les élèves ajoutés plus tard le reçoivent (pupilNew). Ancien c.sexe = 'M' : p.g de chaque élève sert encore.
    - Évaluation de groupe (onglet Évaluation, outils/groupes-carnet.js) : une éval par classe, liées par e.gid ;
      le compteur compte alors toutes les classes du groupe sur un seul écran (run.items = [{cid, eid}]).
-   - Leçon piscine : m.rg = 1 (règles) : ne nage pas, pas de point perdu, sauf si à la leçon piscine précédente
-     (où elle n'était pas absente) elle avait déjà ses règles : −1 tenue « Règles 2 semaines de suite » (dans compute()).
+   - Leçon piscine : m.rg = 1 (règles) : ne nage pas, ne coûte JAMAIS de point (ni tenue, ni attitude) et n'apparaît pas
+     dans les commentaires. À l'appel, simple avertissement « ⚠ 2e / 3e… semaine de suite » (rgStreak : leçons piscine
+     précédentes de la classe où elle n'était pas absente et avait m.rg). Le détail est dans l'onglet Classes > Suivi.
    - Compteur en cours : localStorage 'carnet-eps-endu' (reprise après un rechargement), enregistré dans la classe à la fin.
    Tout passe par save(c.id) : appareil + Drive. */
 const EN_MINS = [10, 15, 20, 25, 30, 35, 40];
-const enScore = (laps, tours, max) => !tours || !laps ? 0 : Math.round(Math.min(laps / tours, 1) * max * 2) / 2;
+// arrondi et anti double toucher : Réglages (S.settings.enStep, enGuard ; voir outils/reglages-carnet.js)
+const enStepV = () => { const v = +S.settings.enStep; return v > 0 ? v : 0.5; };
+const enScore = (laps, tours, max) => { if (!tours || !laps) return 0; const st = enStepV(); return Math.round(Math.round(Math.min(laps / tours, 1) * max / st) * st * 1000) / 1000; };
+const enGuardMs = () => { const v = S.settings.enGuard; return v == null || v === '' || isNaN(+v) ? 5000 : +v * 1000; };
+const enLastOn = () => S.settings.enLast !== false;
 const pupilG = (c, p) => c.sexe === 'F' || c.sexe === 'G' ? c.sexe : (p.g || null);
 
 /* --- Règles à la piscine --- */
@@ -22,12 +27,17 @@ function rgPrev(c, l, pu){
   c.lessons.forEach(x => { if (x === l || x.type !== 'piscine' || rgKey(x) >= k || effA(pu, x) === 'A') return; if (!best || rgKey(x) > rgKey(best)) best = x; });
   return best;
 }
-function rgRepeat(c, l, pu){ const pv = rgPrev(c, l, pu); return !!(pv && (pv.m[pu.id] || {}).rg); }
+// nombre de semaines de suite (cette leçon comprise) avec ses règles : 0 si pas de règles à cette leçon
+function rgStreak(c, l, pu){
+  let n = 0, x = l;
+  while (x && (x.m[pu.id] || {}).rg){ n++; x = rgPrev(c, x, pu); }
+  return n;
+}
 function rgChip(c, L, p, pool, off){
   if (!pool || off || pupilG(c, p) !== 'F') return '';
-  const on = !!(L.m[p.id] || {}).rg, rep = on && rgRepeat(c, L, p);
+  const on = !!(L.m[p.id] || {}).rg, n = on ? rgStreak(c, L, p) : 0;
   return `<div class="rg-line"><button class="rg-chip${on ? ' on' : ''}" type="button" data-act="rg" aria-pressed="${on}" aria-label="Règles : ${on ? 'oui' : 'non'}">${on ? '✓ ' : ''}R · règles</button>`
-    + (rep ? '<span class="rg-warn">⚠ 2e semaine de suite : elle perd des points (non-participation)</span>' : '') + '</div>';
+    + (n > 1 && S.settings.rgWarn !== false ? `<span class="rg-warn">⚠ ${n}e semaine de suite</span>` : '') + '</div>';
 }
 
 /* --- Filles / garçons : un réglage pour toute la classe (jamais de groupe mixte) --- */
@@ -56,7 +66,7 @@ function evEnduFields(c, e){
     <div class="ev-mins">${EN_MINS.map(n => `<button class="chip" type="button" data-emin="${n}" aria-pressed="${n === mn}">${n} min</button>`).join('')}</div>
     <div class="row2"><label class="f" style="flex:1">Autre durée (minutes)<input class="inp num" id="ef-emin" inputmode="decimal" value="${esc(fr(mn, 2))}"></label>
     <label class="f" style="flex:1">Tours pour 100 %<input class="inp num" id="ef-etours" inputmode="numeric" value="${x.tours || ''}" placeholder="à remplir"></label></div>
-    <span class="small muted">Note = tours ÷ objectif × maximum, arrondie au demi-point. Objectif atteint ou dépassé = note maximale.${!e && c.enduLast ? ' Valeurs reprises de la dernière endurance de la classe.' : ''}</span>
+    <span class="small muted">Note = tours ÷ objectif × maximum, arrondie à ${fr(enStepV(), 2)} point près (Réglages). Objectif atteint ou dépassé = note maximale.${!e && c.enduLast ? ' Valeurs reprises de la dernière endurance de la classe.' : ''}</span>
   </div>`;
 }
 function evKindField(e){
@@ -277,7 +287,7 @@ function enAdd(pid, d){
   if (r.st === 'done' || r.st === 'sum'){ enMsg(pid, 'Terminé', 'dup'); return; }
   const n = r.laps[pid] || 0;
   if (d > 0){
-    if (r.last[pid] && now - r.last[pid] < 5000){ enMsg(pid, 'déjà compté', 'dup'); enBuzz(60); return; }
+    if (r.last[pid] && now - r.last[pid] < enGuardMs()){ enMsg(pid, 'déjà compté', 'dup'); enBuzz(60); return; }
     r.undo.push({pid, d: 1, last0: r.last[pid] || null}); r.laps[pid] = n + 1; r.last[pid] = now; enMsg(pid, '+1', 'hit'); enClick(); enBuzz(15);
   } else {
     if (!n){ enMsg(pid, '0 tour', 'dup'); return; }
@@ -323,8 +333,8 @@ function enUI(){
   p.classList.toggle('paused', r.st === 'run');
   p.setAttribute('aria-label', r.st === 'idle' ? 'Démarrer le chrono' : r.st === 'run' ? 'Mettre en pause' : 'Reprendre le chrono');
   const stop = $('en-stop'); if (!stop.classList.contains('arm')) stop.textContent = r.st === 'done' ? 'Résumé' : '■ Stop';
-  $('en-st').textContent = r.st === 'idle' ? `${fr(r.dur / 60000, 2)} min · touche GO` : r.st === 'pause' ? 'En pause' : r.st === 'done' ? 'Terminé' : rem <= 60000 ? 'Dernière minute' : 'En cours';
-  root.classList.toggle('last', r.st === 'run' && rem <= 60000);
+  $('en-st').textContent = r.st === 'idle' ? `${fr(r.dur / 60000, 2)} min · touche GO` : r.st === 'pause' ? 'En pause' : r.st === 'done' ? 'Terminé' : rem <= 60000 && enLastOn() ? 'Dernière minute' : 'En cours';
+  root.classList.toggle('last', r.st === 'run' && rem <= 60000 && enLastOn());
   root.classList.toggle('done', r.st === 'done');
   $('en-grid').classList.toggle('off', r.st === 'idle' || r.st === 'done');
   $('en-end').hidden = r.st !== 'done'; enInfo();
@@ -334,7 +344,7 @@ function enTick(){
   if (!EN) return; const r = EN.run;
   if (r.st === 'run'){
     const rem = r.dur - enEl();
-    if (!r.w1 && rem <= 60000 && rem > 0 && r.dur > 60000){ r.w1 = 1; enSave(); enBeep(2); enBuzz([200, 100, 200]); enFlash('Plus qu\'une minute'); enUI(); }
+    if (!r.w1 && enLastOn() && rem <= 60000 && rem > 0 && r.dur > 60000){ r.w1 = 1; enSave(); enBeep(2); enBuzz([200, 100, 200]); enFlash('Plus qu\'une minute'); enUI(); }
     if (rem <= 0){ r.st = 'done'; r.acc = r.dur; r.t0 = null; enSave(); enBeep(3, true); enBuzz([400, 150, 400, 150, 700]); enFlash('Terminé'); enUI(); }
   }
   $('en-time').textContent = mmss(r.dur - enEl());

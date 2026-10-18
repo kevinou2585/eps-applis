@@ -146,11 +146,14 @@ function enAbsents(parts){
     c.pupils.forEach(p => { if (ls.every(l => ['A', 'D'].includes(effA(p, l)))) s.add(p.id); }); });
   return {s, roll};
 }
-/* élèves du compteur : classe par classe, puis par nom */
+/* élèves du compteur : par prénom (A → Z), absents à la fin */
 const enAll = () => EN.parts.flatMap(({c}) => pupilsOf(c));
 function enIds(){
   const r = EN.run, ab = enAbsents(EN.parts).s;
   let ps = enAll().filter(p => !r.excl || !ab.has(p.id) || (r.laps[p.id] || 0) > 0);
+  // ordre alphabetique des prenoms (toutes classes melangees), absents et dispenses a la fin
+  const cmp = (x, y) => (x || '').localeCompare(y || '', 'fr', {sensitivity: 'base'});
+  ps = [...ps].sort((a, b) => (ab.has(a.id) - ab.has(b.id)) || cmp(nomPre(a).pre, nomPre(b).pre) || cmp(nomPre(a).nom, nomPre(b).nom));
   if (r.sort) ps = [...ps].sort((a, b) => (r.laps[b.id] || 0) - (r.laps[a.id] || 0) || byName(a, b));
   return ps.map(p => p.id);
 }

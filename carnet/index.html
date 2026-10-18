@@ -2617,8 +2617,8 @@ function renderEvalTab(m){
   let key = null; try { key = localStorage.getItem(EVG_KEY); } catch(e){}
   const g = gs.find(x => x.key === key) || gs[0], c0 = g.cls[0], multi = g.cls.length > 1;
   let vp0 = viewPeriod(c0); if (vp0 === 'year') vp0 = periodOf(c0, today());
-  const chips = `<div class="chips gr-chips" id="evg" role="group" aria-label="Groupe">${gs.map(x => { const sl = evSlots(x.ids);
-    return `<button class="chip sess" type="button" data-evg="${x.key}" aria-pressed="${x === g}"><span class="sh1">${x === g ? '✓ ' : ''}${esc(x.name)}</span><span class="sh2">${esc(sl || (x.cls[0].act ? 'activité' : 'seule'))}</span></button>`; }).join('')}</div>`;
+  const chips = `<label class="f">Classe / groupe<select class="inp" id="evg">${gs.map(x => { const sl = evSlots(x.ids);
+    return `<option value="${esc(x.key)}"${x === g ? ' selected' : ''}>${esc(x.name)} · ${esc(sl || (x.cls[0].act ? 'activité' : 'seule'))}</option>`; }).join('')}</select></label>`;
   if (!vp0){ m.innerHTML = `<section class="sec"><h2>Évaluation</h2>${chips}<div class="card empty"><p>Ajoute une période dans Classes › Élèves.</p></div></section>`; bindEvTab(m, g, null); return; }
   const pm = evPerMap(g.cls, vp0), bs = evBuckets(g.cls, pm);
   const tot = g.cls.map(c => { const vp = pm.get(c.id); return vp ? c.evals.filter(e => e.periodId === vp.id && e.kind !== 'form').reduce((a, e) => a + +e.max, 0) : 0; });
@@ -2640,7 +2640,7 @@ function renderEvalTab(m){
   m.querySelectorAll('[data-eb]').forEach(x => x.onclick = () => openGroupScores(bs[+x.dataset.eb].items));
 }
 function bindEvTab(m, g, vp0){
-  m.querySelectorAll('[data-evg]').forEach(x => x.onclick = () => { try { localStorage.setItem(EVG_KEY, x.dataset.evg); } catch(e){} render(); });
+  const evg = m.querySelector('#evg'); if (evg) evg.onchange = () => { try { localStorage.setItem(EVG_KEY, evg.value); } catch(e){} render(); };
   m.querySelectorAll('[data-egp]').forEach(x => x.onclick = () => { const p = g.cls[0].periods.find(q => q.id === x.dataset.egp); if (!p) return;
     evPerMap(g.cls, p).forEach((vp, cid) => { if (vp) UI.period[cid] = vp.id; }); saveUI(); render(); });
 }

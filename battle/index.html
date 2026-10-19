@@ -2092,11 +2092,12 @@ function persoCorps(c, rang, F, pas) {
 }
 function persoChapeau(c, rang, F) {
   let g;
-  if (rang === 3) { // casque de fer (chapel), porté haut pour laisser voir les yeux (pas de nasal : Kevin veut reconnaître la personne)
+  if (rang === 3) { // casque de fer (chapel), porté haut pour laisser voir les yeux, avec son nasal
     c.save(); c.translate(0, -9); c.beginPath(); c.arc(0, -3, 21.5, Math.PI, 0); c.closePath();
     g = c.createLinearGradient(-12, -26, 12, 0); g.addColorStop(0, '#ffffff'); g.addColorStop(0.45, '#aeb6c6'); g.addColorStop(1, '#4a5160'); c.fillStyle = g; c.fill(); c.strokeStyle = '#30343e'; c.lineWidth = 1.4; c.stroke();
     c.beginPath(); c.ellipse(0, -3, 28, 5.5, 0, 0, 7); c.fillStyle = '#6f7a8c'; c.fill(); c.stroke();
     c.fillStyle = '#30343e'; for (const x of [-14, -7, 0, 7, 14]) { c.beginPath(); c.arc(x, -9 - (14 - Math.abs(x)) * 0.25, 1.1, 0, 7); c.fill(); }
+    rrect(c, -2, -3, 4, 12, 1.5); c.fillStyle = '#aeb6c6'; c.fill(); c.strokeStyle = '#30343e'; c.lineWidth = 1; c.stroke(); // nasal (Kevin l'aime)
     c.restore();
   } else if (rang === 2 && !F) { // bord de la cagoule sur le front
     c.beginPath(); c.moveTo(-21, -4); c.quadraticCurveTo(0, -15, 21, -4); c.arc(0, 0, 21.5, -0.19, Math.PI + 0.19, true); c.closePath(); c.fillStyle = '#161616'; c.fill();

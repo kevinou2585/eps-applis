@@ -97,7 +97,7 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .carte.r3{--bord:#c9d1de}
 .carte.vide{opacity:.75;border-style:dashed}
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.carte canvas{display:block;margin:0 auto;animation:flotte 2.4s ease-in-out infinite}
+.carte canvas{display:block;margin:0 auto;max-width:100%;animation:flotte 2.4s ease-in-out infinite}
 .carte.r2 canvas{animation-delay:-.8s}.carte.r3 canvas{animation-delay:-1.6s}
 @keyframes flotte{50%{transform:translateY(-5px) rotate(1.5deg)}}
 .carte .rg{position:absolute;left:8px;top:8px;font-weight:900;font-size:13px;background:var(--bord);color:#16224a;border-radius:999px;padding:2px 8px}
@@ -2092,12 +2092,12 @@ function persoCorps(c, rang, F, pas) {
 }
 function persoChapeau(c, rang, F) {
   let g;
-  if (rang === 3) { // casque de fer (chapel) + nasal
-    c.beginPath(); c.arc(0, -3, 21.5, Math.PI, 0); c.closePath();
+  if (rang === 3) { // casque de fer (chapel), porté haut pour laisser voir les yeux (pas de nasal : Kevin veut reconnaître la personne)
+    c.save(); c.translate(0, -9); c.beginPath(); c.arc(0, -3, 21.5, Math.PI, 0); c.closePath();
     g = c.createLinearGradient(-12, -26, 12, 0); g.addColorStop(0, '#ffffff'); g.addColorStop(0.45, '#aeb6c6'); g.addColorStop(1, '#4a5160'); c.fillStyle = g; c.fill(); c.strokeStyle = '#30343e'; c.lineWidth = 1.4; c.stroke();
     c.beginPath(); c.ellipse(0, -3, 28, 5.5, 0, 0, 7); c.fillStyle = '#6f7a8c'; c.fill(); c.stroke();
     c.fillStyle = '#30343e'; for (const x of [-14, -7, 0, 7, 14]) { c.beginPath(); c.arc(x, -9 - (14 - Math.abs(x)) * 0.25, 1.1, 0, 7); c.fill(); }
-    rrect(c, -2, -3, 4, 12, 1.5); c.fillStyle = '#aeb6c6'; c.fill(); c.strokeStyle = '#30343e'; c.lineWidth = 1; c.stroke();
+    c.restore();
   } else if (rang === 2 && !F) { // bord de la cagoule sur le front
     c.beginPath(); c.moveTo(-21, -4); c.quadraticCurveTo(0, -15, 21, -4); c.arc(0, 0, 21.5, -0.19, Math.PI + 0.19, true); c.closePath(); c.fillStyle = '#161616'; c.fill();
     c.strokeStyle = '#c1121f'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(-20, -4.5); c.quadraticCurveTo(0, -15, 20, -4.5); c.stroke();
@@ -2761,11 +2761,16 @@ function listeBoss() { // les 3 boss à battre : { rang, nom, score, genre ('H' 
     photo: photoOk(t.photo) ? t.photo : i === 0 && boss && photoOk(boss.photo) && String(boss.nom).trim().toLowerCase() === String(t.nom).trim().toLowerCase() ? boss.photo : ''
   })).filter(b => b.nom && b.score > 0);
 }
-function dessinerPortrait(cnv, rang, genre, src) { // portrait déguisé (accueil / fin de partie) dans un <canvas>
+function dessinerPortrait(cnv, rang, genre, src, buste) { // portrait déguisé (accueil / fin de partie) dans un <canvas> ; buste = zoom sur la tête
   const w = cnv.clientWidth || +cnv.getAttribute('width'), h = cnv.clientHeight || +cnv.getAttribute('height'), d = Math.min(window.devicePixelRatio || 1, 2);
   cnv.width = Math.round(w * d); cnv.height = Math.round(h * d);
   const c = cnv.getContext('2d'), img = imageDe(src), k = Math.min(w / 100, h / 132) * d;
-  const go = () => { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cnv.width, cnv.height); c.setTransform(k, 0, 0, k, cnv.width / 2 - 5 * k, cnv.height / 2 - 2 * k); dessinerPerso(c, rang, genre, img, { pas: 0.6 }); };
+  const go = () => {
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cnv.width, cnv.height);
+    if (buste) { const kb = Math.min(cnv.width / 74, cnv.height / 84); c.setTransform(kb, 0, 0, kb, cnv.width / 2, cnv.height * 0.6); } // visage au centre, en grand (Kevin)
+    else c.setTransform(k, 0, 0, k, cnv.width / 2 - 5 * k, cnv.height / 2 - 2 * k);
+    dessinerPerso(c, rang, genre, img, { pas: 0.6 });
+  };
   go(); if (img && !(img.complete && img.naturalWidth)) img.addEventListener('load', go, { once: true });
 }
 let accueilDessine = false;
@@ -2776,9 +2781,9 @@ function afficherAccueil() {
   else {
     const carte = r => {
       const b = liste.find(x => x.rang === r);
-      if (!b) return `<div class="carte r${r} vide"><span class="rg">N°${r}</span><canvas data-rang="${r}" style="width:${r === 1 ? 130 : 84}px;height:${r === 1 ? 172 : 111}px"></canvas><div class="tb">${r === 1 ? 'Le trône' : 'Place libre'}</div><div class="nom">${r === 1 ? 'Place libre' : '—'}</div><div class="sc">À prendre !</div></div>`;
+      if (!b) return `<div class="carte r${r} vide"><span class="rg">N°${r}</span><canvas data-rang="${r}" style="width:${r === 1 ? 210 : 140}px;height:${r === 1 ? 210 : 140}px"></canvas><div class="tb">${r === 1 ? 'Le trône' : 'Place libre'}</div><div class="nom">${r === 1 ? 'Place libre' : '—'}</div><div class="sc">À prendre !</div></div>`;
       const t = titreBoss(r, b.genre);
-      return `<div class="carte r${r}"><span class="rg">N°${r}</span><canvas data-rang="${r}" data-boss="1" style="width:${r === 1 ? 130 : 84}px;height:${r === 1 ? 172 : 111}px" aria-label="${esc(t)}"></canvas><div class="tb">${esc(t)}</div><div class="nom">${esc(b.nom)}</div><div class="sc">${esc(fmt(b.score))} pts</div></div>`;
+      return `<div class="carte r${r}"><span class="rg">N°${r}</span><canvas data-rang="${r}" data-boss="1" style="width:${r === 1 ? 210 : 140}px;height:${r === 1 ? 210 : 140}px" aria-label="${esc(t)}"></canvas><div class="tb">${esc(t)}</div><div class="nom">${esc(b.nom)}</div><div class="sc">${esc(fmt(b.score))} pts</div></div>`;
     };
     html = `<div class="boss3"><div class="lbl">LES BOSS À BATTRE</div>${carte(1)}<div class="duo">${carte(2)}${carte(3)}</div></div>`;
   }
@@ -2789,7 +2794,7 @@ function afficherAccueil() {
     const img = $('bloc-boss').querySelector('img'); if (img) img.src = AVATAR;
     $('bloc-boss').querySelectorAll('canvas').forEach(cnv => {
       const r = +cnv.dataset.rang, b = liste.find(x => x.rang === r);
-      dessinerPortrait(cnv, r, b ? b.genre : '', b ? (b.photo || AVATAR) : '');
+      dessinerPortrait(cnv, r, b ? b.genre : '', b ? (b.photo || AVATAR) : '', true);
     });
   }
   $('etat').textContent = etatTxt;

@@ -117,8 +117,9 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .cadre-boite{width:100%;max-width:360px;text-align:center}.cadre-boite b{display:block;font-size:20px;color:var(--jaune)}.cadre-boite span{display:block;font-size:14px;color:var(--gris);margin:4px 0 6px}
 #cadre-grand{display:block;margin:0 auto;cursor:grab}.cadre-mini{display:flex;justify-content:center;gap:10px;margin:4px 0}.cadre-mini canvas{background:rgba(255,255,255,.06);border-radius:10px}
 #cadre-zoom{width:90%;margin:10px auto;accent-color:#ffd23f}.cadre-bt{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}.cadre-bt .btn{margin:0}
-.btn-son{width:auto;display:inline-block;padding:9px 18px;font-size:16px}
-.btn-son.coupe{border-color:#ffd23f;color:#ffd23f}
+.btn-son,.btn-mus{width:auto;display:inline-block;padding:9px 18px;font-size:16px}
+.btn-mus{padding:9px 14px}.btn-mus:disabled{opacity:.45}
+.btn-son.coupe,.btn-mus.coupe{border-color:#ffd23f;color:#ffd23f}
 canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 </style>
 </head>
@@ -137,8 +138,8 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
     <div id="bloc-boss"></div>
     <button class="gros pulse" id="jouer">Jouer</button>
     <div class="etat" id="etat"></div>
-    <button class="btn btn-son" type="button">🔊 Son activé</button>
-    <p class="aide">Touche à gauche = flipper gauche · à droite = flipper droit.<br>Maintiens <b>LANCER</b> et lâche au bon moment.<br>Vise la <b>RAMPE</b> au centre : 3 paniers ouvrent la cage → récré multiballe !<br>Lancer faible, moyen ou fort : la bille se bloque dans le <b>trou 1, 2 ou 3</b>.<br>Gare au trou de <b>COLLE</b> et aux couloirs de <b>SORTIE</b> sur les côtés…<br>La <b>SALLE DES PROFS</b> t’envoie sous le plancher de verre, droit sur le <b>BUT</b> : bats le gardien !<br><b>3 buts</b> : le flipper se retourne… bienvenue dans la <b>CRYPTE</b> ☠ (1 bille bonus).<br>Dépasse le score d’un <b>BOSS</b> du top 3 : il descend sur le flipper… abats-le à coups de bille ⚔</p>
+    <button class="btn btn-son" type="button">🔊 Son activé</button> <button class="btn btn-mus" type="button">🎵 Musique</button>
+    <p class="aide">Touche à gauche = flipper gauche · à droite = flipper droit.<br>Maintiens <b>LANCER</b> et lâche au bon moment.<br>Vise la <b>RAMPE</b> au centre : 3 paniers ouvrent la cage → récré multiballe !<br>Lancer faible, moyen ou fort : la bille se bloque dans le <b>trou 1, 2 ou 3</b>.<br>Gare au trou de <b>COLLE</b> et aux couloirs de <b>SORTIE</b> sur les côtés…<br>La <b>SALLE DES PROFS</b> t’envoie sous le plancher de verre, droit sur le <b>BUT</b> : bats le gardien !<br><b>3 buts</b> : le flipper se retourne… bienvenue dans la <b>CRYPTE</b> ☠ (1 bille bonus).<br>Dépasse le score d’un <b>BOSS</b> du top 3 : il descend sur le flipper… abats-le à coups de bille ⚔ Si tu perds le combat, la partie est finie !</p>
   </div>
 </section>
 
@@ -146,7 +147,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
   <div class="boite">
     <div class="bandeau">Temps mort</div>
     <button class="gros" id="reprendre">Reprendre</button>
-    <button class="btn btn-son" type="button">🔊 Son activé</button>
+    <button class="btn btn-son" type="button">🔊 Son activé</button> <button class="btn btn-mus" type="button">🎵 Musique</button>
     <button class="btn" id="abandon">Abandonner la partie</button>
   </div>
 </section>
@@ -181,8 +182,14 @@ const AVATAR = 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://ww
 // (touchend, pointerdown, keydown) ; il peut aussi être « interrupted » après un passage en arrière-plan.
 // navigator.audioSession.type = 'playback' (iOS 17+) fait passer le son même avec le bouton silencieux ;
 // sur les iOS plus anciens, un <audio> silencieux en boucle bascule la session audio en mode « lecture ».
-let AC = null, MASTER = null, BRUIT = null, deverrouille = false, audioHtml = null, muet = !!lsGet('battle-muet', false);
-const VOIX = [], MAX_VOIX = 34, DERN = {};
+// Kevin (v8) : bruitages refaits dans un style « jeu mobile viral » (plucks accordés sur la musique, pops, pièces,
+// whooshs, bass drops, montées, foule « yeah ») + une musique par mode, générée en direct (séquenceur planifié à l'avance).
+// Graphe : SFX ─┐                       (ECHO : petit écho « paillettes » pour les plucks / cloches)
+//         MUSF (passe-bas des transitions) → MUSDUCK (atténuation sous les annonces) → MUSB (musique on/off) ─┤→ MASTER (son on/off) → limiteur → sortie
+let AC = null, MASTER = null, SFX = null, ECHO = null, MUSF = null, MUSDUCK = null, MUSB = null, BRUIT = null, TAMB = null, ORGUE_W = null;
+let deverrouille = false, audioHtml = null, muet = !!lsGet('battle-muet', false), musiqueOn = lsGet('battle-musique', true) !== false;
+let DEC = 0, horsLigne = false; // DEC / horsLigne : rendu hors ligne (OfflineAudioContext) pour les tests de niveau
+const VOIX = [], MAX_VOIX = 40, DERN = {}, VOL_MASTER = 0.6, VOL_MUS = 0.5;
 const SILENCE = (() => { // WAV 8 bits mono de 0,1 s de silence, en data URI
   const n = 4410, b = new Uint8Array(44 + n), dv = new DataView(b.buffer), w = (o, s) => { for (let i = 0; i < s.length; i++) b[o + i] = s.charCodeAt(i); };
   w(0, 'RIFF'); dv.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
@@ -191,18 +198,29 @@ const SILENCE = (() => { // WAV 8 bits mono de 0,1 s de silence, en data URI
 })();
 function sessionLecture() { try { const s = navigator.audioSession; if (s && s.type !== 'playback') s.type = 'playback'; } catch (e) {} }
 function relancer() { try { if (AC && AC.state !== 'running' && !document.hidden) { const p = AC.resume(); if (p && p.catch) p.catch(() => {}); } } catch (e) {} }
+function construireGraphe(ac) { // bus, limiteur, écho, bruit blanc, batterie pré-calculée, timbre d'orgue
+  const comp = ac.createDynamicsCompressor(); // limiteur : musique + plusieurs sons à la fois sans saturer
+  comp.threshold.value = -14; comp.knee.value = 6; comp.ratio.value = 12; comp.attack.value = 0.002; comp.release.value = 0.2;
+  MASTER = ac.createGain(); MASTER.gain.value = muet && !horsLigne ? 0 : VOL_MASTER; MASTER.connect(comp); comp.connect(ac.destination);
+  SFX = ac.createGain(); SFX.gain.value = 1; SFX.connect(MASTER);
+  ECHO = ac.createGain(); ECHO.gain.value = 0.2;
+  const dl = ac.createDelay(1), fb = ac.createGain(), lp = ac.createBiquadFilter(); dl.delayTime.value = 0.17; fb.gain.value = 0.32; lp.type = 'lowpass'; lp.frequency.value = 3800;
+  ECHO.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(SFX);
+  MUSF = ac.createBiquadFilter(); MUSF.type = 'lowpass'; MUSF.frequency.value = 18000; MUSF.Q.value = 1.2;
+  MUSDUCK = ac.createGain(); MUSB = ac.createGain(); MUSB.gain.value = musiqueOn ? VOL_MUS : 0;
+  MUSF.connect(MUSDUCK); MUSDUCK.connect(MUSB); MUSB.connect(MASTER);
+  BRUIT = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+  const d = BRUIT.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  TAMB = creerTambours(ac);
+  const re = new Float32Array([0, 1, 0.75, 0.45, 0.5, 0.2, 0.25, 0, 0.12]); ORGUE_W = ac.createPeriodicWave(re, new Float32Array(re.length)); // tirettes d'orgue
+}
 function audio() {
   try {
     if (!AC) {
       const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
       sessionLecture();
       AC = new C({ latencyHint: 'interactive' });
-      const comp = AC.createDynamicsCompressor(); // limiteur : plusieurs sons à la fois sans saturer
-      comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 8; comp.attack.value = 0.003; comp.release.value = 0.18;
-      MASTER = AC.createGain(); MASTER.gain.value = muet ? 0 : 0.6; MASTER.connect(comp); comp.connect(AC.destination);
-      BRUIT = AC.createBuffer(1, AC.sampleRate * 0.6, AC.sampleRate);
-      const d = BRUIT.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-      AC.onstatechange = () => { if (AC.state === 'running' && BEAT.on) BEAT.next = AC.currentTime + 0.05; };
+      construireGraphe(AC);
     }
     relancer();
   } catch (e) { return null; }
@@ -225,174 +243,427 @@ document.addEventListener('visibilitychange', () => {
   else relancer();
 });
 window.addEventListener('pageshow', relancer); window.addEventListener('focus', relancer);
-function pret() { return AC && !muet && AC.state === 'running'; }
-function voix(delai, dur) { // limite la polyphonie : au-delà de MAX_VOIX sons simultanés, on ignore les nouveaux
+function pret() { return AC && (horsLigne || (!muet && AC.state === 'running')); }
+function voix(delai, dur) { // limite la polyphonie des bruitages : au-delà de MAX_VOIX sons simultanés, on ignore les nouveaux
   const now = AC.currentTime; for (let i = VOIX.length - 1; i >= 0; i--) if (VOIX[i] < now) VOIX.splice(i, 1);
-  if (VOIX.length >= MAX_VOIX) return false; VOIX.push(now + delai + dur); return true;
+  if (VOIX.length >= MAX_VOIX) return false; VOIX.push(now + DEC + delai + dur); return true;
 }
 function limite(nom, s) { const t = performance.now(); if (t - (DERN[nom] || -1e9) < s * 1000) return false; DERN[nom] = t; return true; }
-function ton(type, f0, f1, dur, vol, delai = 0, filtre = 0) {
-  if (!pret() || !voix(delai, dur)) return; const t = AC.currentTime + Math.max(0, delai);
-  const o = AC.createOscillator(), g = AC.createGain(); o.type = type;
+const midi = n => 440 * Math.pow(2, (n - 69) / 12);
+
+// ---- batterie pré-calculée (une seule fois, quelques Ko) : grosse caisse, clap, charleston, caisse claire, timbale, tom, cymbale
+function creerTambours(ac) {
+  const sr = ac.sampleRate, T = {}, hasard = () => Math.random() * 2 - 1;
+  const svf = (d, fc, q, mode) => { // filtre d'état (Chamberlin) appliqué sur place
+    const f = 2 * Math.sin(Math.PI * Math.min(fc, sr / 6.5) / sr), amo = 1 / q; let lp = 0, bp = 0;
+    for (let i = 0; i < d.length; i++) { const hp = d[i] - lp - amo * bp; bp += f * hp; lp += f * bp; d[i] = mode === 'hp' ? hp : mode === 'bp' ? bp : lp; }
+  };
+  const buf = (dur, f) => { const b = ac.createBuffer(1, Math.ceil(sr * dur), sr), d = b.getChannelData(0); f(d); let m = 0; for (let i = 0; i < d.length; i++) m = Math.max(m, Math.abs(d[i])); if (m) for (let i = 0; i < d.length; i++) d[i] /= m; return b; };
+  const kick = (dur, f0, f1, kf, ka, sat) => buf(dur, d => { let ph = 0; for (let i = 0; i < d.length; i++) { const t = i / sr; ph += 2 * Math.PI * (f0 + f1 * Math.exp(-t * kf)) / sr; d[i] = Math.tanh(sat * Math.sin(ph) * Math.exp(-t * ka)) + (t < 0.004 ? hasard() * 0.3 * (1 - t / 0.004) : 0); } });
+  T.kick = kick(0.32, 50, 115, 32, 10, 1.6);     // house, ronde
+  T.boum = kick(0.55, 42, 150, 20, 6, 2.6);      // boss, plus lourde
+  T.clap = buf(0.3, d => { for (let i = 0; i < d.length; i++) { const t = i / sr; d[i] = hasard() * (t < 0.033 ? Math.exp(-(t % 0.011) * 320) : 0.75 * Math.exp(-(t - 0.033) * 17)); } svf(d, 1250, 1.4, 'bp'); });
+  T.hat = buf(0.05, d => { for (let i = 0; i < d.length; i++) d[i] = hasard() * Math.exp(-i / sr * 85); svf(d, 6500, 0.9, 'hp'); });
+  T.ohat = buf(0.32, d => { for (let i = 0; i < d.length; i++) d[i] = hasard() * Math.exp(-i / sr * 10); svf(d, 6000, 0.9, 'hp'); });
+  T.caisse = buf(0.28, d => { for (let i = 0; i < d.length; i++) d[i] = hasard() * Math.exp(-i / sr * 17); svf(d, 2600, 0.8, 'bp'); for (let i = 0; i < d.length; i++) { const t = i / sr; d[i] = d[i] * 2.2 + 0.7 * Math.sin(2 * Math.PI * 185 * t) * Math.exp(-t * 26); } });
+  T.timbale = buf(1.1, d => { let ph = 0; for (let i = 0; i < d.length; i++) { const t = i / sr; ph += 2 * Math.PI * (82 + 22 * Math.exp(-t * 6)) / sr; d[i] = (Math.sin(ph) + 0.35 * Math.sin(ph * 1.5) + 0.2 * Math.sin(ph * 2.02)) * Math.exp(-t * 3) + hasard() * 0.25 * Math.exp(-t * 40); } });
+  T.tom = buf(0.45, d => { let ph = 0; for (let i = 0; i < d.length; i++) { const t = i / sr; ph += 2 * Math.PI * (115 + 70 * Math.exp(-t * 12)) / sr; d[i] = Math.sin(ph) * Math.exp(-t * 8) + hasard() * 0.15 * Math.exp(-t * 50); } });
+  T.crash = buf(1.6, d => { for (let i = 0; i < d.length; i++) d[i] = hasard() * Math.exp(-i / sr * 2.6); svf(d, 4800, 0.7, 'hp'); });
+  return T;
+}
+function coup(dest, nom, t, vol, rate = 1) { // une frappe de batterie (tampon partagé : 2 nœuds seulement)
+  const s = AC.createBufferSource(), g = AC.createGain(); s.buffer = TAMB[nom]; s.playbackRate.value = rate; g.gain.value = vol;
+  s.connect(g); g.connect(dest); s.start(t);
+}
+
+// ---------------------------------------------------------------- Musique : 6 pistes générées (séquenceur à pas de double-croche)
+// Chaque piste : tempo, tonalité, grille d'accords (1 par mesure), motifs de batterie / basse / accords (chaînes de pas),
+// mélodies (degrés de la gamme : 0-9 a-z, A-G = degrés négatifs, '-' = tenue) et un arrangement (section selon la mesure).
+const GAMMES = { min: [0, 2, 3, 5, 7, 8, 10], maj: [0, 2, 4, 5, 7, 9, 11], harm: [0, 2, 3, 5, 7, 8, 11] };
+const INTERV = { r: 0, o: 12, 5: 7, b: 1, s: -1, t: 6, 7: 10, O: -12 };
+function arrHouse(intro) { // 16 mesures : intro (1er tour) / drop · couplet + hook · hook 2 · break · montée (roulement + souffle)
+  return (m, tour) => {
+    if (m < 4) return tour === 0 && intro ? { k: 1, c: m >= 2, h: 1, b: m >= 1, s: 1, f0: 450 + m * 700, f1: 1150 + m * 700 }
+      : { k: 1, c: 1, h: 1, oh: 1, b: 1, s: 1, l: 1, crash: m === 0, f0: 3600, f1: 3600 };
+    if (m < 8) return { k: 1, c: 1, h: 1, oh: 1, b: 1, s: 1, l: 0, f0: 2600, f1: 3400 };
+    if (m < 12) return { k: 1, c: 1, h: 1, oh: 1, b: 1, s: 1, l: 1, crash: m === 8, f0: 3400, f1: 3400 };
+    if (m < 14) return { oh: 1, s: 1, p: 1, l: 0, f0: 700, f1: 1500 };
+    return { k: m === 15, h: 1, s: 1, roll: m === 14 ? 1 : 2, souffle: m === 14, f0: 1200 + (m - 14) * 2000, f1: 3200 + (m - 14) * 2000 };
+  };
+}
+function arrBoss(niv) { // 8 mesures : ostinato (A) puis thème + chœur (B) ; plus le boss est haut placé, plus c'est chargé
+  return m => {
+    const B = m >= 4;
+    return { k: niv <= 2, tim: 1, sn: niv <= 2 || B, h: niv <= 2 || B, b: 1, s: 1, l: B ? 0 : null, p: niv === 1 || B, crash: niv <= 2 && m % 4 === 0, roll: m === 7 ? (niv === 1 ? 2 : 1) : 0, toms: m === 3 || m === 7, f0: B ? 3600 : 2400, f1: B ? 3600 : 2800 };
+  };
+}
+function arrValse(m) { // la crypte : valse de vampire 3/4 (clavecin + orgue), 16 mesures
+  if (m < 8) return { b: 1, s: 1, l: 0, cloche: m % 4 === 0, f0: 5000, f1: 5000 };
+  return { b: 1, p: 1, l: 1, tim: 1, cloche: m % 4 === 0, f0: 3000, f1: 4500 };
+}
+const PISTES = {
+  base: { // table de base : house légère et entraînante (la mineur : Am F C G)
+    bpm: 122, pb: 16, racine: 57, gamme: 'min', cycle: 16, section: arrHouse(true), pompe: 1,
+    accords: [[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5]],
+    kick: 'x...x...x...x...', clap: '....x.......x...', hat: '.x.x.x.x.x.x.x.x', ohat: '..x...x...x...x.',
+    basse: 'r..o..r.r..o..r.', basseSon: 'house', stab: '..x..x....x..x..', stabSon: 'piano', padSon: 'nappe',
+    leads: ['7.7.6.4...4.6.4.2...3.4...2.0...', '9.9.7.9...a.9.7.6...7.4...4.2...'], leadSon: 'pluck'
+  },
+  multi: { // multiballe : plus rapide, plus brillant (do majeur : C G Am F)
+    bpm: 128, pb: 16, racine: 60, gamme: 'maj', cycle: 16, section: arrHouse(false), pompe: 1,
+    accords: [[0, 4, 7], [-5, -1, 2], [-3, 0, 4], [-7, -3, 0]],
+    kick: 'x...x...x...x...', clap: '....x.......x..x', hat: 'xxxxxxxxxxxxxxxx', ohat: '..x...x...x...x.',
+    basse: '.ro..ro..ro..ro.', basseSon: 'house', stab: 'x..x..x...x..x..', stabSon: 'saw', stabOct: 12, padSon: 'nappe',
+    leads: ['4.4.5.7...7.5.4.2.2.4.2.1.0.....', 'arp'], leadSon: 'pluck', arpOct: 12
+  },
+  crypte: { // la crypte : valse de vampire en ré mineur harmonique (clavecin, orgue, cloches)
+    bpm: 150, pb: 12, racine: 50, gamme: 'harm', cycle: 16, section: arrValse,
+    accords: [[0, 3, 7], [5, 8, 12], [-5, -1, 2], [0, 3, 7], [-4, 0, 3], [5, 8, 12], [-5, -1, 2], [-5, -1, 2, 5]],
+    timbale: 'x...........', basse: 'r...........', basseSon: 'pedale', basseLong: 10, stab: '....x...x...', stabSon: 'clavecin', stabOct: 12, padSon: 'orgue', padOct: 12,
+    leads: ['9-----8-9-b-a-----9-8-7-8-----6-4-6-7-----------5-----7-9-c-a-----9-a-c-b-----a-9-8-6---8---b---', 'arp'], leadSon: 'clavecin', arpOct: 12
+  },
+  boss3: { // boss n°3 : château gothique, menaçant mais retenu (mi mineur : Em C Am B)
+    bpm: 132, pb: 16, racine: 52, gamme: 'harm', cycle: 8, section: arrBoss(3),
+    accords: [[0, 3, 7], [-4, 0, 3], [5, 8, 12], [-5, -1, 2]],
+    timbale: 'x.......x.......', caisse: '....x.......x.x.', hat: 'x.x.x.x.x.x.x.x.', basse: 'r.r.r.b.r.r.r.s.', basseSon: 'boss',
+    stab: 'x.....x.....x...', stabSon: 'orgue', padSon: 'choeur',
+    leads: ['7---4---2---4---5---4---2---0---3---2---0---3---6-------4-------'], leadSon: 'cuivre'
+  },
+  boss2: { // boss n°2 : plus rapide, grosse caisse lourde, accord diminué (sol mineur)
+    bpm: 140, pb: 16, racine: 55, gamme: 'harm', cycle: 8, section: arrBoss(2),
+    accords: [[0, 3, 7], [-4, 0, 3], [5, 8, 12], [-5, -1, 2], [0, 3, 7], [-4, 0, 3], [-1, 2, 5, 8], [-5, -1, 2]],
+    kick: 'x...x...x...x...', kickSon: 'boum', timbale: 'x...............', caisse: '....x.......x...', hat: 'xxxxxxxxxxxxxxxx',
+    basse: 'r.rbr.rbr.rbr.r5', basseSon: 'boss', stab: 'x..x..x.x..x..x.', stabSon: 'orgue', padSon: 'choeur',
+    leads: ['4-4-2-4-7---4---5-5-2-5-9---5---3-3-5-3-7---3---6-------8---6---'], leadSon: 'orgue'
+  },
+  boss1: { // boss n°1 : épique (do mineur, sixte napolitaine), chœur permanent, cuivres + cloches
+    bpm: 148, pb: 16, racine: 48, gamme: 'harm', cycle: 8, section: arrBoss(1),
+    accords: [[0, 3, 7], [-4, 0, 3], [5, 8, 12], [-5, -1, 2], [0, 3, 7], [-4, 0, 3], [1, 5, 8], [-5, -1, 2, 5]],
+    kick: 'x...x...x...x.x.', kickSon: 'boum', timbale: 'x.......x.......', caisse: '....x.......x...', hat: 'x.xxx.xxx.xxx.xx',
+    basse: 'r.ror.ror.ror5rs', basseSon: 'boss', stab: 'x..x..x...x..x..', stabSon: 'orgue', stabOct: 12, padSon: 'choeur', padOct: 12,
+    leads: ['0---0-2-3---2-0-5-------4-3-2---3---2---0---5---6-------4-------'], leadSon: 'cuivre', leadOct: 12, double: 'cloche'
+  }
+};
+const MUS = { decks: [], nom: null, id: 0, duckFin: 0, duckNiv: 1 };
+function nouveauDeck(nom, t) { // une « platine » : la piste + sa petite chaîne d'effets (créée une fois par changement de piste)
+  const P = PISTES[nom], g = v => { const n = AC.createGain(); n.gain.value = v; return n; }, f = (type, fr, q) => { const n = AC.createBiquadFilter(); n.type = type; n.frequency.value = fr; n.Q.value = q; return n; };
+  const d = { nom, P, pas: 0, next: t + 0.06, dt: 60 / P.bpm / 4, fin: 0, sec: null };
+  d.sortie = g(0); d.sortie.connect(MUSF); d.sortie.gain.setValueAtTime(0, t); d.sortie.gain.setTargetAtTime(1, t, 0.2);
+  d.batt = g(1); d.batt.connect(d.sortie);
+  d.pompe = g(1); d.pompe.connect(d.sortie);            // « sidechain » : la basse et les accords respirent avec la grosse caisse
+  d.filtre = f('lowpass', 3000, 1.6); d.filtre.connect(d.pompe);
+  d.basseF = f('lowpass', P.basseSon === 'boss' ? 1100 : 700, 3); d.basseF.connect(d.pompe);
+  d.envoi = g(0.22); const dl = AC.createDelay(1), fb = g(0.3), lp = f('lowpass', 2600, 0.7); dl.delayTime.value = d.dt * 3; // écho à la croche pointée
+  d.envoi.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(d.sortie);
+  if (P.padSon === 'choeur') { d.choeur = g(1); [[650, 4], [1100, 5], [2500, 6]].forEach(([fr, q], i) => { const b = f('bandpass', fr, q), gg = g([1.6, 1.1, 0.5][i]); d.choeur.connect(b); b.connect(gg); gg.connect(d.pompe); }); }
+  return d;
+}
+function degre(P, k, oct = 0) { const G = GAMMES[P.gamme], o = Math.floor(k / 7); return P.racine + 12 + (P.leadOct || 0) + oct + G[((k % 7) + 7) % 7] + 12 * o; }
+function lireDegre(c) { const x = c.charCodeAt(0); return x >= 48 && x <= 57 ? x - 48 : x >= 97 ? x - 87 : x - 72; }
+function jouerPasMus(d, n, t) {
+  const P = d.P, pb = P.pb, s = n % pb, m = Math.floor(n / pb), mc = m % P.cycle, acc = P.accords[m % P.accords.length], dt = d.dt;
+  if (!d.sec || s === 0) {
+    d.sec = P.section(mc, Math.floor(m / P.cycle)); const S = d.sec;
+    if (s === 0) {
+      d.filtre.frequency.setValueAtTime(S.f0, t); d.filtre.frequency.exponentialRampToValueAtTime(S.f1, t + pb * dt);
+      if (S.crash) coup(d.batt, 'crash', t, 0.22);
+      if (S.p) for (const x of acc) note(d, P.padSon, P.racine + x + (P.padOct || 0), t, pb * dt, P.padSon === 'orgue' ? 0.035 : 0.05);
+      if (S.cloche) note(d, 'cloche', P.racine + 24 + acc[0], t, 2.6, 0.07);
+      if (S.souffle) souffle(d, t, 2 * pb * dt);
+    }
+  }
+  const S = d.sec, x = (motif, v) => motif && motif[s] === v;
+  if (S.k && x(P.kick, 'x')) { coup(d.batt, P.kickSon || 'kick', t, P.kickSon ? 0.75 : 0.85); if (P.pompe) { const g = d.pompe.gain; g.cancelScheduledValues(t); g.setValueAtTime(0.4, t); g.setTargetAtTime(1, t + 0.015, 0.07); } }
+  if (S.c && x(P.clap, 'x')) coup(d.batt, 'clap', t, 0.32);
+  if (S.h && x(P.hat, 'x')) coup(d.batt, 'hat', t, s % 4 === 2 ? 0.13 : 0.08);
+  if ((S.oh || S.h) && x(P.ohat, 'x')) coup(d.batt, 'ohat', t, S.oh ? 0.11 : 0.06);
+  if (S.sn && x(P.caisse, 'x')) coup(d.batt, 'caisse', t, 0.28);
+  if (S.tim && x(P.timbale, 'x')) coup(d.batt, 'timbale', t, 0.55, s ? 1.12 : 1);
+  if (S.toms && s >= 8 && s % 2 === 0) coup(d.batt, 'tom', t, 0.32, 1.5 - (s - 8) * 0.06);
+  if (S.roll && (S.roll === 2 || s % 2 === 0)) coup(d.batt, 'caisse', t, 0.05 + 0.2 * s / pb);
+  if (S.b && P.basse[s] !== '.') {
+    let r = acc[0] % 12; if (r > 6) r -= 12; if (r < -6) r += 12;
+    let k = 1; while (k < 4 && P.basse[(s + k) % pb] === '.') k++;
+    note(d, P.basseSon, P.racine - 12 + r + INTERV[P.basse[s]], t, (P.basseLong || k) * dt * 0.9, 0.3);
+  }
+  if (S.s && x(P.stab, 'x')) for (const y of acc) note(d, P.stabSon, P.racine + y + (P.stabOct || 0), t, dt * 2.5, P.stabSon === 'orgue' ? 0.05 : 0.07);
+  if (S.l != null && P.leads[S.l]) {
+    const L = P.leads[S.l];
+    if (L === 'arp') { // arpège sur l'accord (monte puis redescend)
+      const tons = acc.slice(0, 3).concat([acc[0] + 12]), i = s % 6, j = i < 4 ? i : 6 - i;
+      note(d, P.leadSon, P.racine + tons[j] + (P.arpOct || 0) + (s >= pb / 2 && pb === 16 ? 12 : 0), t, dt * 1.6, 0.075);
+    } else {
+      const i = (m * pb + s) % L.length, c = L[i];
+      if (c !== '.' && c !== '-') {
+        let k = 1; while (k < 16 && L[(i + k) % L.length] === '-') k++;
+        const mm = degre(P, lireDegre(c)); note(d, P.leadSon, mm, t, k * dt, 0.1);
+        if (P.double) note(d, P.double, mm + 12, t, 1.2, 0.035);
+      }
+    }
+  }
+}
+function souffle(d, t, dur) { // montée de bruit blanc (avant le drop)
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = BRUIT; s.loop = true;
+  f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(8000, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + dur * 0.97); g.gain.linearRampToValueAtTime(0, t + dur);
+  s.connect(f); f.connect(g); g.connect(d.sortie); s.start(t); s.stop(t + dur + 0.05);
+}
+function note(d, son, m, t, dur, vol) { // les instruments de la musique (oscillateurs éphémères, filtres partagés de la platine)
+  const f = midi(m), A = AC, osc = (type, fr, dest, det) => { const o = A.createOscillator(); if (type === 'orgue') o.setPeriodicWave(ORGUE_W); else o.type = type; o.frequency.value = fr; if (det) o.detune.value = det; o.connect(dest); o.start(t); o.stop(t + dur + 0.6); return o; };
+  const env = (v, att, fin, dest, tenue) => { const g = A.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + att); if (tenue) g.gain.setValueAtTime(v, t + Math.max(att, dur - 0.05)); g.gain.exponentialRampToValueAtTime(0.0001, t + fin); g.connect(dest); return g; };
+  if (son === 'piano') { const g = env(vol, 0.004, Math.min(0.45, dur + 0.2), d.filtre); osc('triangle', f, g); const g2 = env(vol * 0.35, 0.004, 0.18, d.filtre); osc('sawtooth', f * 2, g2); g.connect(d.envoi); }
+  else if (son === 'saw') { const g = env(vol * 0.8, 0.004, Math.min(0.3, dur + 0.1), d.filtre); osc('sawtooth', f, g, -9); osc('sawtooth', f, g, 9); g.connect(d.envoi); }
+  else if (son === 'nappe') { const g = env(vol * 0.5, 0.35, dur + 0.4, d.filtre, true); osc('sawtooth', f, g, -12); osc('sawtooth', f, g, 12); }
+  else if (son === 'pluck') { const g = env(vol, 0.003, 0.4, d.filtre); osc('sine', f, g); const g2 = env(vol * 0.45, 0.002, 0.07, d.filtre); osc('sine', f * 4, g2); const g3 = env(vol * 0.18, 0.003, 0.2, d.filtre); osc('sawtooth', f, g3); g.connect(d.envoi); }
+  else if (son === 'clavecin') { const g = env(vol * 0.7, 0.001, 0.5, d.filtre); osc('sawtooth', f, g); const g2 = env(vol * 0.3, 0.001, 0.25, d.filtre); osc('square', f * 2, g2); g.connect(d.envoi); }
+  else if (son === 'orgue') { const g = env(vol, 0.015, dur + 0.08, d.filtre, true); osc('orgue', f, g); osc('orgue', f * 2, g, 5); }
+  else if (son === 'choeur') { const g = env(vol * 0.9, 0.3, dur + 0.45, d.choeur || d.filtre, true); osc('sawtooth', f, g, -14); osc('sawtooth', f, g, 13); }
+  else if (son === 'cuivre') {
+    const lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 2; lp.frequency.setValueAtTime(f * 1.2, t); lp.frequency.exponentialRampToValueAtTime(f * 6, t + 0.06); lp.frequency.exponentialRampToValueAtTime(f * 2.5, t + 0.35);
+    const g = env(vol, 0.025, dur + 0.12, d.sortie, true); lp.connect(g); g.connect(d.envoi); osc('sawtooth', f, lp, -7); osc('sawtooth', f, lp, 7);
+  } else if (son === 'cloche') { // cloche FM (rapport inharmonique)
+    const g = env(vol, 0.002, dur, d.sortie), mo = A.createOscillator(), mg = A.createGain(); mo.frequency.value = f * 3.5;
+    mg.gain.setValueAtTime(f * 2.2, t); mg.gain.exponentialRampToValueAtTime(f * 0.05, t + dur); mo.connect(mg); const c = osc('sine', f, g); mg.connect(c.frequency); mo.start(t); mo.stop(t + dur + 0.6); g.connect(d.envoi);
+  } else if (son === 'house') { const g = env(vol, 0.004, Math.min(dur + 0.04, 0.3), d.basseF); osc('sawtooth', f, g); const g2 = env(vol * 0.9, 0.004, Math.min(dur + 0.04, 0.3), d.pompe); osc('sine', f, g2); }
+  else if (son === 'boss') { const g = env(vol, 0.003, dur + 0.03, d.basseF, true); osc('sawtooth', f, g); osc('square', f / 2, g); }
+  else { const g = env(vol, 0.01, dur + 0.1, d.basseF, true); osc('orgue', f, g); osc('sine', f / 2, g); } // basse d'orgue (pédalier)
+}
+function pisteVoulue() { // quelle musique pour l'écran actuel ?
+  if (etat !== 'jeu') return null;
+  if (combat) return combat.phase === 'alerte' || combat.phase === 'elimine' ? null : 'boss' + combat.rang;
+  if (bascule && bascule.vers) return bascule.vers === 'goth' ? 'crypte' : 'base';
+  if (table === 'goth') return 'crypte';
+  if (multiball || spectacleT > 0) return 'multi';
+  return 'base';
+}
+function changerPiste(nom) { // fondu enchaîné + balayage du filtre
+  if (nom === MUS.nom) return; MUS.nom = nom;
+  if (!AC || !MUSF) return; const t = AC.currentTime + DEC;
+  for (const d of MUS.decks) if (!d.fin) { d.fin = t + 1.2; d.sortie.gain.cancelScheduledValues(t); d.sortie.gain.setTargetAtTime(0, t, nom ? 0.3 : 0.15); }
+  if (nom && PISTES[nom]) {
+    MUS.decks.push(nouveauDeck(nom, t));
+    MUSF.frequency.cancelScheduledValues(t); MUSF.frequency.setValueAtTime(900, t); MUSF.frequency.exponentialRampToValueAtTime(18000, t + 1.5);
+    if (!MUS.id && !horsLigne) MUS.id = setInterval(majMusique, 50); // secours si l'affichage ralentit (le rAF appelle aussi majMusique)
+  }
+}
+function musPlanifier(horizon) { // planifie à l'avance (horizon en temps AudioContext) ; un retard (onglet ralenti) est sauté, pas rattrapé
+  const now = AC.currentTime + DEC;
+  for (const d of MUS.decks) {
+    if (d.next < now - 0.04) { const k = Math.ceil((now + 0.03 - d.next) / d.dt); d.next += k * d.dt; d.pas += k; d.sec = null; }
+    while (d.next < horizon && (!d.fin || d.next < d.fin)) { jouerPasMus(d, d.pas, d.next); d.next += d.dt; d.pas++; }
+  }
+  for (let i = MUS.decks.length - 1; i >= 0; i--) { const d = MUS.decks[i]; if (d.fin && now > d.fin + 0.3) { try { d.sortie.disconnect(); } catch (e) {} MUS.decks.splice(i, 1); } }
+  if (!MUS.decks.length && MUS.id) { clearInterval(MUS.id); MUS.id = 0; }
+}
+function tempsMusique() { // nombre de temps écoulés dans la piste en cours (lumières de la boîte de nuit calées sur la grosse caisse)
+  const d = MUS.decks.find(x => !x.fin);
+  if (!d || !AC) return temps * PISTES.multi.bpm / 60;
+  return Math.max(0, (AC.currentTime - (d.next - d.pas * d.dt)) / (4 * d.dt));
+}
+function majMusique() {
+  if (!AC || horsLigne) return;
+  changerPiste(musiqueOn && pret() ? pisteVoulue() : null);
+  if (MUS.decks.length && AC.state === 'running') musPlanifier(AC.currentTime + 0.3);
+}
+function musDuck(niv, dur) { // la musique s'efface sous les grosses annonces (un duck plus profond en cours reste prioritaire)
+  if (!MUSDUCK || !AC) return; const t = AC.currentTime + DEC, g = MUSDUCK.gain;
+  if (t < MUS.duckFin && niv >= MUS.duckNiv) return; MUS.duckFin = t + dur; MUS.duckNiv = niv;
+  g.cancelScheduledValues(t); g.setTargetAtTime(niv, t, 0.03); g.setTargetAtTime(1, t + dur, 0.35);
+}
+function musCouper() { // « coupure de courant » : le filtre plonge, la musique s'éteint (élimination)
+  if (!MUSF || !AC) return; const t = AC.currentTime + DEC;
+  MUSF.frequency.cancelScheduledValues(t); MUSF.frequency.setValueAtTime(6000, t); MUSF.frequency.exponentialRampToValueAtTime(120, t + 0.7);
+  for (const d of MUS.decks) { d.fin = d.fin || t + 0.8; d.sortie.gain.cancelScheduledValues(t); d.sortie.gain.setTargetAtTime(0, t + 0.3, 0.15); }
+  MUS.nom = null;
+}
+
+// ---------------------------------------------------------------- Bruitages
+function t0(delai) { return AC.currentTime + DEC + Math.max(0, delai || 0); }
+function gEnv(t, vol, att, dur) { const g = AC.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + att); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); return g; }
+function sortieSfx(g, echo) { g.connect(SFX); if (echo) g.connect(ECHO); }
+function ton(type, f0, f1, dur, vol, delai = 0, filtre = 0, echo = false, att = 0.003) {
+  if (!pret() || !voix(delai, dur)) return; const t = t0(delai);
+  const o = AC.createOscillator(), g = gEnv(t, vol, att, dur); o.type = type;
   o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
-  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   let n = o; if (filtre) { const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = filtre; o.connect(f); n = f; }
-  n.connect(g); g.connect(MASTER); o.start(t); o.stop(t + dur + 0.02);
+  n.connect(g); sortieSfx(g, echo); o.start(t); o.stop(t + dur + 0.02);
 }
-function bruit(dur, vol, freq, q = 1, delai = 0, f1 = 0, type = 'bandpass') {
-  if (!pret() || !voix(delai, dur)) return; const t = AC.currentTime + Math.max(0, delai);
-  const s = AC.createBufferSource(); s.buffer = BRUIT; s.loop = dur > 0.5; const f = AC.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
+function bruit(dur, vol, freq, q = 1, delai = 0, f1 = 0, type = 'bandpass', att = 0.002) {
+  if (!pret() || !voix(delai, dur)) return; const t = t0(delai);
+  const s = AC.createBufferSource(); s.buffer = BRUIT; s.loop = true; const f = AC.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
   if (f1) f.frequency.exponentialRampToValueAtTime(f1, t + dur);
-  const g = AC.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s.connect(f); f.connect(g); g.connect(MASTER); s.start(t, Math.random() * 0.1); s.stop(t + dur + 0.02);
+  const g = gEnv(t, vol, att, dur); s.connect(f); f.connect(g); g.connect(SFX); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
 }
-// petits outils « arcade » : bips carrés, arpèges 8 bits, balayages de fréquence, explosions de bruit
-function bip(f, dur, vol, delai = 0, type = 'square', filtre = 0) { ton(type, f, f, dur, vol, delai, filtre); }
-function arp(fs, pas, dur, vol, delai = 0, type = 'square') { fs.forEach((f, i) => bip(f, dur, vol, delai + i * pas, type, 5000)); }
-function zap(f0, f1, dur, vol, delai = 0, type = 'sawtooth') { ton(type, f0, f1, dur, vol, delai, 4500); }
-function boum(dur, vol, delai = 0) { bruit(dur, vol, 3500, 0.7, delai, 80, 'lowpass'); ton('square', 120, 30, dur * 0.8, vol * 0.5, delai, 900); }
-// timbres sombres pour la crypte : nappe tenue (orgue), cloches (partiels inharmoniques)
-function nappe(type, f, dur, vol, delai = 0, filtre = 0) {
-  if (!pret() || !voix(delai, dur)) return; const t = AC.currentTime + Math.max(0, delai);
-  const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; o.detune.value = rnd(-7, 7);
-  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.05); g.gain.setValueAtTime(vol, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  let n = o; if (filtre) { const fl = AC.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = filtre; o.connect(fl); n = fl; }
-  n.connect(g); g.connect(MASTER); o.start(t); o.stop(t + dur + 0.02);
+function whoosh(dur, vol, f0, f1, delai = 0) { bruit(dur, vol, f0, 1.4, delai, f1, 'bandpass', dur * 0.5); }
+function pluck(f, dur, vol, delai = 0, clair = 1) { // pluck de synthé (scie + carré désaccordés, filtre qui se referme)
+  if (!pret() || !voix(delai, dur)) return; const t = t0(delai);
+  const a = AC.createOscillator(), b = AC.createOscillator(), lp = AC.createBiquadFilter(), g = gEnv(t, vol, 0.002, dur);
+  a.type = 'sawtooth'; b.type = 'square'; a.frequency.value = f; b.frequency.value = f; b.detune.value = 10;
+  lp.type = 'lowpass'; lp.Q.value = 3; lp.frequency.setValueAtTime(Math.min(15000, f * 9 * clair), t); lp.frequency.exponentialRampToValueAtTime(f * 1.3, t + dur * 0.7);
+  a.connect(lp); b.connect(lp); lp.connect(g); sortieSfx(g, true); a.start(t); b.start(t); a.stop(t + dur + 0.02); b.stop(t + dur + 0.02);
 }
-function orgue(notes, dur, vol, delai = 0) { notes.forEach(m => { const f = midi(m); nappe('sawtooth', f, dur, vol, delai, 1500); nappe('square', f * 2, dur, vol * 0.35, delai, 2600); }); nappe('sine', midi(notes[0]) / 2, dur, vol * 1.6, delai); }
-function cloche(f, dur, vol, delai = 0) { ton('sine', f, f, dur, vol, delai); ton('sine', f * 2.76, f * 2.76, dur * 0.45, vol * 0.4, delai); ton('sine', f * 5.4, f * 5.4, dur * 0.2, vol * 0.25, delai); ton('triangle', f / 2, f / 2, dur, vol * 0.5, delai); }
-// ressort du lanceur : bip carré continu qui monte avec la jauge
+function pop(f, vol, delai = 0) { ton('sine', f * 0.6, f * 1.6, 0.085, vol, delai, 0, false, 0.002); ton('triangle', f * 2, f * 3.2, 0.03, vol * 0.25, delai); } // bulle qui éclate
+function piece(f, vol, delai = 0) { ton('triangle', f, f, 0.06, vol, delai); ton('triangle', f * 1.335, f * 1.335, 0.25, vol, delai + 0.06, 0, true); ton('sine', f * 2.67, f * 2.67, 0.15, vol * 0.3, delai + 0.06); }
+function etoiles(n, vol, delai = 0, d0 = 5, pas = 0.035) { for (let i = 0; i < n; i++) ton('sine', P(d0 + i, 1), P(d0 + i, 1), 0.14, vol, delai + i * pas, 0, true, 0.002); } // paillettes qui montent
+function cogne(f, vol, delai = 0) { ton('sine', f * 2.2, f, 0.16, vol, delai, 0, false, 0.002); } // « thump » sourd
+function drop(vol, delai = 0, f0 = 150, dur = 0.8) { // bass drop : grosse chute de sinus + impact
+  ton('sine', f0, 34, dur, vol, delai, 0, false, 0.004); ton('triangle', f0 * 2, 60, dur * 0.4, vol * 0.4, delai); echantillon('boum', vol * 0.7, delai); bruit(0.3, vol * 0.35, 900, 0.7, delai, 120, 'lowpass');
+}
+function riser(dur, vol, delai = 0) { // montée (souffle + scie qui grimpe), coupée net à la fin
+  if (!pret() || !voix(delai, dur)) return; const t = t0(delai);
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); s.buffer = BRUIT; s.loop = true;
+  f.type = 'bandpass'; f.Q.value = 1.6; f.frequency.setValueAtTime(350, t); f.frequency.exponentialRampToValueAtTime(7500, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.96); g.gain.linearRampToValueAtTime(0, t + dur);
+  s.connect(f); f.connect(g); g.connect(SFX); s.start(t); s.stop(t + dur + 0.02);
+  ton('sawtooth', 160, 1300, dur, vol * 0.25, delai, 2200, false, dur * 0.9);
+}
+function echantillon(nom, vol, delai = 0, rate = 1) { if (!pret() || !TAMB || !voix(delai, 0.3)) return; coup(SFX, nom, t0(delai), vol, rate); }
+function foule(vol, delai = 0, dur = 0.55, F1 = [350, 760], F2 = [2300, 1750], n = 3) { // « YEAH ! » de foule : bruit filtré par 2 formants qui glissent
+  if (!pret() || !voix(delai, dur)) return;
+  for (let k = 0; k < n; k++) {
+    const t = t0(delai + k * 0.025), s = AC.createBufferSource(), g = gEnv(t, vol / n * 1.6, dur * 0.25, dur), r = 1 + (k - 1) * 0.07; s.buffer = BRUIT; s.loop = true;
+    [[F1, 5, 1], [F2, 7, 0.6]].forEach(([F, q, v]) => { const b = AC.createBiquadFilter(), gg = AC.createGain(); b.type = 'bandpass'; b.Q.value = q; b.frequency.setValueAtTime(F[0] * r, t); b.frequency.exponentialRampToValueAtTime(F[1] * r, t + dur * 0.6); gg.gain.value = v * 2.5; s.connect(b); b.connect(gg); gg.connect(g); });
+    g.connect(SFX); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
+  }
+}
+function hey(vol, delai = 0) { foule(vol, delai, 0.2, [550, 650], [1900, 2000], 2); }
+function ooh(vol, delai = 0) { foule(vol, delai, 0.8, [420, 300], [950, 700], 3); } // « oooh… » déçu
+function syllabe(f0, f1, dur, vol, delai, F1, F2) { // voix de dessin animé (scie + 2 formants) : rires, grognements, « aïe »
+  if (!pret() || !voix(delai, dur)) return; const t = t0(delai);
+  const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.015); g.gain.setValueAtTime(vol, t + dur * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  [[F1, 6, 1], [F2, 9, 0.5]].forEach(([F, q, v]) => { const b = AC.createBiquadFilter(), gg = AC.createGain(); b.type = 'bandpass'; b.frequency.value = F; b.Q.value = q; gg.gain.value = v * 3; o.connect(b); b.connect(gg); gg.connect(g); });
+  g.connect(SFX); o.start(t); o.stop(t + dur + 0.02);
+}
+function cloche(f, dur, vol, delai = 0) { // cloche FM
+  if (!pret() || !voix(delai, dur)) return; const t = t0(delai);
+  const c = AC.createOscillator(), mo = AC.createOscillator(), mg = AC.createGain(), g = gEnv(t, vol, 0.002, dur);
+  c.frequency.value = f; mo.frequency.value = f * 3.5; mg.gain.setValueAtTime(f * 2.5, t); mg.gain.exponentialRampToValueAtTime(f * 0.05, t + dur);
+  mo.connect(mg); mg.connect(c.frequency); c.connect(g); sortieSfx(g, true); c.start(t); mo.start(t); c.stop(t + dur + 0.02); mo.stop(t + dur + 0.02);
+}
+function corne(vol, delai = 0, rythme = [0, 0.16, 0.32], durs = [0.12, 0.12, 0.55]) { // corne de stade (« airhorn »)
+  rythme.forEach((x, i) => { const f = P(2, -1); ton('sawtooth', f * 0.92, f, durs[i], vol, delai + x, 2800, false, 0.01); ton('sawtooth', f * 1.5 * 0.92, f * 1.5, durs[i], vol * 0.7, delai + x, 2800, false, 0.01); ton('sawtooth', f * 1.005, f * 1.005, durs[i], vol * 0.6, delai + x, 2000, false, 0.01); });
+}
+function accordSfx(degs, dur, vol, delai = 0) { degs.forEach(k => pluck(P(k), dur, vol, delai, 1.4)); }
+function orgueSfx(notes, dur, vol, delai = 0) { // accord d'orgue (timbre à tirettes)
+  if (!pret() || !voix(delai, dur)) return; const t = t0(delai), g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.03); g.gain.setValueAtTime(vol, t + dur * 0.75); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); sortieSfx(g, true);
+  notes.forEach(m => { const o = AC.createOscillator(); o.setPeriodicWave(ORGUE_W); o.frequency.value = midi(m); o.connect(g); o.start(t); o.stop(t + dur + 0.02); });
+}
+function P(i, oct = 0) { // note de la gamme pentatonique de la musique en cours : tous les bruitages sonnent « juste »
+  const p = PISTES[MUS.nom] || PISTES[pisteVoulueSure()] || PISTES.base, G = p.gamme === 'maj' ? [0, 2, 4, 7, 9] : [0, 3, 5, 7, 10], o = Math.floor(i / 5);
+  return midi(60 + (p.racine % 12) + G[((i % 5) + 5) % 5] + 12 * (o + oct));
+}
+function pisteVoulueSure() { try { return pisteVoulue(); } catch (e) { return 'base'; } }
+let grimpeN = 0, grimpeT = -9; // les bumpers enchaînés montent la gamme (1,5 s sans touche : on repart d'en bas)
+function grimpe() { const t = performance.now(); if (t - grimpeT > 1500) grimpeN = 0; grimpeT = t; return grimpeN++ % 11; }
+// ressort du lanceur : note douce qui monte avec la jauge (+ trémolo qui s'accélère)
 let chargeOsc = null;
 function demarrerCharge() {
   if (!pret() || chargeOsc) return;
   try {
-    const t = AC.currentTime, o = AC.createOscillator(), o2 = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain();
-    o.type = 'square'; o2.type = 'square'; o.frequency.value = 110; o2.frequency.value = 16; f.type = 'lowpass'; f.frequency.value = 1800; f.Q.value = 2;
-    const g2 = AC.createGain(); g2.gain.value = 0.04; o2.connect(g2); g2.connect(g.gain); // hachage 8 bits
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.02);
-    o.connect(f); f.connect(g); g.connect(MASTER); o.start(t); o2.start(t); chargeOsc = { o, o2, f, g };
+    const t = AC.currentTime, o = AC.createOscillator(), o2 = AC.createOscillator(), f = AC.createBiquadFilter(), g = AC.createGain(), lfo = AC.createOscillator(), lg = AC.createGain();
+    o.type = 'triangle'; o2.type = 'sine'; o.frequency.value = 180; o2.frequency.value = 360; f.type = 'lowpass'; f.frequency.value = 2400; f.Q.value = 1;
+    lfo.frequency.value = 8; lg.gain.value = 0.018; lfo.connect(lg); lg.connect(g.gain);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.045, t + 0.04);
+    o.connect(f); o2.connect(f); f.connect(g); g.connect(SFX); o.start(t); o2.start(t); lfo.start(t); chargeOsc = { o, o2, lfo, g };
   } catch (e) { chargeOsc = null; }
 }
-function majCharge(p) { if (chargeOsc && AC) { const t = AC.currentTime; chargeOsc.o.frequency.setTargetAtTime(110 + 770 * p, t, 0.01); chargeOsc.o2.frequency.setTargetAtTime(16 + 34 * p, t, 0.03); } }
+function majCharge(p) { if (chargeOsc && AC) { const t = AC.currentTime; chargeOsc.o.frequency.setTargetAtTime(180 + 620 * p, t, 0.02); chargeOsc.o2.frequency.setTargetAtTime(2 * (180 + 620 * p), t, 0.02); chargeOsc.lfo.frequency.setTargetAtTime(8 + 22 * p, t, 0.05); } }
 function arreterCharge() {
-  if (!chargeOsc) return; const { o, o2, g } = chargeOsc; chargeOsc = null;
-  try { const t = AC.currentTime; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0.0001, t, 0.01); o.stop(t + 0.08); o2.stop(t + 0.08); } catch (e) {}
-}
-// beat de boîte de nuit pendant la multiballe (planifié à l'avance, 124 BPM), timbres 8 bits
-const BPM = 124, DOUBLE = 60 / BPM / 4, BEAT = { on: false, id: 0, next: 0, pas: 0 };
-const BASSE = [45, 0, 45, 57, 0, 45, 0, 45, 48, 0, 48, 60, 0, 48, 0, 50, 43, 0, 43, 55, 0, 43, 0, 43, 40, 0, 40, 52, 0, 43, 0, 47];
-const midi = n => 440 * Math.pow(2, (n - 69) / 12);
-function demarrerBeat() {
-  if (BEAT.on) return; BEAT.on = true; BEAT.pas = 0; BEAT.next = AC ? AC.currentTime + 0.08 : 0;
-  BEAT.id = setInterval(planifierBeat, 40);
-}
-function arreterBeat() { BEAT.on = false; if (BEAT.id) clearInterval(BEAT.id); BEAT.id = 0; }
-function planifierBeat() {
-  if (!pret()) { if (AC) BEAT.next = AC.currentTime + 0.08; return; }
-  if (BEAT.next < AC.currentTime) BEAT.next = AC.currentTime + 0.02;
-  while (BEAT.next < AC.currentTime + 0.16) { jouerPas(BEAT.pas, BEAT.next - AC.currentTime); BEAT.next += DOUBLE; BEAT.pas = (BEAT.pas + 1) % 32; }
-}
-function jouerPas(p, d) {
-  if (p % 4 === 0) { ton('square', 150, 40, 0.14, 0.3, d, 700); bruit(0.012, 0.22, 3000, 1, d); }   // grosse caisse 8 bits
-  if (p % 8 === 4) bruit(0.09, 0.26, 2200, 0.8, d);                                                 // caisse claire (bruit)
-  if (p % 2 === 1) bruit(0.02, 0.08, 9000, 1, d, 0, 'highpass');                                   // charleston
-  const n = BASSE[p]; if (n) ton('square', midi(n), midi(n), 0.12, 0.09, d, 900);                    // basse carrée
-  if (p % 8 === 2 || p % 8 === 6) { const m = [69, 72, 76, 81][(p >> 1) % 4]; bip(midi(m), 0.05, 0.03, d, 'square', 5000); } // arpège
+  if (!chargeOsc) return; const { o, o2, lfo, g } = chargeOsc; chargeOsc = null;
+  try { const t = AC.currentTime; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0.0001, t, 0.01); o.stop(t + 0.08); o2.stop(t + 0.08); lfo.stop(t + 0.08); } catch (e) {}
 }
 const SON = {
-  bumper(type) {
-    if (type === 'foot') { zap(520, 180, 0.07, 0.2, 0, 'square'); bruit(0.02, 0.3, 2500, 1.5); }
-    else if (type === 'basket') { zap(260, 90, 0.09, 0.24, 0, 'square'); bip(1046, 0.03, 0.08, 0.02); }
-    else if (type === 'volley') { zap(700, 1400, 0.05, 0.16, 0, 'square'); bip(2093, 0.03, 0.07, 0.04); }
-    else { zap(1200, 1800, 0.05, 0.14, 0, 'square'); bip(2637, 0.04, 0.07, 0.05); }
+  bumper(type) { // pop accordé qui grimpe la gamme à chaque touche enchaînée
+    const k = grimpe(), f = P(k);
+    if (type === 'foot') { pop(f, 0.2); cogne(90, 0.18); }
+    else if (type === 'basket') { pop(f, 0.2); ton('sine', 210, 140, 0.16, 0.14, 0, 0, false, 0.002); }
+    else if (type === 'volley') { pop(f * 2, 0.14); }
+    else { pop(f, 0.18); ton('sine', P(k + 5), P(k + 5) * 1.06, 0.1, 0.06, 0.02, 0, true); }
   },
-  flip() { bruit(0.025, 0.4, 1800, 1); zap(160, 70, 0.04, 0.16, 0, 'square'); },
-  mur(imp) { const v = Math.min(1, (imp - 90) / 900); if (v <= 0 || !limite('mur', 0.035)) return; bip(1200 + 900 * v, 0.018, 0.03 + 0.06 * v); },
-  sling() { zap(300, 1100, 0.06, 0.18); bip(1760, 0.02, 0.07, 0.05); },
-  cible() { bip(1046, 0.04, 0.12); bip(1568, 0.06, 0.12, 0.04); bruit(0.02, 0.3, 1500, 1.5); },
-  epsRetour() { arp([523, 659, 784, 1047, 1319], 0.05, 0.05, 0.1); },
-  tic(n) { bip(n === 1 ? 1568 : 1046, 0.05, 0.1); },
-  bulletin() { bip(1760, 0.03, 0.1); bip(2349, 0.04, 0.1, 0.035); },
-  lance() { bruit(0.08, 0.4, 1200, 0.8); zap(110, 1320, 0.2, 0.14, 0, 'square'); },
-  cantine() { arp([1319, 1047, 784, 523], 0.05, 0.05, 0.11); zap(400, 100, 0.15, 0.12, 0.2, 'square'); },
-  ejecte() { zap(200, 1400, 0.09, 0.16, 0, 'square'); bruit(0.03, 0.3, 1500, 1); },
-  multi() { arp([523, 659, 784, 1047, 1319, 1568, 2093], 0.055, 0.06, 0.1); arp([523, 659, 784, 1047, 1319, 1568, 2093], 0.055, 0.06, 0.1, 0.45); },
-  sauve() { arp([784, 1047, 1319, 1568], 0.045, 0.05, 0.11); },
-  perdu() { zap(660, 55, 0.7, 0.16, 0, 'sawtooth'); zap(330, 40, 0.7, 0.12, 0.05, 'square'); boum(0.4, 0.3, 0.05); },
-  combo(n) { zap(600 + n * 150, 1200 + n * 300, 0.07, 0.1, 0, 'square'); bip(2093, 0.04, 0.07, 0.07); },
-  fin() { [392, 330, 262, 196].forEach((f, i) => ton('square', f, i === 3 ? f * 0.8 : f, i === 3 ? 0.7 : 0.18, 0.12, i * 0.22, 2500)); },
-  fanfare() { arp([523, 659, 784, 1047, 784, 1047, 1319], 0.07, 0.07, 0.11); arp([131, 196, 262], 0.14, 0.12, 0.12, 0, 'square'); },
-  jackpot() { // gros « zap » + explosion
-    zap(2400, 60, 0.55, 0.2); zap(1800, 90, 0.5, 0.14, 0.02, 'square'); boum(0.9, 0.55, 0.05);
-    arp([1047, 1319, 1568, 2093, 1568, 2093, 2637], 0.05, 0.05, 0.08, 0.35);
-  },
-  grosseFanfare() { // début de la multiballe
-    zap(150, 2400, 0.6, 0.12, 0, 'square'); boum(0.8, 0.5, 0.55);
-    arp([392, 523, 659, 784, 1047, 988, 1047, 1319, 1568], 0.08, 0.08, 0.1, 0.6);
-  },
-  clic() { bip(1319, 0.03, 0.12); bip(1760, 0.04, 0.1, 0.035); },
-  rampe(dur) { const n = Math.min(10, Math.floor(dur / 0.08)); for (let i = 0; i < n; i++) bip(440 * Math.pow(1.09, i), 0.04, 0.06, i * 0.08); zap(200, 900, 0.2, 0.08, 0, 'square'); },
-  panier() { arp([784, 988, 1175, 1568, 2093], 0.05, 0.06, 0.12); bruit(0.25, 0.3, 4000, 0.7); },
-  rate() { zap(220, 110, 0.22, 0.14, 0, 'square'); zap(233, 104, 0.22, 0.1, 0, 'square'); bip(147, 0.25, 0.12, 0.24, 'square', 1500); },
-  jauge(n) { arp([1047, 1319, 1568].map(f => f * Math.pow(1.12, n)), 0.05, 0.05, 0.08, 0.4); },
-  cage() { zap(1500, 100, 0.5, 0.14); boum(0.5, 0.4, 0.05); for (let i = 0; i < 4; i++) bip(2000 + i * 300, 0.03, 0.06, 0.1 + i * 0.06); },
-  colle() { zap(600, 60, 0.45, 0.16, 0, 'square'); bruit(0.3, 0.35, 800, 1.5, 0, 150); },
-  tunnel() { zap(900, 80, 0.45, 0.14, 0, 'square'); bruit(0.4, 0.3, 3000, 1, 0, 200); },
-  sous(dur) { const n = Math.floor(dur / 0.1); for (let i = 0; i < n; i++) bip(110 + (i % 2) * 55, 0.05, 0.08, i * 0.1, 'square', 900); },
-  sortieTunnel() { zap(120, 1600, 0.3, 0.16, 0, 'square'); bruit(0.06, 0.3, 2000, 1); },
-  vitre(i) { const f = [2093, 2349, 2637][i % 3]; bip(f, 0.12, 0.07, 0, 'triangle'); bip(f * 1.5, 0.08, 0.04, 0.03, 'sine'); },
-  but() { zap(2600, 80, 0.5, 0.16); boum(0.6, 0.45, 0.02); arp([523, 659, 784, 1047, 1319, 1568, 2093], 0.045, 0.05, 0.11, 0.2); bruit(0.35, 0.25, 5000, 0.6, 0.02); },
-  bloque() { bruit(0.05, 0.5, 600, 1); zap(260, 70, 0.22, 0.2, 0, 'square'); bip(98, 0.15, 0.12, 0.08, 'square', 800); },
-  poteau() { bip(1760, 0.06, 0.12); bip(2217, 0.08, 0.08, 0.02); bruit(0.03, 0.3, 3000, 2); },
-  trou(n) { const base = 659 * Math.pow(1.19, n - 1); arp([base, base * 1.26, base * 1.5, base * 2].slice(0, n + 1), 0.06, 0.06, 0.12); bruit(0.04, 0.35, 900, 1.2); },
-  relance() { zap(150, 1800, 0.14, 0.16, 0, 'square'); bruit(0.06, 0.3, 1500, 1); },
-  outlane() { zap(880, 110, 0.3, 0.13, 0, 'square'); },
-  looping(dur) { const n = Math.min(14, Math.floor(dur / 0.05)); for (let i = 0; i < n; i++) { const k = Math.sin(Math.PI * i / Math.max(1, n - 1)); bip(500 + 1300 * k, 0.04, 0.07, i * dur / n); } },
-  loopEntree() { zap(200, 1000, 0.18, 0.12, 0, 'square'); },
-  atterrit() { zap(320, 90, 0.07, 0.18, 0, 'square'); },
-  casier() { bip(180, 0.08, 0.2, 0, 'square', 1500); bruit(0.06, 0.45, 800, 1); for (let i = 0; i < 3; i++) bip(1800 + i * 200, 0.025, 0.07, 0.08 + i * 0.07); },
-  casierSort() { zap(300, 1300, 0.09, 0.15, 0, 'square'); },
-  finProtection() { arp([1568, 1319, 1047, 784], 0.08, 0.07, 0.11); zap(440, 110, 0.4, 0.08, 0.32, 'square'); },
-  record() { arp([523, 659, 784, 1047, 1319, 1568, 2093, 2637], 0.05, 0.06, 0.1); boum(0.5, 0.3, 0.42); },
-  retourJour() { arp([1568, 1319, 1047, 784, 523], 0.06, 0.06, 0.1); },
-  triple() { orgue([50, 53, 57], 1.1, 0.035, 0.7); cloche(196, 1.6, 0.14, 0.75); },
+  flip() { cogne(75, 0.16); bruit(0.025, 0.07, 3500, 0.8, 0, 0, 'highpass'); },
+  mur(imp) { const v = Math.min(1, (imp - 90) / 900); if (v <= 0 || !limite('mur', 0.04)) return; ton('sine', 900 + 600 * v, 600, 0.03, 0.02 + 0.05 * v, 0, 0, false, 0.001); },
+  sling() { pluck(P(grimpe() + 2), 0.14, 0.11, 0, 1.2); whoosh(0.09, 0.08, 1500, 4000); },
+  cible() { piece(P(5), 0.11); pop(P(3), 0.12); },
+  epsRetour() { etoiles(5, 0.06, 0, 3); },
+  tic(n) { ton('sine', P(n === 1 ? 10 : 7), P(n === 1 ? 10 : 7), 0.06, 0.12, 0, 0, false, 0.001); ton('triangle', 1800, 1800, 0.015, 0.05); },
+  bulletin() { piece(P(6 + Math.min(4, bulletin)), 0.1); },
+  lance() { whoosh(0.32, 0.22, 300, 3500); cogne(110, 0.18); },
+  cantine() { [4, 2, 0].forEach((k, i) => pop(P(k), 0.16, i * 0.08)); ton('sine', 220, 120, 0.2, 0.12, 0.26); hey(0.16, 0.26); },
+  ejecte() { pop(P(5), 0.15); whoosh(0.12, 0.1, 800, 4000); },
+  multi() { musDuck(0.35, 1.6); riser(1.1, 0.16); foule(0.24, 1.1, 0.7); },
+  sauve() { [0, 2, 4, 7].forEach((k, i) => pop(P(k + 3), 0.13, i * 0.06)); etoiles(3, 0.04, 0.24, 8); },
+  perdu() { musDuck(0.3, 1.4); [4, 3, 1].forEach((k, i) => pluck(P(k, -1), 0.3, 0.11, i * 0.14, 0.8)); ton('sine', 320, 50, 0.9, 0.18, 0.3); ooh(0.18, 0.15); },
+  combo(n) { pluck(P(n + 3), 0.18, 0.12, 0, 1.4); pop(P(n + 8), 0.1, 0.04); if (n >= 3) hey(0.14 + 0.02 * Math.min(4, n), 0.06); if (n >= 5) etoiles(4, 0.04, 0.1, n + 5); },
+  fin() { [4, 3, 2, 0].forEach((k, i) => pluck(P(k, -1), i === 3 ? 0.7 : 0.22, 0.11, i * 0.2, 0.9)); ton('sine', 260, 45, 1.1, 0.16, 0.6); ooh(0.16, 0.6); },
+  fanfare() { musDuck(0.5, 1.2); accordSfx([0, 2, 4], 0.18, 0.06); accordSfx([0, 2, 4], 0.18, 0.06, 0.18); accordSfx([2, 4, 7], 0.5, 0.07, 0.36); etoiles(6, 0.05, 0.36); hey(0.16, 0.36); },
+  jackpot() { musDuck(0.3, 1.6); drop(0.45); [5, 6, 7, 8, 9, 10].forEach((k, i) => piece(P(k), 0.07, 0.12 + i * 0.07)); foule(0.26, 0.1, 0.8); echantillon('clap', 0.4, 0.1); echantillon('crash', 0.25, 0); },
+  grosseFanfare() { drop(0.5, 1.12); accordSfx([0, 2, 4, 5], 0.6, 0.06, 1.12); etoiles(8, 0.05, 1.2); echantillon('crash', 0.3, 1.12); },
+  clic() { pop(P(5), 0.16); },
+  rampe(dur) { const n = Math.min(10, Math.floor(dur / 0.09)); for (let i = 0; i < n; i++) pluck(P(i + 2), 0.12, 0.07, i * 0.09, 1.1); whoosh(Math.min(1, dur), 0.08, 500, 3000); },
+  panier() { whoosh(0.22, 0.18, 6000, 2000); piece(P(7), 0.12, 0.05); etoiles(4, 0.05, 0.12, 7); hey(0.18, 0.1); },
+  rate() { ton('sine', 330, 150, 0.32, 0.16, 0, 0, false, 0.005); ton('sine', 349, 155, 0.32, 0.1, 0, 0, false, 0.005); pluck(P(0, -1), 0.3, 0.08, 0.28, 0.6); },
+  jauge(n) { [0, 2, 4].forEach((k, i) => pluck(P(k + 2 * n), 0.16, 0.08, 0.3 + i * 0.07, 1.3)); },
+  cage() { cloche(P(5), 0.8, 0.1); whoosh(0.4, 0.14, 4000, 500); drop(0.3, 0.05, 110, 0.5); },
+  colle() { ton('sine', 420, 70, 0.45, 0.2, 0, 0, false, 0.004); bruit(0.35, 0.18, 700, 4, 0, 160, 'lowpass'); pop(P(0, -1), 0.14, 0.3); },
+  tunnel() { whoosh(0.45, 0.18, 4000, 300); pop(P(2), 0.14); },
+  sous(dur) { bruit(dur, 0.08, 260, 1.5, 0, 180, 'lowpass', dur * 0.2); const n = Math.floor(dur / 0.25); for (let i = 0; i < n; i++) cogne(55, 0.08, i * 0.25); },
+  sortieTunnel() { whoosh(0.3, 0.18, 300, 5000); pop(P(7), 0.14, 0.2); },
+  vitre(i) { cloche(P(9 + (i % 3)), 0.35, 0.06); },
+  but() { musDuck(0.25, 1.8); drop(0.45); corne(0.07, 0.05); foule(0.3, 0.05, 0.9); [7, 8, 9, 10, 11, 12].forEach((k, i) => piece(P(k), 0.05, 0.25 + i * 0.06)); echantillon('crash', 0.25); },
+  bloque() { cogne(70, 0.24); pluck(P(1, -1), 0.25, 0.1, 0.02, 0.7); pluck(P(0, -1) * 1.06, 0.25, 0.08, 0.02, 0.7); ooh(0.18, 0.08); },
+  poteau() { cloche(1480, 0.35, 0.1); pop(P(4), 0.1); ooh(0.12, 0.1); },
+  trou(n) { for (let i = 0; i <= n; i++) piece(P(4 + 2 * i), 0.08, i * 0.08); cogne(90, 0.14); },
+  relance() { pop(P(4), 0.15); whoosh(0.15, 0.12, 600, 5000); },
+  outlane() { whoosh(0.4, 0.12, 2500, 250); pluck(P(0, -1), 0.3, 0.08, 0.1, 0.7); },
+  looping(dur) { const n = Math.min(12, Math.floor(dur / 0.06)); for (let i = 0; i < n; i++) { const k = Math.round(9 * Math.sin(Math.PI * i / Math.max(1, n - 1))); pluck(P(k + 2), 0.1, 0.06, i * dur / n, 1.3); } whoosh(dur, 0.1, 500, 4000); },
+  loopEntree() { pop(P(3), 0.15); whoosh(0.18, 0.1, 800, 3500); },
+  atterrit() { cogne(85, 0.18); pop(P(0), 0.1); },
+  casier() { cloche(330, 0.3, 0.08); cogne(95, 0.2); [5, 7, 9].forEach((k, i) => pop(P(k), 0.1, 0.08 + i * 0.06)); },
+  casierSort() { pop(P(4), 0.15); whoosh(0.15, 0.1, 700, 3500); },
+  finProtection() { [9, 7, 4, 2].forEach((k, i) => pluck(P(k), 0.12, 0.08, i * 0.08, 1)); whoosh(0.4, 0.08, 3000, 300, 0.3); },
+  record() { musDuck(0.35, 1.6); corne(0.07); etoiles(8, 0.05, 0.5); foule(0.26, 0.4, 0.8); },
+  retourJour() { whoosh(0.5, 0.12, 4000, 400); [9, 7, 5, 2, 0].forEach((k, i) => pluck(P(k), 0.12, 0.06, i * 0.06, 1)); },
+  triple() { riser(1.4, 0.14, 0.2); hey(0.2, 0); cloche(P(0, -1), 1.6, 0.1, 0.7); },
   // ---- la crypte
-  versCrypte() { zap(1800, 60, 1.2, 0.12, 0, 'sawtooth'); boum(0.8, 0.45, 0.1); [0, 0.55, 1.1].forEach(d => cloche(147, 1.8, 0.16, d)); orgue([38, 50, 53, 57], 1.8, 0.03, 0.4); },
-  arriveeCrypte() { orgue([45, 52, 57, 60, 64], 1.7, 0.03); cloche(220, 1.4, 0.12, 0.2); cloche(110, 2.2, 0.12, 0.9); },
-  crane(petit) { bruit(0.025, 0.35, petit ? 3500 : 2200, 3); bruit(0.025, 0.28, petit ? 2800 : 1600, 3, 0.045); ton('square', petit ? 330 : 190, petit ? 160 : 90, 0.07, 0.13, 0, 1300); },
-  chauve() { zap(2600, 3800, 0.05, 0.08, 0, 'square'); zap(2900, 4200, 0.05, 0.07, 0.07, 'square'); bruit(0.12, 0.18, 1800, 2, 0, 600); },
-  nuee() { for (let i = 0; i < 6; i++) zap(2400 + i * 200, 3800, 0.04, 0.06, i * 0.06, 'square'); orgue([57, 60, 64], 0.7, 0.03, 0.3); },
-  tombe() { boum(0.22, 0.3); cloche(392, 0.9, 0.09, 0.03); },
-  rip() { [0, 0.4, 0.8].forEach((d, i) => cloche([262, 233, 196][i], 1.6, 0.14, d)); orgue([45, 48, 52, 57], 1.6, 0.03, 0.9); },
-  orgue() { orgue([38, 50, 53, 57], 1.2, 0.035); },
-  jackpotOrgue() { // petite toccata : 3 accords qui montent + cloches
-    orgue([50, 53, 57], 0.45, 0.035); orgue([49, 52, 57], 0.45, 0.035, 0.45); orgue([38, 50, 53, 57, 62], 1.6, 0.035, 0.9);
-    [1, 1.3, 1.6].forEach((d, i) => cloche([587, 698, 880][i], 1.2, 0.1, d)); boum(0.7, 0.4, 0.9);
-  },
-  cercueil() { ton('sawtooth', 85, 140, 0.45, 0.1, 0, 700); ton('sawtooth', 92, 150, 0.45, 0.06, 0.02, 700); boum(0.3, 0.42, 0.42); },
-  cercueilSort() { ton('sawtooth', 140, 95, 0.25, 0.08, 0, 700); zap(200, 900, 0.1, 0.12, 0.15, 'square'); },
-  reveil() { orgue([40, 47, 52, 55], 1.4, 0.035); for (let i = 0; i < 4; i++) cloche(196 * Math.pow(1.19, i), 0.9, 0.08, 0.2 + i * 0.18); },
-  glas() { cloche(98, 2.6, 0.1); },
-  retourBase() { [62, 57, 53, 50, 45].forEach((m, i) => nappe('sawtooth', midi(m), 0.5, 0.05, i * 0.16, 1400)); cloche(110, 2, 0.14, 0.2); },
-  depart() { arp([523, 784, 1047, 1568], 0.06, 0.06, 0.11); },
+  versCrypte() { musDuck(0.3, 2); drop(0.45, 0.1, 120, 1.2); whoosh(1.4, 0.15, 6000, 200); [0, 0.55, 1.1].forEach(d => cloche(P(0, -1), 1.8, 0.1, d)); },
+  arriveeCrypte() { orgueSfx([62, 65, 69, 74], 1.6, 0.05); cloche(P(0), 1.4, 0.1, 0.2); drop(0.3, 0.1, 100, 1); },
+  crane(petit) { ton('sine', petit ? 1300 : 800, petit ? 900 : 520, 0.05, 0.14, 0, 0, false, 0.001); bruit(0.02, 0.16, petit ? 3500 : 2200, 4); bruit(0.02, 0.12, petit ? 2800 : 1700, 4, 0.04); pop(P(grimpe()), 0.08, 0.02); },
+  chauve() { ton('sine', 3200, 4300, 0.05, 0.08); ton('sine', 3400, 4600, 0.05, 0.07, 0.07); whoosh(0.15, 0.08, 1500, 3500); },
+  nuee() { for (let i = 0; i < 6; i++) ton('sine', 3000 + i * 180, 4400, 0.05, 0.05, i * 0.06); whoosh(0.5, 0.12, 800, 4000); hey(0.16, 0.3); },
+  tombe() { cogne(65, 0.22); cloche(P(2, -1), 0.9, 0.07, 0.03); },
+  rip() { musDuck(0.4, 1.8); [0, 0.4, 0.8].forEach((d, i) => cloche(P(2 - i), 1.4, 0.1, d)); drop(0.3, 0.9, 110, 0.9); },
+  orgue() { orgueSfx([50, 62, 65, 69], 1.1, 0.05); },
+  jackpotOrgue() { musDuck(0.25, 2.4); riser(0.8, 0.14); orgueSfx([50, 62, 65, 69], 0.45, 0.05, 0.8); orgueSfx([49, 61, 64, 69], 0.45, 0.05, 1.25); orgueSfx([38, 50, 62, 65, 69, 74], 1.6, 0.05, 1.7); drop(0.45, 1.7); foule(0.24, 1.7, 0.9); },
+  cercueil() { ton('sawtooth', 85, 140, 0.45, 0.07, 0, 600); ton('sawtooth', 92, 150, 0.45, 0.05, 0.02, 600); cogne(60, 0.25, 0.42); },
+  cercueilSort() { ton('sawtooth', 140, 95, 0.25, 0.06, 0, 600); pop(P(3), 0.14, 0.15); },
+  reveil() { musDuck(0.4, 1.6); foule(0.2, 0, 1.2, [300, 420], [800, 1000], 3); for (let i = 0; i < 4; i++) cloche(P(i * 2), 0.9, 0.06, 0.2 + i * 0.16); },
+  glas() { cloche(P(0, -2), 2.4, 0.05); },
+  retourBase() { musDuck(0.4, 2); whoosh(1.2, 0.14, 200, 5000); [0, 2, 4, 7].forEach((k, i) => pluck(P(k), 0.2, 0.08, 0.6 + i * 0.1, 1.2)); cloche(P(0, -1), 1.6, 0.08, 0.2); },
+  depart() { pop(P(0), 0.14); pop(P(2), 0.14, 0.08); pop(P(4), 0.14, 0.16); etoiles(4, 0.05, 0.22, 7); },
   // ---- les boss
-  alerteBoss() { // roulement de tambours + sirène
-    for (let i = 0; i < 10; i++) { ton('square', 110, 60, 0.07, 0.16, i * 0.08, 700); bruit(0.05, 0.22, 900, 1, i * 0.08); }
-    zap(400, 900, 0.35, 0.1, 0, 'square'); zap(400, 900, 0.35, 0.1, 0.4, 'square'); boum(0.6, 0.45, 0.8);
+  alerteBoss() { musDuck(0.2, 1.6); riser(1.4, 0.16); for (let i = 0; i < 6; i++) echantillon('timbale', 0.35 + i * 0.07, i * 0.22); ton('sine', 520, 780, 0.3, 0.06, 0, 0, false, 0.05); ton('sine', 520, 780, 0.3, 0.06, 0.45, 0, false, 0.05); ton('sine', 520, 780, 0.3, 0.06, 0.9, 0, false, 0.05); },
+  porte() { ton('sawtooth', 70, 130, 0.8, 0.06, 0, 500); ton('sawtooth', 75, 140, 0.8, 0.04, 0.03, 500); drop(0.4, 0.75, 110, 0.8); echantillon('crash', 0.2, 0.75); },
+  grogne(rang) { // grognement (formants « o »), plus grave pour le n°1
+    const f = [0, 70, 90, 115][rang] || 90, F = combat && combat.boss.genre === 'F' ? 1.5 : 1;
+    syllabe(f * 1.4 * F, f * F, 0.75, 0.2, 0, 480 * F, 850 * F); bruit(0.6, 0.12, 300, 2, 0, 120, 'lowpass'); cogne(55, 0.2, 0.05);
   },
-  porte() { ton('sawtooth', 70, 130, 0.8, 0.09, 0, 600); ton('sawtooth', 75, 140, 0.8, 0.06, 0.03, 600); boum(0.5, 0.4, 0.75); },
-  grogne(rang) { // grognement grave (plus grave pour le n°1)
-    const f = [0, 55, 70, 90][rang] || 80; ton('sawtooth', f * 1.4, f, 0.7, 0.14, 0, 500); ton('square', f * 1.5, f * 0.9, 0.7, 0.08, 0.02, 400); bruit(0.6, 0.25, 260, 2, 0, 120, 'lowpass');
+  tambour(k) { cogne(55 + 15 * k, 0.1 + 0.14 * k); cogne(50 + 15 * k, 0.07 + 0.1 * k, 0.16); }, // battement de cœur qui s'accélère
+  aie(rang) { const F = combat && combat.boss.genre === 'F' ? 1.6 : 1; echantillon('clap', 0.4); cogne(80, 0.2); syllabe(260 * F, 170 * F, 0.22, 0.15, 0.02, 700 * F, 1800 * F); piece(P(7), 0.07, 0.05); if (rang === 1) cloche(P(4), 0.5, 0.06, 0.05); },
+  esquive() { whoosh(0.22, 0.2, 4500, 900); hey(0.1, 0.05); },
+  bouclier() { cloche(P(7), 0.4, 0.08); ton('sine', 2600, 3200, 0.12, 0.04, 0.02, 0, true); },
+  pare() { cogne(110, 0.2); bruit(0.04, 0.2, 1500, 1.5); },
+  rire(delai = 0) { // « HA HA HA » de dessin animé (formants « a »), voix grave pour un roi, aiguë pour une reine
+    const C = combat, F = C && C.boss.genre === 'F' ? 1.7 : 1, f = (C ? [0, 105, 125, 150][C.rang] : 130) * F;
+    [0, 0.17, 0.34, 0.51, 0.7].forEach((x, i) => { syllabe(f * (1.3 - i * 0.06), f * (1.08 - i * 0.07), i === 4 ? 0.3 : 0.15, 0.22, delai + x, 780 * F, 1250 * F); bruit(0.04, 0.05, 2000, 1, delai + x, 0, 'highpass'); });
   },
-  tambour(k) { ton('square', 95 + 30 * k, 45, 0.14, 0.18 + 0.1 * k, 0, 600); bruit(0.04, 0.2, 700, 1); },
-  aie(rang) { zap(900, 200, 0.18, 0.18, 0, 'square'); bip(1568, 0.04, 0.1, 0.05); boum(0.25, 0.3); if (rang === 1) cloche(330, 0.5, 0.08, 0.05); },
-  esquive() { bruit(0.18, 0.3, 2500, 1.5, 0, 600); zap(1200, 500, 0.12, 0.08, 0, 'sine'); },
-  bouclier() { cloche(880, 0.35, 0.12); bip(2637, 0.04, 0.06, 0.02); },
-  pare() { zap(220, 520, 0.08, 0.18, 0, 'square'); bruit(0.04, 0.35, 1200, 1); },
-  rire() { [0, 0.16, 0.32, 0.48, 0.64].forEach((d, i) => { ton('square', 520 - i * 40, 380 - i * 40, 0.12, 0.12, d, 2500); }); },
+  elimine() { // le boss gagne : coupure de la musique, chute, « oooh » et rire
+    musCouper(); ton('sawtooth', 700, 60, 1.0, 0.08, 0, 1800); drop(0.5, 0.05, 130, 1.3); ooh(0.2, 0.15); SON.rire(0.55);
+  },
   vaincu(rang) {
-    zap(2400, 60, 0.6, 0.18); boum(0.9, 0.55, 0.05); arp([523, 659, 784, 1047, 1319, 1568, 2093], 0.06, 0.07, 0.11, 0.4);
-    if (rang === 1) { arp([392, 523, 659, 784, 1047, 988, 1047, 1319, 1568], 0.09, 0.09, 0.1, 0.9); boum(0.6, 0.4, 1.7); }
+    musDuck(0.25, 2.4); drop(0.5); echantillon('crash', 0.3); foule(0.32, 0.1, 1.1); [5, 6, 7, 8, 9, 10, 12].forEach((k, i) => piece(P(k), 0.06, 0.3 + i * 0.07));
+    if (rang === 1) { corne(0.07, 0.6, [0, 0.16, 0.32, 0.64], [0.12, 0.12, 0.25, 0.7]); etoiles(10, 0.05, 1.2, 4, 0.05); }
   }
 };
 function vib(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
@@ -542,8 +813,8 @@ const BOUGIES = [[128, 74], [236, 74], [22, 400], [22, 470], [346, 300], [346, 3
 // ---------------------------------------------------------------- 3e table : LES BOSS (le top 3 du classement descend sur le flipper)
 // Quand le score dépasse celui du n°3, puis du n°2, puis du n°1, le jeu se fige, une porte s'ouvre en haut du plateau
 // et le boss (sa photo + un déguisement) descend vers les flippers. Le plateau est épuré : slingshots + 2 bumpers.
-// On l'abat à coups de bille (3 billes de combat). S'il passe les flippers ou si les 3 billes tombent, il s'enfuit :
-// aucune balle n'est perdue, la partie reprend telle quelle et il reviendra (revanche) 15 000 points plus tard.
+// On l'abat à coups de bille (3 billes de combat). Kevin : s'il passe les flippers ou si les 3 billes tombent,
+// c'est ÉLIMINÉ : le boss se moque de toi et la partie est finie (score du moment = score final).
 const segsB = [];
 cibleSegs = segsB;
 for (let i = 0; i < ARC.length - 1; i++) seg(ARC[i][0], ARC[i][1], ARC[i + 1][0], ARC[i + 1][1]);
@@ -562,7 +833,7 @@ const NIV_BOSS = {
   2: { pv: 5, billes: 3, vit: 15, amp: 75, freq: 1.15, esquive: 0.35, bouclier: false, bonus: 10000, titre: { H: 'Le Bourreau', F: 'La Sorcière' }, lieu: 'LE CACHOT', bord: '#ff8c1a' },
   1: { pv: 7, billes: 3, vit: 17, amp: 90, freq: 1.35, esquive: 0.3, bouclier: true, bonus: 25000, titre: { H: 'Le Roi', F: 'La Reine' }, lieu: 'LA SALLE DU TRÔNE', bord: '#ffd23f' }
 };
-const PTS_COUP = 1000, REVANCHE = 15000, Y_BOSS0 = 152, Y_BOSS_PASSE = 690, R_BOSS = 26;
+const PTS_COUP = 1000, Y_BOSS0 = 152, Y_BOSS_PASSE = 690, R_BOSS = 26;
 function titreBoss(rang, genre) { return NIV_BOSS[rang].titre[genre === 'F' ? 'F' : 'H']; }
 
 // ---------------------------------------------------------------- État de jeu
@@ -584,7 +855,7 @@ function nouvelleBalle(nouvelle = true) { balles.push(balleNeuve(375, 697, 0, 0,
 function nouvellePartie() {
   balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps;
   paniers = 0; besoin = 3; cagePleine = true; cageFlash = 0; filetT = 0; COLLE.balle = null;
-  nuit = false; bascule = null; gelT = 0; protegeT = 0; cageAttente = 0; aServir = 0; arreterBeat(); CASIER.balle = null; CASIER.visites = 0; CASIER.ouvert = 0;
+  nuit = false; bascule = null; gelT = 0; protegeT = 0; cageAttente = 0; aServir = 0; CASIER.balle = null; CASIER.visites = 0; CASIER.ouvert = 0;
   cibleRecord = Math.max(+lsGet('battle-record', 0) || 0, classement && classement.boss ? +classement.boss.score || 0 : 0); recordFait = cibleRecord <= 0;
   popups = []; particules = []; grandMsg = null; EPS.forEach(c => { c.bas = false; c.on = true; }); epsReset = 0; attenteBalle = 0;
   butT = 0; jaugeFlash = 0; TROUS_L.forEach(t => { t.balle = null; t.flash = 0; });
@@ -599,7 +870,7 @@ function points(n, x, y) {
   if (!recordFait && score > cibleRecord && etat === 'jeu') { recordFait = true; popups.push({ t: '🏆 RECORD BATTU !', x: 185, y: 250, age: 0, vie: 2.2, coul: '#ffe600' }); SON.record(); vib([30, 30, 30, 30, 80]); }
 }
 function blague(t, x, y, coul) { popups = popups.filter(p => p.petit || p.age < 0.6); popups.push({ t, x: Math.min(Math.max(x, 110), 260), y, age: 0, vie: 1.5, coul: coul || '#ffd23f' }); }
-function annonce(t, sous, coul, taille = 40, vie = 2.2) { grandMsg = { t, sous, age: 0, vie, coul: coul || '#ffd23f', taille }; }
+function annonce(t, sous, coul, taille = 40, vie = 2.2) { grandMsg = { t, sous, age: 0, vie, coul: coul || '#ffd23f', taille }; if (taille >= 30) musDuck(0.6, Math.min(vie, 1.5)); }
 function tir(nom, x, y) {
   chaseT = 0.8;
   if (temps - comboT < 3.5) comboN++; else comboN = 1; comboT = temps;
@@ -879,7 +1150,7 @@ function finRecre() {
   multiball = true; cagePleine = false; paniers = 0; points(10000);
   // appelé à la fin du spectacle, table déjà retournée : 1re bille tout de suite, 2e un peu après (plus facile à suivre)
   balles.push(balleNeuve(101, 143, 150, 40, false)); cageAttente = 1.2;
-  sauveT = 0; flash = 0.3; nuit = true; SON.cage(); demarrerBeat();
+  sauveT = 0; flash = 0.3; nuit = true; SON.cage();
   protegeT = PROTECTION; annonce('RÉCRÉ PROTÉGÉE !', 'Billes sauvées pendant ' + PROTECTION + ' s', '#00e5ff', 30, 2);
   for (const b of balles) { b.ax = b.x; b.ay = b.y; b.at = temps; }
 }
@@ -887,7 +1158,7 @@ function finMulti() { // fin de la récré : les 2 balles retournent en cage, il
   if (!multiball) return;
   protegeT = 0; cageAttente = 0; aServir = 0;
   multiball = false; cagePleine = true; cageFlash = 1.2; paniers = 0; besoin = Math.min(5, besoin + 1);
-  arreterBeat(); SON.retourJour();
+  SON.retourJour();
   if (nuit) { bascule = { t: 0, dur: 1.0, versNuit: false }; if (balles.some(b => !b.collee)) gelT = 1.0; } // retour au jour (la table se fige le temps du retournement)
 }
 // ---- rampe LOOPING (haut droite)
@@ -1089,7 +1360,7 @@ function imageDe(src) { // images des photos (data URL), gardées en cache ; nul
 }
 function preparerBoss() { // file des boss de la partie : du n°3 au n°1 (on peut aussi affronter ses propres places)
   bossFile = listeBoss().sort((a, b) => a.score - b.score)
-    .map(b => Object.assign({}, b, { pv: NIV_BOSS[b.rang].pv, vaincu: false, revanche: 0, img: imageDe(b.photo || AVATAR) }));
+    .map(b => Object.assign({}, b, { pv: NIV_BOSS[b.rang].pv, vaincu: false, img: imageDe(b.photo || AVATAR) }));
 }
 function prochainBoss() { return bossFile.find(b => !b.vaincu) || null; }
 function calmePourBoss() { // jamais pendant la crypte, la multiballe, un tunnel, une rampe, un trou, un retournement…
@@ -1100,12 +1371,12 @@ function calmePourBoss() { // jamais pendant la crypte, la multiballe, un tunnel
 }
 function verifierBoss() {
   const b = prochainBoss();
-  if (b && score > b.score && score >= b.revanche && calmePourBoss()) lancerCombat(b);
+  if (b && score > b.score && calmePourBoss()) lancerCombat(b);
 }
 function lancerCombat(boss) {
   const N = NIV_BOSS[boss.rang];
   combat = { boss, N, rang: boss.rang, phase: 'alerte', t: 0, x: PORTE.x, y: PORTE.y + 30, echelle: 0.55, pv: boss.pv, pvMax: N.pv, inv: 0, recul: 0, stun: 0, ph: 0, dx: 0, vdx: 0,
-    esqCd: 0, boucl: 0, bouclCd: 5, billes: N.billes, pas: 0, porte: 0, coup: 0, pare: 0, rage: false, sauve: null, tambour: 0, bulle: '', monte: false, vfuite: 0, chapeau: null };
+    esqCd: 0, boucl: 0, bouclCd: 5, billes: N.billes, pas: 0, porte: 0, coup: 0, pare: 0, rage: false, sauve: null, tambour: 0, bulle: '', x0: 0, y0: 0, chapeau: null };
   charge.src = {}; charge.actif = false; arreterCharge();
   annonce('ALERTE BOSS !', 'N°' + boss.rang + ' · ' + titreBoss(boss.rang, boss.genre) + ' arrive…', '#ff4d4d', 38, 1.6);
   SON.alerteBoss(); vib([60, 40, 60, 40, 60]); secousse = 0.2; chaseT = 1.5;
@@ -1127,11 +1398,11 @@ function majScene(dt) { // phases mises en scène : la table est figée, seuls l
     const k = Math.min(1, C.t / 1.6); C.pas += dt * 6;
     C.y = PORTE.y + 30 + (Y_BOSS0 - PORTE.y - 30) * k; C.echelle = 0.55 + 0.45 * k;
     if (k >= 1) debutCombat();
-  } else if (C.phase === 'mort') { if (C.t >= 2.8) finCombat(true); }
-  else if (C.phase === 'fuite') {
-    C.pas += dt * 10; C.y += C.vfuite * dt;
-    if (C.monte) { C.porte = Math.min(1, C.porte + dt * 2); C.echelle = Math.max(0.55, 1 - 0.45 * Math.max(0, (C.t - 0.9) / 1.3)); }
-    if (C.t >= 2.4) finCombat(false);
+  } else if (C.phase === 'mort') { if (C.t >= 2.8) finCombat(); }
+  else if (C.phase === 'elimine') { // il revient au milieu du plateau, grossit et se moque… puis fin de la partie
+    const k = Math.min(1, C.t / 0.7), e = 1 - Math.pow(1 - k, 3); C.pas += dt * 10;
+    C.x = C.x0 + (185 - C.x0) * e; C.y = C.y0 + (330 - C.y0) * e; C.echelle = 1 + 0.5 * e;
+    if (C.t >= 2.6) { balleNo = 4; finPartie(); }
   }
 }
 function entrerArene() { // la table de jeu est mise de côté (billes figées), on passe dans l'arène du boss
@@ -1142,7 +1413,7 @@ function entrerArene() { // la table de jeu est mise de côté (billes figées),
 function debutCombat() {
   const C = combat; C.phase = 'combat'; C.t = 0; C.echelle = 1; C.y = Y_BOSS0;
   balles.push(balleNeuve(375, 697, 0, 0, true)); // 1re bille du combat (sauvée 8 s après le lancement, comme une balle neuve)
-  annonce('À L’ATTAQUE !', C.billes + ' billes pour lui prendre ' + C.pv + ' ♥', '#ffffff', 36, 2);
+  annonce('À L’ATTAQUE !', C.billes + ' billes pour ' + C.pv + ' ♥ · sinon ÉLIMINÉ', '#ffffff', 36, 2);
 }
 function majBoss(dt) { // déplacement du boss pendant le combat
   const C = combat; if (!C || C.phase !== 'combat') return;
@@ -1219,29 +1490,28 @@ function bossVaincu() {
   if (C.rang === 1) { annonce('LE TRÔNE EST VIDE !', 'Tiens jusqu’au bout ! ' + bonus, '#ffe600', 30, 2.8); confettis(); }
   else annonce(F ? 'VAINCUE !' : 'VAINCU !', titreBoss(C.rang, B.genre) + ' est à terre · ' + bonus, C.N.bord, 44, 2.6);
 }
-function combatPerdu(cause) { // le boss passe les flippers, ou la bille du combat tombe : il s'enfuit, revanche plus tard
-  const C = combat, B = C.boss; C.phase = 'fuite'; C.t = 0; B.revanche = score + REVANCHE;
-  C.monte = cause === 'bille'; C.vfuite = C.monte ? -(C.y - PORTE.y - 30) / 2.2 : 70;
-  C.bulle = pick(['Trop lent !', 'Même pas mal !', 'Hi hi hi !', 'À la prochaine !', 'Retourne t’échauffer !']);
-  SON.rire(); vib([80, 50, 80]);
-  annonce(cause === 'passe' ? 'IL EST PASSÉ !' : 'BILLE PERDUE !', 'Revanche dans ' + fmt(REVANCHE) + ' pts', '#ff6b6b', 34, 2.4);
-  if (cause === 'passe' && B.genre === 'F') grandMsg.t = 'ELLE EST PASSÉE !';
+function combatPerdu(cause) { // Kevin : le boss passe les flippers, ou la dernière bille du combat tombe → ÉLIMINÉ, partie finie
+  const C = combat, B = C.boss, F = B.genre === 'F'; C.phase = 'elimine'; C.t = 0; C.x0 = C.x; C.y0 = C.y; C.boucl = 0; C.rage = false;
+  charge.src = {}; charge.actif = false; arreterCharge(); FL.forEach(f => f.appui = false);
+  C.bulle = pick(['HA HA HA !', 'Trop lent !', 'Retourne t’échauffer !', 'Même pas mal !', 'Au vestiaire !', 'Game over, collègue !']);
+  SON.elimine(); vib([120, 60, 120, 60, 300]); flash = 0.5; secousse = 0.35;
+  annonce('ÉLIMINÉ !', (cause === 'passe' ? (F ? 'Elle est passée' : 'Il est passé') : 'Plus de billes') + ' · fin de la partie', '#ff3b3b', 46, 2.6);
 }
 function perteBoss() {
   if (balles.length || !combat || combat.phase !== 'combat') return;
   const C = combat;
   if (sauveT > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Bille sauvée !', 'Le combat continue', '#7cf', 30, 1.4); SON.sauve(); sauveT = 0; return; }
-  if (--C.billes > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Bille de combat perdue', 'Encore ' + C.billes + (C.billes > 1 ? ' billes' : ' bille') + ' · ta partie n’est pas touchée', '#ffb86b', 28, 1.6); SON.outlane(); return; }
+  if (--C.billes > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Bille de combat perdue', C.billes > 1 ? 'Encore ' + C.billes + ' billes avant l’élimination' : 'DERNIÈRE BILLE : sinon, éliminé !', '#ffb86b', 28, 1.6); SON.outlane(); return; }
   combatPerdu('bille');
 }
-function finCombat(gagne) { // retour au gymnase : on reprend EXACTEMENT là où on en était (mêmes billes, mêmes compteurs)
+function finCombat() { // boss vaincu : retour au gymnase : on reprend EXACTEMENT là où on en était (mêmes billes, mêmes compteurs)
   const C = combat; if (!C) return;
   table = 'base'; if (C.sauve) { balles = C.sauve.balles; sauveT = C.sauve.sauveT; }
   for (const b of balles) { b.ax = b.x; b.ay = b.y; b.at = temps; }
   combat = null; finCombatT = temps; charge.src = {}; charge.actif = false; arreterCharge();
   gelT = 1.3; flash = Math.max(flash, 0.5); popups = []; particules = [];
   const p = prochainBoss();
-  annonce('REPRISE !', gagne ? (p ? 'Prochain boss : n°' + p.rang + ' à ' + fmt(p.score) + ' pts' : 'Les 3 boss sont tombés !') : 'Aucune balle perdue', '#7cf', 40, 1.4);
+  annonce('REPRISE !', p ? 'Prochain boss : n°' + p.rang + ' à ' + fmt(p.score) + ' pts' : 'Les 3 boss sont tombés !', '#7cf', 40, 1.4);
   SON.depart();
 }
 
@@ -1266,7 +1536,7 @@ function maj(dt) {
   cageFlash = Math.max(0, cageFlash - dt); filetT = Math.max(0, filetT - dt);
   secousse = Math.max(0, secousse - dt); flash = Math.max(0, flash - dt);
   if (etat !== 'jeu') return;
-  if (combat && combat.phase !== 'combat') { majScene(dt); return; } // arrivée / mort / fuite du boss : table figée
+  if (combat && combat.phase !== 'combat') { majScene(dt); return; } // arrivée / mort du boss, élimination : table figée
   if (spectacleT > 0 || gelT > 0) { // la table se fige pendant le spectacle de la récré (et le retournement de la table)
     let finSpectacle = false;
     if (spectacleT > 0) { spectacleT -= dt; finSpectacle = spectacleT <= 0; } else gelT -= dt;
@@ -1719,7 +1989,7 @@ function lumieresNuit() { // projecteurs, reflets de boule à facettes, pulsatio
   if (!lumCv) { lumCv = document.createElement('canvas'); lumCv.width = 100; lumCv.height = 185; }
   const c = lumCv.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, 100, 185);
   c.setTransform(0.25, 0, 0, 0.25, 0, 0); c.globalCompositeOperation = 'lighter';
-  const ph = (temps * BPM / 60) % 1, mesure = Math.floor(temps * BPM / 240) % 3, pulse = Math.pow(1 - ph, 3);
+  const nb = tempsMusique(), ph = nb % 1, mesure = Math.floor(nb / 4) % 3, pulse = Math.pow(1 - ph, 3); // calé sur les temps de la musique
   if (pulse > 0.08) { c.globalAlpha = 0.11 * pulse; c.fillStyle = [NEON.rose, NEON.cyan, NEON.violet][mesure]; c.fillRect(0, 0, 400, 740); }
   [[25, -20, 0.95], [375, -20, 2.2], [200, 760, -1.57]].forEach(([x, y, base], i) => {
     const ang = base + 0.55 * Math.sin(temps * (0.7 + i * 0.23) + i * 2);
@@ -2236,7 +2506,7 @@ function dessinerCombat() { // le boss (au-dessus des billes), sa plaque (titre 
       if (C.rage && !mort) { ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(C.x, C.y + 8, 10, C.x, C.y + 8, 62); gg.addColorStop(0, `rgba(255,40,40,${0.35 + 0.2 * Math.sin(temps * 12)})`); gg.addColorStop(1, 'rgba(255,40,40,0)'); ctx.fillStyle = gg; ctx.fillRect(C.x - 62, C.y - 54, 124, 124); ctx.globalCompositeOperation = 'source-over'; }
       ctx.save(); ctx.translate(C.x + (C.coup > 0 ? rnd(-2.5, 2.5) : 0), C.y);
       if (mort) { ctx.rotate(C.t * 9); ctx.scale(1 - km, 1 - km); }
-      else if (C.phase === 'fuite' || (C.phase === 'combat' && !balles.some(b => !enAttente(b)))) ctx.rotate(Math.sin(temps * 9) * 0.12); // il se moque
+      else if (C.phase === 'elimine' || (C.phase === 'combat' && !balles.some(b => !enAttente(b)))) ctx.rotate(Math.sin(temps * 9) * 0.12); // il se moque
       ctx.scale(s, s); dessinerPerso(ctx, B.rang, B.genre, B.img, { pas: C.pas, flash: C.coup > 0 || mort, sansChapeau: mort });
       ctx.restore();
     }
@@ -2245,7 +2515,7 @@ function dessinerCombat() { // le boss (au-dessus des billes), sa plaque (titre 
       if (hy < 760) { ctx.save(); ctx.translate(hx, hy); ctx.rotate(t * 5); ctx.scale(s, s); ctx.translate(0, 22); dessinerPerso(ctx, B.rang, B.genre, null, { chapeauSeul: true }); ctx.restore(); }
     }
     if (C.boucl > 0 && C.phase === 'combat') { const a = Math.min(1, C.boucl / 0.3); ctx.globalAlpha = a; ctx.strokeStyle = '#ffe600'; ctx.lineWidth = 3; ctx.setLineDash([7, 4]); ctx.lineDashOffset = -temps * 40; ctx.beginPath(); ctx.arc(C.x, C.y + 8, R_BOSS + 9, 0, 7); ctx.stroke(); ctx.setLineDash([]); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,230,0,.35)'; ctx.lineWidth = 9; ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
-    const nargue = C.phase === 'fuite' ? C.bulle : C.phase === 'combat' && !balles.some(b => !enAttente(b)) ? 'Viens te battre !' : '';
+    const nargue = C.phase === 'elimine' ? C.bulle : C.phase === 'combat' && !balles.some(b => !enAttente(b)) ? 'Viens te battre !' : '';
     if (nargue) { // bulle
       ctx.font = '900 13px system-ui,-apple-system,sans-serif'; const lw = ctx.measureText(nargue).width + 18, bx = Math.max(16 + lw / 2, Math.min(350 - lw / 2, C.x + 30)), by = Math.max(24, C.y - 72 * s);
       rrect(ctx, bx - lw / 2, by - 13, lw, 26, 12); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#101a36'; ctx.lineWidth = 2; ctx.stroke();
@@ -2651,7 +2921,7 @@ function boucle(t) {
     majBascule(dt); // fin de partie pendant la multiballe : on termine le retournement
     for (const c of BUMP) { c.flash -= dt; if (c.flash < -0.6 && Math.random() < dt * 0.8) c.flash = 0.22; }
   }
-  rendu();
+  rendu(); majMusique();
   const voirBtn = lanceurPret() || (etat === 'jeu' && charge.actif && balles.some(enAttente));
   if (voirBtn !== btnVu) { btnVu = voirBtn; $('lancer').style.display = voirBtn ? 'block' : 'none'; }
   $('lancer').classList.toggle('charge', charge.actif);
@@ -2713,20 +2983,29 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && eta
 window.addEventListener('resize', () => redim());
 
 function montrer(id) { document.querySelectorAll('.ecran').forEach(s => s.classList.toggle('on', s.id === id)); }
-function pause() { if (etat !== 'jeu') return; etat = 'pause'; FL.forEach(f => f.appui = false); charge.src = {}; charge.actif = false; arreterCharge(); arreterBeat(); montrer('pause-ecran'); }
+function pause() { if (etat !== 'jeu') return; etat = 'pause'; FL.forEach(f => f.appui = false); charge.src = {}; charge.actif = false; arreterCharge(); majMusique(); montrer('pause-ecran'); }
 $('pause').onclick = () => pause();
-$('reprendre').onclick = () => { deverrouiller(); montrer(null); etat = 'jeu'; dernier = 0; if (multiball) demarrerBeat(); };
+$('reprendre').onclick = () => { deverrouiller(); montrer(null); etat = 'jeu'; dernier = 0; };
 $('abandon').onclick = () => { montrer(null); etat = 'jeu'; balleNo = 4; balles = []; attenteBalle = 0; finPartie(); };
 $('jouer').onclick = () => { deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); };
 // bouton son 🔊 / 🔇 (mémorisé)
-function majBoutonsSon() { document.querySelectorAll('.btn-son').forEach(b => { b.textContent = muet ? '🔇 Son coupé' : '🔊 Son activé'; b.setAttribute('aria-pressed', String(!muet)); b.classList.toggle('coupe', muet); }); }
+function majBoutonsSon() {
+  document.querySelectorAll('.btn-son').forEach(b => { b.textContent = muet ? '🔇 Son coupé' : '🔊 Son activé'; b.setAttribute('aria-pressed', String(!muet)); b.classList.toggle('coupe', muet); });
+  document.querySelectorAll('.btn-mus').forEach(b => { b.textContent = musiqueOn ? '🎵 Musique' : '🎵 Musique coupée'; b.setAttribute('aria-pressed', String(musiqueOn)); b.classList.toggle('coupe', !musiqueOn); b.disabled = muet; });
+}
 function basculerSon() {
   muet = !muet; lsSet('battle-muet', muet); majBoutonsSon();
-  if (muet) { arreterBeat(); arreterCharge(); try { if (audioHtml) audioHtml.pause(); } catch (e) {} }
-  deverrouiller(); if (MASTER) MASTER.gain.setTargetAtTime(muet ? 0 : 0.6, AC.currentTime, 0.02);
-  if (!muet) { setTimeout(() => SON.clic(), 30); }
+  if (muet) { arreterCharge(); try { if (audioHtml) audioHtml.pause(); } catch (e) {} }
+  deverrouiller(); if (MASTER) MASTER.gain.setTargetAtTime(muet ? 0 : VOL_MASTER, AC.currentTime, 0.02);
+  majMusique(); if (!muet) { setTimeout(() => SON.clic(), 30); }
+}
+function basculerMusique() { // Kevin : musique on/off séparée (mémorisée), les bruitages restent
+  musiqueOn = !musiqueOn; lsSet('battle-musique', musiqueOn); majBoutonsSon();
+  deverrouiller(); if (MUSB) MUSB.gain.setTargetAtTime(musiqueOn ? VOL_MUS : 0, AC.currentTime, 0.05);
+  majMusique(); setTimeout(() => SON.clic(), 30);
 }
 document.querySelectorAll('.btn-son').forEach(b => b.addEventListener('click', basculerSon));
+document.querySelectorAll('.btn-mus').forEach(b => b.addEventListener('click', basculerMusique));
 majBoutonsSon();
 
 // ---------------------------------------------------------------- Classement
@@ -2905,8 +3184,9 @@ function cadrerPhoto(img, rang, genre) {
 const NARGUE = ['Tu ne m’as pas battu ! 😜', 'Retourne à l’échauffement !', 'Même en dispense je fais mieux !', 'Allez, 10 tours de terrain !', 'C’est tout ? J’ai même pas transpiré !', 'Avis du conseil : peut mieux faire !', 'Va falloir réviser tes flippers !', 'Trop facile, je reste le boss 😎', 'Retourne en salle des profs !'];
 function finPartie() {
   if (etat === 'fin') return;
-  etat = 'fin'; $('pause').style.display = 'none'; FL.forEach(f => f.appui = false); arreterBeat(); arreterCharge();
-  if (bascule && bascule.vers) bascule = null; table = 'base'; gothDans = 0; combat = null; // (abandon pendant la crypte ou un combat)
+  etat = 'fin'; $('pause').style.display = 'none'; FL.forEach(f => f.appui = false); arreterCharge(); majMusique();
+  if (bascule && bascule.vers) bascule = null; gothDans = 0;
+  if (!(combat && combat.phase === 'elimine')) { table = 'base'; combat = null; } // (abandon pendant la crypte ou un combat) ; éliminé : le boss reste à l'écran et se moque
   const rec = lsGet('battle-record', 0); if (score > rec) lsSet('battle-record', score);
   setTimeout(montrerFin, 1300);
 }
@@ -2966,7 +3246,7 @@ function montrerFin() {
   else if (mode === 'moque') { SON.fin(); vib([100, 80, 300]); if (moqueur) dessinerPortrait($('moq'), moqueur.rang, moqueur.genre, moqueur.photo || AVATAR); }
   document.querySelectorAll('#genre input').forEach(i => i.onchange = () => { genre = i.value; $('genre').classList.remove('manque-choix'); majPortrait(); });
   $('rejouer').onclick = () => { deverrouiller(); montrer(null); nouvellePartie(); };
-  $('vers-accueil').onclick = () => { etat = 'accueil'; balles = []; montrer('accueil'); accueilDessine = false; chargerClassement(); };
+  $('vers-accueil').onclick = () => { etat = 'accueil'; balles = []; table = 'base'; combat = null; montrer('accueil'); accueilDessine = false; chargerClassement(); };
   if ($('montrer-nom')) $('montrer-nom').onclick = () => { $('zone-nom').classList.remove('cache'); $('montrer-nom').classList.add('cache'); $('nom').focus(); };
   if ($('photo')) $('photo').onchange = async e => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
@@ -3010,6 +3290,22 @@ function confettis(n = 140) {
   })(t0);
 }
 
+// tests : rendu hors ligne (OfflineAudioContext) d'une piste + de bruitages → crête et niveau RMS
+async function rendreHorsLigne(sec, piste, sons) {
+  const garde = [AC, MASTER, SFX, ECHO, MUSF, MUSDUCK, MUSB, BRUIT, TAMB, ORGUE_W, MUS.decks, MUS.nom, MUS.duckFin, MUS.duckNiv];
+  const off = new OfflineAudioContext(2, Math.ceil(sec * 44100), 44100);
+  horsLigne = true; AC = off; VOIX.length = 0;
+  try {
+    construireGraphe(off); MUS.decks = []; MUS.nom = null; MUS.duckFin = 0;
+    if (piste) { changerPiste(piste); musPlanifier(sec); }
+    for (const [t, nom, arg] of (sons || [])) { DEC = t; SON[nom](arg); }
+  } finally { DEC = 0; [AC, MASTER, SFX, ECHO, MUSF, MUSDUCK, MUSB, BRUIT, TAMB, ORGUE_W, MUS.decks, MUS.nom, MUS.duckFin, MUS.duckNiv] = garde; horsLigne = false; VOIX.length = 0; }
+  const buf = await off.startRendering(), d = buf.getChannelData(0), n = 22050;
+  let crete = 0, somme = 0, rmsMax = 0;
+  for (let i = 0; i < d.length; i += n) { let q = 0; for (let j = i; j < Math.min(d.length, i + n); j++) { const v = d[j]; q += v * v; if (Math.abs(v) > crete) crete = Math.abs(v); } somme += q; rmsMax = Math.max(rmsMax, Math.sqrt(q / n)); }
+  return { crete: +crete.toFixed(3), rms: +Math.sqrt(somme / d.length).toFixed(3), rmsMax: +rmsMax.toFixed(3) };
+}
+
 // Pour les tests automatisés
 window.__battle = {
   get etat() { return etat; }, get balles() { return balles; }, get score() { return score; }, get flippers() { return FL; },
@@ -3020,8 +3316,8 @@ window.__battle = {
   stats, TROUS_L, BUT, GARDIEN, BUMP, OUT, trouVise, appuis,
   get nuit() { return nuit; }, set nuit(v) { nuit = !!v; }, get bascule() { return bascule ? { t: bascule.t, k: basculeK(), versNuit: bascule.versNuit } : null; }, get css() { return cv.style.transform; },
   get epsReset() { return epsReset; }, LOOP, entrerLoop, FLIP_MIN, get protege() { return protegeT; }, get cageAttente() { return cageAttente; }, get eps() { return EPS.map(c => c.bas); }, get mult() { return mult; }, get bulletin() { return bulletin; }, get sauveT() { return sauveT; },
-  get audio() { return { etat: AC ? AC.state : 'absent', muet, beat: BEAT.on, voix: VOIX.length, session: navigator.audioSession ? navigator.audioSession.type : null }; },
-  SON, rendu, basculerSon, entrerTunnel, entrerCasier, dansCasier, CASIER, TRAPPE, EPS,
+  get audio() { return { etat: AC ? AC.state : 'absent', muet, piste: MUS.nom, platines: MUS.decks.length, musique: musiqueOn, voix: VOIX.length, session: navigator.audioSession ? navigator.audioSession.type : null }; },
+  SON, rendu, basculerSon, basculerMusique, PISTES, pisteVoulue, majMusique, rendreHorsLigne, entrerTunnel, entrerCasier, dansCasier, CASIER, TRAPPE, EPS,
   PAS: 1 / 120, maj, nouvellePartie, enAttente, berce, lancer, recreGenerale, entrerRampe, coller, segs, FL, COLLE, RAMPE, PANIER,
   set gel(v) { testGel = !!v; }, get table() { return table; }, get butsN() { return butsN; }, set butsN(v) { butsN = v; }, get gelT() { return gelT; }, get gothDans() { return gothDans; },
   CRYPTE, CRANES, CHAUVES, RIP, ORGUE, CERCUEIL, marquerBut, versGothique, retourBase, segsG, SOUS, VITRES, vitreDe, lanceurPret,

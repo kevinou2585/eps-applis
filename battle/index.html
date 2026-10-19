@@ -1087,9 +1087,8 @@ function imageDe(src) { // images des photos (data URL), gardées en cache ; nul
   if (!i) { i = new Image(); i.src = src; IMGS.set(src, i); }
   return i;
 }
-function preparerBoss() { // file des boss de la partie : du n°3 au n°1 (on ne combat pas sa propre place)
-  const moi = lsGetTxt('battle-nom').trim().toLowerCase();
-  bossFile = listeBoss().filter(b => !moi || b.nom.trim().toLowerCase() !== moi).sort((a, b) => a.score - b.score)
+function preparerBoss() { // file des boss de la partie : du n°3 au n°1 (on peut aussi affronter ses propres places)
+  bossFile = listeBoss().sort((a, b) => a.score - b.score)
     .map(b => Object.assign({}, b, { pv: NIV_BOSS[b.rang].pv, vaincu: false, revanche: 0, img: imageDe(b.photo || AVATAR) }));
 }
 function prochainBoss() { return bossFile.find(b => !b.vaincu) || null; }
@@ -2905,18 +2904,17 @@ function finPartie() {
   const rec = lsGet('battle-record', 0); if (score > rec) lsSet('battle-record', score);
   setTimeout(montrerFin, 1300);
 }
-function blocNom(label) {
-  return `<input class="champ" id="nom" maxlength="24" placeholder="Ton prénom (collègue)" autocomplete="off" value="${esc(lsGetTxt('battle-nom'))}">
+function blocNom(label) { // Kevin : le 1er prénom envoyé depuis ce téléphone reste le sien pour toutes les parties suivantes
+  const fixe = lsGetTxt('battle-nom').trim();
+  return `<input class="champ" id="nom" maxlength="24" placeholder="Ton prénom (collègue)" autocomplete="off" value="${esc(fixe)}"${fixe ? ' readonly style="opacity:.8"' : ''}>${fixe ? '<div class="aide" style="margin:-4px 0 8px">Joueur de ce téléphone : ' + esc(fixe) + '</div>' : ''}
     <button class="btn jaune" id="envoyer">${esc(label)}</button><div id="retour"></div>`;
 }
 let photoData = '';
 function montrerFin() {
   // le nom, le roi / la reine et la photo ne sont demandés qu'ici : le score FINAL donne la place (n°1, 2 ou 3)
-  // une seule place par joueur : on se compare aux AUTRES (le prénom retenu sur ce téléphone), sa propre place ne compte pas
-  const moi = lsGetTxt('battle-nom').trim().toLowerCase(), maPlace = listeBoss().find(b => moi && b.nom.trim().toLowerCase() === moi) || null;
-  const liste = listeBoss().filter(b => b !== maPlace), boss1 = liste[0] || null;
-  const rang = 1 + liste.filter(b => b.score >= score).length;
-  const dansTop = CLASSEMENT_OK && score > 0 && rang <= 3 && !(maPlace && maPlace.score >= score);
+  // Kevin : une même personne peut occuper plusieurs places du top 3 (chaque partie compte)
+  const liste = listeBoss(), boss1 = liste[0] || null;
+  const rang = 1 + liste.filter(b => b.score >= score).length, dansTop = CLASSEMENT_OK && score > 0 && rang <= 3;
   photoData = '';
   let html = '', mode = 'simple', genre = lsGetTxt('battle-genre'), moqueur = null;
   if (genre !== 'H' && genre !== 'F') genre = '';
@@ -2924,12 +2922,6 @@ function montrerFin() {
     html = `<div class="bandeau">Fin du cours !</div><div class="score-fin">${esc(fmt(score))}</div>
       <div class="manque">Record sur cet appareil : ${esc(fmt(Math.max(score, lsGet('battle-record', 0))))}</div>
       <div class="msg">Classement indisponible sur cet appareil</div>`;
-  } else if (maPlace && maPlace.score >= score && score > 0) {
-    mode = 'garde'; // déjà dans le top 3 avec mieux : sa place ne bouge pas
-    html = `<div class="bandeau" style="color:var(--jaune)">Ton record tient !</div><div class="score-fin">${esc(fmt(score))}</div>
-      <canvas class="portrait-fin" id="portrait-garde" style="width:120px;height:158px"></canvas>
-      <div class="manque">Tu restes n°${maPlace.rang} · ${esc(titreBoss(maPlace.rang, maPlace.genre))} avec ${esc(fmt(maPlace.score))} pts.</div>
-      <div class="aide" style="margin:0 0 10px">Une seule place par joueur : pour la garder, bats ton propre record.</div>`;
   } else if (dansTop) {
     mode = 'top';
     const detrone = liste.find(b => b.rang === rang);
@@ -2965,7 +2957,6 @@ function montrerFin() {
     document.querySelectorAll('#genre label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
   };
   if (mode === 'top') { majPortrait(); if (rang === 1) { SON.fanfare(); vib([60, 40, 60, 40, 200]); confettis(); } else { SON.sauve(); confettis(70); } }
-  else if (mode === 'garde') { SON.sauve(); dessinerPortrait($('portrait-garde'), maPlace.rang, maPlace.genre, maPlace.photo || AVATAR); }
   else if (mode === 'moque') { SON.fin(); vib([100, 80, 300]); if (moqueur) dessinerPortrait($('moq'), moqueur.rang, moqueur.genre, moqueur.photo || AVATAR); }
   document.querySelectorAll('#genre input').forEach(i => i.onchange = () => { genre = i.value; $('genre').classList.remove('manque-choix'); majPortrait(); });
   $('rejouer').onclick = () => { deverrouiller(); montrer(null); nouvellePartie(); };
@@ -2990,7 +2981,7 @@ function montrerFin() {
     if (r === null) ret.innerHTML = `<div class="msg">📡 Hors ligne : ton score est gardé et sera envoyé dès que possible.</div>`;
     else if (!r.ok) { ret.innerHTML = `<div class="msg ko">Envoi refusé${r.erreur || r.error ? ' : ' + esc(r.erreur || r.error) : ''}.</div>`; btn.disabled = false; btn.textContent = 'Réessayer'; return; }
     else {
-      const i = (Array.isArray(r.top) ? r.top : []).slice(0, 3).findIndex(t => String(t.nom).trim().toLowerCase() === nom.toLowerCase() && +t.score === Math.round(score));
+      const i = r.rang > 0 ? r.rang - 1 : (Array.isArray(r.top) ? r.top : []).slice(0, 3).findIndex(t => String(t.nom).trim().toLowerCase() === nom.toLowerCase() && +t.score === Math.round(score));
       if (i === 0 || (i < 0 && r.record)) ret.innerHTML = `<div class="msg ok">👑 C’est officiel : ${genre === 'F' ? 'tu es la nouvelle reine' : genre === 'H' ? 'tu es le nouveau roi' : 'tu es n°1'} !</div>`;
       else if (i > 0) ret.innerHTML = `<div class="msg ok">⚔ C’est officiel : tu es n°${i + 1}, ${esc(titreBoss(i + 1, genre).toLowerCase())} !</div>`;
       else if (mode === 'top') ret.innerHTML = `<div class="msg ok">Score enregistré ✔ (quelqu’un a fait mieux entre-temps !)</div>`;

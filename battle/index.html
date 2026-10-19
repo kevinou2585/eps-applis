@@ -113,6 +113,10 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .genre label.on{background:var(--jaune);color:#2a1a00;border-color:var(--jaune)}
 .genre.manque-choix label{border-color:var(--rouge);animation:pulse .5s 2}
 .portrait-fin{display:block;margin:6px auto 0}
+#cadre{position:fixed;inset:0;z-index:50;background:rgba(6,10,26,.985);display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 10px);overflow-y:auto}
+.cadre-boite{width:100%;max-width:360px;text-align:center}.cadre-boite b{display:block;font-size:20px;color:var(--jaune)}.cadre-boite span{display:block;font-size:14px;color:var(--gris);margin:4px 0 6px}
+#cadre-grand{display:block;margin:0 auto;cursor:grab}.cadre-mini{display:flex;justify-content:center;gap:10px;margin:4px 0}.cadre-mini canvas{background:rgba(255,255,255,.06);border-radius:10px}
+#cadre-zoom{width:90%;margin:10px auto;accent-color:#ffd23f}.cadre-bt{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}.cadre-bt .btn{margin:0}
 .btn-son{width:auto;display:inline-block;padding:9px 18px;font-size:16px}
 .btn-son.coupe{border-color:#ffd23f;color:#ffd23f}
 canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
@@ -2022,7 +2026,7 @@ function dessinerPerso(c, rang, genre, img, o = {}) {
     }
     // visage = photo ronde
     c.save(); c.beginPath(); c.arc(0, 0, 20, 0, 7); c.fillStyle = '#d5dae4'; c.fill(); c.clip();
-    if (img && img.complete && img.naturalWidth) c.drawImage(img, -20, -20, 40, 40);
+    if (img && (img.getContext ? img.width : img.complete && img.naturalWidth)) c.drawImage(img, -20, -20, 40, 40);
     else { c.fillStyle = '#6f7a8c'; c.beginPath(); c.arc(0, -3, 9, 0, 7); c.fill(); c.beginPath(); c.ellipse(0, 20, 16, 12, 0, 0, 7); c.fill(); c.font = '900 14px system-ui,sans-serif'; c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('?', 0, -3); }
     if (o.flash) { c.fillStyle = 'rgba(255,60,60,.45)'; c.fillRect(-20, -20, 40, 40); }
     c.restore();
@@ -2821,24 +2825,74 @@ async function viderAttente() {
 window.addEventListener('online', viderAttente);
 
 // ---------------------------------------------------------------- Photo
-function photoVersData(file) {
+function chargerPhoto(file) {
   return new Promise((ok, ko) => {
     const url = URL.createObjectURL(file), img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      const cote = Math.min(img.naturalWidth, img.naturalHeight), sx = (img.naturalWidth - cote) / 2, sy = (img.naturalHeight - cote) / 2;
-      let taille = Math.min(240, cote), q = 0.6, data = '';
-      for (let i = 0; i < 12; i++) {
-        const c = document.createElement('canvas'); c.width = c.height = taille;
-        c.getContext('2d').drawImage(img, sx, sy, cote, cote, 0, 0, taille, taille);
-        data = c.toDataURL('image/jpeg', q);
-        if (data.length < 48000) return ok(data);
-        if (q > 0.35) q -= 0.1; else { taille = Math.round(taille * 0.8); q = 0.5; }
-      }
-      ko(new Error('trop gros'));
-    };
+    img.onload = () => { URL.revokeObjectURL(url); ok(img); };
     img.onerror = () => { URL.revokeObjectURL(url); ko(new Error('image illisible')); };
     img.src = url;
+  });
+}
+function carreVersData(img, sx, sy, cote) { // carré découpé dans la photo -> JPEG < 48 000 caractères
+  let taille = Math.min(240, Math.round(cote)), q = 0.6, data = '';
+  for (let i = 0; i < 12; i++) {
+    const c = document.createElement('canvas'); c.width = c.height = taille;
+    c.getContext('2d').drawImage(img, sx, sy, cote, cote, 0, 0, taille, taille);
+    data = c.toDataURL('image/jpeg', q);
+    if (data.length < 48000) return data;
+    if (q > 0.35) q -= 0.1; else { taille = Math.round(taille * 0.8); q = 0.5; }
+  }
+  throw new Error('trop gros');
+}
+// Cadrage : le visage se place dans le rond du déguisement (glisser = déplacer, curseur ou 2 doigts = zoom)
+function cadrerPhoto(img, rang, genre) {
+  return new Promise(fin => {
+    const W = img.naturalWidth, H = img.naturalHeight, base = Math.min(W, H);
+    let zoom = 1.25, cx = W / 2, cy = H / 2 - base * 0.06;
+    const d = document.createElement('div'); d.id = 'cadre';
+    d.innerHTML = `<div class="cadre-boite"><b>Place ton visage dans le rond</b><span>Glisse la photo avec le doigt, zoome avec le curseur.</span>
+      <canvas id="cadre-grand" style="width:230px;height:300px"></canvas>
+      <div class="cadre-mini"><canvas style="width:70px;height:92px"></canvas><canvas style="width:70px;height:92px"></canvas><canvas style="width:70px;height:92px"></canvas></div>
+      <input type="range" id="cadre-zoom" min="1" max="4" step="0.01" value="${zoom}" aria-label="Zoom">
+      <div class="cadre-bt"><button class="btn" id="cadre-non">Annuler</button><button class="btn jaune" id="cadre-ok">✅ C’est bon</button></div></div>`;
+    document.body.appendChild(d);
+    const cv = d.querySelector('#cadre-grand'), minis = [...d.querySelectorAll('.cadre-mini canvas')], visage = document.createElement('canvas');
+    visage.width = visage.height = 160;
+    const cote = () => base / zoom;
+    const borner = () => { const h = cote() / 2; cx = Math.min(W - h, Math.max(h, cx)); cy = Math.min(H - h, Math.max(h, cy)); };
+    const peindre = (cnv, r, k0) => {
+      const w = cnv.clientWidth, h = cnv.clientHeight, dpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (cnv.width !== Math.round(w * dpr)) { cnv.width = Math.round(w * dpr); cnv.height = Math.round(h * dpr); }
+      const c = cnv.getContext('2d'), k = Math.min(w / 100, h / 132) * dpr * (k0 || 1);
+      c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cnv.width, cnv.height);
+      c.setTransform(k, 0, 0, k, cnv.width / 2 - 5 * k, cnv.height / 2 - 2 * k); dessinerPerso(c, r, genre, visage, { pas: 0.6 });
+    };
+    const maj = () => {
+      borner(); const h = cote() / 2;
+      visage.getContext('2d').drawImage(img, cx - h, cy - h, 2 * h, 2 * h, 0, 0, 160, 160);
+      peindre(cv, rang); [3, 2, 1].forEach((r, i) => peindre(minis[i], r));
+    };
+    // glisser (1 doigt) et pincer (2 doigts)
+    const doigts = new Map(); let pince = 0;
+    const echelle = () => Math.min(cv.clientWidth / 100, cv.clientHeight / 132); // pixels écran par unité (le rond fait 40 unités)
+    cv.style.touchAction = 'none';
+    cv.onpointerdown = e => { cv.setPointerCapture(e.pointerId); doigts.set(e.pointerId, [e.clientX, e.clientY]); if (doigts.size === 2) { const [a, b] = [...doigts.values()]; pince = Math.hypot(a[0] - b[0], a[1] - b[1]); } };
+    cv.onpointermove = e => {
+      const av = doigts.get(e.pointerId); if (!av) return;
+      if (doigts.size === 1) {
+        const parPx = cote() / (40 * echelle()); // pixels photo par pixel écran
+        cx -= (e.clientX - av[0]) * parPx; cy -= (e.clientY - av[1]) * parPx;
+      }
+      doigts.set(e.pointerId, [e.clientX, e.clientY]);
+      if (doigts.size === 2) { const [a, b] = [...doigts.values()], dist = Math.hypot(a[0] - b[0], a[1] - b[1]); if (pince) zoom = Math.min(4, Math.max(1, zoom * dist / pince)); pince = dist; d.querySelector('#cadre-zoom').value = zoom; }
+      maj();
+    };
+    cv.onpointerup = cv.onpointercancel = e => { doigts.delete(e.pointerId); pince = 0; };
+    d.querySelector('#cadre-zoom').oninput = e => { zoom = +e.target.value; maj(); };
+    const fermer = v => { d.remove(); fin(v); };
+    d.querySelector('#cadre-non').onclick = () => fermer(null);
+    d.querySelector('#cadre-ok').onclick = () => { borner(); const h = cote() / 2; try { fermer(carreVersData(img, cx - h, cy - h, 2 * h)); } catch (e) { fermer(null); alert('Photo impossible à utiliser, essaie encore.'); } };
+    maj();
   });
 }
 
@@ -2858,8 +2912,11 @@ function blocNom(label) {
 let photoData = '';
 function montrerFin() {
   // le nom, le roi / la reine et la photo ne sont demandés qu'ici : le score FINAL donne la place (n°1, 2 ou 3)
-  const liste = listeBoss(), boss1 = liste[0] || null;
-  const rang = 1 + liste.filter(b => b.score >= score).length, dansTop = CLASSEMENT_OK && score > 0 && rang <= 3;
+  // une seule place par joueur : on se compare aux AUTRES (le prénom retenu sur ce téléphone), sa propre place ne compte pas
+  const moi = lsGetTxt('battle-nom').trim().toLowerCase(), maPlace = listeBoss().find(b => moi && b.nom.trim().toLowerCase() === moi) || null;
+  const liste = listeBoss().filter(b => b !== maPlace), boss1 = liste[0] || null;
+  const rang = 1 + liste.filter(b => b.score >= score).length;
+  const dansTop = CLASSEMENT_OK && score > 0 && rang <= 3 && !(maPlace && maPlace.score >= score);
   photoData = '';
   let html = '', mode = 'simple', genre = lsGetTxt('battle-genre'), moqueur = null;
   if (genre !== 'H' && genre !== 'F') genre = '';
@@ -2867,6 +2924,12 @@ function montrerFin() {
     html = `<div class="bandeau">Fin du cours !</div><div class="score-fin">${esc(fmt(score))}</div>
       <div class="manque">Record sur cet appareil : ${esc(fmt(Math.max(score, lsGet('battle-record', 0))))}</div>
       <div class="msg">Classement indisponible sur cet appareil</div>`;
+  } else if (maPlace && maPlace.score >= score && score > 0) {
+    mode = 'garde'; // déjà dans le top 3 avec mieux : sa place ne bouge pas
+    html = `<div class="bandeau" style="color:var(--jaune)">Ton record tient !</div><div class="score-fin">${esc(fmt(score))}</div>
+      <canvas class="portrait-fin" id="portrait-garde" style="width:120px;height:158px"></canvas>
+      <div class="manque">Tu restes n°${maPlace.rang} · ${esc(titreBoss(maPlace.rang, maPlace.genre))} avec ${esc(fmt(maPlace.score))} pts.</div>
+      <div class="aide" style="margin:0 0 10px">Une seule place par joueur : pour la garder, bats ton propre record.</div>`;
   } else if (dansTop) {
     mode = 'top';
     const detrone = liste.find(b => b.rang === rang);
@@ -2902,6 +2965,7 @@ function montrerFin() {
     document.querySelectorAll('#genre label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
   };
   if (mode === 'top') { majPortrait(); if (rang === 1) { SON.fanfare(); vib([60, 40, 60, 40, 200]); confettis(); } else { SON.sauve(); confettis(70); } }
+  else if (mode === 'garde') { SON.sauve(); dessinerPortrait($('portrait-garde'), maPlace.rang, maPlace.genre, maPlace.photo || AVATAR); }
   else if (mode === 'moque') { SON.fin(); vib([100, 80, 300]); if (moqueur) dessinerPortrait($('moq'), moqueur.rang, moqueur.genre, moqueur.photo || AVATAR); }
   document.querySelectorAll('#genre input').forEach(i => i.onchange = () => { genre = i.value; $('genre').classList.remove('manque-choix'); majPortrait(); });
   $('rejouer').onclick = () => { deverrouiller(); montrer(null); nouvellePartie(); };
@@ -2909,8 +2973,10 @@ function montrerFin() {
   if ($('montrer-nom')) $('montrer-nom').onclick = () => { $('zone-nom').classList.remove('cache'); $('montrer-nom').classList.add('cache'); $('nom').focus(); };
   if ($('photo')) $('photo').onchange = async e => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
-    try { photoData = await photoVersData(f); majPortrait(); $('photo-lbl').firstChild.textContent = '📸 Reprendre la photo'; }
-    catch (err) { photoData = ''; alert('Photo impossible à utiliser, essaie encore.'); }
+    e.target.value = ''; // pour pouvoir reprendre la même photo
+    let img; try { img = await chargerPhoto(f); } catch (err) { alert('Photo impossible à utiliser, essaie encore.'); return; }
+    const data = await cadrerPhoto(img, rang, genre); if (!data) return;
+    photoData = data; majPortrait(); $('photo-lbl').firstChild.textContent = '📸 Reprendre la photo';
   };
   if ($('envoyer')) $('envoyer').onclick = async () => {
     const nom = $('nom').value.trim().replace(/\s+/g, ' ').slice(0, 24);

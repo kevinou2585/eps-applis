@@ -68,10 +68,10 @@ body:not(.sur-installer) .etape2,.sur-installer .etape1{display:none}
   <a class="tuile" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b><span>Points, équipes, fair-play, fin de leçon</span></a>
   <a class="tuile" href="le-fist/"><img src="icones/le-fist-192.png" alt=""><b>Le Fist</b><span>Fléchettes 301 ou 101 entre collègues</span></a>
   <a class="tuile" href="classeur/"><img src="icones/classeur-192.png" alt=""><b>Classeur EPS</b><span>Leçons, évaluations, idées par sport</span></a>
-  <a class="tuile perso" href="battle/"><img src="icones/battle-192.png" alt=""><b>Battle des profs</b><span>Le jeu du mois : bats le boss !</span></a>
+  <a class="tuile" href="battle/"><img src="icones/battle-192.png" alt=""><b>Battle des profs</b><span>Le jeu du mois : bats le boss !</span></a>
 </div>
 <script>
-// Carnet et Battle des profs : cadenas tant que le 2e code n'a pas été entré sur cet appareil (voir perso.js).
+// Carnet : cadenas tant que le 2e code n'a pas été entré sur cet appareil (voir perso.js).
 try { if (localStorage.getItem('eps-perso-ok') !== '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5')
   document.querySelectorAll('.tuile.perso b').forEach(b => b.insertAdjacentHTML('afterbegin', '🔒 ')); } catch (e) {}
 </script>
@@ -113,8 +113,8 @@ try { if (localStorage.getItem('eps-perso-ok') !== '5994471abb01112afcc18159f6cc
   <form id="porte-f">
     <img src="icones/eps-192.png" alt="">
     <b>EPS ultime</b>
-    <span>Entre le code de l'école. Il n'est demandé qu'une fois sur ce téléphone.</span>
-    <input id="porte-i" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code de l'école">
+    <span>Entre le code EPS ultime (majuscules ou minuscules, peu importe). Il n'est demandé qu'une fois sur ce téléphone.</span>
+    <input id="porte-i" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code EPS ultime">
     <button type="submit">Entrer</button>
     <span id="porte-m" class="err"></span>
   </form>
@@ -169,10 +169,11 @@ async function ouvrirListes(code){
   if (o.tableau) localStorage.setItem('eps-tableau', o.tableau); else localStorage.removeItem('eps-tableau');
   if (o.script) localStorage.setItem('eps-script', o.script); else localStorage.removeItem('eps-script');
   montrerTableau();
-  localStorage.setItem('eps-code', code);
+  localStorage.setItem('eps-cle', code); // code d'EPS ultime (dechiffre les listes)
+  localStorage.setItem('eps-code', o.scode || code); // code d'ecole envoye au script Google
   localStorage.setItem('eps-listes-v', C.v);
 }
-let codeGarde = null; try { codeGarde = localStorage.getItem('eps-code'); } catch(e){}
+let codeGarde = null; try { codeGarde = localStorage.getItem('eps-cle') || localStorage.getItem('eps-code'); } catch(e){}
 const installe = document.body.classList.contains('installe');
 if (!codeGarde && installe) document.getElementById('porte').hidden = false;
 else if (navigator.onLine) ouvrirListes(codeGarde).catch(() => {}); // listes mises a jour

@@ -899,14 +899,15 @@ LISTES_JS = ("const ROSTER = (() => { try { const r = JSON.parse(localStorage.ge
              "if (r && Array.isArray(r.jaune)) return r; } catch(e){} return {jaune:[], vert:[], bleu:[], rouge:[]}; })();")
 
 
-def chiffrer(listes):
-    """AES-GCM avec une cle tiree du code d'ecole (PBKDF2). Le code est lu dans la variable KL_CODE."""
+def chiffrer(listes, code=None):
+    """AES-GCM avec une cle tiree d'un code (PBKDF2). Par defaut le code d'EPS ultime, lu dans la variable KL_CODE.
+    Les codes ne tiennent pas compte des majuscules (tout est mis en minuscules, ici comme dans les pages)."""
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    code = os.environ.get("KL_CODE", "").strip().lower()
+    code = (code if code is not None else os.environ.get("KL_CODE", "")).strip().lower()
     if not code:
-        sys.exit("Donne le code d'ecole dans la variable KL_CODE")
+        sys.exit("Donne le code d'EPS ultime dans la variable KL_CODE")
     sel, iv = os.urandom(16), os.urandom(12)
     cle = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=sel, iterations=250000).derive(code.encode())
     donnees = AESGCM(cle).encrypt(iv, json.dumps(listes, ensure_ascii=False).encode(), None)
@@ -940,9 +941,18 @@ def koh_lanta(src):
     sortie = subprocess.run(["node", "-e", "process.stdout.write(JSON.stringify(" + m_r.group(1) + "))"],
                             capture_output=True, text=True, check=True).stdout
     # Le lien du tableau des scores (Drive) est chiffre avec les listes : il n'apparait pas en clair sur le site.
+    # KL_SCODE = code d'ecole attendu par le script Google (envoi des scores) ; il peut differer du code d'EPS ultime.
+    scode = os.environ.get("KL_SCODE", "").strip().lower()
+    if not scode:
+        sys.exit("Donne le code d'ecole du script Google dans la variable KL_SCODE")
     secret = {"listes": json.loads(sortie), "tableau": os.environ.get("KL_TABLEAU", ""),
-              "script": os.environ.get("KL_SCRIPT", "")}
+              "script": os.environ.get("KL_SCRIPT", ""), "scode": scode}
     (RACINE / "eleves.chiffre.json").write_text(json.dumps(chiffrer(secret)), encoding="utf-8")
+    # Battle des profs seul (lien partage aux collegues hors EPS) : l'adresse du script et le code d'ecole,
+    # chiffres une fois avec le code d'ecole et une fois avec le code d'EPS ultime. Pas de noms d'eleves.
+    acces = {"script": os.environ.get("KL_SCRIPT", ""), "scode": scode}
+    (RACINE / "battle/acces.chiffre.json").write_text(
+        json.dumps([chiffrer(acces, scode), chiffrer(acces)]), encoding="utf-8")
     corps = corps[:m_r.start()] + LISTES_JS + corps[m_r.end():]
     if "jaune:['" in corps:
         sys.exit("Koh-Lanta : noms d'eleves restants")

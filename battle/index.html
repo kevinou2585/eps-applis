@@ -850,6 +850,7 @@ function titreBoss(rang, genre) { return NIV_BOSS[rang].titre[genre === 'F' ? 'F
 let etat = 'accueil';
 let balles = [], score = 0, balleNo = 1, mult = 1, bulletin = 0, multiball = false;
 let sauveT = 0, temps = 0, comboN = 0, comboT = -9, basketHits = [], attenteBalle = 0, tilts = 0;
+let acoup = { x: 0, y: 0, t: -9 }; // à-coup visible de la table quand on secoue le téléphone
 let popups = [], particules = [], grandMsg = null, secousse = 0, flash = 0, chaseT = 0;
 let epsReset = 0, spectacleT = 0, derniereAction = 0;
 let paniers = 0, besoin = 3, cagePleine = true, cageFlash = 0, filetT = 0, forcePanier = null;
@@ -2597,7 +2598,8 @@ function rendu() {
   if (table === 'goth' && !fondGoth) dessinerFondGoth();
   if (table === 'boss' && combat && !fondBoss[combat.rang]) dessinerFondBoss(combat.rang);
   ctx.drawImage(table === 'goth' ? fondGoth : table === 'boss' && combat ? fondBoss[combat.rang] : nuit ? fondNuit : fond, 0, 0);
-  const sx = secousse > 0 ? rnd(-3, 3) * secousse * 8 : 0, sy = secousse > 0 ? rnd(-3, 3) * secousse * 8 : 0;
+  const tc = temps - acoup.t, kc = tc >= 0 && tc < 0.5 ? Math.exp(-tc * 7) * Math.cos(tc * 28) : 0; // la table part d'un coup puis revient en vibrant
+  const sx = (secousse > 0 ? rnd(-3, 3) * secousse * 8 : 0) + acoup.x * kc, sy = (secousse > 0 ? rnd(-3, 3) * secousse * 8 : 0) + acoup.y * kc;
   ctx.setTransform(DPR * S, 0, 0, DPR * S, (OX + sx) * DPR, (OY + sy) * DPR);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   const attract = etat !== 'jeu' && etat !== 'pause', arcEnCiel = multiball || (attract && Math.floor(temps / 4) % 2 === 1);
@@ -2968,8 +2970,8 @@ const SECOUSSE = {
   FENETRE: 2.5,   // s : les secousses se cumulent sur cette durée
   AVERT: 2,       // total dans la fenêtre → « ATTENTION ! »
   TILT: 3,        // total dans la fenêtre, après un avertissement → TILT
-  VY: 330,        // poussée vers le haut donnée à la bille (vitesse, unités de la table / s)
-  VX: 200,        // poussée sur le côté
+  VY: 230,        // poussée vers le haut donnée à la bille (vitesse, unités de la table / s)
+  VX: 140,        // poussée sur le côté
   CHUTE: 7        // s : sécurité, après un TILT la bille finit par passer à travers la table
 };
 let secOn = lsGet('battle-secousses', true) !== false;
@@ -3020,7 +3022,7 @@ function secousseTable(m, dx = 0, dy = 0) { // une secousse détectée : poussé
     const v = Math.hypot(b.vx, b.vy); if (v > VMAX) { b.vx *= VMAX / v; b.vy *= VMAX / v; }
     b.ax = b.x; b.ay = b.y; b.at = temps;
   }
-  stats.nudges++; secousse = Math.max(secousse, 0.1 + 0.06 * f); SON.nudge(f); vib(25);
+  stats.nudges++; secousse = Math.max(secousse, 0.14 + 0.06 * f); acoup = { x: cote * 9 * f, y: -11 * f, t: temps }; SON.nudge(f); vib([70, 30, 50]);
   if (total >= SECOUSSE.AVERT) { secAvertiT = temps; annonce('ATTENTION !', 'Encore une secousse = TILT', '#ffd23f', 38, 1.4); SON.attention(); return 'attention'; }
   return 'nudge';
 }

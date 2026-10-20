@@ -117,9 +117,10 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .cadre-boite{width:100%;max-width:360px;text-align:center}.cadre-boite b{display:block;font-size:20px;color:var(--jaune)}.cadre-boite span{display:block;font-size:14px;color:var(--gris);margin:4px 0 6px}
 #cadre-grand{display:block;margin:0 auto;cursor:grab}.cadre-mini{display:flex;justify-content:center;gap:10px;margin:4px 0}.cadre-mini canvas{background:rgba(255,255,255,.06);border-radius:10px}
 #cadre-zoom{width:90%;margin:10px auto;accent-color:#ffd23f}.cadre-bt{display:grid;grid-template-columns:1fr 1.4fr;gap:10px}.cadre-bt .btn{margin:0}
-.btn-son,.btn-mus{width:auto;display:inline-block;padding:9px 18px;font-size:16px}
-.btn-mus{padding:9px 14px}.btn-mus:disabled{opacity:.45}
-.btn-son.coupe,.btn-mus.coupe{border-color:#ffd23f;color:#ffd23f}
+.btn-son,.btn-mus,.btn-sec{width:auto;display:inline-block;padding:9px 18px;font-size:16px}
+.btn-mus,.btn-sec{padding:9px 14px}.btn-mus:disabled{opacity:.45}
+.btn-son.coupe,.btn-mus.coupe,.btn-sec.coupe{border-color:#ffd23f;color:#ffd23f}
+.btn-sec.refuse{border-style:dashed}
 canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 </style>
 </head>
@@ -138,8 +139,8 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
     <div id="bloc-boss"></div>
     <button class="gros pulse" id="jouer">Jouer</button>
     <div class="etat" id="etat"></div>
-    <button class="btn btn-son" type="button">🔊 Son activé</button> <button class="btn btn-mus" type="button">🎵 Musique</button>
-    <p class="aide">Touche à gauche = flipper gauche · à droite = flipper droit.<br>Maintiens <b>LANCER</b> et lâche au bon moment.<br>Vise la <b>RAMPE</b> au centre : 3 paniers ouvrent la cage → récré multiballe !<br>Lancer faible, moyen ou fort : la bille se bloque dans le <b>trou 1, 2 ou 3</b>.<br>Gare au trou de <b>COLLE</b> et aux couloirs de <b>SORTIE</b> sur les côtés…<br>La <b>SALLE DES PROFS</b> t’envoie sous le plancher de verre, droit sur le <b>BUT</b> : bats le gardien !<br><b>3 buts</b> : le flipper se retourne… bienvenue dans la <b>CRYPTE</b> ☠ (1 bille bonus).<br>Dépasse le score d’un <b>BOSS</b> du top 3 : il descend sur le flipper… abats-le à coups de bille ⚔ Si tu perds le combat, la partie est finie !</p>
+    <button class="btn btn-son" type="button">🔊 Son activé</button> <button class="btn btn-mus" type="button">🎵 Musique</button> <button class="btn btn-sec" type="button">📳 Secousses</button>
+    <p class="aide">Touche à gauche = flipper gauche · à droite = flipper droit.<br>Maintiens <b>LANCER</b> et lâche au bon moment.<br>Vise la <b>RAMPE</b> au centre : 3 paniers ouvrent la cage → récré multiballe !<br>Lancer faible, moyen ou fort : la bille se bloque dans le <b>trou 1, 2 ou 3</b>.<br>Gare au trou de <b>COLLE</b> et aux couloirs de <b>SORTIE</b> sur les côtés…<br>La <b>SALLE DES PROFS</b> t’envoie sous le plancher de verre, droit sur le <b>BUT</b> : bats le gardien !<br><b>3 buts</b> : le flipper se retourne… bienvenue dans la <b>CRYPTE</b> ☠ (1 bille bonus).<br>Dépasse le score d’un <b>BOSS</b> du top 3 : il descend sur le flipper… abats-le à coups de bille ⚔ Si tu perds le combat, la partie est finie !<br>📳 <b>Secoue le téléphone</b> d’un coup sec pour pousser la bille (pratique devant un couloir de sortie)… mais trop fort ou trop souvent : <b>ATTENTION</b>, puis <b>TILT</b> = flippers bloqués et bille perdue !</p>
   </div>
 </section>
 
@@ -147,7 +148,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
   <div class="boite">
     <div class="bandeau">Temps mort</div>
     <button class="gros" id="reprendre">Reprendre</button>
-    <button class="btn btn-son" type="button">🔊 Son activé</button> <button class="btn btn-mus" type="button">🎵 Musique</button>
+    <button class="btn btn-son" type="button">🔊 Son activé</button> <button class="btn btn-mus" type="button">🎵 Musique</button> <button class="btn btn-sec" type="button">📳 Secousses</button>
     <button class="btn" id="abandon">Abandonner la partie</button>
   </div>
 </section>
@@ -641,6 +642,15 @@ const SON = {
   reveil() { musDuck(0.4, 1.6); foule(0.2, 0, 1.2, [300, 420], [800, 1000], 3); for (let i = 0; i < 4; i++) cloche(P(i * 2), 0.9, 0.06, 0.2 + i * 0.16); },
   glas() { cloche(P(0, -2), 2.4, 0.05); },
   retourBase() { musDuck(0.4, 2); whoosh(1.2, 0.14, 200, 5000); [0, 2, 4, 7].forEach((k, i) => pluck(P(k), 0.2, 0.08, 0.6 + i * 0.1, 1.2)); cloche(P(0, -1), 1.6, 0.08, 0.2); },
+  // ---- secousses (capteur de mouvement) et TILT
+  nudge(k = 1) { cogne(46, 0.3 * k); echantillon('tom', 0.22 * k, 0, 0.7); bruit(0.14, 0.14 * k, 320, 0.8, 0, 90, 'lowpass'); }, // « boum » sourd de la table qu'on bouscule
+  attention() { musDuck(0.4, 1.2); [0, 0.24].forEach(d => { ton('square', 988, 988, 0.11, 0.07, d, 2600); ton('square', 740, 740, 0.11, 0.06, d + 0.12, 2600); }); },
+  tilt() { // gros buzzer de flipper + chute
+    musDuck(0.12, 2.2); ton('sawtooth', 98, 92, 1.2, 0.2, 0, 1400); ton('square', 104, 98, 1.2, 0.16, 0, 1200);
+    for (let i = 0; i < 5; i++) ton('square', 196, 196, 0.1, 0.1, i * 0.2, 1200);
+    drop(0.32, 0.05, 120, 0.9); ooh(0.16, 0.6);
+  },
+  flipMort() { cogne(45, 0.12); }, // flipper bloqué par le TILT
   depart() { pop(P(0), 0.14); pop(P(2), 0.14, 0.08); pop(P(4), 0.14, 0.16); etoiles(4, 0.05, 0.22, 7); },
   // ---- les boss
   alerteBoss() { musDuck(0.2, 1.6); riser(1.4, 0.16); for (let i = 0; i < 6; i++) echantillon('timbale', 0.35 + i * 0.07, i * 0.22); ton('sine', 520, 780, 0.3, 0.06, 0, 0, false, 0.05); ton('sine', 520, 780, 0.3, 0.06, 0.45, 0, false, 0.05); ton('sine', 520, 780, 0.3, 0.06, 0.9, 0, false, 0.05); },
@@ -847,11 +857,12 @@ let nuit = false, bascule = null, gelT = 0, protegeT = 0, cageAttente = 0, aServ
 let butT = 0, butTxt = '', jaugeFlash = 0;
 let combat = null, bossFile = [], finCombatT = -99; // combat : boss en cours ; bossFile : boss de la partie (n°3 d'abord)
 let table = 'base', butsN = 0, butsFlash = 0, gothDans = 0, gothScore0 = 0; // table : 'base' (gymnase) ou 'goth' (la crypte) ; butsN : compteur de buts (3 = crypte)
-const stats = { buts: 0, bloques: 0, poteaux: 0, sorties: 0, trous: [0, 0, 0], petits: 0, outG: 0, outD: 0 };
+const stats = { buts: 0, bloques: 0, poteaux: 0, sorties: 0, trous: [0, 0, 0], petits: 0, outG: 0, outD: 0, nudges: 0, tilts: 0 };
+let tiltOn = false, tiltT0 = 0, secCompte = [], secAvertiT = -99; // TILT en cours (jusqu'à la bille suivante) ; secousses récentes
 const charge = { src: {}, actif: false, t0: 0 };
 
 function balleNeuve(x, y, vx, vy, neuve) { return { x, y, vx, vy, tient: 0, ignoreTrou: 0, ignoreCasier: 0, neuve, lance: 0, ax: x, ay: y, at: temps, rampe: null, tunnel: null, boucle: null, lieu: null, trou: null, filet: null, vise: 0, viseT: 0, tirBut: 0, sansGardien: 0 }; }
-function nouvelleBalle(nouvelle = true) { balles.push(balleNeuve(375, 697, 0, 0, nouvelle)); }
+function nouvelleBalle(nouvelle = true) { finTilt(); balles.push(balleNeuve(375, 697, 0, 0, nouvelle)); }
 function nouvellePartie() {
   balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps;
   paniers = 0; besoin = 3; cagePleine = true; cageFlash = 0; filetT = 0; COLLE.balle = null;
@@ -861,10 +872,11 @@ function nouvellePartie() {
   butT = 0; jaugeFlash = 0; TROUS_L.forEach(t => { t.balle = null; t.flash = 0; });
   FL.forEach(f => { f.a = A_REPOS; f.w = 0; f.appui = false; });
   table = 'base'; butsN = 0; butsFlash = 0; gothDans = 0;
-  combat = null; finCombatT = -99; preparerBoss();
+  combat = null; finCombatT = -99; preparerBoss(); finTilt();
   nouvelleBalle(true); etat = 'jeu'; $('pause').style.display = 'block';
 }
 function points(n, x, y) {
+  if (tiltOn) return; // TILT : plus aucun point jusqu'à la bille suivante
   const p = n * mult * (multiball ? 2 : 1); score += p;
   if (x != null) popups.push({ t: '+' + fmt(p), x, y, age: 0, vie: 0.8, petit: true });
   if (!recordFait && score > cibleRecord && etat === 'jeu') { recordFait = true; popups.push({ t: '🏆 RECORD BATTU !', x: 185, y: 250, age: 0, vie: 2.2, coul: '#ffe600' }); SON.record(); vib([30, 30, 30, 30, 80]); }
@@ -902,7 +914,7 @@ function collSeg(b, s) {
   b.x += nx * (rr - d); b.y += ny * (rr - d);
   const vn = b.vx * nx + b.vy * ny;
   if (vn < 0) { b.vx -= (1 + s.e) * vn * nx; b.vy -= (1 + s.e) * vn * ny; b.vx *= 0.997; b.vy *= 0.997; }
-  if (s.kick && vn < -30) { // sortie de slingshot toujours identique : lisible, pas de ping-pong
+  if (s.kick && vn < -30 && !tiltOn) { // sortie de slingshot toujours identique : lisible, pas de ping-pong
     const tx = -ny, ty = nx, vt = (b.vx * tx + b.vy * ty) * 0.4;
     b.vx = nx * s.kick + tx * vt; b.vy = ny * s.kick + ty * vt;
   }
@@ -967,12 +979,14 @@ function pas(h) {
     if (f.a > cible) f.a = Math.max(cible, f.a - vit * h); else f.a = Math.min(cible, f.a + vit * h);
     f.w = (f.a - old) / h;
   }
+  if (tiltOn) for (const f of FL) f.appui = false; // TILT : flippers bloqués
   if (table === 'goth') { pasGoth(h); return; }
   if (table === 'boss') { pasBoss(h); return; }
   { const g = GARDIEN, sg = g.seg; sg.ax = g.x - g.l; sg.bx = g.x + g.l; sg.ay = sg.by = g.y; }
   const amort = 1 - 0.06 * h;
   for (const b of balles) {
     if (!libre(b)) continue;
+    if (tiltOn) { pasTilt(b, h, segs, BUMP); continue; }
     const py = b.y;
     b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
     // entrée de la rampe : la balle qui monte dans le couloir central est prise par le rail (une seule à la fois)
@@ -1247,6 +1261,7 @@ function pasGoth(h) {
   const amort = 1 - 0.06 * h;
   for (const b of balles) {
     if (!libre(b)) continue;
+    if (tiltOn) { pasTilt(b, h, segsG, CRANES); continue; }
     b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
     for (const s of segsG) { if (!s.on) continue; const imp = collSeg(b, s); if (imp > 50) toucheGoth(s, b, imp); }
     for (const c of CRANES) if (collBump(b, c)) toucheCrane(c, b);
@@ -1454,6 +1469,7 @@ function pasBoss(h) { // physique de l'arène : même bas de table, 2 bumpers, l
   const amort = 1 - 0.06 * h, C = combat;
   for (const b of balles) {
     if (!libre(b)) continue;
+    if (tiltOn) { pasTilt(b, h, segsB, BUMPB); if (C && C.phase === 'combat') collPlot(b, C.x, C.y + 8, R_BOSS); continue; } // TILT : le boss n'est plus touché
     b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
     for (const s of segsB) { if (!s.on) continue; const imp = collSeg(b, s); if (imp > 50) { if (s.type === 'sling') { points(100, b.x, b.y - 14); SON.sling(); vib(10); s.flash = 0.15; etincelles(b.x, b.y, 5, '#fff'); } else SON.mur(imp); } }
     for (const c of BUMPB) if (collBump(b, c) && c.cd <= 0) { c.cd = 0.08; c.flash = 0.22; points(300, c.x, c.y - 34); SON.bumper('sifflet'); vib(8); etincelles(b.x, b.y, 7, '#ffd23f'); }
@@ -1601,6 +1617,7 @@ function maj(dt) {
   const avant = balles.length;
   balles = balles.filter(b => b.y < TH + 30);
   if (balles.length < avant) { if (table === 'goth') perteGoth(); else if (table === 'boss') perteBoss(); else apresPerte(true); }
+  if (tiltOn && balles.length && balles.every(enAttente)) finTilt(); // bille suivante (ex. bille de combat) : le TILT est levé
   if (attenteBalle > 0) { attenteBalle -= dt; if (attenteBalle <= 0) { if (balleNo > 3) finPartie(); else nouvelleBalle(true); } }
   for (const p of popups) p.age += dt; popups = popups.filter(p => p.age < p.vie);
   for (const p of particules) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; } particules = particules.filter(p => p.age < p.vie);
@@ -2790,6 +2807,14 @@ function rendu() {
     texte(grandMsg.t, 0, 0, grandMsg.taille || 40, grandMsg.coul, a); if (grandMsg.sous) texte(grandMsg.sous, 0, 36, 18, '#fff', a);
     ctx.restore();
   }
+  if (tiltOn && etat !== 'fin') { // TILT : grand panneau rouge / blanc clignotant (contraste fort, pas seulement la couleur)
+    const cl = Math.floor(temps * 4) % 2 === 0;
+    ctx.save(); ctx.translate(185, 320); ctx.rotate(-0.08);
+    rrect(ctx, -136, -66, 272, 132, 18); ctx.fillStyle = 'rgba(10,0,4,.86)'; ctx.fill(); ctx.strokeStyle = cl ? '#ffffff' : '#ff2233'; ctx.lineWidth = 7; ctx.stroke();
+    ctx.font = '900 96px system-ui,-apple-system,sans-serif'; ctx.lineWidth = 10; ctx.strokeStyle = cl ? '#ffffff' : '#000000'; ctx.strokeText('TILT', 0, -8); ctx.fillStyle = cl ? '#ff2233' : '#ffffff'; ctx.fillText('TILT', 0, -8);
+    texte('Flippers bloqués · bille perdue', 0, 46, 17, '#ffffff');
+    ctx.restore();
+  }
   if (combat && combat.phase === 'alerte') { // alerte : le gymnase figé vire au rouge
     ctx.fillStyle = `rgba(200,0,20,${0.18 + 0.12 * Math.sin(temps * 14)})`; cheminTable(ctx); ctx.fill();
     ctx.strokeStyle = Math.floor(temps * 6) % 2 ? '#ff3344' : '#ffffff'; ctx.lineWidth = 8; ctx.stroke();
@@ -2930,9 +2955,98 @@ function boucle(t) {
 }
 let btnVu = false, cssVu = '';
 
+// ---------------------------------------------------------------- Secousses (capteur de mouvement) et TILT
+// Kevin : on secoue le téléphone comme on bouscule un vrai flipper. Une secousse franche pousse la bille (surtout vers le haut,
+// et sur le côté à l'opposé du mouvement, par inertie) : une vraie chance de sauver une bille qui file vers un couloir de sortie.
+// Trop de secousses rapprochées, ou une secousse trop violente : « ATTENTION ! », puis TILT (flippers bloqués, bille perdue).
+const SECOUSSE = {
+  SEUIL: 13,      // m/s² : variation d'accélération (hors gravité) à partir de laquelle on compte une secousse
+  REARME: 6,      // m/s² : il faut redescendre sous ce niveau avant la secousse suivante (un aller-retour du bras = 1 seule poussée)
+  FORTE: 30,      // m/s² : secousse trop violente : elle compte double
+  PIC_MS: 120,    // on observe la secousse pendant ce temps pour en garder le pic (force et direction)
+  ECART_MS: 450,  // délai minimal entre deux poussées
+  FENETRE: 2.5,   // s : les secousses se cumulent sur cette durée
+  AVERT: 2,       // total dans la fenêtre → « ATTENTION ! »
+  TILT: 3,        // total dans la fenêtre, après un avertissement → TILT
+  VY: 330,        // poussée vers le haut donnée à la bille (vitesse, unités de la table / s)
+  VX: 200,        // poussée sur le côté
+  CHUTE: 7        // s : sécurité, après un TILT la bille finit par passer à travers la table
+};
+let secOn = lsGet('battle-secousses', true) !== false;
+let secPerm = typeof DeviceMotionEvent === 'undefined' ? 'absent' : typeof DeviceMotionEvent.requestPermission === 'function' ? 'a-demander' : 'ok'; // iPhone : autorisation au 1er tap
+let secG = null, secArme = true, secPic = null, secDernier = -1e9;
+function demanderMouvement() { // iPhone (iOS 13+) : doit être appelé pendant un tap ; refus = le jeu marche sans
+  try {
+    DeviceMotionEvent.requestPermission().then(r => { secPerm = r === 'granted' ? 'ok' : 'refuse'; majBoutonsSon(); }, () => { secPerm = 'refuse'; majBoutonsSon(); });
+  } catch (e) { secPerm = 'refuse'; majBoutonsSon(); }
+}
+function basculerSecousses() {
+  if (secOn && secPerm === 'refuse') { demanderMouvement(); setTimeout(() => SON.clic(), 30); return; } // refusées : on redemande
+  secOn = !secOn; lsSet('battle-secousses', secOn);
+  if (secOn && secPerm === 'a-demander') demanderMouvement();
+  secPic = null; majBoutonsSon(); setTimeout(() => SON.clic(), 30);
+}
+const dansLanceur = b => b.x > 358 && b.y > 236; // couloir du lanceur (bille posée ou qui monte)
+function secouable() { // on ignore les mouvements hors jeu, en pause, pendant les scènes figées et tant que la bille est au lanceur
+  return secOn && etat === 'jeu' && !tiltOn && spectacleT <= 0 && gelT <= 0 && !bascule && !(combat && combat.phase !== 'combat')
+    && balles.some(b => libre(b) && !dansLanceur(b));
+}
+function lireMouvement(e) {
+  const A = e.accelerationIncludingGravity, B = e.acceleration, a = A && A.x != null ? A : B && B.x != null ? B : null;
+  if (!a) return;
+  const x = +a.x || 0, y = +a.y || 0, z = +a.z || 0;
+  if (!secG) { secG = { x, y, z }; return; }
+  const dx = x - secG.x, dy = y - secG.y, dz = z - secG.z, m = Math.hypot(dx, dy, dz);
+  const k = m < SECOUSSE.REARME ? 0.1 : 0.02; secG.x += dx * k; secG.y += dy * k; secG.z += dz * k; // le « repos » suit l'inclinaison du téléphone, pas les secousses
+  if (secPic) { if (m > secPic.m) { secPic.m = m; secPic.dx = dx; secPic.dy = dy; } return; }
+  if (m < SECOUSSE.REARME) { secArme = true; return; }
+  if (!secArme || m < SECOUSSE.SEUIL || performance.now() - secDernier < SECOUSSE.ECART_MS || !secouable()) return;
+  secArme = false; const p = secPic = { m, dx, dy };
+  setTimeout(() => { if (secPic !== p) return; secPic = null; secDernier = performance.now(); secousseTable(p.m, p.dx, p.dy); }, SECOUSSE.PIC_MS);
+}
+window.addEventListener('devicemotion', lireMouvement);
+function secousseTable(m, dx = 0, dy = 0) { // une secousse détectée : poussée, avertissement ou TILT
+  if (!secouable()) return false;
+  const forte = m >= SECOUSSE.FORTE;
+  secCompte = secCompte.filter(t => temps - t.t < SECOUSSE.FENETRE); secCompte.push({ t: temps, n: forte ? 2 : 1 });
+  const total = secCompte.reduce((s, t) => s + t.n, 0); derniereAction = temps;
+  if (total >= SECOUSSE.TILT && temps - secAvertiT < SECOUSSE.FENETRE) { declencherTilt(); return 'tilt'; }
+  const f = Math.min(1.25, 0.8 + 0.45 * Math.max(0, m - SECOUSSE.SEUIL) / (SECOUSSE.FORTE - SECOUSSE.SEUIL));
+  const l = Math.hypot(dx, dy), cote = l > 0.01 ? -dx / l * Math.min(1, l / 8) : 0; // inertie : le téléphone part à droite, la bille part à gauche
+  for (const b of balles) {
+    if (!libre(b) || dansLanceur(b)) continue;
+    const centre = b.x < 185 ? 1 : -1; // un peu vers le milieu, comme quand on bouscule le côté du flipper
+    b.vy -= SECOUSSE.VY * f; b.vx += SECOUSSE.VX * f * (0.65 * cote + 0.35 * centre);
+    const v = Math.hypot(b.vx, b.vy); if (v > VMAX) { b.vx *= VMAX / v; b.vy *= VMAX / v; }
+    b.ax = b.x; b.ay = b.y; b.at = temps;
+  }
+  stats.nudges++; secousse = Math.max(secousse, 0.1 + 0.06 * f); SON.nudge(f); vib(25);
+  if (total >= SECOUSSE.AVERT) { secAvertiT = temps; annonce('ATTENTION !', 'Encore une secousse = TILT', '#ffd23f', 38, 1.4); SON.attention(); return 'attention'; }
+  return 'nudge';
+}
+function declencherTilt() { // flippers bloqués, plus de bumpers ni de points : la bille descend et elle est perdue (pas de bille sauvée)
+  tiltOn = true; tiltT0 = temps; secCompte = []; secAvertiT = -99; stats.tilts++;
+  FL.forEach(f => f.appui = false); charge.src = {}; charge.actif = false; arreterCharge();
+  sauveT = 0; protegeT = 0; aServir = 0; cageAttente = 0; grandMsg = null;
+  SON.tilt(); vib([200, 80, 200, 80, 400]); secousse = 0.35; flash = Math.max(flash, 0.3);
+}
+function finTilt() { tiltOn = false; secCompte = []; secAvertiT = -99; }
+function pasTilt(b, h, liste, ronds) { // physique pendant le TILT : murs passifs, bumpers et slingshots éteints, flippers baissés
+  const amort = 1 - 0.06 * h;
+  b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
+  if (temps - tiltT0 > SECOUSSE.CHUTE) { b.vx *= 0.98; return; } // bille coincée : elle tombe à travers la table
+  for (const s of liste) if (s.on) collSeg(b, s);
+  for (const c of ronds) collPlot(b, c.x, c.y, c.r);
+  for (const f of FL) collFlip(b, f);
+  const v2 = b.vx * b.vx + b.vy * b.vy; if (v2 > VMAX * VMAX) { const k = VMAX / Math.sqrt(v2); b.vx *= k; b.vy *= k; }
+}
+
 // ---------------------------------------------------------------- Entrées
+let appuiMort = [false, false];
 function appuis(gauche, droite) {
   if (etat !== 'jeu') return;
+  if (tiltOn) { if ((gauche && !appuiMort[0] || droite && !appuiMort[1]) && limite('flipMort', 0.2)) SON.flipMort(); appuiMort = [gauche, droite]; return; } // TILT : flippers bloqués (bruit sourd)
+  appuiMort = [false, false];
   if (gauche && !FL[0].appui || droite && !FL[1].appui) { SON.flip(); vib(6); }
   if (gauche !== FL[0].appui || droite !== FL[1].appui) derniereAction = temps;
   FL[0].appui = gauche; FL[1].appui = droite;
@@ -2987,11 +3101,13 @@ function pause() { if (etat !== 'jeu') return; etat = 'pause'; FL.forEach(f => f
 $('pause').onclick = () => pause();
 $('reprendre').onclick = () => { deverrouiller(); montrer(null); etat = 'jeu'; dernier = 0; };
 $('abandon').onclick = () => { montrer(null); etat = 'jeu'; balleNo = 4; balles = []; attenteBalle = 0; finPartie(); };
-$('jouer').onclick = () => { deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); };
+$('jouer').onclick = () => { if (secOn && secPerm === 'a-demander') demanderMouvement(); deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); };
 // bouton son 🔊 / 🔇 (mémorisé)
 function majBoutonsSon() {
   document.querySelectorAll('.btn-son').forEach(b => { b.textContent = muet ? '🔇 Son coupé' : '🔊 Son activé'; b.setAttribute('aria-pressed', String(!muet)); b.classList.toggle('coupe', muet); });
   document.querySelectorAll('.btn-mus').forEach(b => { b.textContent = musiqueOn ? '🎵 Musique' : '🎵 Musique coupée'; b.setAttribute('aria-pressed', String(musiqueOn)); b.classList.toggle('coupe', !musiqueOn); b.disabled = muet; });
+  const refuse = secOn && secPerm === 'refuse';
+  document.querySelectorAll('.btn-sec').forEach(b => { b.textContent = !secOn ? '📳 Secousses coupées' : refuse ? '📳 Secousses refusées' : '📳 Secousses'; b.setAttribute('aria-pressed', String(secOn && !refuse)); b.classList.toggle('coupe', !secOn || refuse); b.classList.toggle('refuse', refuse); });
 }
 function basculerSon() {
   muet = !muet; lsSet('battle-muet', muet); majBoutonsSon();
@@ -3006,6 +3122,7 @@ function basculerMusique() { // Kevin : musique on/off séparée (mémorisée), 
 }
 document.querySelectorAll('.btn-son').forEach(b => b.addEventListener('click', basculerSon));
 document.querySelectorAll('.btn-mus').forEach(b => b.addEventListener('click', basculerMusique));
+document.querySelectorAll('.btn-sec').forEach(b => b.addEventListener('click', basculerSecousses));
 majBoutonsSon();
 
 // ---------------------------------------------------------------- Classement
@@ -3314,6 +3431,7 @@ window.__battle = {
   get colle() { return COLLE.balle; }, get attente() { return attenteBalle; },
   set forcePanier(v) { forcePanier = v; }, get forcePanier() { return forcePanier; },
   stats, TROUS_L, BUT, GARDIEN, BUMP, OUT, trouVise, appuis,
+  get tiltOn() { return tiltOn; }, get secOn() { return secOn; }, get secPerm() { return secPerm; }, get secCompte() { return secCompte; }, SECOUSSE, secousseTable, declencherTilt, basculerSecousses, secouable,
   get nuit() { return nuit; }, set nuit(v) { nuit = !!v; }, get bascule() { return bascule ? { t: bascule.t, k: basculeK(), versNuit: bascule.versNuit } : null; }, get css() { return cv.style.transform; },
   get epsReset() { return epsReset; }, LOOP, entrerLoop, FLIP_MIN, get protege() { return protegeT; }, get cageAttente() { return cageAttente; }, get eps() { return EPS.map(c => c.bas); }, get mult() { return mult; }, get bulletin() { return bulletin; }, get sauveT() { return sauveT; },
   get audio() { return { etat: AC ? AC.state : 'absent', muet, piste: MUS.nom, platines: MUS.decks.length, musique: musiqueOn, voix: VOIX.length, session: navigator.audioSession ? navigator.audioSession.type : null }; },

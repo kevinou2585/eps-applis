@@ -135,7 +135,7 @@ function fiHistHTML(c, p, vp){
     if (m.x) add('Exclu du cours', '⛔', 'd'); else if (m.d) add('Perturbe le cours', '👎', 'd');
   });
   c.evals.filter(e => e.date ? inP(e.date) : (year || e.periodId === vp.id)).forEach(e => { const s = e.s[p.id]; if (s == null) return;
-    ev.push({date: e.date || '', k: (e.date || '') + '99', h: '', t: `${e.kind === 'form' ? 'Éval. formative' : 'Évaluation'} « ${e.name} » : ${s === 'abs' ? 'absent' : fr(s, 2) + '/' + fr(+e.max, 2)}`, ic: '📝', cls: 'fe', sp: ''}); });
+    ev.push({date: e.date || '', k: (e.date || '') + '99', h: '', t: `${e.kind === 'form' ? 'Éval. formative' : 'Évaluation'} « ${e.name} » : ${evTag(s) ? evTagLong(s) : fr(s, 2) + '/' + fr(+e.max, 2)}`, ic: '📝', cls: 'fe', sp: ''}); });
   (p.certs || []).forEach(x => { if (!(year || inP(x.from) || inP(x.to))) return;
     ev.push({date: x.from, k: x.from + '00', h: '', t: `Certificat médical jusqu'au ${dFR(x.to)}${zoneTxt(x) ? ' (' + zoneTxt(x) + ')' : ''}${x.note ? ' · ' + x.note : ''}`, ic: '🩺', cls: '', sp: ''}); });
   (year ? periodsOf(c) : [vp]).forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (!a) return;
@@ -169,10 +169,10 @@ function fiBulletin(c, pid, per){
       ${row('Savoir-être', `${fr(r.se)}<small>/${seP}</small>`, 'big')}
       ${year ? '' : row('&nbsp;&nbsp;Tenue', `${r.t}<small>/${T}</small>`) + row('&nbsp;&nbsp;Attitude', `${r.c}<small>/${Cc}</small>`)}
       ${row('Savoir-faire', `${fr(r.sf)}<small>/${100 - seP}</small>`, 'big')}
-      ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), s === 'abs' ? 'abs' : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
+      ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), evTag(s) ? evTagTxt(s) : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
       ${row(year ? 'Moyenne de l\'année' : 'Total', `${fr(r.total)}<small> %</small>`, 'big tot')}
     </div>
-    ${fo.length ? `<h3>Formatif (ne compte pas)</h3><div class="card fi-bt">${fo.map(e => row(esc(e.name), e.s[p.id] === 'abs' ? 'abs' : `${fr(e.s[p.id], 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}</div>` : ''}
+    ${fo.length ? `<h3>Formatif (ne compte pas)</h3><div class="card fi-bt">${fo.map(e => row(esc(e.name), evTag(e.s[p.id]) ? evTagTxt(e.s[p.id]) : `${fr(e.s[p.id], 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}</div>` : ''}
     <div class="card fi-bt">${row('Absences', k.abs)}${row('Retards', r.late || 0)}${row('Oublis de tenue', k.gym + k.adjT + k.pool)}${k.np ? row('Pas nagé', k.np) : ''}${row('Perturbations', k.d)}${row('Exclusions', k.x)}</div>
     <h3>Commentaire${mine != null ? ' <span class="tag com-man">✎ modifié</span>' : ''}</h3>
     <div class="card small">${esc(com) || '<span class="muted">Pas de commentaire.</span>'}</div>

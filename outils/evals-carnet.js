@@ -72,7 +72,8 @@ function evEnduFields(c, e){
 function evKindField(e){
   const f = e?.kind === 'form';
   return `<span class="small muted" style="font-weight:600">Compte dans le bulletin ?</span>
-    <div class="ev-kind"><button class="chip" type="button" data-kind="cert" aria-pressed="${!f}">✔ Certificative (compte dans le bulletin)</button><button class="chip" type="button" data-kind="form" aria-pressed="${f}">ℹ Formative (pour info)</button></div>`;
+    <div class="ev-kind"><button class="chip" type="button" data-kind="cert" aria-pressed="${!f}">✔ Certificative (compte dans le bulletin)</button><button class="chip" type="button" data-kind="form" aria-pressed="${f}">ℹ Formative (pour info)</button></div>
+    <label class="toggle"><input type="checkbox" id="ef-dec" ${e && evDec(e) ? 'checked' : ''}>Notes à virgule (ex. 2,5)</label><p class="small muted" style="margin:-6px 0 0">Décoché : seulement des notes entières (1, 2, 3…).</p>`;
 }
 let EF = null;
 function bindEvForm(c, e){
@@ -100,11 +101,57 @@ function evFormOk(){
 function evFormApply(c, o){
   if (!EF) return;
   if (EF.kind === 'form') o.kind = 'form'; else delete o.kind;
+  o.dec = !!$('ef-dec')?.checked || !!EF.endu;
   if (!EF.endu) return;
   const old = o.endu || {}, mn = parseNum($('ef-emin').value), t = Math.round(parseNum($('ef-etours').value));
   o.endu = {min: mn, tours: t, laps: old.laps || {}};
   if (old.tours !== t || EF.max0 !== +o.max) Object.entries(o.endu.laps).forEach(([pid, n]) => o.s[pid] = enScore(n, t, +o.max));
   c.enduLast = {min: mn, tours: t, max: +o.max};
+}
+
+/* --- Saisie des notes (classe et groupe) ---
+   e.s[pid] : nombre, ou 'abs' (absent), 'D' (dispensé), 'CM' (certificat médical) : ces trois-là ne comptent pas dans la note.
+   Un certificat de l'élève à la date de l'éval est repris tout seul en CM (sauf si on l'a retiré : e.cmOff[pid]).
+   e.dec : notes à virgule permises (sinon entières ; vieilles évals avec des virgules et endurance : permises).
+   Après une note, on passe tout seul à l'élève suivant. */
+const EV_TAGS = {abs: 'Abs', D: 'D', CM: 'CM'};
+const evTag = s => typeof s === 'string' && EV_TAGS[s] ? s : null;
+const evTagTxt = s => s;
+const evTagLong = s => ({abs: 'absent', D: 'dispensé', CM: 'certificat médical'})[s] || s;
+const evDec = e => e.dec === true || (e.dec == null && (!!e.endu || Object.values(e.s || {}).some(v => typeof v === 'number' && v % 1)));
+function evCertFill(c, e){
+  const d = e.date || today(); let n = 0;
+  c.pupils.forEach(p => { if (e.s[p.id] == null && !(e.cmOff || {})[p.id] && certOn(p, d)){ e.s[p.id] = 'CM'; n++; } });
+  if (n) save(c.id);
+}
+function evSinHTML(p, s, cid){
+  const t = evTag(s), dc = cid ? ` data-cid="${cid}"` : '';
+  return `<span class="sin"><input class="inp num" inputmode="decimal" enterkeyhint="next" aria-label="Note de ${esc(p.n)}" data-in="${p.id}"${dc} value="${typeof s === 'number' ? esc(fr(s, 2)) : ''}" ${t ? 'disabled' : ''} placeholder="${t ? EV_TAGS[t] : '—'}">${Object.entries(EV_TAGS).map(([k, l]) => `<button class="btn abs" type="button" data-tag="${k}" data-abs="${p.id}"${dc} aria-pressed="${t === k}">${l}</button>`).join('')}</span>`;
+}
+function evBindSin(sb, get, redraw){
+  const go = n => { if (!n) return; n.focus(); try { n.scrollIntoView({block: 'center', behavior: 'smooth'}); } catch(x){} };
+  const nextAfter = pid => { const a = [...sb.querySelectorAll('[data-in]')], i = a.findIndex(x => x.dataset.in === pid); return a.slice(i + 1).find(x => !x.disabled); };
+  sb.querySelectorAll('[data-in]').forEach(inp => {
+    const pid = inp.dataset.in;
+    inp.oninput = () => { clearTimeout(inp._t); const {c, e} = get(inp), raw = inp.value.trim(), dec = evDec(e);
+      if (/[.,]$/.test(raw)){ if (!dec){ inp.style.borderColor = 'var(--bad)'; toast('Notes entières seulement (coche « Notes à virgule » dans Modifier)'); } return; }
+      const v = parseNum(raw);
+      if (v == null){ delete e.s[pid]; inp.style.borderColor = ''; save(c.id); return; }
+      if (v < 0 || v > +e.max || (!dec && v % 1)){ inp.style.borderColor = 'var(--bad)'; if (!dec && v % 1) toast('Notes entières seulement (coche « Notes à virgule » dans Modifier)'); return; }
+      e.s[pid] = v; inp.style.borderColor = ''; save(c.id);
+      // élève suivant : tout de suite si la note ne peut plus s'allonger (ex. 7 sur 10), sinon après un court instant (1 → 10 ?)
+      const fin = /[.,]\d/.test(raw) || (!dec && v * 10 > +e.max);
+      if (fin) go(nextAfter(pid)); else inp._t = setTimeout(() => { if (document.activeElement === inp) go(nextAfter(pid)); }, dec ? 1500 : 1100);
+    };
+    inp.onkeydown = ev => { if (ev.key === 'Enter'){ clearTimeout(inp._t); const n = nextAfter(pid); if (n) go(n); else inp.blur(); } };
+  });
+  sb.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => { const {c, e} = get(b), pid = b.dataset.abs, k = b.dataset.tag;
+    if (e.s[pid] === k){ delete e.s[pid]; if (k === 'CM') (e.cmOff = e.cmOff || {})[pid] = 1; }
+    else { e.s[pid] = k; if (e.cmOff) delete e.cmOff[pid]; }
+    save(c.id); redraw();
+    const me = [...sb.querySelectorAll('[data-in]')].find(x => x.dataset.in === pid);
+    go(e.s[pid] != null ? nextAfter(pid) : me);
+  });
 }
 
 /* --- Feuille des notes : bouton du compteur, tours par élève --- */
@@ -122,7 +169,7 @@ function bindEvScoresHead(c, e){ if ($('es-endu')) $('es-endu').onclick = () => 
 const evLapsTxt = (e, p) => { const n = e.endu && (e.endu.laps || {})[p.id]; return n != null ? `<span class="pts">${n} tour${n > 1 ? 's' : ''}</span>` : ''; };
 function evFormList(c, vp, p){
   return c.evals.filter(e => e.periodId === vp.id && e.kind === 'form').map(e => { const s = e.s[p.id];
-    return `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)} <span class="small muted">(formatif, ne compte pas)</span></span><b class="num">${s === 'abs' ? 'abs' : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`; }).join('');
+    return `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)} <span class="small muted">(formatif, ne compte pas)</span></span><b class="num">${evTag(s) ? evTagTxt(s) : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`; }).join('');
 }
 
 /* ====== Compteur de tours plein écran ====== */

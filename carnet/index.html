@@ -170,7 +170,9 @@ textarea.inp{min-height:130px; resize:vertical}
 .ev .sur{font:700 26px/1 var(--display)}
 .sin{display:flex; align-items:center; gap:6px; flex:none}
 .sin input{width:70px; text-align:center; font-weight:700}
-.sin .abs{min-height:40px; padding:6px 10px; font-size:13px}
+.sin{gap:4px}
+.sin input{width:58px}
+.sin .abs{min-height:40px; padding:6px 7px; font-size:13px}
 .sin .abs[aria-pressed="true"]{background:var(--bad-soft); color:var(--bad); border-color:var(--bad)}
 
 /* Bulletin */
@@ -1203,21 +1205,14 @@ function openEvalScores(c, e){
     ${evScoresHead(c, e)}<div class="row2" style="align-items:center"><span class="small muted" style="flex:1">${e.date ? esc(fmtDL(e.date)) + ' · ' : ''}sur ${fr(+e.max, 2)}. Laisse vide si pas encore noté.</span><button class="btn" type="button" id="es-edit">Modifier</button></div>
     <div class="list">${pupilsOf(c).map(p => { const s = e.s[p.id], abs = s === 'abs';
       return `<div class="prow" data-pid="${p.id}"><span class="who">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b>${evLapsTxt(e, p)}</span></span>
-        <span class="sin"><input class="inp num" inputmode="decimal" enterkeyhint="next" aria-label="Note de ${esc(p.n)}" data-in="${p.id}" value="${typeof s === 'number' ? esc(fr(s, 2)) : ''}" ${abs ? 'disabled' : ''} placeholder="—"><button class="btn abs" type="button" data-abs="${p.id}" aria-pressed="${abs}">Abs</button></span></div>`; }).join('')}</div>`;
+        ${evSinHTML(p, s)}</div>`; }).join('')}</div>`;
+  evCertFill(c, e);
   openSheet(e.name, body());
   const sb = document.querySelector('.sheet .sb');
   const bind = () => {
     $('es-edit').onclick = () => { closeSheet(); openEvalForm(c, null, e); };
     bindEvScoresHead(c, e);
-    sb.querySelectorAll('[data-in]').forEach(inp => {
-      inp.oninput = () => { const v = parseNum(inp.value); const pid = inp.dataset.in;
-        if (v == null){ delete e.s[pid]; inp.style.borderColor = ''; }
-        else if (v < 0 || v > +e.max){ inp.style.borderColor = 'var(--bad)'; return; }
-        else { e.s[pid] = v; inp.style.borderColor = ''; }
-        save(c.id); };
-      inp.onkeydown = ev => { if (ev.key === 'Enter'){ const all = [...sb.querySelectorAll('[data-in]:not([disabled])')]; const n = all[all.indexOf(inp) + 1]; if (n) n.focus(); else inp.blur(); } };
-    });
-    sb.querySelectorAll('[data-abs]').forEach(b => b.onclick = () => { const pid = b.dataset.abs; if (e.s[pid] === 'abs') delete e.s[pid]; else e.s[pid] = 'abs'; save(c.id); sb.innerHTML = body(); bind(); });
+    evBindSin(sb, () => ({c, e}), () => { sb.innerHTML = body(); bind(); });
   };
   bind();
   sheetOnClose = () => render();
@@ -1402,7 +1397,7 @@ function periodSheet(c, p){
     const r = res[pu.id], b = i % 2 === 1;
     const cells = [{v: i + 1, s: b ? XS.INTB : XS.INT}, {v: pu.n, s: b ? XS.TXTB : XS.TXT},
       {v: r.t, s: b ? XS.INTB : XS.INT}, {v: r.c, s: b ? XS.INTB : XS.INT}, {v: r.se, s: b ? XS.NUMB : XS.NUM},
-      ...evals.map(e => { const s = e.s[pu.id]; return {v: s === 'abs' ? 'abs' : (typeof s === 'number' ? s : ''), s: typeof s === 'number' && s < e.max / 2 ? (b ? XS.NUMLOWB : XS.NUMLOW) : (b ? XS.NUMB : XS.NUM)}; }),
+      ...evals.map(e => { const s = e.s[pu.id]; return {v: evTag(s) ? evTagTxt(s) : (typeof s === 'number' ? s : ''), s: typeof s === 'number' && s < e.max / 2 ? (b ? XS.NUMLOWB : XS.NUMLOW) : (b ? XS.NUMB : XS.NUM)}; }),
       {v: r.sf, s: b ? XS.NUMB : XS.NUM}, {v: r.total, s: r.total != null && r.total < 50 ? XS.TOTLOW : XS.TOT},
       {v: r.abs, s: b ? XS.INTB : XS.INT}, {v: r.late, s: b ? XS.INTB : XS.INT}, {v: r.kit, s: b ? XS.INTB : XS.INT}, ...(pool ? [{v: r.np, s: b ? XS.INTB : XS.INT}] : []), {v: r.d, s: b ? XS.INTB : XS.INT}, {v: r.x, s: b ? XS.INTB : XS.INT}];
     rows.push({h: 20, cells});
@@ -1477,7 +1472,7 @@ function openPupil(c, pid){
       <b>Attitude</b>${pipsH(r.c, Cc, 'c')}<span class="num">${r.c}/${Cc}</span></div>`}
     <div class="card small">${r.abs} absence${r.abs > 1 ? 's' : ''} · ${r.late} retard${r.late > 1 ? 's' : ''} · ${r.kit} oubli${r.kit > 1 ? 's' : ''} de tenue/affaires${r.np ? ` · ${r.np} fois sans nager` : ''} · ${r.d} perturbation${r.d > 1 ? 's' : ''}${r.x ? ` · ${r.x} exclusion${r.x > 1 ? 's' : ''}` : ''}</div>
     ${fiHistHTML(c, p, vp)}
-    ${year ? '' : `<h3>Évaluations</h3><div class="card">${r.evals.length ? r.evals.map(({e, s}) => `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)}</span><b class="num">${s === 'abs' ? 'abs' : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`).join('') : '<span class="muted small">Aucune évaluation dans cette période.</span>'}${evFormList(c, vp, p)}</div>
+    ${year ? '' : `<h3>Évaluations</h3><div class="card">${r.evals.length ? r.evals.map(({e, s}) => `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)}</span><b class="num">${evTag(s) ? evTagTxt(s) : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`).join('') : '<span class="muted small">Aucune évaluation dans cette période.</span>'}${evFormList(c, vp, p)}</div>
     <h3>Points retirés</h3><div class="card">${r.ev.length ? r.ev.map((v, k) => `<div class="evt"><span class="d">${esc(fmtD(v.date))}</span><span class="l">${esc(v.label)}</span><span class="col ${v.hit}">${v.hit === 't' ? '−1 tenue' : v.hit === 'c' ? '−1 attitude' : 'déjà à 0'}</span><button class="ib" type="button" data-undo="${k}" aria-label="Retirer">${IC.x}</button></div>`).join('') : '<span class="muted small">Aucun point retiré. Bravo.</span>'}</div>`}
     <h3>Certificats médicaux</h3><div class="card">${(p.certs || []).length ? [...p.certs].sort((a, b) => a.from < b.from ? 1 : -1).map(x => { const on = x.from <= today() && today() <= x.to;
       return `<div class="evt">${PH['cert_' + x.id] ? `<button type="button" data-cview="${x.id}" style="border:0;padding:0;background:none;flex:none"><img src="${PH['cert_' + x.id]}" alt="Certificat" style="width:52px;height:52px;object-fit:cover;border-radius:8px;display:block"></button>` : `<span class="av" style="border-radius:8px;width:52px;height:52px">${IC.evals}</span>`}
@@ -2164,7 +2159,8 @@ function evEnduFields(c, e){
 function evKindField(e){
   const f = e?.kind === 'form';
   return `<span class="small muted" style="font-weight:600">Compte dans le bulletin ?</span>
-    <div class="ev-kind"><button class="chip" type="button" data-kind="cert" aria-pressed="${!f}">✔ Certificative (compte dans le bulletin)</button><button class="chip" type="button" data-kind="form" aria-pressed="${f}">ℹ Formative (pour info)</button></div>`;
+    <div class="ev-kind"><button class="chip" type="button" data-kind="cert" aria-pressed="${!f}">✔ Certificative (compte dans le bulletin)</button><button class="chip" type="button" data-kind="form" aria-pressed="${f}">ℹ Formative (pour info)</button></div>
+    <label class="toggle"><input type="checkbox" id="ef-dec" ${e && evDec(e) ? 'checked' : ''}>Notes à virgule (ex. 2,5)</label><p class="small muted" style="margin:-6px 0 0">Décoché : seulement des notes entières (1, 2, 3…).</p>`;
 }
 let EF = null;
 function bindEvForm(c, e){
@@ -2192,11 +2188,57 @@ function evFormOk(){
 function evFormApply(c, o){
   if (!EF) return;
   if (EF.kind === 'form') o.kind = 'form'; else delete o.kind;
+  o.dec = !!$('ef-dec')?.checked || !!EF.endu;
   if (!EF.endu) return;
   const old = o.endu || {}, mn = parseNum($('ef-emin').value), t = Math.round(parseNum($('ef-etours').value));
   o.endu = {min: mn, tours: t, laps: old.laps || {}};
   if (old.tours !== t || EF.max0 !== +o.max) Object.entries(o.endu.laps).forEach(([pid, n]) => o.s[pid] = enScore(n, t, +o.max));
   c.enduLast = {min: mn, tours: t, max: +o.max};
+}
+
+/* --- Saisie des notes (classe et groupe) ---
+   e.s[pid] : nombre, ou 'abs' (absent), 'D' (dispensé), 'CM' (certificat médical) : ces trois-là ne comptent pas dans la note.
+   Un certificat de l'élève à la date de l'éval est repris tout seul en CM (sauf si on l'a retiré : e.cmOff[pid]).
+   e.dec : notes à virgule permises (sinon entières ; vieilles évals avec des virgules et endurance : permises).
+   Après une note, on passe tout seul à l'élève suivant. */
+const EV_TAGS = {abs: 'Abs', D: 'D', CM: 'CM'};
+const evTag = s => typeof s === 'string' && EV_TAGS[s] ? s : null;
+const evTagTxt = s => s;
+const evTagLong = s => ({abs: 'absent', D: 'dispensé', CM: 'certificat médical'})[s] || s;
+const evDec = e => e.dec === true || (e.dec == null && (!!e.endu || Object.values(e.s || {}).some(v => typeof v === 'number' && v % 1)));
+function evCertFill(c, e){
+  const d = e.date || today(); let n = 0;
+  c.pupils.forEach(p => { if (e.s[p.id] == null && !(e.cmOff || {})[p.id] && certOn(p, d)){ e.s[p.id] = 'CM'; n++; } });
+  if (n) save(c.id);
+}
+function evSinHTML(p, s, cid){
+  const t = evTag(s), dc = cid ? ` data-cid="${cid}"` : '';
+  return `<span class="sin"><input class="inp num" inputmode="decimal" enterkeyhint="next" aria-label="Note de ${esc(p.n)}" data-in="${p.id}"${dc} value="${typeof s === 'number' ? esc(fr(s, 2)) : ''}" ${t ? 'disabled' : ''} placeholder="${t ? EV_TAGS[t] : '—'}">${Object.entries(EV_TAGS).map(([k, l]) => `<button class="btn abs" type="button" data-tag="${k}" data-abs="${p.id}"${dc} aria-pressed="${t === k}">${l}</button>`).join('')}</span>`;
+}
+function evBindSin(sb, get, redraw){
+  const go = n => { if (!n) return; n.focus(); try { n.scrollIntoView({block: 'center', behavior: 'smooth'}); } catch(x){} };
+  const nextAfter = pid => { const a = [...sb.querySelectorAll('[data-in]')], i = a.findIndex(x => x.dataset.in === pid); return a.slice(i + 1).find(x => !x.disabled); };
+  sb.querySelectorAll('[data-in]').forEach(inp => {
+    const pid = inp.dataset.in;
+    inp.oninput = () => { clearTimeout(inp._t); const {c, e} = get(inp), raw = inp.value.trim(), dec = evDec(e);
+      if (/[.,]$/.test(raw)){ if (!dec){ inp.style.borderColor = 'var(--bad)'; toast('Notes entières seulement (coche « Notes à virgule » dans Modifier)'); } return; }
+      const v = parseNum(raw);
+      if (v == null){ delete e.s[pid]; inp.style.borderColor = ''; save(c.id); return; }
+      if (v < 0 || v > +e.max || (!dec && v % 1)){ inp.style.borderColor = 'var(--bad)'; if (!dec && v % 1) toast('Notes entières seulement (coche « Notes à virgule » dans Modifier)'); return; }
+      e.s[pid] = v; inp.style.borderColor = ''; save(c.id);
+      // élève suivant : tout de suite si la note ne peut plus s'allonger (ex. 7 sur 10), sinon après un court instant (1 → 10 ?)
+      const fin = /[.,]\d/.test(raw) || (!dec && v * 10 > +e.max);
+      if (fin) go(nextAfter(pid)); else inp._t = setTimeout(() => { if (document.activeElement === inp) go(nextAfter(pid)); }, dec ? 1500 : 1100);
+    };
+    inp.onkeydown = ev => { if (ev.key === 'Enter'){ clearTimeout(inp._t); const n = nextAfter(pid); if (n) go(n); else inp.blur(); } };
+  });
+  sb.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => { const {c, e} = get(b), pid = b.dataset.abs, k = b.dataset.tag;
+    if (e.s[pid] === k){ delete e.s[pid]; if (k === 'CM') (e.cmOff = e.cmOff || {})[pid] = 1; }
+    else { e.s[pid] = k; if (e.cmOff) delete e.cmOff[pid]; }
+    save(c.id); redraw();
+    const me = [...sb.querySelectorAll('[data-in]')].find(x => x.dataset.in === pid);
+    go(e.s[pid] != null ? nextAfter(pid) : me);
+  });
 }
 
 /* --- Feuille des notes : bouton du compteur, tours par élève --- */
@@ -2214,7 +2256,7 @@ function bindEvScoresHead(c, e){ if ($('es-endu')) $('es-endu').onclick = () => 
 const evLapsTxt = (e, p) => { const n = e.endu && (e.endu.laps || {})[p.id]; return n != null ? `<span class="pts">${n} tour${n > 1 ? 's' : ''}</span>` : ''; };
 function evFormList(c, vp, p){
   return c.evals.filter(e => e.periodId === vp.id && e.kind === 'form').map(e => { const s = e.s[p.id];
-    return `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)} <span class="small muted">(formatif, ne compte pas)</span></span><b class="num">${s === 'abs' ? 'abs' : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`; }).join('');
+    return `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)} <span class="small muted">(formatif, ne compte pas)</span></span><b class="num">${evTag(s) ? evTagTxt(s) : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`; }).join('');
 }
 
 /* ====== Compteur de tours plein écran ====== */
@@ -2739,22 +2781,14 @@ function openGroupScores(items){
     <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">${multi ? '<b>' + esc(names) + '</b> · ' : ''}${e0.date ? esc(fmtDL(e0.date)) + ' · ' : ''}sur ${fr(+e0.max, 2)}. Laisse vide si pas encore noté.</span><button class="btn" type="button" id="es-edit">Modifier</button></div>
     <div class="list">${items.map(({c, e}) => (multi ? `<div class="lsub">${esc(c.name)} <span>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}</span></div>` : '') + pupilsOf(c).map(p => { const s = e.s[p.id], abs = s === 'abs';
       return `<div class="prow" data-pid="${p.id}"><span class="who">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b>${evLapsTxt(e, p)}</span></span>
-        <span class="sin"><input class="inp num" inputmode="decimal" enterkeyhint="next" aria-label="Note de ${esc(p.n)}" data-in="${p.id}" data-cid="${c.id}" value="${typeof s === 'number' ? esc(fr(s, 2)) : ''}" ${abs ? 'disabled' : ''} placeholder="—"><button class="btn abs" type="button" data-abs="${p.id}" data-cid="${c.id}" aria-pressed="${abs}">Abs</button></span></div>`; }).join('')).join('')}</div>`;
+        ${evSinHTML(p, s, c.id)}</div>`; }).join('')).join('')}</div>`;
+  items.forEach(({c, e}) => evCertFill(c, e));
   openSheet(e0.name, body());
   const sb = document.querySelector('.sheet .sb'), it = cid => items.find(x => x.c.id === cid);
   const bind = () => {
     $('es-edit').onclick = () => { closeSheet(); openGroupEvalForm(null, null, items); };
     if ($('es-endu')) $('es-endu').onclick = () => { closeSheet(); enOpen(items.map(({c, e}) => ({cid: c.id, eid: e.id}))); };
-    sb.querySelectorAll('[data-in]').forEach(inp => {
-      inp.oninput = () => { const v = parseNum(inp.value), pid = inp.dataset.in, {c, e} = it(inp.dataset.cid);
-        if (v == null){ delete e.s[pid]; inp.style.borderColor = ''; }
-        else if (v < 0 || v > +e.max){ inp.style.borderColor = 'var(--bad)'; return; }
-        else { e.s[pid] = v; inp.style.borderColor = ''; }
-        save(c.id); };
-      inp.onkeydown = ev => { if (ev.key === 'Enter'){ const all = [...sb.querySelectorAll('[data-in]:not([disabled])')]; const n = all[all.indexOf(inp) + 1]; if (n) n.focus(); else inp.blur(); } };
-    });
-    sb.querySelectorAll('[data-abs]').forEach(b => b.onclick = () => { const pid = b.dataset.abs, {c, e} = it(b.dataset.cid);
-      if (e.s[pid] === 'abs') delete e.s[pid]; else e.s[pid] = 'abs'; save(c.id); sb.innerHTML = body(); bind(); });
+    evBindSin(sb, el => it(el.dataset.cid), () => { sb.innerHTML = body(); bind(); });
   };
   bind();
   sheetOnClose = () => render();
@@ -3151,7 +3185,7 @@ function fiHistHTML(c, p, vp){
     if (m.x) add('Exclu du cours', '⛔', 'd'); else if (m.d) add('Perturbe le cours', '👎', 'd');
   });
   c.evals.filter(e => e.date ? inP(e.date) : (year || e.periodId === vp.id)).forEach(e => { const s = e.s[p.id]; if (s == null) return;
-    ev.push({date: e.date || '', k: (e.date || '') + '99', h: '', t: `${e.kind === 'form' ? 'Éval. formative' : 'Évaluation'} « ${e.name} » : ${s === 'abs' ? 'absent' : fr(s, 2) + '/' + fr(+e.max, 2)}`, ic: '📝', cls: 'fe', sp: ''}); });
+    ev.push({date: e.date || '', k: (e.date || '') + '99', h: '', t: `${e.kind === 'form' ? 'Éval. formative' : 'Évaluation'} « ${e.name} » : ${evTag(s) ? evTagLong(s) : fr(s, 2) + '/' + fr(+e.max, 2)}`, ic: '📝', cls: 'fe', sp: ''}); });
   (p.certs || []).forEach(x => { if (!(year || inP(x.from) || inP(x.to))) return;
     ev.push({date: x.from, k: x.from + '00', h: '', t: `Certificat médical jusqu'au ${dFR(x.to)}${zoneTxt(x) ? ' (' + zoneTxt(x) + ')' : ''}${x.note ? ' · ' + x.note : ''}`, ic: '🩺', cls: '', sp: ''}); });
   (year ? periodsOf(c) : [vp]).forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (!a) return;
@@ -3185,10 +3219,10 @@ function fiBulletin(c, pid, per){
       ${row('Savoir-être', `${fr(r.se)}<small>/${seP}</small>`, 'big')}
       ${year ? '' : row('&nbsp;&nbsp;Tenue', `${r.t}<small>/${T}</small>`) + row('&nbsp;&nbsp;Attitude', `${r.c}<small>/${Cc}</small>`)}
       ${row('Savoir-faire', `${fr(r.sf)}<small>/${100 - seP}</small>`, 'big')}
-      ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), s === 'abs' ? 'abs' : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
+      ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), evTag(s) ? evTagTxt(s) : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
       ${row(year ? 'Moyenne de l\'année' : 'Total', `${fr(r.total)}<small> %</small>`, 'big tot')}
     </div>
-    ${fo.length ? `<h3>Formatif (ne compte pas)</h3><div class="card fi-bt">${fo.map(e => row(esc(e.name), e.s[p.id] === 'abs' ? 'abs' : `${fr(e.s[p.id], 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}</div>` : ''}
+    ${fo.length ? `<h3>Formatif (ne compte pas)</h3><div class="card fi-bt">${fo.map(e => row(esc(e.name), evTag(e.s[p.id]) ? evTagTxt(e.s[p.id]) : `${fr(e.s[p.id], 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}</div>` : ''}
     <div class="card fi-bt">${row('Absences', k.abs)}${row('Retards', r.late || 0)}${row('Oublis de tenue', k.gym + k.adjT + k.pool)}${k.np ? row('Pas nagé', k.np) : ''}${row('Perturbations', k.d)}${row('Exclusions', k.x)}</div>
     <h3>Commentaire${mine != null ? ' <span class="tag com-man">✎ modifié</span>' : ''}</h3>
     <div class="card small">${esc(com) || '<span class="muted">Pas de commentaire.</span>'}</div>

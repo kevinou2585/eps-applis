@@ -146,6 +146,9 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .chemin .tag b{display:block;padding:0 7px;font-size:13px;font-weight:900;line-height:1.1;word-break:break-word}.chemin .b1 .tag b{font-size:15px}
 /* intronisation : le nouveau boss bat les boss un par un sur le chemin, puis prend la place du dernier battu */
 .intro-calque{position:absolute;inset:0;z-index:5;pointer-events:none}
+.chemin .chateau{position:absolute;right:6px;top:calc(60px * var(--k));width:calc(150px * var(--k));height:calc(180px * var(--k));z-index:1;border:0;background:transparent;-webkit-tap-highlight-color:transparent}
+.chemin .rumeur{position:absolute;right:10px;top:calc(250px * var(--k));z-index:4;max-width:220px;padding:8px 12px;border-radius:12px;background:rgba(20,6,30,.92);border:2px solid #b26bff;color:#e9d8ff;font:800 13px/1.3 system-ui,-apple-system,sans-serif;text-align:center;box-shadow:0 0 18px rgba(178,107,255,.5);animation:glisse .3s both}
+.chemin .rumeur small{font-weight:700;color:#c9a8f0}
 .heros{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;will-change:transform}
 .heros canvas{animation:none;background:radial-gradient(circle at 50% 55%,rgba(255,240,170,.55),transparent 62%);filter:drop-shadow(0 0 14px rgba(255,220,120,.8)) drop-shadow(0 8px 10px rgba(0,0,0,.55))}
 .heros b{position:relative;margin-top:-10px;padding:3px 10px;border-radius:999px;background:#ffd23f;color:#2a0f3d;font:900 13px system-ui,-apple-system,sans-serif;box-shadow:0 3px 0 #7a5200;white-space:nowrap}
@@ -502,7 +505,7 @@ function note(d, son, m, t, dur, vol) { // les instruments de la musique (oscill
 }
 function pisteVoulue() { // quelle musique pour l'écran actuel ?
   if (etat !== 'jeu') return null;
-  if (combat) return combat.phase === 'alerte' || combat.phase === 'elimine' ? null : 'boss' + combat.rang;
+  if (combat) return combat.phase === 'alerte' || combat.phase === 'elimine' ? null : 'boss' + (combat.rang || 1);
   if (bascule && bascule.vers) return bascule.vers === 'goth' ? 'crypte' : 'base';
   if (table === 'goth') return 'crypte';
   if (multiball || spectacleT > 0) return 'multi';
@@ -727,7 +730,7 @@ const SON = {
   alerteBoss() { musDuck(0.2, 1.6); riser(1.4, 0.16); for (let i = 0; i < 6; i++) echantillon('timbale', 0.35 + i * 0.07, i * 0.22); ton('sine', 520, 780, 0.3, 0.06, 0, 0, false, 0.05); ton('sine', 520, 780, 0.3, 0.06, 0.45, 0, false, 0.05); ton('sine', 520, 780, 0.3, 0.06, 0.9, 0, false, 0.05); },
   porte() { ton('sawtooth', 70, 130, 0.8, 0.06, 0, 500); ton('sawtooth', 75, 140, 0.8, 0.04, 0.03, 500); drop(0.4, 0.75, 110, 0.8); echantillon('crash', 0.2, 0.75); },
   grogne(rang) { // grognement (formants « o »), plus grave pour le n°1
-    const f = [0, 70, 90, 115][rang] || 90, F = combat && combat.boss.genre === 'F' ? 1.5 : 1;
+    const f = [55, 70, 90, 115][rang] || 90, F = combat && combat.boss.genre === 'F' ? 1.5 : 1;
     syllabe(f * 1.4 * F, f * F, 0.75, 0.2, 0, 480 * F, 850 * F); bruit(0.6, 0.12, 300, 2, 0, 120, 'lowpass'); cogne(55, 0.2, 0.05);
   },
   tambour(k) { cogne(55 + 15 * k, 0.1 + 0.14 * k); cogne(50 + 15 * k, 0.07 + 0.1 * k, 0.16); }, // battement de cœur qui s'accélère
@@ -736,7 +739,7 @@ const SON = {
   bouclier() { cloche(P(7), 0.4, 0.08); ton('sine', 2600, 3200, 0.12, 0.04, 0.02, 0, true); },
   pare() { cogne(110, 0.2); bruit(0.04, 0.2, 1500, 1.5); },
   rire(delai = 0) { // « HA HA HA » de dessin animé (formants « a »), voix grave pour un roi, aiguë pour une reine
-    const C = combat, F = C && C.boss.genre === 'F' ? 1.7 : 1, f = (C ? [0, 105, 125, 150][C.rang] : 130) * F;
+    const C = combat, F = C && C.boss.genre === 'F' ? 1.7 : 1, f = (C ? [85, 105, 125, 150][C.rang] : 130) * F;
     [0, 0.17, 0.34, 0.51, 0.7].forEach((x, i) => { syllabe(f * (1.3 - i * 0.06), f * (1.08 - i * 0.07), i === 4 ? 0.3 : 0.15, 0.22, delai + x, 780 * F, 1250 * F); bruit(0.04, 0.05, 2000, 1, delai + x, 0, 'highpass'); });
   },
   elimine() { // le boss gagne : coupure de la musique, chute, « oooh » et rire
@@ -912,7 +915,9 @@ const PORTE = { x: 185, y: 24, w: 62, h: 58 }; // porte en haut du plateau (le h
 const NIV_BOSS = {
   3: { pv: 3, billes: 3, vit: 12, amp: 55, freq: 0.9, esquive: 0, bouclier: false, bonus: 5000, titre: { H: 'Le Garde', F: 'La Garde' }, lieu: 'LE REMPART', bord: '#c9d1de' },
   2: { pv: 5, billes: 3, vit: 15, amp: 75, freq: 1.15, esquive: 0.35, bouclier: false, bonus: 10000, titre: { H: 'Le Bourreau', F: 'La Sorcière' }, lieu: 'LE CACHOT', bord: '#ff8c1a' },
-  1: { pv: 7, billes: 3, vit: 17, amp: 90, freq: 1.35, esquive: 0.3, bouclier: true, bonus: 25000, titre: { H: 'Le Roi', F: 'La Reine' }, lieu: 'LA SALLE DU TRÔNE', bord: '#ffd23f' }
+  1: { pv: 7, billes: 3, vit: 17, amp: 90, freq: 1.35, esquive: 0.3, bouclier: true, bonus: 25000, titre: { H: 'Le Roi', F: 'La Reine' }, lieu: 'LA SALLE DU TRÔNE', bord: '#ffd23f' },
+  // Kevin : le boss caché du château (rang 0) : on ne le tape pas avec sa bille, on lui RENVOIE ses boules de feu avec les flippers ; billes = cœurs du joueur
+  0: { pv: 6, billes: 3, vit: 0, amp: 105, freq: 0.75, esquive: 0, bouclier: false, bonus: 50000, titre: { H: 'L’Empereur', F: 'L’Impératrice' }, lieu: 'LE DONJON CACHÉ', bord: '#b26bff', ultime: true }
 };
 const PTS_COUP = 1000, Y_BOSS0 = 152, Y_BOSS_PASSE = 690, R_BOSS = 26;
 function titreBoss(rang, genre) { return NIV_BOSS[rang].titre[genre === 'F' ? 'F' : 'H']; }
@@ -927,7 +932,7 @@ let epsReset = 0, spectacleT = 0, derniereAction = 0;
 let paniers = 0, besoin = 3, cagePleine = true, cageFlash = 0, filetT = 0, forcePanier = null;
 let nuit = false, bascule = null, gelT = 0, protegeT = 0, cageAttente = 0, aServir = 0, PROTECTION = 20, cibleRecord = 0, recordFait = true;
 let butT = 0, butTxt = '', jaugeFlash = 0;
-let combat = null, bossFile = [], finCombatT = -99; // combat : boss en cours ; bossFile : boss de la partie (n°3 d'abord)
+let combat = null, bossFile = [], finCombatT = -99, bossUlt = null, ultimeTente = false, ultimeBattu = false; // combat : boss en cours ; bossFile : boss de la partie (n°3 d'abord)
 let table = 'base', butsN = 0, butsFlash = 0, gothDans = 0, gothScore0 = 0; // table : 'base' (gymnase) ou 'goth' (la crypte) ; butsN : compteur de buts (3 = crypte)
 const stats = { buts: 0, bloques: 0, poteaux: 0, sorties: 0, trous: [0, 0, 0], petits: 0, outG: 0, outD: 0, nudges: 0, tilts: 0 };
 let tiltOn = false, tiltT0 = 0, secCompte = [], secAvertiT = -99; // TILT en cours (jusqu'à la bille suivante) ; secousses récentes
@@ -1453,6 +1458,8 @@ function imageDe(src) { // images des photos (data URL), gardées en cache ; nul
 function preparerBoss() { // file des boss de la partie : du n°3 au n°1 (on peut aussi affronter ses propres places)
   bossFile = listeBoss().sort((a, b) => a.score - b.score)
     .map(b => Object.assign({}, b, { pv: NIV_BOSS[b.rang].pv, vaincu: false, img: imageDe(b.photo || AVATAR) }));
+  const u = bossUltime(); ultimeTente = false; ultimeBattu = false;
+  bossUlt = u && Object.assign(u, { pv: NIV_BOSS[0].pv, vaincu: false, img: imageDe(u.photo || (u.inconnu ? '' : AVATAR)) }); // pas encore de boss caché : une ombre « ? »
 }
 function prochainBoss() { return bossFile.find(b => !b.vaincu) || null; }
 function calmePourBoss() { // jamais pendant la crypte, la multiballe, un tunnel, une rampe, un trou, un retournement…
@@ -1463,14 +1470,17 @@ function calmePourBoss() { // jamais pendant la crypte, la multiballe, un tunnel
 }
 function verifierBoss() {
   const b = prochainBoss();
-  if (b && score > b.score && calmePourBoss()) lancerCombat(b);
+  if (b) { if (score > b.score && calmePourBoss()) lancerCombat(b); return; }
+  // les 3 boss sont tombés (dont le roi) et on dépasse le score caché : le château s'ouvre, une seule fois par partie
+  if (bossUlt && !ultimeTente && bossFile.some(x => x.rang === 1 && x.vaincu) && score > bossUlt.score && calmePourBoss()) { ultimeTente = true; lancerCombat(bossUlt); }
 }
 function lancerCombat(boss) {
   const N = NIV_BOSS[boss.rang];
   combat = { boss, N, rang: boss.rang, score0: score, phase: 'alerte', t: 0, x: PORTE.x, y: PORTE.y + 30, echelle: 0.55, pv: boss.pv, pvMax: N.pv, inv: 0, recul: 0, stun: 0, ph: 0, dx: 0, vdx: 0,
-    esqCd: 0, boucl: 0, bouclCd: 5, billes: N.billes, pas: 0, porte: 0, coup: 0, pare: 0, rage: false, sauve: null, tambour: 0, bulle: '', x0: 0, y0: 0, chapeau: null };
+    esqCd: 0, boucl: 0, bouclCd: 5, billes: N.billes, pas: 0, porte: 0, coup: 0, pare: 0, rage: false, sauve: null, tambour: 0, bulle: '', x0: 0, y0: 0, chapeau: null, ultime: !!N.ultime, tir: 0 };
   charge.src = {}; charge.actif = false; arreterCharge();
-  annonce('ALERTE BOSS !', 'N°' + boss.rang + ' · ' + titreBoss(boss.rang, boss.genre) + ' arrive…', '#ff4d4d', 38, 1.6);
+  if (N.ultime) annonce('LE CHÂTEAU S’OUVRE…', 'Un boss caché en sort !', '#b26bff', 34, 1.6);
+  else annonce('ALERTE BOSS !', 'N°' + boss.rang + ' · ' + titreBoss(boss.rang, boss.genre) + ' arrive…', '#ff4d4d', 38, 1.6);
   SON.alerteBoss(); vib([60, 40, 60, 40, 60]); secousse = 0.2; chaseT = 1.5;
   if (!fondBoss[boss.rang]) dessinerFondBoss(boss.rang); // pré-rendu pendant que la table est figée
 }
@@ -1489,8 +1499,8 @@ function majScene(dt) { // phases mises en scène : la table est figée, seuls l
   } else if (C.phase === 'entree') {
     const k = Math.min(1, C.t / 1.6); C.pas += dt * 6;
     C.y = PORTE.y + 30 + (Y_BOSS0 - PORTE.y - 30) * k; C.echelle = 0.55 + 0.45 * k;
-    if (k >= 1) debutCombat();
-  } else if (C.phase === 'mort') { if (C.t >= 2.8) finCombat(); }
+    if (k >= 1) { if (C.ultime) { C.phase = 'parole'; C.t = 0; C.echelle = 1; C.bulle = 'Si tu me bats, tu deviendras le boss caché…\nHA HA HA ! Mais tu n’y arriveras pas !'; SON.rire(0.9); } else debutCombat(); }
+  } else if (C.phase === 'parole') { C.pas += dt * 2; if (C.t >= 4.2) { C.bulle = ''; debutCombat(); } } else if (C.phase === 'mort') { if (C.t >= 2.8) finCombat(); }
   else if (C.phase === 'elimine') { // il revient au milieu du plateau, grossit et se moque… puis fin de la partie
     const k = Math.min(1, C.t / 0.7), e = 1 - Math.pow(1 - k, 3); C.pas += dt * 10;
     C.x = C.x0 + (185 - C.x0) * e; C.y = C.y0 + (330 - C.y0) * e; C.echelle = 1 + 0.5 * e;
@@ -1504,6 +1514,7 @@ function entrerArene() { // la table de jeu est mise de côté (billes figées),
 }
 function debutCombat() {
   const C = combat; C.phase = 'combat'; C.t = 0; C.echelle = 1; C.y = Y_BOSS0;
+  if (C.ultime) { C.tir = 1.2; annonce('RENVOIE LE FEU !', 'Ses boules de feu, avec tes flippers · ' + C.billes + ' ♥', '#d9b3ff', 34, 2.6); return; }
   balles.push(balleNeuve(375, 697, 0, 0, true)); // 1re bille du combat (sauvée 8 s après le lancement, comme une balle neuve)
   annonce('À L’ATTAQUE !', C.billes + ' billes pour ' + C.pv + ' ♥ · sinon ÉLIMINÉ', '#ffffff', 36, 2);
 }
@@ -1512,6 +1523,7 @@ function majBoss(dt) { // déplacement du boss pendant le combat
   C.t += dt; C.inv = Math.max(0, C.inv - dt); C.esqCd -= dt; C.pare -= dt; C.coup = Math.max(0, C.coup - dt); C.stun = Math.max(0, C.stun - dt);
   BUMPB.forEach(b => { b.flash -= dt; b.cd -= dt; }); SLB.forEach(s => s.flash = (s.flash || 0) - dt);
   C.porte = Math.max(0, C.porte - dt); // la porte se referme derrière lui
+  if (C.ultime) { majUltime(dt); return; }
   const N = C.N, enJeu = balles.some(b => !enAttente(b));
   if (C.boucl > 0) C.boucl -= dt;
   if (!enJeu) { C.pas += dt * 2; return; } // il attend qu'on lance la bille (et nargue)
@@ -1542,6 +1554,18 @@ function majBoss(dt) { // déplacement du boss pendant le combat
   if (C.tambour <= 0) { const k = Math.max(0, Math.min(1, (C.y - Y_BOSS0) / (Y_BOSS_PASSE - Y_BOSS0))); C.tambour = 0.85 - 0.5 * k; SON.tambour(k); }
   if (C.y >= Y_BOSS_PASSE) combatPerdu('passe');
 }
+function majUltime(dt) { // le boss caché reste en haut, va et vient, et lance des boules de feu (2 à la fois quand il se déchaîne)
+  const C = combat, N = C.N;
+  balles = balles.filter(b => !b.mort); // boules renvoyées qui l'ont touché
+  C.ph += dt * N.freq * (C.rage ? 1.5 : 1); C.pas += dt * 3;
+  if (C.recul > 0) { const d = Math.min(C.recul, 300 * dt); C.y -= d; C.recul -= d; } else C.y += (Y_BOSS0 - C.y) * Math.min(1, dt * 3);
+  C.x = 185 + N.amp * Math.sin(C.ph);
+  C.tir -= dt;
+  if (C.tir <= 0 && balles.length < (C.rage ? 2 : 1)) {
+    const b = balleNeuve(C.x, C.y + 42, rnd(-80, 80), C.rage ? 230 : 170, false); b.feu = true; balles.push(b);
+    C.tir = C.rage ? 1.5 : 2.2; SON.lance(); blague(pick(['Boule de feu !', 'Attrape ça !', 'Brûle !', 'HA HA !']), C.x, C.y - 62, '#ffb347');
+  }
+}
 function pasBoss(h) { // physique de l'arène : même bas de table, 2 bumpers, le boss est un obstacle rond
   const amort = 1 - 0.06 * h, C = combat;
   for (const b of balles) {
@@ -1558,6 +1582,10 @@ function pasBoss(h) { // physique de l'arène : même bas de table, 2 bumpers, l
 function collBoss(b) {
   const C = combat, cy = C.y + 8, rr = R + R_BOSS;
   let nx = b.x - C.x, ny = b.y - cy; const d2 = nx * nx + ny * ny; if (d2 >= rr * rr) return;
+  if (C.ultime) { // seule une boule de feu qui REMONTE le touche (celles qu'il lance le traversent) ; elle explose sur lui
+    if (b.vy < -120 && !b.mort) { b.mort = true; etincelles(b.x, b.y, 24, '#ffb347'); if (C.inv <= 0) toucherBoss(); }
+    return;
+  }
   const d = Math.sqrt(d2) || 1; nx /= d; ny /= d; b.x = C.x + nx * rr; b.y = cy + ny * rr;
   const vn = b.vx * nx + b.vy * ny; if (vn >= 0) return;
   const tx = -ny, ty = nx, vt = (b.vx * tx + b.vy * ty) * 0.6, k = Math.max(-vn * 0.7, 320);
@@ -1569,7 +1597,7 @@ function toucherBoss() {
   const C = combat, F = C.boss.genre === 'F'; C.pv--; C.boss.pv = C.pv; C.inv = 0.45; C.coup = 0.35; C.recul = 60;
   points(PTS_COUP, C.x, C.y - 48); SON.aie(C.rang); vib([30, 20, 30]); etincelles(C.x, C.y, 18, '#ff4d4d'); secousse = Math.max(secousse, 0.08); chaseT = Math.max(chaseT, 0.4);
   if (C.pv <= 0) { bossVaincu(); return; }
-  if (C.N.bouclier && !C.rage && C.pv <= C.pvMax / 2) { C.rage = true; annonce(F ? 'ELLE ENRAGE !' : 'IL ENRAGE !', 'Plus vite… mais plus que ' + C.pv + ' ♥', '#ff4d4d', 34, 1.6); SON.grogne(1); }
+  if ((C.N.bouclier || C.ultime) && !C.rage && C.pv <= C.pvMax / 2) { C.rage = true; annonce(C.ultime ? (F ? 'ELLE SE DÉCHAÎNE !' : 'IL SE DÉCHAÎNE !') : F ? 'ELLE ENRAGE !' : 'IL ENRAGE !', C.ultime ? 'Deux boules de feu à la fois · plus que ' + C.pv + ' ♥' : 'Plus vite… mais plus que ' + C.pv + ' ♥', C.ultime ? '#b26bff' : '#ff4d4d', 30, 1.6); SON.grogne(C.rang); }
   else blague(pick(['Aïe !', 'Touché !', 'Ouille !', 'Pan !', 'Bim !']) + ' ' + C.pv + ' ♥', C.x, C.y - 62, '#ff6b6b');
 }
 function bossVaincu() {
@@ -1580,7 +1608,8 @@ function bossVaincu() {
   SON.vaincu(C.rang); vib([60, 40, 60, 40, 200]);
   const bonus = '+' + fmt(C.N.bonus * mult);
   // vaincre le n°1 ne donne pas encore la couronne : c'est le score final qui compte (nom + roi/reine + photo en fin de partie)
-  if (C.rang === 1) { annonce('LE TRÔNE EST VIDE !', 'Tiens jusqu’au bout ! ' + bonus, '#ffe600', 30, 2.8); confettis(); }
+  if (C.ultime) { ultimeBattu = true; annonce('BOSS CACHÉ VAINCU !', 'Le château est à toi · ' + bonus, '#d9b3ff', 34, 3); confettis(); }
+  else if (C.rang === 1) { annonce('LE TRÔNE EST VIDE !', 'Tiens jusqu’au bout ! ' + bonus, '#ffe600', 30, 2.8); confettis(); }
   else annonce(F ? 'VAINCUE !' : 'VAINCU !', titreBoss(C.rang, B.genre) + ' est à terre · ' + bonus, C.N.bord, 44, 2.6);
 }
 function combatPerdu(cause) { // Kevin : le boss passe les flippers, ou la dernière bille du combat tombe → ÉLIMINÉ, partie finie
@@ -1590,9 +1619,15 @@ function combatPerdu(cause) { // Kevin : le boss passe les flippers, ou la derni
   charge.src = {}; charge.actif = false; arreterCharge(); FL.forEach(f => f.appui = false);
   C.bulle = pick(['HA HA HA !', 'Trop lent !', 'Retourne t’échauffer !', 'Même pas mal !', 'Au vestiaire !', 'Game over, collègue !']);
   SON.elimine(); vib([120, 60, 120, 60, 300]); flash = 0.5; secousse = 0.35;
-  annonce('ÉLIMINÉ !', (cause === 'passe' ? (F ? 'Elle est passée' : 'Il est passé') : 'Plus de billes') + ' · fin de la partie', '#ff3b3b', 46, 2.6);
+  annonce('ÉLIMINÉ !', (cause === 'passe' ? (F ? 'Elle est passée' : 'Il est passé') : cause === 'feu' ? 'Trop brûlé' : 'Plus de billes') + ' · fin de la partie', '#ff3b3b', 46, 2.6);
 }
-function perteBoss() {
+function perteBoss(n = 1) {
+  if (combat && combat.ultime) { // une boule de feu passe les flippers : un cœur de moins
+    const C = combat; if (C.phase !== 'combat') return;
+    C.billes = Math.max(0, C.billes - n);
+    if (C.billes <= 0) combatPerdu('feu'); else { annonce('BRÛLÉ !', C.billes > 1 ? 'Encore ' + C.billes + ' ♥' : 'DERNIER CŒUR !', '#ff8c1a', 34, 1.4); SON.outlane(); vib([80, 40, 80]); secousse = 0.15; }
+    return;
+  }
   if (balles.length || !combat || combat.phase !== 'combat') return;
   const C = combat;
   if (sauveT > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Bille sauvée !', 'Le combat continue', '#7cf', 30, 1.4); SON.sauve(); sauveT = 0; return; }
@@ -1606,7 +1641,7 @@ function finCombat() { // boss vaincu : retour au gymnase : on reprend EXACTEMEN
   combat = null; finCombatT = temps; charge.src = {}; charge.actif = false; arreterCharge();
   gelT = 1.3; flash = Math.max(flash, 0.5); popups = []; particules = [];
   const p = prochainBoss();
-  annonce('REPRISE !', p ? 'Prochain boss : n°' + p.rang + ' à ' + fmt(p.score) + ' pts' : 'Les 3 boss sont tombés !', '#7cf', 40, 1.4);
+  annonce('REPRISE !', C.ultime ? 'Tu es le boss caché… continue !' : p ? 'Prochain boss : n°' + p.rang + ' à ' + fmt(p.score) + ' pts' : 'Les 3 boss sont tombés !', '#7cf', 40, 1.4);
   SON.depart();
 }
 
@@ -1695,7 +1730,7 @@ function maj(dt) {
   }
   const avant = balles.length;
   balles = balles.filter(b => b.y < TH + 30);
-  if (balles.length < avant) { if (table === 'goth') perteGoth(); else if (table === 'boss') perteBoss(); else apresPerte(true); }
+  if (balles.length < avant) { if (table === 'goth') perteGoth(); else if (table === 'boss') perteBoss(avant - balles.length); else apresPerte(true); }
   if (tiltOn && balles.length && balles.every(enAttente)) finTilt(); // bille suivante (ex. bille de combat) : le TILT est levé
   if (attenteBalle > 0) { attenteBalle -= dt; if (attenteBalle <= 0) { if (balleNo > 3) finPartie(); else nouvelleBalle(true); } }
   for (const p of popups) p.age += dt; popups = popups.filter(p => p.age < p.vie);
@@ -2411,6 +2446,11 @@ function dessinerPerso(c, rang, genre, img, o = {}) {
 }
 function persoCorps(c, rang, F, pas) {
   const jambe = Math.sin(pas) * 4, bob = Math.abs(Math.sin(pas)) * 1.5;
+  if (rang === 0) { // cape noire doublée de violet, très large
+    c.beginPath(); c.moveTo(-15, 12); c.quadraticCurveTo(-46, 40, -40, 64); c.lineTo(40, 64); c.quadraticCurveTo(46, 40, 15, 12); c.closePath();
+    const g = c.createLinearGradient(-40, 0, 40, 0); g.addColorStop(0, '#3b0d5c'); g.addColorStop(0.5, '#0d0418'); g.addColorStop(1, '#3b0d5c'); c.fillStyle = g; c.fill();
+    c.strokeStyle = '#b26bff'; c.lineWidth = 2; c.stroke();
+  }
   if (rang === 1) { // cape rouge bordée d'or, derrière tout
     c.beginPath(); c.moveTo(-14, 14); c.quadraticCurveTo(-36, 40, -31, 60); c.lineTo(31, 60); c.quadraticCurveTo(36, 40, 14, 14); c.closePath();
     const g = c.createLinearGradient(-31, 0, 31, 0); g.addColorStop(0, '#6e0b14'); g.addColorStop(0.5, '#d61f2e'); g.addColorStop(1, '#6e0b14'); c.fillStyle = g; c.fill();
@@ -2428,6 +2468,7 @@ function persoCorps(c, rang, F, pas) {
     c.fillStyle = '#ffd23f'; c.fillRect(-1.6, 18, 3.2, 20); c.fillRect(-6, 24, 12, 3.2);
   } else if (rang === 2 && !F) { tronc('#1b1b1b'); c.fillStyle = '#7a4a1d'; c.fillRect(-16, 33, 32, 4); c.fillStyle = '#ffd23f'; c.fillRect(-2.5, 32.5, 5, 5); manche = '#f2c79b'; }
   else if (rang === 2) { tronc('#1b1b1b', 52, 22); c.fillStyle = '#ff8c1a'; c.fillRect(-15, 30, 30, 4); manche = '#1b1b1b'; c.fillStyle = '#ffd23f'; c.font = '8px system-ui'; c.textAlign = 'center'; c.fillText('★', -8, 44); c.fillText('★', 9, 40); }
+  else if (rang === 0) { tronc('#1a0b2e', 46, 18); c.fillStyle = '#b26bff'; c.fillRect(-16, 32, 32, 3.5); c.fillStyle = '#e8d6ff'; c.beginPath(); c.arc(0, 33.7, 3, 0, 7); c.fill(); manche = '#1a0b2e'; }
   else { // roi / reine : tunique dorée, col d'hermine
     tronc(F ? '#3a86ff' : '#ffd23f', F ? 50 : 44, F ? 20 : 17); manche = F ? '#3a86ff' : '#ffd23f';
     c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(0, 16 - bob, 19, 5.5, 0, 0, 7); c.fill(); c.strokeStyle = '#9aa6c4'; c.lineWidth = 1; c.stroke();
@@ -2452,6 +2493,11 @@ function persoCorps(c, rang, F, pas) {
     c.beginPath(); c.moveTo(17, 42); c.lineTo(5, 66); c.lineTo(31, 66); c.lineTo(23, 42); c.closePath(); c.fillStyle = '#e0a72b'; c.fill(); c.strokeStyle = '#7a4f00'; c.lineWidth = 1.2; c.stroke();
     c.beginPath(); c.moveTo(12, 64); c.lineTo(18, 46); c.moveTo(24, 64); c.lineTo(21, 46); c.stroke();
     c.strokeStyle = '#d61f2e'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(16, 46); c.lineTo(24, 46); c.stroke();
+  } else if (rang === 0) { // bâton noir à orbe violet
+    c.strokeStyle = '#000'; c.lineWidth = 5; c.beginPath(); c.moveTo(25, -22); c.lineTo(25, 58); c.stroke(); c.strokeStyle = '#4a2a6a'; c.lineWidth = 3; c.stroke();
+    const g = c.createRadialGradient(23, -33, 1, 25, -31, 11); g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, '#d9b3ff'); g.addColorStop(1, '#5b1f9a');
+    c.beginPath(); c.arc(25, -31, 9, 0, 7); c.fillStyle = g; c.fill(); c.strokeStyle = '#1a0b2e'; c.lineWidth = 1.5; c.stroke();
+    c.strokeStyle = '#1a0b2e'; c.lineWidth = 2; c.beginPath(); c.moveTo(18, -22); c.quadraticCurveTo(25, -18, 32, -22); c.stroke();
   } else { // sceptre
     c.strokeStyle = '#7a5a00'; c.lineWidth = 5; c.beginPath(); c.moveTo(25, -20); c.lineTo(25, 44); c.stroke();
     c.strokeStyle = '#ffd23f'; c.lineWidth = 3; c.stroke();
@@ -2478,6 +2524,12 @@ function persoChapeau(c, rang, F) {
     c.beginPath(); c.ellipse(0, -14, 33, 7, 0, 0, 7); c.fillStyle = '#262626'; c.fill(); c.strokeStyle = '#000'; c.stroke();
     c.beginPath(); c.moveTo(-15.5, -17); c.lineTo(15.5, -17); c.lineTo(14.5, -23); c.lineTo(-14, -23); c.closePath(); c.fillStyle = '#ff8c1a'; c.fill();
     c.strokeStyle = '#ffd23f'; c.lineWidth = 1.6; c.strokeRect(-3.5, -23, 7, 6);
+  } else if (rang === 0) { // cornes + couronne noire à pointes et pierres violettes
+    for (const sg of [-1, 1]) { c.beginPath(); c.moveTo(sg * 13, -16); c.quadraticCurveTo(sg * 30, -24, sg * 30, -46); c.quadraticCurveTo(sg * 22, -30, sg * 8, -22); c.closePath(); c.fillStyle = '#efe6d6'; c.fill(); c.strokeStyle = '#3a2a1a'; c.lineWidth = 1.2; c.stroke(); }
+    c.beginPath(); c.moveTo(-17, -16); c.lineTo(-17, -30); c.lineTo(-10, -24); c.lineTo(-5, -40); c.lineTo(0, -26); c.lineTo(5, -40); c.lineTo(10, -24); c.lineTo(17, -30); c.lineTo(17, -16); c.closePath();
+    c.fillStyle = '#120818'; c.fill(); c.strokeStyle = '#b26bff'; c.lineWidth = 1.4; c.stroke();
+    rrect(c, -18, -21, 36, 7, 2); c.fillStyle = '#2a0f45'; c.fill(); c.stroke();
+    c.fillStyle = '#d9b3ff'; [[-9, -17.5], [0, -17.5], [9, -17.5]].forEach(([x, y]) => { c.beginPath(); c.arc(x, y, 2.2, 0, 7); c.fill(); });
   } else { // couronne (reine : arceaux arrondis + perles)
     g = c.createLinearGradient(0, -46, 0, -16); g.addColorStop(0, '#fff3c4'); g.addColorStop(0.5, '#ffd23f'); g.addColorStop(1, '#b07d00');
     c.beginPath();
@@ -2524,6 +2576,13 @@ function dessinerFondBoss(rang) {
     g = c.createRadialGradient(185, 360, 30, 185, 360, 440); g.addColorStop(0, 'rgba(255,140,26,.12)'); g.addColorStop(1, 'rgba(0,0,0,.65)'); c.fillStyle = g; c.fillRect(0, 0, 400, 740);
     c.fillStyle = 'rgba(193,18,31,.35)'; [[140, 520, 16, 6], [250, 300, 11, 4], [100, 410, 8, 3]].forEach(([x, y, a, b]) => { c.beginPath(); c.ellipse(x, y, a, b, 0.3, 0, 7); c.fill(); }); // flaques
     for (const x of [112, 258]) { c.fillStyle = '#3d4352'; c.fillRect(x - 2, 50, 4, 18); c.fillStyle = '#5b3a1a'; c.beginPath(); c.moveTo(x - 6, 50); c.lineTo(x + 6, 50); c.lineTo(x + 3, 40); c.lineTo(x - 3, 40); c.closePath(); c.fill(); } // torches (flamme animée)
+  } else if (rang === 0) { // donjon caché : pierre noire, ciel d'étoiles, cercle de runes violet
+    c.fillStyle = '#0c0614'; c.fillRect(0, 0, 400, 740);
+    for (let y = 0, r = 0; y < 740; y += 26, r++) for (let x = -(r % 2) * 20; x < 400; x += 40) { c.fillStyle = `hsl(${265 + alea() * 20},${25 + alea() * 15}%,${7 + alea() * 6}%)`; rrect(c, x + 1, y + 1, 38, 24, 4); c.fill(); }
+    for (let i = 0; i < 60; i++) { c.fillStyle = `rgba(230,210,255,${0.2 + alea() * 0.6})`; c.beginPath(); c.arc(alea() * 400, alea() * 300, alea() * 1.4 + 0.3, 0, 7); c.fill(); }
+    c.strokeStyle = 'rgba(178,107,255,.45)'; c.lineWidth = 2; c.beginPath(); c.arc(185, 330, 120, 0, 7); c.stroke(); c.beginPath(); c.arc(185, 330, 96, 0, 7); c.stroke();
+    c.font = '900 16px Georgia,serif'; c.fillStyle = 'rgba(178,107,255,.5)'; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; c.fillText('ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃ'[i], 185 + Math.cos(a) * 108, 330 + Math.sin(a) * 108); }
+    g = c.createRadialGradient(185, 330, 20, 185, 330, 460); g.addColorStop(0, 'rgba(178,107,255,.12)'); g.addColorStop(1, 'rgba(0,0,0,.6)'); c.fillStyle = g; c.fillRect(0, 0, 400, 740);
   } else { // salle du trône : dalles crème, tapis rouge, colonnes
     c.fillStyle = '#e8dcc0'; c.fillRect(0, 0, 400, 740);
     for (let y = 0; y < 740; y += 40) for (let x = 0; x < 400; x += 40) { c.fillStyle = (x / 40 + y / 40) % 2 ? '#e2d3b0' : '#efe6d0'; c.fillRect(x, y, 40, 40); }
@@ -2534,12 +2593,12 @@ function dessinerFondBoss(rang) {
     g = c.createLinearGradient(0, 0, 0, 740); g.addColorStop(0, 'rgba(60,30,0,.35)'); g.addColorStop(0.4, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(255,240,200,.1)'); c.fillStyle = g; c.fillRect(0, 0, 400, 740);
   }
   // encadrement de la porte (pierre / fer / or) et ouverture sombre
-  const cadre = rang === 3 ? '#4a5160' : rang === 2 ? '#3d4352' : '#ffd23f';
+  const cadre = rang === 3 ? '#4a5160' : rang === 2 ? '#3d4352' : rang === 0 ? '#5b1f9a' : '#ffd23f';
   c.save(); c.lineWidth = 14; c.strokeStyle = 'rgba(0,0,0,.4)'; cheminPorte(c, 3); c.stroke(); c.strokeStyle = cadre; c.lineWidth = 12; cheminPorte(c); c.stroke(); c.restore();
   cheminPorte(c); g = c.createLinearGradient(0, PORTE.y, 0, PORTE.y + PORTE.h); g.addColorStop(0, '#000'); g.addColorStop(1, '#1a1208'); c.fillStyle = g; c.fill();
   // nom du lieu
   c.save(); c.translate(185, 262); c.rotate(-0.05); c.font = '900 22px Georgia,"Times New Roman",serif';
-  c.fillStyle = rang === 1 ? 'rgba(255,210,63,.55)' : 'rgba(255,255,255,.22)'; c.fillText(NIV_BOSS[rang].lieu, 0, 0); c.restore();
+  c.fillStyle = rang === 1 ? 'rgba(255,210,63,.55)' : rang === 0 ? 'rgba(217,179,255,.5)' : 'rgba(255,255,255,.22)'; c.fillText(NIV_BOSS[rang].lieu, 0, 0); c.restore();
   // couloir du lanceur
   c.fillStyle = 'rgba(0,0,0,.45)'; c.fillRect(360, 230, 30, 480);
   c.save(); c.translate(375, 600); c.rotate(-Math.PI / 2); c.font = '800 12px system-ui,sans-serif'; c.fillStyle = 'rgba(255,255,255,.8)'; c.fillText('LANCEUR ▶', 0, 0); c.restore();
@@ -2547,7 +2606,7 @@ function dessinerFondBoss(rang) {
   c.shadowColor = 'rgba(0,0,0,.7)'; c.shadowBlur = 16 * k; c.lineWidth = 12; c.strokeStyle = 'rgba(0,0,0,.6)'; cheminTable(c); c.stroke(); c.shadowBlur = 0;
   c.restore();
   // rails (même relief que le gymnase, teinte du lieu)
-  const rails = segsB.filter(s => s.rail && !s.oneWay || s.oneWay), metal = rang === 1 ? ['#7a5a00', '#e0a72b', '#fff3c4'] : rang === 2 ? ['#1b1b1b', '#5b6272', '#9aa3b5'] : ['#3d4352', '#9aa3b5', '#eef2f8'];
+  const rails = segsB.filter(s => s.rail && !s.oneWay || s.oneWay), metal = rang === 0 ? ['#1a0b2e', '#5b3a8a', '#d9b3ff'] : rang === 1 ? ['#7a5a00', '#e0a72b', '#fff3c4'] : rang === 2 ? ['#1b1b1b', '#5b6272', '#9aa3b5'] : ['#3d4352', '#9aa3b5', '#eef2f8'];
   const tracer = (dx, dy) => { c.beginPath(); for (const s of rails) { c.moveTo(s.ax + dx, s.ay + dy); c.lineTo(s.bx + dx, s.by + dy); } };
   tracer(3, 5); c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 11; c.stroke();
   tracer(0, 0); c.strokeStyle = metal[0]; c.lineWidth = 9; c.stroke();
@@ -2556,7 +2615,7 @@ function dessinerFondBoss(rang) {
   for (const m of [false, true]) { // corps des slingshots
     const X = x => m ? 370 - x : x, forme = (dx, dy) => { c.beginPath(); c.moveTo(X(64) + dx, 478 + dy); c.lineTo(X(64) + dx, 548 + dy); c.lineTo(X(100) + dx, 582 + dy); c.closePath(); };
     forme(4, 6); c.fillStyle = 'rgba(0,0,0,.35)'; c.fill();
-    forme(0, 0); c.fillStyle = rang === 1 ? '#c8102e' : rang === 2 ? '#5b3a1a' : '#3a86ff'; c.fill(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 3; c.stroke();
+    forme(0, 0); c.fillStyle = rang === 0 ? '#3b0d5c' : rang === 1 ? '#c8102e' : rang === 2 ? '#5b3a1a' : '#3a86ff'; c.fill(); c.strokeStyle = 'rgba(0,0,0,.6)'; c.lineWidth = 3; c.stroke();
   }
   for (const b of BUMPB) { g = c.createRadialGradient(b.x + 5, b.y + 8, b.r * 0.4, b.x + 5, b.y + 8, b.r + 14); g.addColorStop(0, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.arc(b.x + 5, b.y + 8, b.r + 14, 0, 7); c.fill(); }
   g = c.createLinearGradient(366, 0, 384, 0); g.addColorStop(0, '#5b6272'); g.addColorStop(0.4, '#f2f5fa'); g.addColorStop(1, '#4a505e'); c.fillStyle = g; c.fillRect(366, 710, 18, 18);
@@ -2576,7 +2635,7 @@ function renduBoss() { // éléments animés de l'arène : torches, bumpers, él
     ctx.save(); ctx.translate(b.x, b.y);
     if (rang === 3) { ctx.beginPath(); ctx.arc(0, 0, r + 4, 0, 7); ctx.fillStyle = '#7a4a1d'; ctx.fill(); ctx.strokeStyle = '#3d4352'; ctx.lineWidth = 3; ctx.stroke(); ctx.beginPath(); ctx.arc(0, 0, r - 2, 0, 7); ctx.fillStyle = '#d61f2e'; ctx.fill(); ctx.fillStyle = '#ffd23f'; ctx.fillRect(-2, -r + 3, 4, 2 * r - 6); ctx.fillRect(-r + 3, -2, 2 * r - 6, 4); ctx.beginPath(); ctx.arc(0, 0, 4, 0, 7); ctx.fillStyle = '#e9edf3'; ctx.fill(); }
     else if (rang === 2) { ctx.beginPath(); ctx.arc(0, 2, r + 3, 0, 7); ctx.fillStyle = '#1b1b1b'; ctx.fill(); ctx.strokeStyle = '#5b6272'; ctx.lineWidth = 2.5; ctx.stroke(); ctx.beginPath(); ctx.ellipse(0, -3, r - 1, 5, 0, 0, 7); ctx.fillStyle = f > 0 ? '#fff3c4' : '#ff8c1a'; ctx.fill(); for (let i = 0; i < 3; i++) { const t = (temps * 1.3 + i / 3) % 1; ctx.globalAlpha = 1 - t; ctx.beginPath(); ctx.arc(-6 + i * 6, -5 - t * 14, 2.4, 0, 7); ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 1.2; ctx.stroke(); } ctx.globalAlpha = 1; }
-    else { const gg = ctx.createRadialGradient(-r * 0.35, -r * 0.4, 1, 0, 0, r + 3); gg.addColorStop(0, '#ffffff'); gg.addColorStop(0.4, '#ffd23f'); gg.addColorStop(1, '#8a6200'); ctx.beginPath(); ctx.arc(0, 0, r + 3, 0, 7); ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = '#7a5a00'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#c8102e'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fill(); }
+    else { const gg = ctx.createRadialGradient(-r * 0.35, -r * 0.4, 1, 0, 0, r + 3); gg.addColorStop(0, '#ffffff'); gg.addColorStop(0.4, rang === 0 ? '#b26bff' : '#ffd23f'); gg.addColorStop(1, rang === 0 ? '#2a0f45' : '#8a6200'); ctx.beginPath(); ctx.arc(0, 0, r + 3, 0, 7); ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = '#7a5a00'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#c8102e'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fill(); }
     ctx.restore();
   }
   SLB.forEach(s => { // élastiques
@@ -2590,10 +2649,10 @@ function renduBoss() { // éléments animés de l'arène : torches, bumpers, él
   for (const s of [-1, 1]) {
     const lw = (w / 2) * (1 - 0.86 * ouv), x0 = s < 0 ? x - w / 2 : x + w / 2 - lw;
     if (rang === 2) { ctx.strokeStyle = '#5b6272'; ctx.lineWidth = 3; ctx.beginPath(); for (let i = 0; i <= 3; i++) { const xx = x0 + lw * i / 3; ctx.moveTo(xx, y - 4); ctx.lineTo(xx, y + h); } ctx.moveTo(x0, y + 22); ctx.lineTo(x0 + lw, y + 22); ctx.moveTo(x0, y + 44); ctx.lineTo(x0 + lw, y + 44); ctx.stroke(); continue; }
-    ctx.fillStyle = rang === 1 ? '#a4161a' : '#8a5a2b'; ctx.fillRect(x0, y - 4, lw, h + 4);
-    ctx.strokeStyle = rang === 1 ? '#ffd23f' : '#3d4352'; ctx.lineWidth = rang === 1 ? 2 : 3; ctx.strokeRect(x0 + 2, y, lw - 4, h - 3);
+    ctx.fillStyle = rang === 0 ? '#1a0b2e' : rang === 1 ? '#a4161a' : '#8a5a2b'; ctx.fillRect(x0, y - 4, lw, h + 4);
+    ctx.strokeStyle = rang === 0 ? '#b26bff' : rang === 1 ? '#ffd23f' : '#3d4352'; ctx.lineWidth = rang <= 1 ? 2 : 3; ctx.strokeRect(x0 + 2, y, lw - 4, h - 3);
     if (rang === 3) { ctx.beginPath(); ctx.moveTo(x0, y + 18); ctx.lineTo(x0 + lw, y + 18); ctx.moveTo(x0, y + 40); ctx.lineTo(x0 + lw, y + 40); ctx.stroke(); }
-    else { ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(x0 + lw / 2, y + 30, Math.max(1, lw / 6), 0, 7); ctx.fill(); }
+    else { ctx.fillStyle = rang === 0 ? '#d9b3ff' : '#ffd23f'; ctx.beginPath(); ctx.arc(x0 + lw / 2, y + 30, Math.max(1, lw / 6), 0, 7); ctx.fill(); }
   }
   if (ouv > 0) { ctx.fillStyle = `rgba(0,0,0,${0.5 * ouv})`; ctx.fillRect(x - w / 2, y - 6, w, h + 6); }
   ctx.restore();
@@ -2616,23 +2675,25 @@ function dessinerCombat() { // le boss (au-dessus des billes), sa plaque (titre 
       if (hy < 760) { ctx.save(); ctx.translate(hx, hy); ctx.rotate(t * 5); ctx.scale(s, s); ctx.translate(0, 22); dessinerPerso(ctx, B.rang, B.genre, null, { chapeauSeul: true }); ctx.restore(); }
     }
     if (C.boucl > 0 && C.phase === 'combat') { const a = Math.min(1, C.boucl / 0.3); ctx.globalAlpha = a; ctx.strokeStyle = '#ffe600'; ctx.lineWidth = 3; ctx.setLineDash([7, 4]); ctx.lineDashOffset = -temps * 40; ctx.beginPath(); ctx.arc(C.x, C.y + 8, R_BOSS + 9, 0, 7); ctx.stroke(); ctx.setLineDash([]); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,230,0,.35)'; ctx.lineWidth = 9; ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
-    const nargue = C.phase === 'elimine' ? C.bulle : C.phase === 'combat' && !balles.some(b => !enAttente(b)) ? 'Viens te battre !' : '';
-    if (nargue) { // bulle
-      ctx.font = '900 13px system-ui,-apple-system,sans-serif'; const lw = ctx.measureText(nargue).width + 18, bx = Math.max(16 + lw / 2, Math.min(350 - lw / 2, C.x + 30)), by = Math.max(24, C.y - 72 * s);
-      rrect(ctx, bx - lw / 2, by - 13, lw, 26, 12); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#101a36'; ctx.lineWidth = 2; ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(bx - 14, by + 12); ctx.lineTo(bx - 20, by + 22); ctx.lineTo(bx - 4, by + 12); ctx.fillStyle = '#fff'; ctx.fill();
-      ctx.fillStyle = '#101a36'; ctx.fillText(nargue, bx, by + 1);
+    const nargue = C.phase === 'elimine' || C.phase === 'parole' ? C.bulle : C.phase === 'combat' && !C.ultime && !balles.some(b => !enAttente(b)) ? 'Viens te battre !' : '';
+    if (nargue) { // bulle (une ou deux lignes)
+      ctx.font = '900 13px system-ui,-apple-system,sans-serif'; const lignes = nargue.split('\n'), lw = Math.max(...lignes.map(l => ctx.measureText(l).width)) + 18, hb = 10 + 16 * lignes.length;
+      const bx = Math.max(16 + lw / 2, Math.min(354 - lw / 2, C.x + 30)), by = C.phase === 'parole' ? C.y + 92 : Math.max(24, C.y - 72 * s); // sous lui quand il parle (il est collé en haut)
+      rrect(ctx, bx - lw / 2, by - hb / 2, lw, hb, 12); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#101a36'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); if (C.phase === 'parole') { ctx.moveTo(C.x - 8, by - hb / 2 + 1); ctx.lineTo(C.x, by - hb / 2 - 12); ctx.lineTo(C.x + 8, by - hb / 2 + 1); } else { ctx.moveTo(bx - 14, by + hb / 2 - 1); ctx.lineTo(bx - 20, by + hb / 2 + 9); ctx.lineTo(bx - 4, by + hb / 2 - 1); } ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.fillStyle = '#101a36'; lignes.forEach((l, i) => ctx.fillText(l, bx, by + 1 + (i - (lignes.length - 1) / 2) * 16));
     }
   }
   if (C.phase === 'combat' || C.phase === 'mort') { // plaque sous la porte : n° + titre + nom, cœurs
-    const titre = 'N°' + C.rang + ' · ' + titreBoss(C.rang, B.genre).toUpperCase() + ' · ' + B.nom;
+    const titre = (C.rang ? 'N°' + C.rang : 'BOSS CACHÉ') + ' · ' + titreBoss(C.rang, B.genre).toUpperCase() + ' · ' + B.nom;
     ctx.font = '900 11px system-ui,-apple-system,sans-serif'; const lw = Math.min(250, Math.max(ctx.measureText(titre).width + 20, C.pvMax * 16 + 60));
     rrect(ctx, 185 - lw / 2, 86, lw, 38, 10); ctx.fillStyle = 'rgba(10,12,30,.86)'; ctx.fill(); ctx.strokeStyle = C.N.bord; ctx.lineWidth = 2; ctx.stroke();
     let t = titre; while (ctx.measureText(t).width > lw - 14 && t.length > 4) t = t.slice(0, -2) + '…';
     ctx.fillStyle = C.N.bord; ctx.fillText(t, 185, 96);
     for (let i = 0; i < C.pvMax; i++) coeur(ctx, 185 + (i - (C.pvMax - 1) / 2) * 16 - 14, 104, 13, i < C.pv);
     const xb = 185 + (C.pvMax - 1) / 2 * 16 - 2; // billes de combat restantes (à droite des cœurs)
-    for (let i = 0; i < C.N.billes; i++) { ctx.beginPath(); ctx.arc(xb + 6 + i * 8, 110.5, 3.2, 0, 7); ctx.fillStyle = i < C.billes ? '#e6e9f0' : 'rgba(255,255,255,.18)'; ctx.fill(); }
+    if (C.ultime) { ctx.font = '900 10px system-ui,sans-serif'; ctx.fillStyle = '#ffb347'; ctx.fillText('TOI', 185, 134); for (let i = 0; i < C.N.billes; i++) coeur(ctx, 205 + i * 11, 129, 9, i < C.billes); } // tes cœurs
+    else for (let i = 0; i < C.N.billes; i++) { ctx.beginPath(); ctx.arc(xb + 6 + i * 8, 110.5, 3.2, 0, 7); ctx.fillStyle = i < C.billes ? '#e6e9f0' : 'rgba(255,255,255,.18)'; ctx.fill(); }
   }
 }
 
@@ -2846,6 +2907,12 @@ function rendu() {
     if (b.tient > 0) { ctx.globalAlpha = 0.55; ctx.drawImage(SPR.balle, b.x - tb * 0.4, b.y - tb * 0.4, tb * 0.8, tb * 0.8); ctx.globalAlpha = 1; }
     else ctx.drawImage(SPR.balle, b.x - tb / 2, b.y - tb / 2, tb, tb);
   }
+  if (table === 'boss' && combat && combat.ultime) for (const b of balles) if (b.feu) { // boules de feu : halo et traînée
+    ctx.globalCompositeOperation = 'lighter'; const v = Math.hypot(b.vx, b.vy) || 1, rr = tb * (1.3 + 0.15 * Math.sin(temps * 30));
+    for (let i = 1; i <= 4; i++) { const t = i * 7; ctx.globalAlpha = 0.35 - i * 0.07; ctx.fillStyle = '#ff6a00'; ctx.beginPath(); ctx.arc(b.x - b.vx / v * t, b.y - b.vy / v * t, tb * (0.55 - i * 0.08), 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1; const gg = ctx.createRadialGradient(b.x, b.y, 1, b.x, b.y, rr); gg.addColorStop(0, 'rgba(255,240,180,.95)'); gg.addColorStop(0.45, 'rgba(255,120,20,.7)'); gg.addColorStop(1, 'rgba(255,40,0,0)');
+    ctx.fillStyle = gg; ctx.fillRect(b.x - rr, b.y - rr, 2 * rr, 2 * rr); ctx.globalCompositeOperation = 'source-over';
+  }
   if (table === 'boss' && combat) dessinerCombat(); // le boss passe au-dessus de la bille
   if (table === 'base') { // ---- gymnase : éléments au-dessus des billes
   // rampe surélevée, panier de basket, balle sur le rail (au-dessus de tout le plateau)
@@ -2913,7 +2980,7 @@ function rendu() {
   ctx.textAlign = 'left'; ctx.font = '800 12px system-ui,sans-serif'; ctx.fillStyle = '#9aa6c4'; ctx.fillText('BALLE', 12, hy - 10);
   for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(18 + i * 16, hy + 8, 6, 0, 7); ctx.fillStyle = i >= balleNo - 1 ? '#e6e9f0' : 'rgba(255,255,255,.15)'; ctx.fill(); }
   ctx.textAlign = 'center';
-  const etiq = table === 'boss' && combat ? '⚔ COMBAT DE BOSS · N°' + combat.rang + (mult > 1 ? ' · x' + mult : '') : table === 'goth' ? '☠ LA CRYPTE · BILLE BONUS' + (mult > 1 ? ' · x' + mult : '') : (multiball ? 'MULTIBALLE ' : 'MULTIPLICATEUR ') + 'x' + (mult * (multiball ? 2 : 1));
+  const etiq = table === 'boss' && combat ? (combat.rang ? '⚔ COMBAT DE BOSS · N°' + combat.rang : '💀 BOSS CACHÉ') + (mult > 1 ? ' · x' + mult : '') : table === 'goth' ? '☠ LA CRYPTE · BILLE BONUS' + (mult > 1 ? ' · x' + mult : '') : (multiball ? 'MULTIBALLE ' : 'MULTIPLICATEUR ') + 'x' + (mult * (multiball ? 2 : 1));
   texte(etiq, CW / 2, hy + 23, 11, table === 'boss' && combat ? combat.N.bord : table === 'goth' ? CRYPTE_C.lilas : multiball ? '#ff8fab' : (mult > 1 ? '#9ef' : '#9aa6c4'));
 }
 
@@ -3241,6 +3308,23 @@ majBoutonsSon();
 
 // ---------------------------------------------------------------- Classement
 let introAvant = null, introEnCours = false;
+// Kevin : le boss caché est le n°1 d'un 2e classement (même script, autre nom de jeu) qui n'est JAMAIS affiché ; il attend dans le château
+const JEU_CACHE = JEU + '-cache';
+let ultime = (() => { const u = lsGet('battle-ultime', null); return u && +u.score > 0 ? u : null; })();
+function bossUltime() { // le boss caché de la partie, toujours au-dessus du roi ; personne encore : une ombre « ? » à 1,5 × le score du roi
+  const roi = listeBoss().find(b => b.rang === 1); if (!roi) return null;
+  const u = ultime, sc = u ? +u.score : Math.max(150000, Math.round(roi.score * 1.5 / 1000) * 1000);
+  return { rang: 0, nom: u ? String(u.nom || '').trim() || '???' : '???', score: Math.max(sc, roi.score + 1), genre: u && u.genre === 'F' ? 'F' : 'H', photo: u && photoOk(u.photo) ? u.photo : '', inconnu: !u };
+}
+function garderUltime(r) {
+  if (!r || !r.ok || !Array.isArray(r.top)) return;
+  const t = r.top.filter(x => +x.score > 0).sort((a, b) => b.score - a.score)[0];
+  if (t && (!ultime || +t.score >= +ultime.score)) { ultime = { nom: String(t.nom || '').trim(), score: +t.score, genre: t.genre === 'F' ? 'F' : 'H', photo: photoOk(t.photo) ? t.photo : '' }; lsSet('battle-ultime', ultime); }
+}
+async function chargerUltime() {
+  try { garderUltime(await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU_CACHE)}`)); } catch (e) {}
+}
+const garderReponse = (p, r) => { if (r && r.ok) { if (p.jeu === JEU_CACHE) garderUltime(r); else garderClassement(r); } };
 let classement = (() => { const c = lsGet('battle-classement', null); return c && c.jeu === JEU ? c : null; })();
 function avecTimeout(url, opts = {}) {
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 8000);
@@ -3252,7 +3336,7 @@ async function chargerClassement() {
   etatTxt = classement ? 'Mise à jour du classement…' : 'Chargement du classement…'; afficherAccueil();
   try {
     const r = await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU)}`);
-    if (r && r.ok) { garderClassement(r); etatTxt = ''; } else etatTxt = 'Classement indisponible pour le moment';
+    if (r && r.ok) { garderClassement(r); etatTxt = ''; chargerUltime(); } else etatTxt = 'Classement indisponible pour le moment';
   } catch (e) { etatTxt = classement ? 'Hors ligne — dernier classement connu' : 'Hors ligne — classement indisponible'; }
   const n = lsGet('battle-attente', []).length; if (n) etatTxt += (etatTxt ? ' · ' : '') + n + ' score' + (n > 1 ? 's' : '') + ' en attente d’envoi';
   afficherAccueil();
@@ -3333,7 +3417,8 @@ function decorChemin(W, H, k) {
     <circle cx="75" cy="160" r="34" fill="url(#halo)"/>
     <path d="M60 172 v-24 a15 15 0 0 1 30 0 v24Z" fill="#1a0806" stroke="#8a5a2a" stroke-width="2"/>
     <path d="M54 171 h42 l3 5 h-48Z" fill="#6e5a66" stroke="#2a1a22" stroke-width="1"/><path d="M57 172 h36" stroke="#a08c98" stroke-width="1" opacity=".7"/>
-    <path d="M64 150 v22 M70 142 v30 M75 140 v32 M80 142 v30 M86 150 v22 M60 152 h30 M60 160 h30 M60 167 h30" stroke="#5a3a1a" stroke-width="1.4" opacity=".9"/>
+    <clipPath id="arche"><path d="M60 172 v-24 a15 15 0 0 1 30 0 v24Z"/></clipPath>
+    <g clip-path="url(#arche)"><g class="herse"><path d="M64 140 v32 M70 136 v36 M75 134 v38 M80 136 v36 M86 140 v32 M60 152 h30 M60 160 h30 M60 167 h30" stroke="#5a3a1a" stroke-width="1.4" opacity=".9"/></g></g>
     <rect x="52" y="146" width="3" height="12" fill="#5a3a1a"/><circle cx="53.5" cy="143" r="4" fill="#ffb020"/><rect x="95" y="146" width="3" height="12" fill="#5a3a1a"/><circle cx="96.5" cy="143" r="4" fill="#ffb020"/>
   </g>`;
   return `<svg class="decor" viewBox="0 0 ${f(W)} ${f(H)}" aria-hidden="true">
@@ -3374,13 +3459,18 @@ function afficherAccueil() {
     };
     const T = [[50, 99], [10, 86], [92, 72], [54, 58], [76, 43]]; // torches au bord du chemin (% largeur, % hauteur)
     html = `<div class="chemin" style="--k:${k.toFixed(3)};height:${Math.round(H)}px">${decorChemin(W, H, k)}<div class="ttl"><b>Battle des profs</b><span>Novembre · grimpe jusqu'au trône</span></div>`
-      + `${T.map(([x, y]) => `<i class="torche" style="left:${x}%;top:${y}%"></i>`).join('')}${etape(1)}${etape(2)}${etape(3)}</div>`;
+      + `${T.map(([x, y]) => `<i class="torche" style="left:${x}%;top:${y}%"></i>`).join('')}<button class="chateau" type="button" aria-label="Le château"></button>${etape(1)}${etape(2)}${etape(3)}</div>`;
   }
   const cle = html + JSON.stringify(liste.map(b => [b.photo.length, b.genre]));
   if (cle !== accueilDessine) {
     accueilDessine = cle;
     $('bloc-boss').innerHTML = html;
     const img = $('bloc-boss').querySelector('img'); if (img) img.src = AVATAR;
+    const cht = $('bloc-boss').querySelector('.chateau'); if (cht) cht.onclick = () => { // Kevin : on ne montre rien du boss caché, juste une rumeur
+      const ch = cht.parentNode; if (ch.querySelector('.rumeur')) return;
+      const e = document.createElement('div'); e.className = 'rumeur'; e.innerHTML = '🔒 Quelqu’un se cache dans ce château…<br><small>Bats le roi… et continue de jouer.</small>'; ch.appendChild(e);
+      setTimeout(() => e.remove(), 3200);
+    };
     $('bloc-boss').querySelectorAll('canvas').forEach(cnv => {
       const r = +cnv.dataset.rang, b = liste.find(x => x.rang === r);
       dessinerPortrait(cnv, r, b ? b.genre : '', b ? (b.photo || AVATAR) : '', true);
@@ -3393,7 +3483,7 @@ async function envoyer(p) {
   // renvoie la réponse du serveur, ou null si hors ligne (score mis en attente)
   try {
     const r = await avecTimeout(URL_SCRIPT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(p) });
-    if (r && r.ok) garderClassement(r);
+    garderReponse(p, r);
     return r || { ok: false };
   } catch (e) {
     const q = lsGet('battle-attente', []); q.push(p); lsSet('battle-attente', q); return null;
@@ -3409,7 +3499,7 @@ async function viderAttente() {
       const p = q[0];
       try {
         const r = await avecTimeout(URL_SCRIPT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(p) });
-        if (r && r.ok) garderClassement(r);
+        garderReponse(p, r);
       } catch (e) { break; }
       q.shift(); lsSet('battle-attente', q);
     }
@@ -3440,11 +3530,19 @@ function garderIntro(r, avant, rang, nom, genre) { // r : réponse du serveur, o
   const battus = avant.filter(b => b.score < sc && b.rang >= rang).map(b => b.rang).sort((a, b) => b - a); // du garde vers le roi
   lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang, battus, avant });
 }
+function garderIntroUltime(r, avant, nom, genre, ultAvant) { // tu bats tout le monde, tu montes au château, la herse se lève, tu chasses l'ancien boss caché
+  if (r && !r.ok) return;
+  const sc = Math.round(score);
+  if (!ultime || sc >= +ultime.score) { ultime = { nom, score: sc, genre, photo: photoData }; lsSet('battle-ultime', ultime); }
+  const battus = avant.filter(b => b.score < sc).map(b => b.rang).sort((a, b) => b - a);
+  const ancien = ultAvant ? { nom: ultAvant.inconnu ? '???' : ultAvant.nom, genre: ultAvant.genre, photo: ultAvant.photo || '', inconnu: !!ultAvant.inconnu } : null;
+  lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang: 0, ultime: true, battus, avant, ancien });
+}
 function verifierIntro() {
   const d = lsGet('battle-intro', null); lsSet('battle-intro', null);
   if (!d || Date.now() - d.t > 2 * 864e5 || !Array.isArray(d.avant)) return;
   introEnCours = true; introAvant = d.avant; accueilDessine = false; afficherAccueil();
-  setTimeout(() => jouerIntro(d).catch(() => {}).finally(() => { introEnCours = false; introAvant = null; accueilDessine = false; afficherAccueil(); const c = document.querySelector('.chemin'); if (c) c.style.animation = 'none'; const n = document.querySelector('.chemin .b' + d.rang); if (n) n.classList.add('nouveau'); }), 1100);
+  setTimeout(() => jouerIntro(d).catch(() => {}).finally(() => { introEnCours = false; introAvant = null; accueilDessine = false; afficherAccueil(); const c = document.querySelector('.chemin'); if (c) c.style.animation = 'none'; const n = !d.ultime && document.querySelector('.chemin .b' + d.rang); if (n) n.classList.add('nouveau'); }), 1100);
 }
 async function jouerIntro(d) {
   const ch = document.querySelector('.chemin'); if (!ch) return;
@@ -3500,8 +3598,9 @@ async function jouerIntro(d) {
       anim(c, [{ transform: 'translate(-50%,-50%)' }, { transform: `translate(calc(-50% + ${(px - b.x) * .5}px), calc(-50% - ${80 * k}px)) rotate(200deg) scale(1.4)`, offset: .5 }, { transform: `translate(calc(-50% + ${px - b.x}px), calc(-50% + ${py - s * .42 - (b.y - b.w * .4)}px)) rotate(360deg)` }], { duration: 1200, easing: 'ease-out' }).then(() => anim(c, [{ opacity: 1 }, { opacity: 0 }], { duration: 400, delay: 500 }));
       await anim(el, [{ transform: 'none' }, { transform: 'rotate(-14deg) scale(1.05)', offset: .2 }, { transform: 'rotate(720deg) scale(0)', opacity: 0 }], { duration: 1400, easing: 'cubic-bezier(.6,0,.9,.5)' });
     }
-    await bulle(I.heros, px, py - s * .5);
+    await bulle(d.ultime && r === 1 ? 'Le trône ? Je vise plus haut…' : I.heros, px, py - s * .5);
   }
+  if (d.ultime) await entrerChateau();
   // la place du dernier battu (ou la place libre)
   const cible = ch.querySelector('.b' + d.rang), cv = cible && cible.querySelector('canvas');
   if (cv) {
@@ -3514,6 +3613,29 @@ async function jouerIntro(d) {
   }
   await anim(calque, [{ opacity: 1 }, { opacity: 0 }], { duration: 350 });
   calque.remove();
+  async function entrerChateau() { // le chemin jusqu'à la porte, la herse se lève, il entre… et l'ancien boss caché est éjecté
+    const hz = ch.querySelector('svg.decor .herse'), pr = (hz || ch).getBoundingClientRect();
+    const door = hz ? { x: pr.left - cr.left + pr.width / 2, y: pr.bottom - cr.top } : { x: W * .8, y: H * .32 };
+    await marche({ x: door.x - 30 * k, y: door.y + 70 * k, sc: .7 }, 900, 2);
+    await marche({ x: door.x, y: door.y - s * .1, sc: .42 }, 1100, 3);
+    await bulle('Ouvre-toi !', door.x, door.y - s * .35);
+    son('porte'); if (hz) await anim(hz, [{ transform: 'translateY(0)' }, { transform: 'translateY(-32px)' }], { duration: 1100, easing: 'cubic-bezier(.5,0,.3,1)' });
+    await anim(h, [{ transform: T(pos), opacity: 1 }, { transform: T({ x: door.x, y: door.y - 10 * k, sc: .15 }), opacity: 0 }], { duration: 650 });
+    for (const [t, m] of [['BAM !', -30], ['PAF !', 25], ['BOUM !', -5]]) { boom(t, door.x + m * k, door.y - (60 + Math.abs(m)) * k, '#b26bff'); eclats(door.x, door.y - 14 * k, '#d9b3ff', 12); son('pare'); await attendre(380); }
+    const a = d.ancien || { nom: '???', genre: 'H', photo: '', inconnu: true };
+    const v = ajoute('heros', `<canvas style="width:${s}px;height:${s}px"></canvas><b style="background:#b26bff;color:#fff">${esc(a.nom)}</b>`);
+    v.style.transformOrigin = `${s / 2}px ${s / 2}px`; dessinerPortrait(v.querySelector('canvas'), 0, a.genre, a.photo || (a.inconnu ? '' : AVATAR), true);
+    const p0 = { x: door.x, y: door.y - 10 * k, sc: .2 }, p1 = { x: W * .3, y: H * .12, sc: 1.1 }, p2 = { x: -s, y: -s * .6, sc: .3 };
+    son('ejecte');
+    anim(v, [{ transform: T(p0) + ' rotate(0deg)' }, { transform: T(p1) + ' rotate(320deg)', offset: .45 }, { transform: T(p2) + ' rotate(900deg)' }], { duration: 1900, easing: 'cubic-bezier(.3,.6,.6,1)' });
+    await attendre(250); await bulle('NOOOOON !', W * .45, H * .2);
+    if (hz) anim(hz, [{ transform: 'translateY(-32px)' }, { transform: 'translateY(0)' }], { duration: 450, easing: 'cubic-bezier(.6,0,1,.6)' });
+    await attendre(450); son('fanfare'); eclats(door.x, door.y - 20 * k, '#b26bff', 30);
+    const an3 = ajoute('i-annonce', `Un nouveau boss se cache dans le château…<small>Chut… c’est toi, ${esc(d.nom)}</small>`);
+    an3.style.fontSize = '22px';
+    anim(an3, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 450, easing: 'cubic-bezier(.2,1.6,.4,1)' });
+    await attendre(2600);
+  }
 }
 
 // ---------------------------------------------------------------- Photo
@@ -3608,7 +3730,8 @@ function montrerFin() {
   // le nom, le roi / la reine et la photo ne sont demandés qu'ici : le score FINAL donne la place (n°1, 2 ou 3)
   // Kevin : une même personne peut occuper plusieurs places du top 3 (chaque partie compte)
   const liste = listeBoss(), boss1 = liste[0] || null;
-  const rang = 1 + liste.filter(b => b.score >= score).length, dansTop = CLASSEMENT_OK && score > 0 && rang <= 3;
+  const ult = CLASSEMENT_OK && ultimeBattu && score > 0, ultAvant = ult ? bossUltime() || bossUlt : null;
+  const rang = ult ? 0 : 1 + liste.filter(b => b.score >= score).length, dansTop = CLASSEMENT_OK && score > 0 && rang <= 3;
   photoData = '';
   let html = '', mode = 'simple', genre = lsGetTxt('battle-genre'), moqueur = null;
   if (genre !== 'H' && genre !== 'F') genre = '';
@@ -3616,6 +3739,20 @@ function montrerFin() {
     html = `<div class="bandeau">Fin du cours !</div><div class="score-fin">${esc(fmt(score))}</div>
       <div class="manque">Record sur cet appareil : ${esc(fmt(Math.max(score, lsGet('battle-record', 0))))}</div>
       <div class="msg">Classement indisponible sur cet appareil</div>`;
+  } else if (ult) {
+    mode = 'top';
+    html = `<div class="bandeau boss-n">💀<br>Boss caché !</div>
+      <div class="score-fin">${esc(fmt(score))}</div>
+      <div class="manque">Tu as vaincu ${ultAvant && !ultAvant.inconnu ? esc(ultAvant.nom) : 'l’ombre du château'} ! Chut… personne ne le saura.</div>
+      <canvas class="portrait-fin" id="portrait-fin" style="width:140px;height:185px"></canvas>
+      <div class="aide" id="titre-fin" style="margin:0;font-weight:800;color:var(--clair)"></div>
+      <div class="genre" id="genre">
+        <label${genre === 'H' ? ' class="on"' : ''}><input type="radio" name="genre" value="H"${genre === 'H' ? ' checked' : ''}>🤴 Un empereur</label>
+        <label${genre === 'F' ? ' class="on"' : ''}><input type="radio" name="genre" value="F"${genre === 'F' ? ' checked' : ''}>👸 Une impératrice</label>
+      </div>
+      <label class="btn photo-btn" id="photo-lbl">📸 Prends une photo terrifiante<input type="file" accept="image/*" capture="user" id="photo"></label>
+      <div class="aide" style="margin:0 0 10px">Ta tête attendra dans le château. Seuls ceux qui battent le roi ET atteignent ton score te verront. Le roi garde sa place au classement.</div>
+      ${blocNom('Devenir le boss caché 💀')}`;
   } else if (dansTop) {
     mode = 'top';
     const detrone = liste.find(b => b.rang === rang);
@@ -3647,10 +3784,10 @@ function montrerFin() {
   const majPortrait = () => {
     if (!$('portrait-fin')) return;
     dessinerPortrait($('portrait-fin'), rang, genre, photoData || AVATAR);
-    $('titre-fin').textContent = genre ? 'Tu deviens : ' + titreBoss(rang, genre) : 'Roi ou reine ? Coche ta case :';
+    $('titre-fin').textContent = genre ? 'Tu deviens : ' + titreBoss(rang, genre) : rang ? 'Roi ou reine ? Coche ta case :' : 'Empereur ou impératrice ? Coche ta case :';
     document.querySelectorAll('#genre label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
   };
-  if (mode === 'top') { majPortrait(); if (rang === 1) { SON.fanfare(); vib([60, 40, 60, 40, 200]); confettis(); } else { SON.sauve(); confettis(70); } }
+  if (mode === 'top') { majPortrait(); if (rang <= 1) { SON.fanfare(); vib([60, 40, 60, 40, 200]); confettis(); } else { SON.sauve(); confettis(70); } }
   else if (mode === 'moque') { SON.fin(); vib([100, 80, 300]); if (moqueur) dessinerPortrait($('moq'), moqueur.rang, moqueur.genre, moqueur.photo || AVATAR); }
   document.querySelectorAll('#genre input').forEach(i => i.onchange = () => { genre = i.value; $('genre').classList.remove('manque-choix'); majPortrait(); });
   $('rejouer').onclick = () => { pleinEcran(); deverrouiller(); montrer(null); nouvellePartie(); };
@@ -3672,12 +3809,13 @@ function montrerFin() {
     if (mode === 'top' && !genre) { $('genre').classList.add('manque-choix'); $('titre-fin').textContent = 'Coche d’abord : roi ou reine ?'; $('genre').scrollIntoView({ block: 'center' }); return; }
     lsSetTxt('battle-nom', nom); if (genre) lsSetTxt('battle-genre', genre);
     const btn = $('envoyer'); btn.disabled = true; btn.textContent = 'Envoi…';
-    const p = { code: CODE, action: 'jeu', jeu: JEU, nom, score: Math.round(score), photo: mode === 'top' && photoData.length < 48000 ? photoData : '', genre: mode === 'top' ? genre : '' };
+    const p = { code: CODE, action: 'jeu', jeu: ult ? JEU_CACHE : JEU, nom, score: Math.round(score), photo: mode === 'top' && photoData.length < 48000 ? photoData : '', genre: mode === 'top' ? genre : '' };
     const r = await envoyer(p);
-    if (mode === 'top' && r !== false) garderIntro(r, liste, rang, nom, genre);
+    if (mode === 'top' && r !== false) { if (ult) garderIntroUltime(r, liste, nom, genre, ultAvant); else garderIntro(r, liste, rang, nom, genre); }
     const ret = $('retour') || document.createElement('div');
     if (r === null) ret.innerHTML = `<div class="msg">📡 Hors ligne : ton score est gardé et sera envoyé dès que possible.</div>`;
     else if (!r.ok) { ret.innerHTML = `<div class="msg ko">Envoi refusé${r.erreur || r.error ? ' : ' + esc(r.erreur || r.error) : ''}.</div>`; btn.disabled = false; btn.textContent = 'Réessayer'; return; }
+    else if (ult) ret.innerHTML = `<div class="msg ok">💀 C’est fait : tu es ${genre === 'F' ? 'l’impératrice cachée' : 'l’empereur caché'} du château. Chut…</div>`;
     else {
       const i = r.rang > 0 ? r.rang - 1 : (Array.isArray(r.top) ? r.top : []).slice(0, 3).findIndex(t => String(t.nom).trim().toLowerCase() === nom.toLowerCase() && +t.score === Math.round(score));
       if (i === 0 || (i < 0 && r.record)) ret.innerHTML = `<div class="msg ok">👑 C’est officiel : ${genre === 'F' ? 'tu es la nouvelle reine' : genre === 'H' ? 'tu es le nouveau roi' : 'tu es n°1'} !</div>`;

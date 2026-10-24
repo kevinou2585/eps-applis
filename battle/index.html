@@ -113,25 +113,25 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 #accueil .defi{margin:6px 0 0;font-size:13px;font-weight:800;color:var(--jaune);letter-spacing:.14em;text-transform:uppercase;opacity:1}
 #accueil .etat{margin:4px 0 0;font-size:12px}
 #accueil .etat:empty{display:none}
-.chemin{position:relative;height:585px;margin-top:6px;animation:chute .8s .2s cubic-bezier(.2,1.5,.4,1) both}
+.chemin{position:relative;height:610px;margin-top:6px;animation:chute .8s .2s cubic-bezier(.2,1.5,.4,1) both}
 .chemin svg{position:absolute;inset:0;width:100%;height:100%}
 .chemin .b{position:absolute;display:flex;align-items:center}
 .chemin canvas{display:block;filter:drop-shadow(0 8px 10px rgba(0,0,0,.5));animation:flotte 2.4s ease-in-out infinite}
 .chemin .b1{top:0;left:50%;transform:translateX(-50%);flex-direction:column}
-.chemin .b2{top:305px;right:-8px;flex-direction:row-reverse}
-.chemin .b3{top:445px;left:-8px}
+.chemin .b2{top:285px;right:-8px;flex-direction:row-reverse}
+.chemin .b3{top:435px;left:-8px}
 .chemin .b2 canvas{animation-delay:-.8s}.chemin .b3 canvas{animation-delay:-1.6s}
 .chemin .b1{--c:#ffd23f;--t:#5a3a00}.chemin .b2{--c:#ff8c1a;--t:#fff}.chemin .b3{--c:#c9d1de;--t:#26304a}
 .chemin canvas{background:radial-gradient(circle at 50% 55%,color-mix(in srgb,var(--c) 55%,transparent),transparent 62%)}
 /* étiquettes (Kevin) : le titre du personnage en grand dans un bandeau à sa couleur, n° en médaille */
-.chemin .tag{position:relative;background:#fff;color:#2a0f3d;border:3px solid var(--c);border-radius:16px;padding:0 0 7px;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.3),0 0 18px color-mix(in srgb,var(--c) 45%,transparent);min-width:150px;max-width:190px}
-.chemin .b1 .tag{margin-top:-12px;min-width:190px}
+.chemin .tag{position:relative;background:#fff;color:#2a0f3d;border:2px solid var(--c);border-radius:11px;padding:0 0 4px;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.3),0 0 18px color-mix(in srgb,var(--c) 45%,transparent);min-width:96px;max-width:130px}
+.chemin .b1 .tag{margin-top:-14px;min-width:120px}
 .chemin .vide .tag{opacity:.85;border-style:dashed}
-.chemin .tag em{position:absolute;left:-14px;top:-14px;width:34px;height:34px;border-radius:50%;background:var(--c);color:var(--t);border:3px solid #fff;font:900 16px/28px system-ui,-apple-system,sans-serif;font-style:normal;box-shadow:0 3px 8px rgba(0,0,0,.4)}
-.chemin .tag i{display:block;margin-bottom:4px;padding:6px 12px 5px 18px;border-radius:12px 12px 0 0;background:var(--c);color:var(--t);font:900 21px/1.05 system-ui,-apple-system,sans-serif;font-style:normal;text-transform:uppercase;letter-spacing:.02em}
-.chemin .b1 .tag i{font-size:26px;padding-left:12px}
-.chemin .tag b{display:block;padding:0 10px;font-size:19px;font-weight:900;line-height:1.1;word-break:break-word}.chemin .b1 .tag b{font-size:23px}
-.chemin .tag span{font-size:14px;font-weight:800;color:#7a4a5a;font-variant-numeric:tabular-nums}
+.chemin .tag em{position:absolute;left:-10px;top:-10px;width:22px;height:22px;border-radius:50%;background:var(--c);color:var(--t);border:2px solid #fff;font:900 11px/18px system-ui,-apple-system,sans-serif;font-style:normal;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.chemin .tag i{display:block;margin-bottom:2px;padding:4px 8px 3px 13px;border-radius:9px 9px 0 0;background:var(--c);color:var(--t);font:900 13px/1.05 system-ui,-apple-system,sans-serif;font-style:normal;text-transform:uppercase;letter-spacing:.02em}
+.chemin .b1 .tag i{font-size:16px;padding-left:10px}
+.chemin .tag b{display:block;padding:0 7px;font-size:13px;font-weight:900;line-height:1.1;word-break:break-word}.chemin .b1 .tag b{font-size:15px}
+.chemin .tag span{font-size:10.5px;font-weight:800;color:#7a4a5a;font-variant-numeric:tabular-nums}
 .barre{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:12px 16px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(transparent,rgba(20,6,20,.85) 30%)}
 .barre .gros{max-width:440px;margin:0 auto;background:var(--jaune);color:#2a0f3d;font-size:24px;letter-spacing:.08em;box-shadow:0 6px 0 #b38a00,0 12px 24px rgba(0,0,0,.4)}
 .barre .gros:active{box-shadow:0 2px 0 #b38a00}
@@ -3263,7 +3263,7 @@ function afficherAccueil() {
   if (!CLASSEMENT_OK) html = `<div class="boss"><img class="photo" alt=""><div class="lbl">ENTRAÎNEMENT</div><div class="nom">Joue pour le plaisir</div><div class="sc">Record ici : ${esc(fmt(lsGet('battle-record', 0)))} pts</div></div>`;
   else {
     const etape = r => { // un boss sur le chemin : portrait + étiquette
-      const b = liste.find(x => x.rang === r), t = b ? titreBoss(r, b.genre) : (r === 1 ? 'Le trône' : 'Place libre'), px = r === 1 ? 210 : 140;
+      const b = liste.find(x => x.rang === r), t = b ? titreBoss(r, b.genre) : (r === 1 ? 'Le trône' : 'Place libre'), px = r === 1 ? 250 : 175; // Kevin : boss en grand, étiquettes petites
       return `<div class="b b${r}${b ? '' : ' vide'}"><canvas data-rang="${r}"${b ? ' data-boss="1"' : ''} style="width:${px}px;height:${px}px" aria-label="${esc(t)}"></canvas>`
         + `<div class="tag"><em>${r}</em><i>${esc(t)}</i><b>${b ? esc(b.nom) : 'Personne'}</b><span>${b ? esc(fmt(b.score)) + ' pts' : 'À prendre !'}</span></div></div>`;
     };

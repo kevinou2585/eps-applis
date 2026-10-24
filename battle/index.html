@@ -1658,18 +1658,20 @@ function perdreBalle() {
 
 // ---------------------------------------------------------------- Rendu
 const cv = $('jeu'), ctx = cv.getContext('2d');
-let DPR = 1, S = 1, KY = 1, OX = 0, OY = 0, HUD = 60, fond = null, CW = 0, CH = 0, SPR = {};
+let HUD_Y = 30;
+let DPR = 1, S = 1, KY = 1, OX = 0, OY = 0, fond = null, CW = 0, CH = 0, SPR = {};
 function redim() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  DPR = Math.min(window.devicePixelRatio || 1, 3); // jusqu'à 3 : image nette sur les téléphones récents
   CW = window.innerWidth; CH = window.innerHeight;
   cv.width = Math.round(CW * DPR); cv.height = Math.round(CH * DPR);
   const sonde = getComputedStyle($('sonde')), haut = parseFloat(sonde.paddingTop) || 0, bas = parseFloat(sonde.paddingBottom) || 0;
-  HUD = haut + 54;
-  // Kevin : flipper le plus grand possible, sur tout l'écran ; le score flotte par-dessus le haut de la table.
-  // Téléphone (écran étroit) : toute la largeur, et la table s'étire un peu en hauteur (KY, 18 % au plus) jusqu'au bas de l'écran.
-  const dispo = CH - haut - bas;
-  S = Math.min(CW / TW, dispo / (TH - 8)); KY = Math.min(1.18, Math.max(1, dispo / ((TH - 8) * S)));
-  OX = (CW - TW * S) / 2; OY = haut + Math.max(0, (dispo - (TH - 8) * S * KY) / 2);
+  // Kevin : flipper le plus grand possible SANS le déformer (les ronds restent ronds, KY = 1),
+  // tout le flipper visible : le score a sa propre bande au-dessus de la table (testé aussi en dessous : caché par les pouces et LANCER).
+  const dispo = CH - haut - bas, bmin = 46;
+  S = Math.min(CW / TW, (dispo - bmin) / (TH - 8)); KY = 1;
+  const libre = dispo - (TH - 8) * S, bande = Math.min(72, Math.max(bmin, libre));
+  OX = (CW - TW * S) / 2;
+  OY = haut + bande + Math.max(0, (libre - bande) / 2); HUD_Y = OY - bande / 2;
   fondNuit = null; fondGoth = null; fondBoss = {}; dessinerFond(); sprites();
   const bt = $('tilt'); if (bt){ bt.style.left = (OX + 185 * S) + 'px'; bt.style.top = (OY + 704 * S * KY) + 'px'; } // bouton TILT à la place de « Sauvée »
 }
@@ -2842,11 +2844,8 @@ function rendu() {
   // HUD
   if (etat !== 'jeu' && etat !== 'pause') return;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const hy = HUD - 30;
-  { // bandeau du score par-dessus la table : fond sombre en dégradé pour rester lisible
-    const g = ctx.createLinearGradient(0, 0, 0, HUD + 6); g.addColorStop(0, 'rgba(8,12,28,.82)'); g.addColorStop(0.7, 'rgba(8,12,28,.55)'); g.addColorStop(1, 'rgba(8,12,28,0)');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, CW, HUD + 6); }
-  ctx.textAlign = 'center'; texte(fmt(score), CW / 2, hy, 30, '#ffd23f');
+  const hy = HUD_Y - 6; // bande du score, hors de la table (voir redim)
+  ctx.textAlign = 'center'; texte(fmt(score), CW / 2, hy, 28, '#ffd23f');
   ctx.textAlign = 'left'; ctx.font = '800 12px system-ui,sans-serif'; ctx.fillStyle = '#9aa6c4'; ctx.fillText('BALLE', 12, hy - 10);
   for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(18 + i * 16, hy + 8, 6, 0, 7); ctx.fillStyle = i >= balleNo - 1 ? '#e6e9f0' : 'rgba(255,255,255,.15)'; ctx.fill(); }
   ctx.textAlign = 'center';

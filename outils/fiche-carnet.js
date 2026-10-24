@@ -72,7 +72,7 @@ function fiClassList(m){
 }
 
 /* --- Vue d'une classe ou d'un groupe --- */
-const FI_TOOLS = {points: ['Points de savoir-être', renderPoints], suivi: ['Tableau de suivi', renderSuivi], pupils: ['Gérer les élèves', renderManage]};
+const FI_TOOLS = {suivi: ['Tableau de suivi', renderSuivi], pupils: ['Gérer les élèves', renderManage]};
 function fiClassesOpen(c){
   const g = (UI.cgrp || []).map(id => S.classes.find(x => x.id === id)).filter(Boolean);
   return g.length > 1 && g.some(x => x.id === c.id) ? g : [c];
@@ -140,7 +140,7 @@ function fiEleves(cs, m){
     <h2>Élèves</h2>
     <p class="small muted" style="margin:0">Touche un élève pour sa fiche complète (tout, avec les dates) et son bulletin.</p>
     ${cs.map(c => `${grp ? `<h3 class="fi-cl">${esc(c.name)}</h3>` : ''}<div class="fi-list">${c.pupils.length ? pupilsOf(c).map(p => row(c, p)).join('') : '<div class="card empty small muted">Pas encore d\'élève.</div>'}</div>`).join('')}
-    <div class="fi-tools">${Object.entries(FI_TOOLS).filter(([k]) => k !== 'suivi').map(([k, [l]]) => `<button class="btn" type="button" data-tool="${k}">${({points: '🧮 ', suivi: '📋 ', pupils: '✏️ '})[k]}${l}</button>`).join('')}</div>
+    <div class="fi-tools">${Object.entries(FI_TOOLS).filter(([k]) => k !== 'suivi').map(([k, [l]]) => `<button class="btn" type="button" data-tool="${k}">${({suivi: '📋 ', pupils: '✏️ '})[k]}${l}</button>`).join('')}</div>
   </section>`;
   m.querySelectorAll('[data-fp]').forEach(b => b.onclick = () => openPupil(S.classes.find(x => x.id === b.dataset.fc), b.dataset.fp));
   m.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { UI.ctab = b.dataset.tool; saveUI(); render(); window.scrollTo(0, 0); });

@@ -98,23 +98,33 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .boss3>.lbl{font-weight:900;letter-spacing:.08em;color:var(--rouge);background:var(--jaune);display:inline-block;padding:3px 12px;border-radius:8px;transform:rotate(-2deg);animation:clign 1s 1s steps(2) infinite}
 .carte{position:relative;border-radius:20px;background:linear-gradient(160deg,#2b3a6b,#16224a);border:3px solid var(--bord,#9aa6c4);box-shadow:0 8px 22px rgba(0,0,0,.45);padding:6px 6px 10px;min-width:0}
 .carte.r1{--bord:#ffd23f;margin:10px auto 10px;max-width:270px}
-/* Accueil sur un seul écran (Kevin) : titre sur une ligne, Jouer et Partager côte à côte ; les boss gardent leur taille */
-#accueil .eps-retour{position:absolute;left:0;top:-8px;float:none;padding:2px 0;font-size:13px}
-#accueil .boite{position:relative}
-#accueil h1.titre{font-size:30px;margin:26px 0 0}
-#accueil .defi{margin:4px 0 0;font-size:14px}
-#accueil .boss3{margin:6px auto 2px}
-#accueil .boss3>.lbl{font-size:13px;padding:2px 10px}
-#accueil .carte.r1{margin:4px auto 8px}
+/* Accueil « L'ascension » (maquette 2 choisie par Kevin) : un chemin monte du garde au roi, Jouer collé en bas */
+#accueil{background:linear-gradient(180deg,#2a0f3d 0,#5b1530 45%,#c2410c 100%);padding-bottom:calc(env(safe-area-inset-bottom) + 100px)}
+#accueil .haut{display:flex;justify-content:space-between;align-items:center;min-height:32px}
+#accueil .eps-retour{float:none;padding:2px 0;font-size:13px;color:#ffd9c2}
+#accueil #partage{border:0;border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.14);color:#fff;font:800 13px system-ui,-apple-system,sans-serif}
+#accueil #partage i{display:inline-block;width:14px;height:14px;border-radius:50%;background:#25d366;vertical-align:-2px;margin-right:6px}
+#accueil h1.titre{margin:8px 0 0;font-size:30px;color:#fff;transform:none;text-shadow:0 4px 0 #7d1019;animation:none}
+#accueil .defi{margin:6px 0 0;font-size:13px;font-weight:800;color:var(--jaune);letter-spacing:.14em;text-transform:uppercase;opacity:1}
+#accueil .etat{margin:4px 0 0;font-size:12px}
 #accueil .etat:empty{display:none}
-.rangee{margin-top:12px}
-.rangee:has(#partage){display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch}
-.rangee:has(#partage) .gros{margin:0;height:100%;font-size:24px;padding:10px}
-.rangee #partage{margin:0;padding:8px 6px;font-size:12px;line-height:1.2}
-.rangee #partage b{margin-bottom:6px}
-.rangee #partage .pl{gap:6px}
-.rangee #partage button,.rangee #partage a{padding:7px 9px;font-size:12px}
-.rangee #partage small{display:none}
+.chemin{position:relative;height:540px;margin-top:6px;animation:chute .8s .2s cubic-bezier(.2,1.5,.4,1) both}
+.chemin svg{position:absolute;inset:0;width:100%;height:100%}
+.chemin .b{position:absolute;display:flex;align-items:center}
+.chemin canvas{display:block;filter:drop-shadow(0 8px 10px rgba(0,0,0,.5));animation:flotte 2.4s ease-in-out infinite}
+.chemin .b1{top:0;left:50%;transform:translateX(-50%);flex-direction:column}
+.chemin .b2{top:250px;right:-8px;flex-direction:row-reverse}
+.chemin .b3{top:400px;left:-8px}
+.chemin .b2 canvas{animation-delay:-.8s}.chemin .b3 canvas{animation-delay:-1.6s}
+.chemin .tag{background:#fff;color:#2a0f3d;border-radius:14px;padding:6px 12px;text-align:left;box-shadow:0 6px 0 rgba(0,0,0,.25);max-width:170px}
+.chemin .b1 .tag{text-align:center;margin-top:-10px;background:var(--jaune)}
+.chemin .vide .tag{opacity:.8}
+.chemin .tag i{display:block;font:900 11px system-ui,-apple-system,sans-serif;letter-spacing:.1em;color:var(--rouge);font-style:normal}
+.chemin .tag b{display:block;font-size:18px;font-weight:900;line-height:1.1;word-break:break-word}.chemin .b1 .tag b{font-size:22px}
+.chemin .tag span{font-size:13px;font-weight:800;opacity:.75;font-variant-numeric:tabular-nums}
+.barre{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:12px 16px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(transparent,rgba(20,6,20,.85) 30%)}
+.barre .gros{max-width:440px;margin:0 auto;background:var(--jaune);color:#2a0f3d;font-size:24px;letter-spacing:.08em;box-shadow:0 6px 0 #b38a00,0 12px 24px rgba(0,0,0,.4)}
+.barre .gros:active{box-shadow:0 2px 0 #b38a00}
 .carte.r2{--bord:#ff8c1a}
 .carte.r3{--bord:#c9d1de}
 .carte.vide{opacity:.75;border-style:dashed}
@@ -156,12 +166,12 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 
 <section id="accueil" class="ecran on">
   <div class="boite">
-    <a class="eps-retour" href="../">‹ Mes applis</a>
+    <div class="haut" id="haut"><a class="eps-retour" href="../">‹ Mes applis</a></div>
     <h1 class="titre">Battle des profs</h1>
-    <div class="defi"><b>Novembre</b>Flipper de l'école</div>
-    <div id="bloc-boss"></div>
-    <div class="rangee" id="rangee"><button class="gros pulse" id="jouer">Jouer</button></div>
+    <div class="defi">Novembre · grimpe jusqu'au trône</div>
     <div class="etat" id="etat"></div>
+    <div id="bloc-boss"></div>
+    <div class="barre"><button class="gros" id="jouer">▶ Jouer</button></div>
   </div>
 </section>
 
@@ -3241,13 +3251,12 @@ function afficherAccueil() {
   let html;
   if (!CLASSEMENT_OK) html = `<div class="boss"><img class="photo" alt=""><div class="lbl">ENTRAÎNEMENT</div><div class="nom">Joue pour le plaisir</div><div class="sc">Record ici : ${esc(fmt(lsGet('battle-record', 0)))} pts</div></div>`;
   else {
-    const carte = r => {
-      const b = liste.find(x => x.rang === r);
-      if (!b) return `<div class="carte r${r} vide"><span class="rg">N°${r}</span><canvas data-rang="${r}" style="width:${r === 1 ? 210 : 140}px;height:${r === 1 ? 210 : 140}px"></canvas><div class="tb">${r === 1 ? 'Le trône' : 'Place libre'}</div><div class="nom">${r === 1 ? 'Place libre' : '—'}</div><div class="sc">À prendre !</div></div>`;
-      const t = titreBoss(r, b.genre);
-      return `<div class="carte r${r}"><span class="rg">N°${r}</span><canvas data-rang="${r}" data-boss="1" style="width:${r === 1 ? 210 : 140}px;height:${r === 1 ? 210 : 140}px" aria-label="${esc(t)}"></canvas><div class="tb">${esc(t)}</div><div class="nom">${esc(b.nom)}</div><div class="sc">${esc(fmt(b.score))} pts</div></div>`;
+    const etape = r => { // un boss sur le chemin : portrait + étiquette
+      const b = liste.find(x => x.rang === r), t = b ? titreBoss(r, b.genre) : (r === 1 ? 'Le trône' : 'Place libre'), px = r === 1 ? 210 : 140;
+      return `<div class="b b${r}${b ? '' : ' vide'}"><canvas data-rang="${r}"${b ? ' data-boss="1"' : ''} style="width:${px}px;height:${px}px" aria-label="${esc(t)}"></canvas>`
+        + `<div class="tag"><i>N°${r}${b ? ' · ' + esc(t) : ''}</i><b>${b ? esc(b.nom) : 'Place libre'}</b><span>${b ? esc(fmt(b.score)) + ' pts' : 'À prendre !'}</span></div></div>`;
     };
-    html = `<div class="boss3"><div class="lbl">LES BOSS À BATTRE</div>${carte(1)}<div class="duo">${carte(2)}${carte(3)}</div></div>`;
+    html = `<div class="chemin"><svg viewBox="0 0 361 540" preserveAspectRatio="none" aria-hidden="true"><path d="M70 500 C 40 420, 330 450, 290 320 S 180 250, 180 190" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="6" stroke-dasharray="2 14" stroke-linecap="round"/></svg>${etape(1)}${etape(2)}${etape(3)}</div>`;
   }
   const cle = html + JSON.stringify(liste.map(b => [b.photo.length, b.genre]));
   if (cle !== accueilDessine) {

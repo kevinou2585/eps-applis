@@ -84,7 +84,7 @@ function renderSuivi(c, m){
       ${V.quiet && V.rows.length ? `<p class="su-quiet">✓ ${V.quiet} élève${V.quiet > 1 ? 's' : ''} sans remarque${f === 'all' ? '' : ' dans ce filtre'}</p>` : ''}
     </div>
     <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">Trier :</span>
-      <div class="seg" role="group" aria-label="Trier">${[['n', 'Plus de remarques'], ['az', 'A → Z']].map(([k, l]) => `<button type="button" data-susort="${k}" aria-pressed="${sort === k}">${l}</button>`).join('')}</div></div>
+      <div class="seg" role="group" aria-label="Trier">${[['n', 'Plus de remarques'], ['az', 'Ordre de la classe']].map(([k, l]) => `<button type="button" data-susort="${k}" aria-pressed="${sort === k}">${l}</button>`).join('')}</div></div>
     <p class="small muted" style="margin:0">Touche un élève pour la liste datée. Les règles ne coûtent jamais de point ; « de suite » = semaines de piscine consécutives où elle était présente.</p>
     <button class="btn pri block" type="button" id="su-copy">📋 Copier le suivi (${esc(c.name)})</button>
     <button class="btn block" type="button" id="su-xls">Exporter Excel</button>
@@ -136,7 +136,8 @@ function suPupilText(c, vp, D, r, f){
 }
 function suClassText(c, vp, D, V, f){
   const out = [suHead(c, vp, f), ''];
-  [...V.rows].sort((a, b) => byName(a.p, b.p)).forEach(r => {
+  const ord = new Map(pupilsOf(c).map((p, i) => [p.id, i]));
+  [...V.rows].sort((a, b) => (ord.get(a.p.id) ?? 1e6) - (ord.get(b.p.id) ?? 1e6)).forEach(r => {
     const parts = V.cols.map(o => { const ev = r.ev.filter(e => e.k === o.k).reverse(); return ev.length ? `${o.l} ${ev.length} (${ev.map(suEvTxt).join(', ')})` : ''; }).filter(Boolean);
     if ((f === 'all' || f === 'salle' || f === 'att') && (r.adj.t || r.adj.c)) parts.push(`relevé ${[r.adj.t ? '−' + r.adj.t + ' tenue' : '', r.adj.c ? '−' + r.adj.c + ' attitude' : ''].filter(Boolean).join(', ')}`);
     out.push(`${r.p.n} : ${parts.join(' ; ')}. ${suPtsTxt(D, r)}.`);

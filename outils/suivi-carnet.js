@@ -96,6 +96,9 @@ function renderSuivi(c, m){
   if (tb) tb.onclick = e => { const tr = e.target.closest('tr[data-supid]'); if (tr) openSuivi(c, vp, tr.dataset.supid, f, V.rows.map(r => r.p.id)); };
   $('su-copy').onclick = () => { if (!V.rows.length){ toast('Rien à copier'); return; } comCopy(suClassText(c, vp, D, V, f), 'Suivi de la classe copié'); };
   $('su-xls').onclick = () => suXlsx(c, vp, D, f);
+  // Journal des leçons (déplacé ici depuis « Points de savoir-être », supprimé) : leçon par leçon, ce qu'on a fait
+  const ls = vp === 'year' ? [...c.lessons].sort((a, b) => suKey(a) < suKey(b) ? -1 : 1) : compute(c, vp).lessons;
+  if (ls.length) m.insertAdjacentHTML('beforeend', `<section class="sec">${agJournal(ls)}</section>`);
 }
 /* Liste datée d'un élève */
 function suEvLabel(e){ const o = SU_COLS.find(x => x.k === e.k); return o.long; }

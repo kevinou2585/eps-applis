@@ -3,6 +3,8 @@
    - Sport et note d'un cours daté : sur les leçons de chaque classe (l.sport, l.note).
      Avant l'appel (pas encore de leçon) : S.settings.ag['AAAA-MM-JJ|H1'] = {s, n}, repris dans les leçons au début de l'appel.
    - Sports ajoutés par l'enseignant : S.settings.sports = [noms].
+   - Programme : compétences travaillées pendant le cours, l.prog = ['HME2', …] (absent = option pas activée) ;
+     cases cochées d'office par sport, modifiables : S.settings.progSport = {sport: [codes]}.
    Tout passe par save() / save(c.id) : appareil + Drive (réglages par S.ts, classes par c.ts). */
 IC.cal = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7 13.5h2M11 13.5h2M15 13.5h2M7 17h2M11 17h2"/></svg>';
 const SPORTS0 = ['Natation','Badminton','Basket-ball','Volley-ball','Football','Handball','Unihoc (floorball)','Athlétisme','Gymnastique','Acrosport',"Course d'endurance",'Tennis de table','Jeux de raquettes','Danse','Rugby (flag/tag)','Ultimate','Kin-ball','Tchoukball','Baseball/Softball','Jeux collectifs',"Jeux d'opposition / Lutte",'Escalade','Musculation / Renforcement','Condition physique','Orientation','Cirque / Jonglerie','Koh-Lanta','Évaluation'];
@@ -53,22 +55,22 @@ function agLessons(date, it, ids){
   return (ids || it.cls).map(id => { const c = clsById(id), l = c && lessonOn(c, date, it.h); return l ? [c, l] : null; }).filter(Boolean);
 }
 function agGet(date, it){
-  const f = agLessons(date, it).find(([, l]) => l.sport || l.note);
-  if (f) return {s: f[1].sport || '', n: f[1].note || ''};
+  const f = agLessons(date, it).find(([, l]) => l.sport || l.note || l.prog);
+  if (f) return {s: f[1].sport || '', n: f[1].note || '', p: f[1].prog || null};
   const p = (S.settings.ag || {})[agKey(date, it.h)];
-  return p ? {s: p.s || '', n: p.n || '', plan: true} : {s: '', n: ''};
+  return p ? {s: p.s || '', n: p.n || '', p: p.p || null, plan: true} : {s: '', n: '', p: null};
 }
-function agSet(date, it, ids, s, n){
+function agSet(date, it, ids, s, n, pr){
   const ls = agLessons(date, it, ids), k = agKey(date, it.h);
-  ls.forEach(([c, l]) => { if (s) l.sport = s; else delete l.sport; if (n) l.note = n; else delete l.note; save(c.id); });
-  if (ls.length < ids.length && (s || n)){ if (!S.settings.ag) S.settings.ag = {}; S.settings.ag[k] = {s, n}; }
+  ls.forEach(([c, l]) => { if (s) l.sport = s; else delete l.sport; if (n) l.note = n; else delete l.note; if (pr) l.prog = [...pr]; else delete l.prog; save(c.id); });
+  if (ls.length < ids.length && (s || n || pr)){ if (!S.settings.ag) S.settings.ag = {}; S.settings.ag[k] = pr ? {s, n, p: [...pr]} : {s, n}; }
   else if (S.settings.ag) delete S.settings.ag[k];
   save();
 }
 /* au début de l'appel : ce qui avait été prévu dans l'agenda passe dans les leçons */
 function agApply(date, h, cls){
   const k = agKey(date, h), p = (S.settings.ag || {})[k]; if (!p) return;
-  cls.forEach(c => { const l = lessonOn(c, date, h); if (l && !l.sport && !l.note){ if (p.s) l.sport = p.s; if (p.n) l.note = p.n; save(c.id); } });
+  cls.forEach(c => { const l = lessonOn(c, date, h); if (l && !l.sport && !l.note && !l.prog){ if (p.s) l.sport = p.s; if (p.n) l.note = p.n; if (p.p) l.prog = [...p.p]; save(c.id); } });
   delete S.settings.ag[k]; save();
 }
 
@@ -99,7 +101,7 @@ function agCard(date, it){
   return `<button type="button" class="ag-slot${st.done ? ' done' : ''}" data-ag="${it.id}" data-date="${date}" aria-label="${esc(lab)}">
     <span class="ag-l1"><b>${esc(slotLabel(it))}</b><span class="muted">${esc(slotTime(it))}</span>${n > 1 ? `<span class="ag-blk">Bloc ${n}h</span>` : ''}${st.done ? '<span class="ag-ok">✓ appel fait</span>' : ''}</span>
     <span class="ag-who">${esc(st.who)}</span>${it.pick && !st.done ? `<span class="small">${esc(actName(it.cls))}</span>` : ''}
-    <span class="ag-tags">${st.type === 'piscine' ? `<span class="tag piscine">${IC.wave} Piscine</span>` : ''}${st.g.s ? `<span class="tag ag-sp">🏷 ${esc(st.g.s)}</span>` : ''}${st.g.n ? `<span class="ag-note">${esc(st.g.n)}</span>` : ''}</span>
+    <span class="ag-tags">${st.type === 'piscine' ? `<span class="tag piscine">${IC.wave} Piscine</span>` : ''}${st.g.s ? `<span class="tag ag-sp">🏷 ${esc(st.g.s)}</span>` : ''}${st.g.p && st.g.p.length ? `<span class="tag ag-prt">📚 ${st.g.p.length} compét.</span>` : ''}${st.g.n ? `<span class="ag-note">${esc(st.g.n)}</span>` : ''}</span>
   </button>`;
 }
 function agMini(date, it){
@@ -190,6 +192,7 @@ function openAgSlot(date, id){
     <button class="btn pri block" type="button" id="ag-roll">${IC.lesson.replace('<svg', '<svg width="20" height="20"')} ${st.done ? 'Voir l\'appel' : 'Faire l\'appel'}</button>
     <div class="card sec" style="padding-block:14px"><h3>Ce cours · ${esc(fmtD(date))}</h3>
       ${sportField('ags', g.s)}
+      ${progField('ags', g.p, it.cls)}
       <label class="f">Ce que j'ai fait<textarea class="inp" id="ags-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>${micBtn('ags-note')}
       ${st.done ? '' : '<span class="small muted">Pas encore d\'appel : c\'est gardé et repris dans l\'appel de ce cours.</span>'}
       <button class="btn block" type="button" id="ags-save">Enregistrer</button></div>
@@ -197,10 +200,12 @@ function openAgSlot(date, id){
       <div class="row2"><button class="btn" type="button" id="ag-edit">✏️ Modifier l'horaire</button><button class="btn danger" type="button" id="ag-del">Supprimer</button></div>
       <div id="ag-delc"></div>
       <span class="small muted">Même horaire que Réglages › Mon horaire. Les appels déjà faits restent.</span></div>`);
-  let s0 = g.s, n0 = g.n, cur = g.s;
+  let s0 = g.s, n0 = g.n, cur = g.s, p0 = JSON.stringify(g.p || null);
   const ids = () => it.pick ? (grp ? [grp] : it.cls) : it.cls;
-  const keep = () => { const nv = $('ags-note') ? $('ags-note').value.trim() : n0; if (cur === s0 && nv === n0) return false; agSet(date, it, ids(), cur, nv); s0 = cur; n0 = nv; return true; };
-  bindSportField('ags', v => { cur = v; keep(); });
+  const PF = bindProgField('ags', g.p, () => cur, () => keep());
+  const keep = () => { const nv = $('ags-note') ? $('ags-note').value.trim() : n0, pv = JSON.stringify(PF.get());
+    if (cur === s0 && nv === n0 && pv === p0) return false; agSet(date, it, ids(), cur, nv, PF.get()); s0 = cur; n0 = nv; p0 = pv; return true; };
+  bindSportField('ags', v => { cur = v; PF.sport(v); keep(); });
   bindMic('ags-note');
   sheetOnClose = () => { micStop(); keep(); render(); };
   document.querySelectorAll('[data-grp]').forEach(x => x.onclick = () => { grp = x.dataset.grp; document.querySelectorAll('[data-grp]').forEach(y => y.setAttribute('aria-pressed', y === x)); });
@@ -315,7 +320,7 @@ function agJournal(ls){
   if (!ls.length) return '';
   const w = ls.filter(l => l.sport || l.note).length;
   return `<details class="card ag-jr"><summary><b>📅 Journal des leçons</b><span class="small muted">${ls.length} leçon${ls.length > 1 ? 's' : ''}${w ? ` · ${w} avec sport ou note` : ''}</span></summary>
-    ${[...ls].reverse().map(l => `<div class="evt"><span class="d">${esc(fmtD(l.date))}${l.h ? '<br>' + esc(slotLabel(l)) : ''}</span><span class="l">${l.sport ? `<b>${esc(l.sport)}</b>` : '<span class="muted">Sport non noté</span>'}${l.type === 'piscine' ? ' <span class="small muted">· piscine</span>' : ''}${l.note ? `<br><span class="small">${esc(l.note)}</span>` : ''}</span></div>`).join('')}</details>`;
+    ${[...ls].reverse().map(l => `<div class="evt"><span class="d">${esc(fmtD(l.date))}${l.h ? '<br>' + esc(slotLabel(l)) : ''}</span><span class="l">${l.sport ? `<b>${esc(l.sport)}</b>` : '<span class="muted">Sport non noté</span>'}${l.type === 'piscine' ? ' <span class="small muted">· piscine</span>' : ''}${l.note ? `<br><span class="small">${esc(l.note)}</span>` : ''}${l.prog && l.prog.length ? `<br><span class="small ag-jp">📚 ${esc(l.prog.join(' · '))}</span>` : ''}</span></div>`).join('')}</details>`;
 }
 
 /* --- Réglages : sports ajoutés --- */
@@ -333,3 +338,85 @@ function bindAgSports(){
   $('sp-add').onclick = add; $('sp-new').onkeydown = e => { if (e.key === 'Enter') add(); };
 }
 
+
+/* --- Programme EPS (réseau libre, FWB) : quelles compétences ce cours a travaillées ---
+   1re année : tronc commun (programme SeGEC 2025, 3 champs, 13 compétences).
+   2e année et suivantes : même grille pour l'instant (les 2es passent au tronc commun S2 en septembre 2027) — à confirmer par Kevin.
+   Couleurs très distinctes (bleu, orange vif, violet) et toujours le code écrit : Kevin est un peu daltonien. */
+const PROG = [
+  {k: 'HME', n: 'Habiletés motrices et expression', col: '#1f63d6', l: [['HME1', 'Grands mouvements fondamentaux', 'Grands mouvements'], ['HME2', "Gestes avec manipulation d'objets", 'Manipuler des objets'], ['HME3', "S'équilibrer", 'Équilibre'], ['HME4', "Se repérer dans l'espace et le temps, rythme", 'Espace, temps, rythme'], ['HME5', "S'exprimer avec son corps", 'Expression corporelle']]},
+  {k: 'HSC', n: 'Habiletés sociomotrices et citoyenneté', col: '#f06400', l: [['HSC1', 'Respecter des règles, rôles, arbitrage', 'Règles, rôles, arbitrage'], ['HSC2', 'Contribuer à une réalisation commune', 'Réalisation commune'], ['HSC3', 'Interagir positivement, fair-play', 'Fair-play']]},
+  {k: 'GSS', n: 'Gestion de sa santé et de la sécurité', col: '#8a3ffc', l: [['GSS1', 'Style de vie sain et actif, condition physique', 'Condition physique'], ['GSS2', 'Sécurité (dont sécurité aquatique, premiers secours)', 'Sécurité'], ['GSS3', 'Émotions et stress', 'Émotions, stress'], ['GSS4', 'Image positive de soi', 'Image de soi'], ['GSS5', 'Pensée critique santé et bien-être', 'Esprit critique santé']]}
+];
+const PROG_CODES = PROG.flatMap(g => g.l.map(x => x[0]));
+/* cases cochées d'office selon le sport (suggestions ; Kevin peut retenir les siennes par sport) */
+const PROG_SPORT0 = [
+  [/basket|hand|foot|rugby|ultimate|unihoc|floorball|kin-ball|tchouk|baseball|softball|jeux collectifs/i, ['HME2', 'HME4', 'HSC1', 'HSC2', 'HSC3']],
+  [/volley/i, ['HME2', 'HME4', 'HSC1', 'HSC2']],
+  [/badminton|tennis|raquette/i, ['HME2', 'HME4', 'HSC1', 'HSC3']],
+  [/natation|piscine/i, ['HME1', 'HME4', 'GSS1', 'GSS2']],
+  [/gym|acrosport/i, ['HME1', 'HME3', 'HSC2', 'GSS2', 'GSS4']],
+  [/athl/i, ['HME1', 'HME4', 'GSS1', 'GSS4']],
+  [/endurance|condition physique|musculation|renforcement/i, ['HME4', 'GSS1', 'GSS3', 'GSS5']],
+  [/danse|expression|cirque|jonglerie/i, ['HME4', 'HME5', 'HSC2', 'GSS4']],
+  [/opposition|lutte|judo/i, ['HME1', 'HME3', 'HSC1', 'HSC3', 'GSS2', 'GSS3']],
+  [/koh/i, ['HME1', 'HME2', 'HSC1', 'HSC2', 'HSC3', 'GSS3']],
+  [/orientation/i, ['HME4', 'HSC2', 'GSS2']],
+  [/escalade/i, ['HME1', 'HME3', 'GSS2', 'GSS3']]
+];
+const progSportSet = () => S.settings.progSport && typeof S.settings.progSport === 'object' ? S.settings.progSport : {};
+function progDefault(sport){
+  if (!sport) return [];
+  const own = progSportSet()[sport]; if (Array.isArray(own)) return own.filter(k => PROG_CODES.includes(k));
+  const f = PROG_SPORT0.find(([re]) => re.test(sport)); return f ? [...f[1]] : [];
+}
+const progYear = c => { const m = /^\s*(\d)/.exec(c && c.name || ''); return m ? +m[1] : 0; };
+function progLabel(ids){
+  const y = (ids || []).map(id => progYear(clsById(id))).find(Boolean) || 0;
+  return y === 1 ? '1re année · tronc commun' : y ? `${y}e année · même grille que les 1res (provisoire)` : 'Grille du tronc commun';
+}
+function progChips(sel){
+  const on = new Set(sel || []);
+  return PROG.map(g => `<div class="ag-pg" style="--pc:${g.col}"><span class="ag-pgn" title="${esc(g.n)}">${g.k}</span><div class="ag-pcs">${g.l.map(([k, t, c]) => `<button type="button" class="ag-pc" data-pc="${k}" aria-pressed="${on.has(k)}" title="${esc(k + ' · ' + t)}"><b>${k}</b>${esc(c)}</button>`).join('')}</div></div>`).join('');
+}
+function progField(pre, sel, ids){
+  const on = Array.isArray(sel);
+  return `<div class="ag-prog"><label class="toggle"><input type="checkbox" id="${pre}-pon" ${on ? 'checked' : ''}>📚 Lien avec le programme</label>
+    <div id="${pre}-pbox" class="ag-pbox" ${on ? '' : 'hidden'}>
+      <div class="ag-psum"><span id="${pre}-psum"></span><button class="btn" type="button" id="${pre}-pedit" aria-expanded="false">✏️ Modifier</button></div>
+      <div id="${pre}-pdet" class="ag-pdet" hidden><span class="small muted">${esc(progLabel(ids))} · cochées d'office selon le sport, touche pour décocher / recocher</span>
+      <div id="${pre}-pcs">${progChips(sel)}</div>
+      <div class="row2 ag-pdef"><button class="btn" type="button" id="${pre}-pkeep" hidden></button><button class="btn" type="button" id="${pre}-preset" hidden>↺ Suggestion de départ</button></div></div></div></div>`;
+}
+/* renvoie {get: liste cochée (ou null si l'option est coupée), sport(v): nouveau sport choisi} */
+function bindProgField(pre, sel, sportNow, onChange){
+  let cur = Array.isArray(sel) ? [...sel] : null;
+  const tg = $(pre + '-pon'), box = $(pre + '-pbox'), cs = $(pre + '-pcs'), kb = $(pre + '-pkeep'), rb = $(pre + '-preset');
+  const foot = () => { const sp = sportNow(), own = sp && Array.isArray(progSportSet()[sp]);
+    kb.hidden = !sp || !cur || JSON.stringify([...cur].sort()) === JSON.stringify([...progDefault(sp)].sort());
+    kb.textContent = `Retenir ces cases pour « ${sp} »`; rb.hidden = !own; };
+  const sum = () => { $(pre + '-psum').innerHTML = cur && cur.length ? cur.map(k => { const g = PROG.find(x => k.startsWith(x.k)); return `<b class="ag-pk" style="--pc:${g.col}">${k}</b>`; }).join('') : '<span class="small muted">Aucune compétence cochée</span>'; };
+  const draw = () => { cs.innerHTML = progChips(cur); sum(); foot(); };
+  const ed = $(pre + '-pedit'), det = $(pre + '-pdet');
+  ed.onclick = () => { det.hidden = !det.hidden; ed.setAttribute('aria-expanded', !det.hidden); ed.textContent = det.hidden ? '✏️ Modifier' : '✓ Fermer'; };
+  const fill = () => { cur = progDefault(sportNow()); draw(); };
+  tg.onchange = () => { box.hidden = !tg.checked; if (tg.checked){ if (!cur) fill(); } else cur = null; foot(); onChange(); };
+  cs.onclick = e => { const b = e.target.closest('[data-pc]'); if (!b || !cur) return; const k = b.dataset.pc;
+    cur = cur.includes(k) ? cur.filter(x => x !== k) : PROG_CODES.filter(x => x === k || cur.includes(x)); draw(); onChange(); };
+  kb.onclick = () => { const sp = sportNow(); if (!sp || !cur) return; S.settings.progSport = {...progSportSet(), [sp]: [...cur]}; save(); foot(); toast(`Retenu pour « ${sp} »`); };
+  rb.onclick = () => { const sp = sportNow(), o = {...progSportSet()}; delete o[sp]; S.settings.progSport = o; save(); fill(); onChange(); toast('Suggestion de départ remise'); };
+  sum(); foot();
+  return {get: () => cur ? [...cur] : null, sport: () => { if (cur) fill(); }};
+}
+
+/* --- Couverture du programme d'une classe sur une période (onglet Suivi) --- */
+function agCouverture(c, ls){
+  if (!ls.length) return '';
+  const done = ls.filter(l => Array.isArray(l.prog)), n = {};
+  done.forEach(l => l.prog.forEach(k => { n[k] = (n[k] || 0) + 1; }));
+  const zero = PROG_CODES.filter(k => !n[k]).length, mx = Math.max(1, ...Object.values(n));
+  return `<details class="card ag-jr ag-cov" ${done.length ? 'open' : ''}><summary><b>📚 Couverture du programme</b><span class="small muted">${done.length ? `${done.length} leçon${done.length > 1 ? 's' : ''} reliée${done.length > 1 ? 's' : ''} au programme${zero ? ` · ${zero} jamais travaillée${zero > 1 ? 's' : ''}` : ' · tout a été travaillé'}` : 'aucune leçon reliée'}</span></summary>
+    ${done.length ? `<span class="small muted">${esc(progLabel([c.id]))}</span>` + PROG.map(g => `<div class="ag-cg" style="--pc:${g.col}"><b class="ag-cgn">${g.k} · ${esc(g.n)}</b>${g.l.map(([k, t]) => { const v = n[k] || 0;
+      return `<div class="ag-cr${v ? '' : ' zero'}"><span class="ag-cc">${k}</span><span class="ag-ct">${esc(t)}</span><span class="ag-cb"><i style="width:${v / mx * 100}%"></i></span><b class="ag-cn">${v ? v + '×' : 'jamais'}</b></div>`; }).join('')}</div>`).join('')
+      : '<span class="small muted">Dans l\'agenda, touche un cours, choisis le sport et active « Lien avec le programme » : la couverture de la période apparaîtra ici.</span>'}</details>`;
+}

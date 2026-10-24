@@ -75,8 +75,16 @@ body:not(.sur-installer) .etape2,.sur-installer .etape1{display:none}
 try { if (localStorage.getItem('eps-perso-ok') !== '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5')
   document.querySelectorAll('.tuile.perso b').forEach(b => b.insertAdjacentHTML('afterbegin', '🔒 ')); } catch (e) {}
 </script>
+<div class="pied"><button type="button" id="b-param" aria-expanded="false">⚙️ Paramètres</button></div>
+<section id="param" hidden>
+  <h2>📱 Cet appareil</h2>
+  <div class="relie" id="relie-code" hidden><b>✅ Le code EPS ultime est entré sur cet appareil.</b><br>Les listes d'élèves et les classements arrivent tout seuls, il n'y a rien d'autre à faire.</div>
+  <h2>👀 Applis visibles à l'accueil</h2>
+  <p class="note" style="padding:0;margin:0 0 6px">Décoche celles dont tu ne te sers pas : elles disparaissent de l'accueil (rien n'est effacé).</p>
+  <div id="choix-applis"></div>
+  <div id="param-bas"></div>
+</section>
 </div>
-
 <div class="web-seul">
 <div class="accueil">
   <img src="icones/eps-512.png" alt="">
@@ -120,6 +128,15 @@ try { if (localStorage.getItem('eps-perso-ok') !== '5994471abb01112afcc18159f6cc
   </form>
 </div>
 <style>
+.pied{text-align:center;margin:30px 0 0}
+.pied button{border:0;background:none;color:var(--muted);font:inherit;font-size:14px;font-weight:600;padding:8px 12px}
+#param{margin-top:8px}
+#param h2:first-child{margin-top:8px}
+.choix{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:6px 0;background:var(--surface);border:1px solid var(--line);border-radius:12px;font-weight:600}
+.choix input{width:20px;height:20px;accent-color:var(--accent)}
+.choix img{width:30px;height:30px;border-radius:8px}
+.relie{background:#d8efdc;color:#1d5a2c;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.5;margin:6px 0 10px}
+@media (prefers-color-scheme:dark){.relie{background:#1f3a26;color:#bfe6c8}}
 #porte{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:16px}
 #porte[hidden]{display:none}
 #porte form{display:grid;gap:12px;max-width:340px;width:100%;text-align:center;justify-items:center}
@@ -183,6 +200,22 @@ document.getElementById('porte-f').onsubmit = async e => {
   try { await ouvrirListes(document.getElementById('porte-i').value.trim().toLowerCase()); document.getElementById('porte').hidden = true; m.textContent = ''; }
   catch(err){ m.textContent = navigator.onLine ? 'Code incorrect, réessaie.' : 'Connecte-toi à internet pour la première ouverture.'; }
 };
+</script>
+<script>
+// Paramètres en bas de l'accueil (comme Happiness) : applis visibles (localStorage 'eps-cachees' = liste des href cachés)
+(() => {
+  const $ = id => document.getElementById(id), tuiles = [...document.querySelectorAll('.app-seul .tuiles a.tuile')];
+  let cachees = []; try { cachees = JSON.parse(localStorage.getItem('eps-cachees') || '[]'); } catch(e){}
+  const appliquer = () => tuiles.forEach(t => { if (!t.id) t.hidden = cachees.includes(t.getAttribute('href')); });
+  $('choix-applis').innerHTML = tuiles.filter(t => !t.id).map(t => `<label class="choix"><input type="checkbox" data-h="${t.getAttribute('href')}" ${cachees.includes(t.getAttribute('href')) ? '' : 'checked'}><img src="${t.querySelector('img').getAttribute('src')}" alt="">${t.querySelector('b').textContent.replace('🔒 ', '')}</label>`).join('');
+  $('choix-applis').onchange = e => { const h = e.target.dataset.h; if (!h) return; cachees = cachees.filter(x => x !== h); if (!e.target.checked) cachees.push(h);
+    try { localStorage.setItem('eps-cachees', JSON.stringify(cachees)); } catch(err){} appliquer(); };
+  appliquer();
+  $('b-param').onclick = () => { const o = $('param').hidden; $('param').hidden = !o; $('b-param').setAttribute('aria-expanded', String(o)); if (o) $('param').scrollIntoView({behavior: 'smooth', block: 'start'}); };
+  try { $('relie-code').hidden = !(localStorage.getItem('eps-cle') || localStorage.getItem('eps-code')); } catch(e){}
+  // Appli installée : « Bon à savoir » passe dans les Paramètres
+  if (document.body.classList.contains('installe')) { const h = [...document.querySelectorAll('body > h2')].find(x => /Bon à savoir/.test(x.textContent)); if (h) $('param-bas').append(h, h.nextElementSibling); }
+})();
 </script>
 <script>
 // Mise a jour automatique : on verifie a chaque ouverture et a chaque retour dans l'appli,

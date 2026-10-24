@@ -39,27 +39,18 @@
     };
     if (document.body) montrer(); else document.addEventListener('DOMContentLoaded', montrer);
   }
-  // Bloc « Partager avec les collègues » en bas de la page d'accueil du jeu
+  // Bouton « Partager avec les collègues » sur la page d'accueil du jeu
   const partage = () => {
     const boite = document.querySelector('#accueil .boite') || document.getElementById('accueil'); if (!boite || document.getElementById('partage')) return;
     const code = lire('eps-code') || '';
     const msg = 'Viens jouer à Battle des profs 🎮 : ' + LIEN + (code ? '\nCode : ' + code : '');
-    const st = document.createElement('style');
-    st.textContent = '#partage{margin:22px 0 8px;padding:12px;border-radius:14px;background:rgba(255,255,255,.08);text-align:center;font-size:14px}#partage b{display:block;margin-bottom:8px}'
-      + '#partage .pl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}#partage button,#partage a{padding:10px 14px;border-radius:10px;border:0;font:700 14px system-ui,-apple-system,sans-serif;text-decoration:none}'
-      + '#partage .wa{background:#25d366;color:#06301a}#partage .cp{background:#f4f1e8;color:#101a36}#partage small{display:block;margin-top:8px;opacity:.75;word-break:break-all}';
-    document.head.appendChild(st);
-    const d = document.createElement('div'); d.id = 'partage';
-    d.innerHTML = '<b>📲 Partager avec les collègues</b><div class="pl"><a class="wa" target="_blank" rel="noopener">WhatsApp</a><button class="cp" type="button">Copier le lien</button></div><small></small>';
-    d.querySelector('.wa').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
-    d.querySelector('small').textContent = LIEN + (code ? ' · code : ' + code : '');
-    const cp = d.querySelector('.cp');
-    cp.onclick = async () => {
+    // petit bouton « Partager » en haut à droite de l'accueil (WhatsApp si le téléphone ne propose pas le partage)
+    const bt = document.createElement('button'); bt.id = 'partage'; bt.type = 'button'; bt.innerHTML = '<i></i>Partager';
+    bt.onclick = async () => {
       try { if (navigator.share) { await navigator.share({ title: 'Battle des profs', text: msg }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
-      try { await navigator.clipboard.writeText(msg); cp.textContent = '✓ Copié'; } catch (e) { cp.textContent = 'Copie impossible'; }
-      setTimeout(() => { cp.textContent = 'Copier le lien'; }, 2000);
+      window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
     };
-    (document.getElementById('rangee') || boite).appendChild(d); // à côté de « Jouer » (accueil sur un seul écran)
+    (document.getElementById('haut') || boite).appendChild(bt);
     // Collègue venu par le lien (sans EPS ultime) : pas de retour vers les autres applis
     if (lire('battle-acces') === '1' && !lire('eps-cle') && !lire('kl-listes-v1')) document.querySelectorAll('.eps-retour').forEach(a => { a.style.display = 'none'; });
   };

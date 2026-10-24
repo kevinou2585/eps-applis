@@ -98,6 +98,23 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .boss3>.lbl{font-weight:900;letter-spacing:.08em;color:var(--rouge);background:var(--jaune);display:inline-block;padding:3px 12px;border-radius:8px;transform:rotate(-2deg);animation:clign 1s 1s steps(2) infinite}
 .carte{position:relative;border-radius:20px;background:linear-gradient(160deg,#2b3a6b,#16224a);border:3px solid var(--bord,#9aa6c4);box-shadow:0 8px 22px rgba(0,0,0,.45);padding:6px 6px 10px;min-width:0}
 .carte.r1{--bord:#ffd23f;margin:10px auto 10px;max-width:270px}
+/* Accueil sur un seul écran (Kevin) : titre sur une ligne, Jouer et Partager côte à côte ; les boss gardent leur taille */
+#accueil .eps-retour{position:absolute;left:0;top:-6px;float:none;padding:2px 0;font-size:13px}
+#accueil .boite{position:relative}
+#accueil h1.titre{font-size:30px;margin:22px 0 0}
+#accueil .defi{margin:4px 0 0;font-size:14px}
+#accueil .boss3{margin:6px auto 2px}
+#accueil .boss3>.lbl{font-size:13px;padding:2px 10px}
+#accueil .carte.r1{margin:4px auto 8px}
+#accueil .etat:empty{display:none}
+.rangee{margin-top:12px}
+.rangee:has(#partage){display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch}
+.rangee:has(#partage) .gros{margin:0;height:100%;font-size:24px;padding:10px}
+.rangee #partage{margin:0;padding:8px 6px;font-size:12px;line-height:1.2}
+.rangee #partage b{margin-bottom:6px}
+.rangee #partage .pl{gap:6px}
+.rangee #partage button,.rangee #partage a{padding:7px 9px;font-size:12px}
+.rangee #partage small{display:none}
 .carte.r2{--bord:#ff8c1a}
 .carte.r3{--bord:#c9d1de}
 .carte.vide{opacity:.75;border-style:dashed}
@@ -143,7 +160,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
     <h1 class="titre">Battle des profs</h1>
     <div class="defi"><b>Novembre</b>Flipper de l'école</div>
     <div id="bloc-boss"></div>
-    <button class="gros pulse" id="jouer">Jouer</button>
+    <div class="rangee" id="rangee"><button class="gros pulse" id="jouer">Jouer</button></div>
     <div class="etat" id="etat"></div>
   </div>
 </section>

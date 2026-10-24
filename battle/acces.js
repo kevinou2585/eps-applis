@@ -50,7 +50,7 @@
       + '#partage .wa{background:#25d366;color:#06301a}#partage .cp{background:#f4f1e8;color:#101a36}#partage small{display:block;margin-top:8px;opacity:.75;word-break:break-all}';
     document.head.appendChild(st);
     const d = document.createElement('div'); d.id = 'partage';
-    d.innerHTML = '<b>📲 Partager le flipper avec les collègues</b><div class="pl"><a class="wa" target="_blank" rel="noopener">WhatsApp</a><button class="cp" type="button">Copier le lien</button></div><small></small>';
+    d.innerHTML = '<b>📲 Partager avec les collègues</b><div class="pl"><a class="wa" target="_blank" rel="noopener">WhatsApp</a><button class="cp" type="button">Copier le lien</button></div><small></small>';
     d.querySelector('.wa').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
     d.querySelector('small').textContent = LIEN + (code ? ' · code : ' + code : '');
     const cp = d.querySelector('.cp');
@@ -59,7 +59,7 @@
       try { await navigator.clipboard.writeText(msg); cp.textContent = '✓ Copié'; } catch (e) { cp.textContent = 'Copie impossible'; }
       setTimeout(() => { cp.textContent = 'Copier le lien'; }, 2000);
     };
-    boite.appendChild(d);
+    (document.getElementById('rangee') || boite).appendChild(d); // à côté de « Jouer » (accueil sur un seul écran)
     // Collègue venu par le lien (sans EPS ultime) : pas de retour vers les autres applis
     if (lire('battle-acces') === '1' && !lire('eps-cle') && !lire('kl-listes-v1')) document.querySelectorAll('.eps-retour').forEach(a => { a.style.display = 'none'; });
   };

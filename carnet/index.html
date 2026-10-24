@@ -1235,8 +1235,6 @@ function renderReport(c, m){
   const avg = k => { const v = rows.map(o => o.r[k]).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
   const tots = rows.map(o => o.r.total).filter(x => x != null);
   const under = tots.filter(x => x < 50).length;
-  const bins = [[0, 40, '<40'], [40, 50, '40–49'], [50, 60, '50–59'], [60, 70, '60–69'], [70, 80, '70–79'], [80, 100.01, '80+']].map(([a, b, l]) => ({l, n: tots.filter(x => x >= a && x < b).length, lo: b <= 50}));
-  const mx = Math.max(1, ...bins.map(b => b.n));
   const seP = S.settings.se, sfP = 100 - seP, seMax = seP, sfMax = sfP;
   m.innerHTML = `<section class="sec">
     <h2>Bulletin</h2>
@@ -1247,7 +1245,7 @@ function renderReport(c, m){
       <div class="tile"><div class="k">Savoir-faire (${sfP} %)</div><div class="v num">${fr(avg('sf'))}<small>/${fr(sfMax)}</small></div></div>
       <div class="tile"><div class="k">Sous 50 %</div><div class="v num ${under ? 'bad' : ''}">${under}<small> élève${under > 1 ? 's' : ''}</small></div></div>
     </div>
-    ${tots.length ? `<div class="card"><h3>Répartition des notes en %</h3><div class="hist">${bins.map(b => `<div class="b"><div class="bar ${b.lo ? 'lo' : ''}" style="height:${b.n / mx * 75}%"><span>${b.n || ''}</span></div>${b.l}</div>`).join('')}</div></div>`
+    ${tots.length ? '' // Kevin : plus de « Répartition des notes en % »
       : `<div class="card small muted">La note en % apparaît dès qu'il y a au moins une évaluation dans la période. En attendant, seul le savoir-être est calculé.</div>`}
     <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">Trier :</span>
       <div class="seg" role="group" aria-label="Trier">${[['name', 'Nom'], ['total', 'Note'], ['abs', 'Absences'], ['d', 'Pert.']].map(([k, l]) => `<button type="button" data-sort="${k}" aria-pressed="${sk === k}">${l}</button>`).join('')}</div></div>

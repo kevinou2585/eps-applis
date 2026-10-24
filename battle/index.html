@@ -233,7 +233,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 
 <script>
 'use strict';
-const JEU = 'flipper-2026-10';
+const JEU = 'flipper-2026-11'; // changer ce nom = classement remis à zéro (Kevin, 24/10/2026 ; l'ancien reste dans le tableur)
 const URL_SCRIPT = (() => { try { return localStorage.getItem('eps-script') || ''; } catch (e) { return ''; } })();
 const CODE = (() => { try { return localStorage.getItem('eps-code') || ''; } catch (e) { return ''; } })();
 const CLASSEMENT_OK = !!(URL_SCRIPT && CODE);
@@ -944,7 +944,7 @@ function nouvellePartie() {
   balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps;
   paniers = 0; besoin = 3; cagePleine = true; cageFlash = 0; filetT = 0; COLLE.balle = null;
   nuit = false; bascule = null; gelT = 0; protegeT = 0; cageAttente = 0; aServir = 0; CASIER.balle = null; CASIER.visites = 0; CASIER.ouvert = 0;
-  cibleRecord = Math.max(+lsGet('battle-record', 0) || 0, classement && classement.boss ? +classement.boss.score || 0 : 0); recordFait = cibleRecord <= 0;
+  cibleRecord = Math.max(+lsGet('battle-record-' + JEU, 0) || 0, classement && classement.boss ? +classement.boss.score || 0 : 0); recordFait = cibleRecord <= 0;
   popups = []; particules = []; grandMsg = null; EPS.forEach(c => { c.bas = false; c.on = true; }); epsReset = 0; attenteBalle = 0;
   butT = 0; jaugeFlash = 0; TROUS_L.forEach(t => { t.balle = null; t.flash = 0; });
   FL.forEach(f => { f.a = A_REPOS; f.w = 0; f.appui = false; });
@@ -3314,7 +3314,7 @@ majBoutonsSon();
 let introAvant = null, introEnCours = false;
 // Kevin : le boss caché est le n°1 d'un 2e classement (même script, autre nom de jeu) qui n'est JAMAIS affiché ; il attend dans le château
 const JEU_CACHE = JEU + '-cache';
-let ultime = (() => { const u = lsGet('battle-ultime', null); return u && +u.score > 0 ? u : null; })();
+let ultime = (() => { const u = lsGet('battle-ultime', null); return u && +u.score > 0 && u.jeu === JEU_CACHE ? u : null; })();
 function bossUltime() { // le boss caché de la partie, toujours au-dessus du roi ; personne encore : une ombre « ? » à 1,5 × le score du roi
   const roi = listeBoss().find(b => b.rang === 1); if (!roi) return null;
   const u = ultime, sc = u ? +u.score : Math.max(150000, Math.round(roi.score * 1.5 / 1000) * 1000);
@@ -3323,7 +3323,7 @@ function bossUltime() { // le boss caché de la partie, toujours au-dessus du ro
 function garderUltime(r) {
   if (!r || !r.ok || !Array.isArray(r.top)) return;
   const t = r.top.filter(x => +x.score > 0).sort((a, b) => b.score - a.score)[0];
-  if (t && (!ultime || +t.score >= +ultime.score)) { ultime = { nom: String(t.nom || '').trim(), score: +t.score, genre: t.genre === 'F' ? 'F' : 'H', photo: photoOk(t.photo) ? t.photo : '' }; lsSet('battle-ultime', ultime); }
+  if (t && (!ultime || +t.score >= +ultime.score)) { ultime = { jeu: JEU_CACHE, nom: String(t.nom || '').trim(), score: +t.score, genre: t.genre === 'F' ? 'F' : 'H', photo: photoOk(t.photo) ? t.photo : '' }; lsSet('battle-ultime', ultime); }
 }
 async function chargerUltime() {
   try { garderUltime(await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU_CACHE)}`)); } catch (e) {}
@@ -3454,7 +3454,7 @@ function afficherAccueil() {
   $('accueil').classList.toggle('decor', CLASSEMENT_OK);
   const W = Math.min(innerWidth, 472), haut = $('bloc-boss').getBoundingClientRect().top + $('accueil').scrollTop;
   const H = Math.max(420, innerHeight - (haut > 0 ? haut : 56) - (document.querySelector('.barre')?.offsetHeight || 90) + 14), k = Math.min(1, H / H_DECOR);
-  if (!CLASSEMENT_OK) html = `<div class="boss"><img class="photo" alt=""><div class="lbl">ENTRAÎNEMENT</div><div class="nom">Joue pour le plaisir</div><div class="sc">Record ici : ${esc(fmt(lsGet('battle-record', 0)))} pts</div></div>`;
+  if (!CLASSEMENT_OK) html = `<div class="boss"><img class="photo" alt=""><div class="lbl">ENTRAÎNEMENT</div><div class="nom">Joue pour le plaisir</div><div class="sc">Record ici : ${esc(fmt(lsGet('battle-record-' + JEU, 0)))} pts</div></div>`;
   else {
     const etape = r => { // un boss sur le chemin : portrait + étiquette
       const b = liste.find(x => x.rang === r), t = b ? titreBoss(r, b.genre) : (r === 1 ? 'Le trône' : 'Place libre'), px = Math.round((r === 1 ? 280 : 175) * k); // Kevin : boss en grand (le n°1 encore plus), étiquettes petites
@@ -3537,7 +3537,7 @@ function garderIntro(r, avant, rang, nom, genre) { // r : réponse du serveur, o
 function garderIntroUltime(r, avant, nom, genre, ultAvant) { // tu bats tout le monde, tu montes au château, la herse se lève, tu chasses l'ancien boss caché
   if (r && !r.ok) return;
   const sc = Math.round(score);
-  if (!ultime || sc >= +ultime.score) { ultime = { nom, score: sc, genre, photo: photoData }; lsSet('battle-ultime', ultime); }
+  if (!ultime || sc >= +ultime.score) { ultime = { jeu: JEU_CACHE, nom, score: sc, genre, photo: photoData }; lsSet('battle-ultime', ultime); }
   const battus = avant.filter(b => b.score < sc).map(b => b.rang).sort((a, b) => b - a);
   const ancien = ultAvant ? { nom: ultAvant.inconnu ? '???' : ultAvant.nom, genre: ultAvant.genre, photo: ultAvant.photo || '', inconnu: !!ultAvant.inconnu } : null;
   lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang: 0, ultime: true, battus, avant, ancien });
@@ -3721,7 +3721,7 @@ function finPartie() {
   etat = 'fin'; $('pause').style.display = 'none'; FL.forEach(f => f.appui = false); arreterCharge(); majMusique();
   if (bascule && bascule.vers) bascule = null; gothDans = 0;
   if (!(combat && combat.phase === 'elimine')) { table = 'base'; combat = null; } // (abandon pendant la crypte ou un combat) ; éliminé : le boss reste à l'écran et se moque
-  const rec = lsGet('battle-record', 0); if (score > rec) lsSet('battle-record', score);
+  const rec = lsGet('battle-record-' + JEU, 0); if (score > rec) lsSet('battle-record-' + JEU, score);
   setTimeout(montrerFin, 1300);
 }
 function blocNom(label) { // Kevin : le 1er prénom envoyé depuis ce téléphone reste le sien pour toutes les parties suivantes
@@ -3741,7 +3741,7 @@ function montrerFin() {
   if (genre !== 'H' && genre !== 'F') genre = '';
   if (!CLASSEMENT_OK) {
     html = `<div class="bandeau">Fin du cours !</div><div class="score-fin">${esc(fmt(score))}</div>
-      <div class="manque">Record sur cet appareil : ${esc(fmt(Math.max(score, lsGet('battle-record', 0))))}</div>
+      <div class="manque">Record sur cet appareil : ${esc(fmt(Math.max(score, lsGet('battle-record-' + JEU, 0))))}</div>
       <div class="msg">Classement indisponible sur cet appareil</div>`;
   } else if (ult) {
     mode = 'top';

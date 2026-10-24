@@ -58,18 +58,32 @@ body:not(.installe) .app-seul{display:none}
 .gros-bouton{display:inline-block;margin-top:14px;border-radius:14px;padding:16px 24px;font-weight:700;font-size:18px;background:var(--accent);color:#fff;text-decoration:none}
 body:not(.sur-installer) .etape2,.sur-installer .etape1{display:none}
 #installer{margin-top:10px;border:0;border-radius:14px;padding:15px 22px;font:inherit;font-weight:700;font-size:17px;background:var(--accent);color:#fff}
+/* Accueil plus gai (Kevin) : seulement le nom, une couleur par appli */
+a.tuile{border:0;color:#fff;box-shadow:0 6px 16px rgba(0,0,0,.14)}
+a.tuile b{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+a.tuile img{box-shadow:0 3px 10px rgba(0,0,0,.25)}
+a.tuile.principale b{font-size:22px}
+a.tuile.principale{align-items:center}
+a.tuile:not(.principale){padding:14px 6px}
+a.tuile.c-carnet{background:linear-gradient(140deg,#1f5fc8,#4f9bff)}
+a.tuile.c-tournoi{background:linear-gradient(140deg,#e08a00,#ffc23a)}
+a.tuile.c-koh{background:linear-gradient(140deg,#0f8a6a,#3cc79a)}
+a.tuile.c-fist{background:linear-gradient(140deg,#c62f3f,#ff6b6b)}
+a.tuile.c-classeur{background:linear-gradient(140deg,#7a3fc4,#b07cff)}
+a.tuile.c-battle{background:linear-gradient(140deg,#d0388f,#ff7ac0)}
+a.tuile .beta{background:#fff;color:#1f5fc8}
 </style>
 </head>
 <body>
 <div class="app-seul">
 <div class="top"><img src="icones/eps-192.png" alt=""><div><h1>EPS ultime</h1><p class="sub">Gratuites, sans compte, même sans internet.</p></div></div>
 <div class="tuiles">
-  <a class="tuile principale perso" href="carnet/"><img src="icones/carnet-192.png" alt=""><div><b>Carnet EPS <small class="beta">bêta</small></b><br><span>Présences, tenue, attitude, évaluations, bulletins</span></div></a>
-  <a class="tuile" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><b>Tournoi</b><span>Matchs, scores, arbitres, classement</span></a>
-  <a class="tuile" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b><span>Points, équipes, fair-play, fin de leçon</span></a>
-  <a class="tuile" href="le-fist/"><img src="icones/le-fist-192.png" alt=""><b>Le Fist</b><span>Fléchettes 301 ou 101 entre collègues</span></a>
-  <a class="tuile" href="classeur/"><img src="icones/classeur-192.png" alt=""><b>Classeur EPS</b><span>Leçons, évaluations, idées par sport</span></a>
-  <a class="tuile" href="battle/"><img src="icones/battle-192.png" alt=""><b>Battle des profs</b><span>Le jeu du mois : bats le boss !</span></a>
+  <a class="tuile principale perso c-carnet" href="carnet/"><img src="icones/carnet-192.png" alt=""><div><b>Carnet EPS <small class="beta">bêta</small></b></div></a>
+  <a class="tuile c-tournoi" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><b>Tournoi</b></a>
+  <a class="tuile c-koh" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b></a>
+  <a class="tuile c-fist" href="le-fist/"><img src="icones/le-fist-192.png" alt=""><b>Le Fist</b></a>
+  <a class="tuile c-classeur" href="classeur/"><img src="icones/classeur-192.png" alt=""><b>Classeur EPS</b></a>
+  <a class="tuile c-battle" href="battle/"><img src="icones/battle-192.png" alt=""><b>Battle des profs</b></a>
 </div>
 <script>
 // Carnet : cadenas tant que le 2e code n'a pas été entré sur cet appareil (voir perso.js).

@@ -16,7 +16,12 @@
 html,body,button,a,input,label,select{touch-action:manipulation}
 /* Retour vers l'accueil de l'appli EPS */
 .eps-retour{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;max-width:680px;margin:0 auto;padding:10px 16px 0;font:600 14px system-ui,-apple-system,sans-serif;color:#5d6a60;text-decoration:none}
-@media (prefers-color-scheme:dark){.eps-retour{color:#9aa89e}}</style>
+@media (prefers-color-scheme:dark){.eps-retour{color:#9aa89e}}.ord-l{display:flex; flex-direction:column; gap:6px}
+.ord-b{display:flex; align-items:center; gap:10px; min-height:46px; border:1.5px solid var(--line); background:var(--surface); color:var(--fg); border-radius:12px; padding:6px 12px; text-align:left; font-weight:600; font-size:15px}
+.ord-b i{flex:none; width:28px; height:28px; border-radius:50%; border:1.5px dashed var(--muted); display:grid; place-items:center; font:700 14px/1 var(--body); font-style:normal}
+.ord-b.on{border-color:var(--accent); background:var(--accent-soft)}
+.ord-b.on i{background:var(--accent); color:var(--accent-ink); border:0}
+</style>
 </head>
 <body>
 <a class="eps-retour" href="../"><span style="white-space:nowrap">‹ Mes applis</span><span style="font-weight:500">· Version bêta, pas encore finie</span></a>
@@ -620,7 +625,41 @@ if (!S.deleted) S.deleted = [];
 
 const C = () => S.classes.find(c => c.id === S.cur) || S.classes[0] || null;
 const byName = (a, b) => a.n.localeCompare(b.n, 'fr', {sensitivity: 'base'});
-const pupilsOf = c => [...c.pupils].sort(byName);
+/* ordre des élèves choisi par classe (Kevin), partout (appel, bulletin, évaluations, suivi…) :
+   c.ordre = 'nom' (défaut : nom de famille) | 'prenom' | 'perso' (c.ordreIds = ids dans l'ordre touché ; les autres suivent par nom) */
+function pupilsOf(c){
+  const ps = [...c.pupils].sort(byName);
+  if (c.ordre === 'prenom') return ps.sort((a, b) => { const x = nomPre(a), y = nomPre(b); return (x.pre || x.nom || a.n).localeCompare(y.pre || y.nom || b.n, 'fr', {sensitivity: 'base'}) || byName(a, b); });
+  if (c.ordre === 'perso' && Array.isArray(c.ordreIds)){ const r = new Map(c.ordreIds.map((id, i) => [id, i])), k = p => r.has(p.id) ? r.get(p.id) : 1e6; return ps.sort((a, b) => k(a) - k(b)); }
+  return ps;
+}
+function ordreHTML(c){
+  const o = ['prenom', 'perso'].includes(c.ordre) ? c.ordre : 'nom';
+  return `<div class="card sec" style="padding-block:14px"><h3>Ordre des élèves</h3>
+    <p class="small muted" style="margin:0">Le même partout : appel, bulletin, évaluations, suivi.</p>
+    <div class="seg" role="group" aria-label="Ordre des élèves">${[['nom', 'Nom de famille'], ['prenom', 'Prénom'], ['perso', 'Mon ordre']].map(([k, l]) => `<button type="button" data-ordre="${k}" aria-pressed="${o === k}">${l}</button>`).join('')}</div>
+    ${o === 'perso' ? '<button class="btn" type="button" id="s-ordre">✋ Changer mon ordre</button>' : ''}</div>`;
+}
+function bindOrdreEleves(c){
+  document.querySelectorAll('[data-ordre]').forEach(b => b.onclick = () => { const k = b.dataset.ordre;
+    if (k === 'perso'){ openOrdrePerso(c); return; }
+    if (k === 'nom') delete c.ordre; else c.ordre = k; save(c.id); render(); toast(k === 'prenom' ? 'Élèves rangés par prénom' : 'Élèves rangés par nom'); });
+  if ($('s-ordre')) $('s-ordre').onclick = () => openOrdrePerso(c);
+}
+/* « Mon ordre » : on touche les élèves dans l'ordre voulu (retoucher enlève le numéro) */
+function openOrdrePerso(c){
+  let pick = c.ordre === 'perso' && Array.isArray(c.ordreIds) ? c.ordreIds.filter(id => c.pupils.some(p => p.id === id)) : [];
+  const ps = [...c.pupils].sort(byName);
+  openSheet(`Mon ordre · ${c.name}`, `<p class="small muted" style="margin:0">Touche les élèves dans l'ordre où tu veux les voir. Retouche un élève pour lui enlever son numéro. Ceux que tu ne touches pas viennent à la fin, par nom.</p>
+    <div class="ord-l" id="ord-l"></div>
+    <div class="row2"><button class="btn" type="button" id="ord-raz">Recommencer</button><button class="btn pri" type="button" id="ord-ok">Enregistrer cet ordre</button></div>`);
+  const draw = () => { $('ord-l').innerHTML = ps.map(p => { const i = pick.indexOf(p.id);
+    return `<button type="button" class="ord-b${i >= 0 ? ' on' : ''}" data-ord="${p.id}" aria-pressed="${i >= 0}"><i>${i >= 0 ? i + 1 : ''}</i><span>${esc(p.n)}</span></button>`; }).join(''); };
+  draw();
+  $('ord-l').onclick = e => { const b = e.target.closest('[data-ord]'); if (!b) return; const id = b.dataset.ord; pick = pick.includes(id) ? pick.filter(x => x !== id) : [...pick, id]; draw(); };
+  $('ord-raz').onclick = () => { pick = []; draw(); };
+  $('ord-ok').onclick = () => { if (!pick.length){ toast('Touche au moins un élève'); return; } c.ordre = 'perso'; c.ordreIds = pick; save(c.id); closeSheet(); render(); toast('Ordre enregistré'); };
+}
 const periodsOf = c => [...c.periods].sort((a, b) => a.start < b.start ? -1 : 1);
 function periodOf(c, date){ const ps = periodsOf(c); let r = ps[0] || null; ps.forEach(p => { if (p.start <= date) r = p; }); return r; }
 function viewPeriod(c){ const id = UI.period[c.id]; if (id === 'year') return 'year'; return c.periods.find(p => p.id === id) || periodOf(c, today()); }
@@ -1288,7 +1327,7 @@ function renderReport(c, m){
     ${tots.length ? '' // Kevin : plus de « Répartition des notes en % »
       : `<div class="card small muted">La note en % apparaît dès qu'il y a au moins une évaluation dans la période. En attendant, seul le savoir-être est calculé.</div>`}
     <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">Trier :</span>
-      <div class="seg" role="group" aria-label="Trier">${[['name', 'Nom'], ['total', 'Note'], ['abs', 'Absences'], ['d', 'Pert.']].map(([k, l]) => `<button type="button" data-sort="${k}" aria-pressed="${sk === k}">${l}</button>`).join('')}</div></div>
+      <div class="seg" role="group" aria-label="Trier">${[['name', 'Élèves'], ['total', 'Note'], ['abs', 'Absences'], ['d', 'Pert.']].map(([k, l]) => `<button type="button" data-sort="${k}" aria-pressed="${sk === k}">${l}</button>`).join('')}</div></div>
     <div class="tblw"><table class="bt num">
       <thead><tr><th>Élève</th><th>S-être /${fr(seMax)}</th><th>S-faire /${fr(sfMax)}</th><th>Total %</th><th>Abs.</th><th>Oublis</th>${X.lessons.some(l => l.type === 'piscine') ? '<th>Pas nagé</th>' : ''}<th>Pert.</th><th>Exclu</th></tr></thead>
       <tbody>${rows.map(({p, r}) => `<tr data-pid="${p.id}"><td>${esc(p.n)}</td><td>${fr(r.se)}</td><td>${fr(r.sf)}</td><td class="tot ${r.total != null && r.total < 50 ? 'bad' : ''}">${fr(r.total)}</td><td>${r.abs}</td><td>${r.kit}</td>${X.lessons.some(l => l.type === 'piscine') ? `<td>${r.np}</td>` : ''}<td>${r.d}</td><td>${r.x}</td></tr>`).join('')}</tbody>
@@ -1640,6 +1679,7 @@ function renderManage(c, m){
       <span class="small muted" style="margin-top:-4px">Le nom en MAJUSCULES, sinon le dernier mot est pris comme prénom. Deux colonnes copiées d'Excel : nom puis prénom. Tu peux corriger dans la fiche de l'élève.</span>
       <button class="btn pri" type="button" id="s-addgo">Ajouter</button>
     </div>
+    ${ordreHTML(c)}
     <div class="card sec" style="padding-block:14px">
       <h3>Périodes</h3>
       <p class="small muted" style="margin:0">Chaque période remet les points de savoir-être à zéro. Dates de début proposées pour 2026-2027, à vérifier.</p>
@@ -1663,7 +1703,7 @@ function renderManage(c, m){
   bindClassSexe(c);
   $('s-cname').onchange = e => { const v = e.target.value.trim(); if (v){ c.name = v; save(c.id); render(); } };
   m.querySelectorAll('[data-pp]').forEach(b => b.onclick = () => openPupil(c, b.dataset.pp));
-  bindAddOne(c);
+  bindAddOne(c); bindOrdreEleves(c);
   $('s-addgo').onclick = () => { const added = addPupils(c, $('s-add').value); if (!added.length) return; save(c.id); render(); toast(`${added.length} élève${added.length > 1 ? 's' : ''} ajouté${added.length > 1 ? 's' : ''}`); };
   m.querySelectorAll('[data-per]').forEach(row => {
     const p = c.periods.find(x => x.id === row.dataset.per);
@@ -3038,7 +3078,7 @@ function renderSuivi(c, m){
       ${V.quiet && V.rows.length ? `<p class="su-quiet">✓ ${V.quiet} élève${V.quiet > 1 ? 's' : ''} sans remarque${f === 'all' ? '' : ' dans ce filtre'}</p>` : ''}
     </div>
     <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">Trier :</span>
-      <div class="seg" role="group" aria-label="Trier">${[['n', 'Plus de remarques'], ['az', 'A → Z']].map(([k, l]) => `<button type="button" data-susort="${k}" aria-pressed="${sort === k}">${l}</button>`).join('')}</div></div>
+      <div class="seg" role="group" aria-label="Trier">${[['n', 'Plus de remarques'], ['az', 'Ordre de la classe']].map(([k, l]) => `<button type="button" data-susort="${k}" aria-pressed="${sort === k}">${l}</button>`).join('')}</div></div>
     <p class="small muted" style="margin:0">Touche un élève pour la liste datée. Les règles ne coûtent jamais de point ; « de suite » = semaines de piscine consécutives où elle était présente.</p>
     <button class="btn pri block" type="button" id="su-copy">📋 Copier le suivi (${esc(c.name)})</button>
     <button class="btn block" type="button" id="su-xls">Exporter Excel</button>
@@ -3090,7 +3130,8 @@ function suPupilText(c, vp, D, r, f){
 }
 function suClassText(c, vp, D, V, f){
   const out = [suHead(c, vp, f), ''];
-  [...V.rows].sort((a, b) => byName(a.p, b.p)).forEach(r => {
+  const ord = new Map(pupilsOf(c).map((p, i) => [p.id, i]));
+  [...V.rows].sort((a, b) => (ord.get(a.p.id) ?? 1e6) - (ord.get(b.p.id) ?? 1e6)).forEach(r => {
     const parts = V.cols.map(o => { const ev = r.ev.filter(e => e.k === o.k).reverse(); return ev.length ? `${o.l} ${ev.length} (${ev.map(suEvTxt).join(', ')})` : ''; }).filter(Boolean);
     if ((f === 'all' || f === 'salle' || f === 'att') && (r.adj.t || r.adj.c)) parts.push(`relevé ${[r.adj.t ? '−' + r.adj.t + ' tenue' : '', r.adj.c ? '−' + r.adj.c + ' attitude' : ''].filter(Boolean).join(', ')}`);
     out.push(`${r.p.n} : ${parts.join(' ; ')}. ${suPtsTxt(D, r)}.`);

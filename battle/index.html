@@ -85,6 +85,11 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 #pause{position:fixed;right:calc(env(safe-area-inset-right) + 8px);top:calc(env(safe-area-inset-top) + 8px);z-index:3;width:42px;height:42px;border-radius:12px;border:2px solid rgba(255,255,255,.25);background:rgba(16,26,54,.6);font-weight:900;font-size:16px;display:none}
 /* bouton LANCER : petit, collé au bord droit (zone du couloir du lanceur), visible seulement quand une bille attend au lanceur */
 #lancer{position:fixed;right:calc(env(safe-area-inset-right) + 3px);bottom:calc(env(safe-area-inset-bottom) + 3px);z-index:3;width:50px;height:50px;padding:0;border-radius:50%;border:2.5px solid #fff;background:radial-gradient(circle at 35% 30%,#ff8a95,#d61f2e 60%,#7a0f19);color:#fff;font-weight:900;font-size:9.5px;letter-spacing:-.01em;box-shadow:0 4px 0 #5a0a12,0 6px 14px rgba(0,0,0,.5);display:none;touch-action:none;-webkit-user-select:none;user-select:none;animation:pulse 1s ease-in-out infinite;line-height:1}
+#tilt{position:fixed;z-index:3;display:none;width:70px;height:32px;margin:-16px 0 0 -35px;padding:0;border-radius:16px;border:2px solid rgba(255,255,255,.35);background:rgba(16,26,54,.7);color:#ffd23f;font-weight:900;font-size:14px;letter-spacing:.08em;touch-action:none}
+#pause[style*="block"] ~ #tilt{display:block}
+#tilt:active{background:#ffd23f;color:#101a36}
+.quitter{margin:10px 0;padding:12px;border-radius:14px;background:rgba(255,210,63,.15);border:2px solid #ffd23f;text-align:center;font-weight:800}
+.quitter .row{display:flex;gap:8px}.quitter .btn{margin:8px 0 0}
 #lancer small{display:block;font-size:13px;margin-bottom:1px}
 #lancer.charge{animation:none;transform:translateY(3px) scale(.95);box-shadow:0 1px 0 #5a0a12}
 .cache{display:none!important}
@@ -128,6 +133,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 <canvas id="jeu"></canvas>
 <div id="sonde"></div>
 <button id="pause" aria-label="Pause">II</button>
+<button id="tilt" aria-label="Tilt : secouer le flipper">TILT</button>
 <button id="lancer" aria-label="Lancer la balle"><small>▲</small>LANCER</button>
 <canvas id="confettis"></canvas>
 
@@ -147,7 +153,9 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 <section id="pause-ecran" class="ecran">
   <div class="boite">
     <div class="bandeau">Temps mort</div>
-    <button class="gros" id="reprendre">Reprendre</button>
+    <div class="quitter" id="quitter" hidden>Quitter la partie ?<div class="row"><button class="btn" type="button" id="quitter-oui">Oui</button><button class="btn" type="button" id="quitter-non">Non</button></div></div>
+    <button class="gros" id="reprendre">Reprendre la partie</button>
+    <button class="btn" type="button" id="recommencer">Nouvelle partie</button>
     <button class="btn btn-son" type="button">🔊 Son activé</button> <button class="btn btn-mus" type="button">🎵 Musique</button> <button class="btn btn-sec" type="button">📳 Secousses</button>
     <button class="btn" id="abandon">Abandonner la partie</button>
   </div>
@@ -1117,6 +1125,10 @@ function entrerCasier(b) {
   if (CASIER.visites < 3) { points(2500, CASIER.x + 40, CASIER.y); blague('Casier ' + CASIER.visites + '/3 🔒', 125, 196, '#00e5ff'); }
   else {
     CASIER.visites = 0;
+    if (COLLE.balle) { // le casier ouvert libère aussi la bille en colle : deux billes en jeu
+      const bc = COLLE.balle; COLLE.balle = null; bc.collee = false; bc.y = COLLE.y + COLLE.r + R + 2; bc.vx = 90; bc.vy = 120; bc.ax = bc.x; bc.ay = bc.y; bc.at = temps;
+      blague('Fin de la colle ! 🎉', COLLE.x, COLLE.y - 30, '#d9b3ff'); etincelles(COLLE.x, COLLE.y, 14, '#d9b3ff');
+    }
     if (!multiball) { points(10000); sauveT = Math.max(sauveT, 12); annonce('CASIER OUVERT !', 'Dispense trouvée : balle sauvée 12 s', '#00e5ff', 32, 2); SON.sauve(); }
     else { points(25000); annonce('JACKPOT CASIER !', 'Objets trouvés pendant la récré', '#00e5ff', 32, 1.8); SON.jackpot(); }
     SON.fanfare(); flash = Math.max(flash, 0.15);
@@ -1655,6 +1667,7 @@ function redim() {
   S = Math.min(CW / TW, (CH - HUD - bande) / (TH - 8));
   OX = (CW - TW * S) / 2; OY = HUD + Math.max(0, (CH - HUD - bande - (TH - 8) * S) / 2);
   fondNuit = null; fondGoth = null; fondBoss = {}; dessinerFond(); sprites();
+  const bt = $('tilt'); if (bt){ bt.style.left = (OX + 185 * S) + 'px'; bt.style.top = (OY + 704 * S) + 'px'; } // bouton TILT à la place de « Sauvée »
 }
 const hsla = (h, a, l = 60) => `hsla(${h},100%,${l}%,${a})`;
 function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
@@ -2218,7 +2231,7 @@ const LAMPES_G = [
   ...[0, 1, 2].map(i => ({ x: 152 + i * 47, y: 530, r: 11, h: 300, txt: '🦇', t: 11, on: () => CRYPTE.chauves % 3 > i })),
   ...[0, 1, 2].map(i => ({ x: 276 + i * 18, y: 395, r: 6, h: 30, on: () => CRYPTE.cercueils % 3 > i })),
   { x: 182, y: 104, r: 13, forme: 'fleche', ang: 0, h: 95, on: () => Math.floor(temps * (CRYPTE.allume ? 7 : 1.5)) % 2 === 0 },
-  { x: 185, y: 704, forme: 'pilule', w: 96, hh: 18, h: 280, txt: 'ÂME SAUVÉE', t: 10, on: () => sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
+  { x: 185, y: 574, forme: 'pilule', w: 96, hh: 18, h: 280, txt: 'ÂME SAUVÉE', t: 10, on: () => sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
 ];
 function dessinerChauve(c) {
   let a = 1;
@@ -2560,7 +2573,7 @@ const LAMPES = [
   ...[0, 1, 2, 3, 4].map(i => ({ x: 322, y: 476 - i * 20, r: 7, h: 185, on: () => bulletin > i })),
   { x: 191, y: 318, r: 13, forme: 'fleche', ang: 0, h: 28, on: () => Math.floor(temps * (!multiball && paniers + 1 >= besoin ? 7 : 2)) % 2 === 0 },
   { x: 258, y: 340, r: 11, forme: 'fleche', ang: -0.15, h: 340, on: () => Math.floor(temps * 2 + 1) % 2 === 0 },
-  { x: 185, y: 704, forme: 'pilule', w: 76, hh: 18, h: 195, txt: 'SAUVÉE', t: 11, on: () => protegeT > 0 || sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
+  { x: 185, y: 574, forme: 'pilule', w: 76, hh: 18, h: 195, txt: 'SAUVÉE', t: 11, on: () => protegeT > 0 || sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
 ];
 function dessinerLampe(L, on, h) {
   ctx.save(); ctx.translate(L.x, L.y);
@@ -3058,16 +3071,19 @@ function appuis(gauche, droite) {
 function lanceurPret() { return etat === 'jeu' && !(combat && combat.phase !== 'combat') && spectacleT <= 0 && gelT <= 0 && !bascule && balles.some(enAttente) && balles.every(enAttente); }
 // zone du lanceur (couloir de droite, en bas) : on y appuie longtemps pour charger le piston
 function zoneLanceur(x, y) { return x > OX + 340 * S && y > OY + 470 * S && lanceurPret(); }
+// centre bas de l'écran (sous et entre les flippers, autour du bouton TILT) : n'actionne aucun flipper
+function zoneMorte(x, y) { return Math.abs(x - (OX + 185 * S)) < 52 * S && y > OY + 600 * S; }
 function lireTouches(e) {
   e.preventDefault(); audio();
   let g = false, d = false, l = false;
-  for (const t of e.touches) { if (t.target !== cv) continue; if (zoneLanceur(t.clientX, t.clientY)) l = true; else if (t.clientX < CW / 2) g = true; else d = true; }
+  for (const t of e.touches) { if (t.target !== cv) continue; if (zoneLanceur(t.clientX, t.clientY)) l = true; else if (zoneMorte(t.clientX, t.clientY)) continue; else if (t.clientX < CW / 2) g = true; else d = true; }
   charger(l, 'doigt'); appuis(g, d);
 }
 ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(n => cv.addEventListener(n, lireTouches, { passive: false }));
 let souris = null;
 cv.addEventListener('mousedown', e => {
   audio(); if (zoneLanceur(e.clientX, e.clientY)) { souris = 'l'; charger(true, 'souris'); return; }
+  if (zoneMorte(e.clientX, e.clientY)) return;
   souris = e.clientX < CW / 2 ? 'g' : 'd'; appuis(souris === 'g' || clav.g, souris === 'd' || clav.d);
 });
 window.addEventListener('mouseup', () => { if (souris === 'l') charger(false, 'souris'); else if (souris) appuis(clav.g, clav.d); souris = null; });
@@ -3100,8 +3116,32 @@ window.addEventListener('resize', () => redim());
 
 function montrer(id) { document.querySelectorAll('.ecran').forEach(s => s.classList.toggle('on', s.id === id)); }
 function pause() { if (etat !== 'jeu') return; etat = 'pause'; FL.forEach(f => f.appui = false); charge.src = {}; charge.actif = false; arreterCharge(); majMusique(); montrer('pause-ecran'); }
-$('pause').onclick = () => pause();
+$('pause').onclick = () => { $('quitter').hidden = true; pause(); };
 $('reprendre').onclick = () => { deverrouiller(); montrer(null); etat = 'jeu'; dernier = 0; };
+$('recommencer').onclick = () => { deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); };
+// Bouton TILT : bouscule la table (bille coincée dans une rigole). Ne compte pas pour le vrai TILT des secousses.
+function coupTable() {
+  if (etat !== 'jeu' || tiltOn || spectacleT > 0 || gelT > 0 || bascule || (combat && combat.phase !== 'combat')) return;
+  let n = 0;
+  for (const b of balles) {
+    if (!libre(b) || dansLanceur(b)) continue;
+    b.vy -= SECOUSSE.VY * 1.15; b.vx += SECOUSSE.VX * 0.6 * (b.x < 185 ? 1 : -1);
+    const v = Math.hypot(b.vx, b.vy); if (v > VMAX) { b.vx *= VMAX / v; b.vy *= VMAX / v; }
+    b.ax = b.x; b.ay = b.y; b.at = temps; n++;
+  }
+  if (!n) return;
+  stats.nudges++; derniereAction = temps; secousse = Math.max(secousse, 0.2); acoup = { x: 0, y: -12, t: temps }; SON.nudge(1.1); vib([70, 30, 50]);
+}
+$('tilt').addEventListener('pointerdown', e => { e.preventDefault(); audio(); coupTable(); });
+$('tilt').addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+// Android : le glissé depuis le bord (geste « retour ») ne quitte plus la partie : temps mort et « Quitter la partie ? »
+try { history.pushState({ jeu: 1 }, ''); } catch (e) {}
+window.addEventListener('popstate', () => {
+  if (etat === 'jeu' || etat === 'pause') { try { history.pushState({ jeu: 1 }, ''); } catch (e) {} pause(); $('quitter').hidden = false; }
+  else history.back();
+});
+$('quitter-non').onclick = () => { $('quitter').hidden = true; $('reprendre').onclick(); };
+$('quitter-oui').onclick = () => { $('quitter').hidden = true; $('abandon').onclick(); };
 $('abandon').onclick = () => { montrer(null); etat = 'jeu'; balleNo = 4; balles = []; attenteBalle = 0; finPartie(); };
 $('jouer').onclick = () => { if (secOn && secPerm === 'a-demander') demanderMouvement(); deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); };
 // bouton son 🔊 / 🔇 (mémorisé)

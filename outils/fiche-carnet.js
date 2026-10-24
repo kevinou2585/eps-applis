@@ -79,11 +79,11 @@ function fiClassesOpen(c){
 }
 function fiClassView(c, m){
   const cs = fiClassesOpen(c), grp = cs.length > 1;
-  const sub = ['eleve', 'report'].includes(UI.ctab) || FI_TOOLS[UI.ctab] ? UI.ctab : 'eleve', tool = FI_TOOLS[sub];
+  const sub = ['eleve', 'report', 'evals'].includes(UI.ctab) || FI_TOOLS[UI.ctab] ? UI.ctab : 'eleve', tool = FI_TOOLS[sub], ong = sub === 'suivi';
   const n = cs.reduce((a, x) => a + x.pupils.length, 0);
   m.innerHTML = `<div class="cvh"><button class="ib" type="button" id="cv-back" aria-label="Toutes les classes">${IC.left}</button><span class="cvn">${cs.map(x => esc(x.name)).join(' + ')}</span><span class="small muted">${n} élèves</span></div>
-    <div class="seg full" role="tablist" aria-label="Rubriques de la classe">${[['eleve', 'Élève'], ['report', 'Bulletin']].map(([k, l]) => `<button type="button" data-ct="${k}" aria-pressed="${sub === k || (k === 'eleve' && !!tool)}">${l}</button>`).join('')}</div>
-    ${tool ? `<div class="fi-tool"><button class="btn" type="button" data-ct="eleve">‹ Élèves</button><b>${tool[0]}</b></div>
+    <div class="seg full" role="tablist" aria-label="Rubriques de la classe">${[['eleve', 'Élèves'], ['suivi', 'Suivi'], ['report', 'Bulletins'], ['evals', 'Évaluations']].map(([k, l]) => `<button type="button" data-ct="${k}" aria-pressed="${sub === k || (k === 'eleve' && !!tool && !ong)}">${l}</button>`).join('')}</div>
+    ${tool ? `${ong ? '' : `<div class="fi-tool"><button class="btn" type="button" data-ct="eleve">‹ Élèves</button><b>${tool[0]}</b></div>`}
       ${grp ? `<div class="chips">${cs.map(x => `<button class="chip" type="button" data-tc="${x.id}" aria-pressed="${x.id === c.id}">${esc(x.name)}</button>`).join('')}</div>` : ''}` : ''}
     <div id="cv"></div>`;
   $('cv-back').onclick = () => { UI.cview = false; fiSetGrp(null); saveUI(); render(); window.scrollTo(0, 0); };
@@ -92,6 +92,7 @@ function fiClassView(c, m){
   const cv = $('cv');
   if (tool) tool[1](c, cv);
   else if (sub === 'eleve') fiEleves(cs, cv);
+  else if (sub === 'evals') fiEvalsRecap(cs, cv);
   else if (!grp) renderReport(c, cv);
   else {
     // un bulletin par classe, l'un sous l'autre (les id des blocs déjà dessinés sont retirés pour ne pas se mélanger)
@@ -102,6 +103,34 @@ function fiClassView(c, m){
     xls.onclick = () => exportXlsx(cs.filter(x => !x.act).map(x => { const vp = viewPeriod(x); return [x, vp]; }).filter(z => z[1]), 'Bulletins EPS ' + cs.map(x => x.name).join(' + '));
   }
 }
+/* --- Onglet Évaluations : une colonne par évaluation de la période, le résultat de chaque élève --- */
+function fiEvalsRecap(cs, m){
+  const c0 = cs[0], vp = viewPeriod(c0);
+  const bloc = c => {
+    const v = viewPeriod(c), evs = c.evals.filter(e => v === 'year' || e.periodId === v?.id).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    if (!evs.length) return `${cs.length > 1 ? `<h3 class="fi-cl">${esc(c.name)}</h3>` : ''}<div class="card empty small muted">Pas encore d'évaluation ${v === 'year' ? 'cette année' : 'sur cette période'}.</div>`;
+    const cell = (e, p) => { const s = e.s[p.id];
+      if (evTag(s)) return `<td class="muted">${evTagTxt(s)}</td>`;
+      if (typeof s !== 'number') return '<td class="muted">—</td>';
+      return `<td class="${s < +e.max / 2 ? 'bad' : ''}">${fr(s, 2)}</td>`; };
+    const moy = e => { const x = c.pupils.map(p => e.s[p.id]).filter(s => typeof s === 'number'); return x.length ? fr(x.reduce((a, b) => a + b, 0) / x.length, 1) : '—'; };
+    return `${cs.length > 1 ? `<h3 class="fi-cl">${esc(c.name)}</h3>` : ''}<div class="tblw"><table class="bt num fi-evt">
+      <thead><tr><th>Élève</th>${evs.map(e => `<th data-ev="${c.id}|${e.id}" title="${esc(e.name)}">${esc(e.name.length > 14 ? e.name.slice(0, 13) + '…' : e.name)}${e.kind === 'form' ? ' (F)' : ''}<br>/${fr(+e.max, 2)}${e.date ? ' · ' + esc(fmtD(e.date)) : ''}</th>`).join('')}</tr></thead>
+      <tbody>${pupilsOf(c).map(p => `<tr data-pid="${p.id}" data-cid="${c.id}"><td>${esc(p.n)}</td>${evs.map(e => cell(e, p)).join('')}</tr>`).join('')}
+      <tr class="fi-moy"><td>Moyenne</td>${evs.map(e => `<td>${moy(e)}</td>`).join('')}</tr></tbody>
+    </table></div>`;
+  };
+  m.innerHTML = `<section class="sec">
+    <h2>Évaluations</h2>
+    ${periodChips(c0, true)}
+    <p class="small muted" style="margin:0">Toutes les évaluations ${vp === 'year' ? 'de l\'année' : 'de la période'} d'un coup d'œil. Touche le titre d'une colonne pour modifier ses notes, un élève pour sa fiche. (F) = formative, ne compte pas.</p>
+    ${cs.map(bloc).join('')}
+  </section>`;
+  // la période choisie vaut pour toutes les classes du groupe
+  m.querySelectorAll('#pchips [data-p]').forEach(b => b.onclick = () => { cs.forEach(x => { UI.period[x.id] = b.dataset.p === 'year' ? 'year' : ((x.periods.find(p => p.id === b.dataset.p) || periodOf(x, (c0.periods.find(p => p.id === b.dataset.p) || {}).start || today()) || {}).id || b.dataset.p); }); saveUI(); render(); });
+  m.querySelectorAll('[data-ev]').forEach(th => th.onclick = () => { const [cid, eid] = th.dataset.ev.split('|'), c = S.classes.find(x => x.id === cid), e = c && c.evals.find(x => x.id === eid); if (e) openEvalScores(c, e); });
+  m.querySelectorAll('tr[data-pid]').forEach(tr => tr.onclick = () => openPupil(S.classes.find(x => x.id === tr.dataset.cid), tr.dataset.pid));
+}
 function fiEleves(cs, m){
   const grp = cs.length > 1, d = today();
   const row = (c, p) => { const vp = periodOf(c, d), r = vp ? compute(c, vp).res[p.id] : null, al = fiAlertTxt(c, p, d), cert = certOn(p, d);
@@ -111,7 +140,7 @@ function fiEleves(cs, m){
     <h2>Élèves</h2>
     <p class="small muted" style="margin:0">Touche un élève pour sa fiche complète (tout, avec les dates) et son bulletin.</p>
     ${cs.map(c => `${grp ? `<h3 class="fi-cl">${esc(c.name)}</h3>` : ''}<div class="fi-list">${c.pupils.length ? pupilsOf(c).map(p => row(c, p)).join('') : '<div class="card empty small muted">Pas encore d\'élève.</div>'}</div>`).join('')}
-    <div class="fi-tools">${Object.entries(FI_TOOLS).map(([k, [l]]) => `<button class="btn" type="button" data-tool="${k}">${({points: '🧮 ', suivi: '📋 ', pupils: '✏️ '})[k]}${l}</button>`).join('')}</div>
+    <div class="fi-tools">${Object.entries(FI_TOOLS).filter(([k]) => k !== 'suivi').map(([k, [l]]) => `<button class="btn" type="button" data-tool="${k}">${({points: '🧮 ', suivi: '📋 ', pupils: '✏️ '})[k]}${l}</button>`).join('')}</div>
   </section>`;
   m.querySelectorAll('[data-fp]').forEach(b => b.onclick = () => openPupil(S.classes.find(x => x.id === b.dataset.fc), b.dataset.fp));
   m.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { UI.ctab = b.dataset.tool; saveUI(); render(); window.scrollTo(0, 0); });

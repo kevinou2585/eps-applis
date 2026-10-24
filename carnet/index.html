@@ -170,7 +170,9 @@ textarea.inp{min-height:130px; resize:vertical}
 .ev .sur{font:700 26px/1 var(--display)}
 .sin{display:flex; align-items:center; gap:6px; flex:none}
 .sin input{width:70px; text-align:center; font-weight:700}
-.sin .abs{min-height:40px; padding:6px 10px; font-size:13px}
+.sin{gap:4px}
+.sin input{width:58px}
+.sin .abs{min-height:40px; padding:6px 7px; font-size:13px}
 .sin .abs[aria-pressed="true"]{background:var(--bad-soft); color:var(--bad); border-color:var(--bad)}
 
 /* Bulletin */
@@ -482,6 +484,11 @@ body.en-open .toast{z-index:95; bottom:calc(16px + env(safe-area-inset-bottom,0p
 .fi-al-b{display:block; font-size:15px; padding:10px 12px; border-radius:10px}
 .fi-al-line{padding-left:49px}
 .fi-tools{display:grid; gap:8px; margin-top:6px}
+.fi-evt th{text-transform:none; letter-spacing:0; text-align:center; white-space:normal; min-width:70px; line-height:1.25}
+.fi-evt td{text-align:center}
+.fi-evt td.bad{color:var(--bad); font-weight:700}
+.fi-evt tr[data-pid]{cursor:pointer}
+.fi-moy td{font-weight:700; background:var(--surface2)}
 .fi-tools .btn{justify-content:flex-start}
 .fi-tool{display:flex; align-items:center; gap:12px; margin:12px 0 0}
 .fi-tool b{font:700 1.05rem var(--body)}
@@ -1203,21 +1210,14 @@ function openEvalScores(c, e){
     ${evScoresHead(c, e)}<div class="row2" style="align-items:center"><span class="small muted" style="flex:1">${e.date ? esc(fmtDL(e.date)) + ' · ' : ''}sur ${fr(+e.max, 2)}. Laisse vide si pas encore noté.</span><button class="btn" type="button" id="es-edit">Modifier</button></div>
     <div class="list">${pupilsOf(c).map(p => { const s = e.s[p.id], abs = s === 'abs';
       return `<div class="prow" data-pid="${p.id}"><span class="who">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b>${evLapsTxt(e, p)}</span></span>
-        <span class="sin"><input class="inp num" inputmode="decimal" enterkeyhint="next" aria-label="Note de ${esc(p.n)}" data-in="${p.id}" value="${typeof s === 'number' ? esc(fr(s, 2)) : ''}" ${abs ? 'disabled' : ''} placeholder="—"><button class="btn abs" type="button" data-abs="${p.id}" aria-pressed="${abs}">Abs</button></span></div>`; }).join('')}</div>`;
+        ${evSinHTML(p, s)}</div>`; }).join('')}</div>`;
+  evCertFill(c, e);
   openSheet(e.name, body());
   const sb = document.querySelector('.sheet .sb');
   const bind = () => {
     $('es-edit').onclick = () => { closeSheet(); openEvalForm(c, null, e); };
     bindEvScoresHead(c, e);
-    sb.querySelectorAll('[data-in]').forEach(inp => {
-      inp.oninput = () => { const v = parseNum(inp.value); const pid = inp.dataset.in;
-        if (v == null){ delete e.s[pid]; inp.style.borderColor = ''; }
-        else if (v < 0 || v > +e.max){ inp.style.borderColor = 'var(--bad)'; return; }
-        else { e.s[pid] = v; inp.style.borderColor = ''; }
-        save(c.id); };
-      inp.onkeydown = ev => { if (ev.key === 'Enter'){ const all = [...sb.querySelectorAll('[data-in]:not([disabled])')]; const n = all[all.indexOf(inp) + 1]; if (n) n.focus(); else inp.blur(); } };
-    });
-    sb.querySelectorAll('[data-abs]').forEach(b => b.onclick = () => { const pid = b.dataset.abs; if (e.s[pid] === 'abs') delete e.s[pid]; else e.s[pid] = 'abs'; save(c.id); sb.innerHTML = body(); bind(); });
+    evBindSin(sb, () => ({c, e}), () => { sb.innerHTML = body(); bind(); });
   };
   bind();
   sheetOnClose = () => render();
@@ -1402,7 +1402,7 @@ function periodSheet(c, p){
     const r = res[pu.id], b = i % 2 === 1;
     const cells = [{v: i + 1, s: b ? XS.INTB : XS.INT}, {v: pu.n, s: b ? XS.TXTB : XS.TXT},
       {v: r.t, s: b ? XS.INTB : XS.INT}, {v: r.c, s: b ? XS.INTB : XS.INT}, {v: r.se, s: b ? XS.NUMB : XS.NUM},
-      ...evals.map(e => { const s = e.s[pu.id]; return {v: s === 'abs' ? 'abs' : (typeof s === 'number' ? s : ''), s: typeof s === 'number' && s < e.max / 2 ? (b ? XS.NUMLOWB : XS.NUMLOW) : (b ? XS.NUMB : XS.NUM)}; }),
+      ...evals.map(e => { const s = e.s[pu.id]; return {v: evTag(s) ? evTagTxt(s) : (typeof s === 'number' ? s : ''), s: typeof s === 'number' && s < e.max / 2 ? (b ? XS.NUMLOWB : XS.NUMLOW) : (b ? XS.NUMB : XS.NUM)}; }),
       {v: r.sf, s: b ? XS.NUMB : XS.NUM}, {v: r.total, s: r.total != null && r.total < 50 ? XS.TOTLOW : XS.TOT},
       {v: r.abs, s: b ? XS.INTB : XS.INT}, {v: r.late, s: b ? XS.INTB : XS.INT}, {v: r.kit, s: b ? XS.INTB : XS.INT}, ...(pool ? [{v: r.np, s: b ? XS.INTB : XS.INT}] : []), {v: r.d, s: b ? XS.INTB : XS.INT}, {v: r.x, s: b ? XS.INTB : XS.INT}];
     rows.push({h: 20, cells});
@@ -1477,7 +1477,7 @@ function openPupil(c, pid){
       <b>Attitude</b>${pipsH(r.c, Cc, 'c')}<span class="num">${r.c}/${Cc}</span></div>`}
     <div class="card small">${r.abs} absence${r.abs > 1 ? 's' : ''} · ${r.late} retard${r.late > 1 ? 's' : ''} · ${r.kit} oubli${r.kit > 1 ? 's' : ''} de tenue/affaires${r.np ? ` · ${r.np} fois sans nager` : ''} · ${r.d} perturbation${r.d > 1 ? 's' : ''}${r.x ? ` · ${r.x} exclusion${r.x > 1 ? 's' : ''}` : ''}</div>
     ${fiHistHTML(c, p, vp)}
-    ${year ? '' : `<h3>Évaluations</h3><div class="card">${r.evals.length ? r.evals.map(({e, s}) => `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)}</span><b class="num">${s === 'abs' ? 'abs' : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`).join('') : '<span class="muted small">Aucune évaluation dans cette période.</span>'}${evFormList(c, vp, p)}</div>
+    ${year ? '' : `<h3>Évaluations</h3><div class="card">${r.evals.length ? r.evals.map(({e, s}) => `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)}</span><b class="num">${evTag(s) ? evTagTxt(s) : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`).join('') : '<span class="muted small">Aucune évaluation dans cette période.</span>'}${evFormList(c, vp, p)}</div>
     <h3>Points retirés</h3><div class="card">${r.ev.length ? r.ev.map((v, k) => `<div class="evt"><span class="d">${esc(fmtD(v.date))}</span><span class="l">${esc(v.label)}</span><span class="col ${v.hit}">${v.hit === 't' ? '−1 tenue' : v.hit === 'c' ? '−1 attitude' : 'déjà à 0'}</span><button class="ib" type="button" data-undo="${k}" aria-label="Retirer">${IC.x}</button></div>`).join('') : '<span class="muted small">Aucun point retiré. Bravo.</span>'}</div>`}
     <h3>Certificats médicaux</h3><div class="card">${(p.certs || []).length ? [...p.certs].sort((a, b) => a.from < b.from ? 1 : -1).map(x => { const on = x.from <= today() && today() <= x.to;
       return `<div class="evt">${PH['cert_' + x.id] ? `<button type="button" data-cview="${x.id}" style="border:0;padding:0;background:none;flex:none"><img src="${PH['cert_' + x.id]}" alt="Certificat" style="width:52px;height:52px;object-fit:cover;border-radius:8px;display:block"></button>` : `<span class="av" style="border-radius:8px;width:52px;height:52px">${IC.evals}</span>`}
@@ -2164,7 +2164,8 @@ function evEnduFields(c, e){
 function evKindField(e){
   const f = e?.kind === 'form';
   return `<span class="small muted" style="font-weight:600">Compte dans le bulletin ?</span>
-    <div class="ev-kind"><button class="chip" type="button" data-kind="cert" aria-pressed="${!f}">✔ Certificative (compte dans le bulletin)</button><button class="chip" type="button" data-kind="form" aria-pressed="${f}">ℹ Formative (pour info)</button></div>`;
+    <div class="ev-kind"><button class="chip" type="button" data-kind="cert" aria-pressed="${!f}">✔ Certificative (compte dans le bulletin)</button><button class="chip" type="button" data-kind="form" aria-pressed="${f}">ℹ Formative (pour info)</button></div>
+    <label class="toggle"><input type="checkbox" id="ef-dec" ${e && evDec(e) ? 'checked' : ''}>Notes à virgule (ex. 2,5)</label><p class="small muted" style="margin:-6px 0 0">Décoché : seulement des notes entières (1, 2, 3…).</p>`;
 }
 let EF = null;
 function bindEvForm(c, e){
@@ -2192,11 +2193,57 @@ function evFormOk(){
 function evFormApply(c, o){
   if (!EF) return;
   if (EF.kind === 'form') o.kind = 'form'; else delete o.kind;
+  o.dec = !!$('ef-dec')?.checked || !!EF.endu;
   if (!EF.endu) return;
   const old = o.endu || {}, mn = parseNum($('ef-emin').value), t = Math.round(parseNum($('ef-etours').value));
   o.endu = {min: mn, tours: t, laps: old.laps || {}};
   if (old.tours !== t || EF.max0 !== +o.max) Object.entries(o.endu.laps).forEach(([pid, n]) => o.s[pid] = enScore(n, t, +o.max));
   c.enduLast = {min: mn, tours: t, max: +o.max};
+}
+
+/* --- Saisie des notes (classe et groupe) ---
+   e.s[pid] : nombre, ou 'abs' (absent), 'D' (dispensé), 'CM' (certificat médical) : ces trois-là ne comptent pas dans la note.
+   Un certificat de l'élève à la date de l'éval est repris tout seul en CM (sauf si on l'a retiré : e.cmOff[pid]).
+   e.dec : notes à virgule permises (sinon entières ; vieilles évals avec des virgules et endurance : permises).
+   Après une note, on passe tout seul à l'élève suivant. */
+const EV_TAGS = {abs: 'Abs', D: 'D', CM: 'CM'};
+const evTag = s => typeof s === 'string' && EV_TAGS[s] ? s : null;
+const evTagTxt = s => s;
+const evTagLong = s => ({abs: 'absent', D: 'dispensé', CM: 'certificat médical'})[s] || s;
+const evDec = e => e.dec === true || (e.dec == null && (!!e.endu || Object.values(e.s || {}).some(v => typeof v === 'number' && v % 1)));
+function evCertFill(c, e){
+  const d = e.date || today(); let n = 0;
+  c.pupils.forEach(p => { if (e.s[p.id] == null && !(e.cmOff || {})[p.id] && certOn(p, d)){ e.s[p.id] = 'CM'; n++; } });
+  if (n) save(c.id);
+}
+function evSinHTML(p, s, cid){
+  const t = evTag(s), dc = cid ? ` data-cid="${cid}"` : '';
+  return `<span class="sin"><input class="inp num" inputmode="decimal" enterkeyhint="next" aria-label="Note de ${esc(p.n)}" data-in="${p.id}"${dc} value="${typeof s === 'number' ? esc(fr(s, 2)) : ''}" ${t ? 'disabled' : ''} placeholder="${t ? EV_TAGS[t] : '—'}">${Object.entries(EV_TAGS).map(([k, l]) => `<button class="btn abs" type="button" data-tag="${k}" data-abs="${p.id}"${dc} aria-pressed="${t === k}">${l}</button>`).join('')}</span>`;
+}
+function evBindSin(sb, get, redraw){
+  const go = n => { if (!n) return; n.focus(); try { n.scrollIntoView({block: 'center', behavior: 'smooth'}); } catch(x){} };
+  const nextAfter = pid => { const a = [...sb.querySelectorAll('[data-in]')], i = a.findIndex(x => x.dataset.in === pid); return a.slice(i + 1).find(x => !x.disabled); };
+  sb.querySelectorAll('[data-in]').forEach(inp => {
+    const pid = inp.dataset.in;
+    inp.oninput = () => { clearTimeout(inp._t); const {c, e} = get(inp), raw = inp.value.trim(), dec = evDec(e);
+      if (/[.,]$/.test(raw)){ if (!dec){ inp.style.borderColor = 'var(--bad)'; toast('Notes entières seulement (coche « Notes à virgule » dans Modifier)'); } return; }
+      const v = parseNum(raw);
+      if (v == null){ delete e.s[pid]; inp.style.borderColor = ''; save(c.id); return; }
+      if (v < 0 || v > +e.max || (!dec && v % 1)){ inp.style.borderColor = 'var(--bad)'; if (!dec && v % 1) toast('Notes entières seulement (coche « Notes à virgule » dans Modifier)'); return; }
+      e.s[pid] = v; inp.style.borderColor = ''; save(c.id);
+      // élève suivant : tout de suite si la note ne peut plus s'allonger (ex. 7 sur 10), sinon après un court instant (1 → 10 ?)
+      const fin = /[.,]\d/.test(raw) || (!dec && v * 10 > +e.max);
+      if (fin) go(nextAfter(pid)); else inp._t = setTimeout(() => { if (document.activeElement === inp) go(nextAfter(pid)); }, dec ? 1500 : 1100);
+    };
+    inp.onkeydown = ev => { if (ev.key === 'Enter'){ clearTimeout(inp._t); const n = nextAfter(pid); if (n) go(n); else inp.blur(); } };
+  });
+  sb.querySelectorAll('[data-tag]').forEach(b => b.onclick = () => { const {c, e} = get(b), pid = b.dataset.abs, k = b.dataset.tag;
+    if (e.s[pid] === k){ delete e.s[pid]; if (k === 'CM') (e.cmOff = e.cmOff || {})[pid] = 1; }
+    else { e.s[pid] = k; if (e.cmOff) delete e.cmOff[pid]; }
+    save(c.id); redraw();
+    const me = [...sb.querySelectorAll('[data-in]')].find(x => x.dataset.in === pid);
+    go(e.s[pid] != null ? nextAfter(pid) : me);
+  });
 }
 
 /* --- Feuille des notes : bouton du compteur, tours par élève --- */
@@ -2214,7 +2261,7 @@ function bindEvScoresHead(c, e){ if ($('es-endu')) $('es-endu').onclick = () => 
 const evLapsTxt = (e, p) => { const n = e.endu && (e.endu.laps || {})[p.id]; return n != null ? `<span class="pts">${n} tour${n > 1 ? 's' : ''}</span>` : ''; };
 function evFormList(c, vp, p){
   return c.evals.filter(e => e.periodId === vp.id && e.kind === 'form').map(e => { const s = e.s[p.id];
-    return `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)} <span class="small muted">(formatif, ne compte pas)</span></span><b class="num">${s === 'abs' ? 'abs' : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`; }).join('');
+    return `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)} <span class="small muted">(formatif, ne compte pas)</span></span><b class="num">${evTag(s) ? evTagTxt(s) : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`; }).join('');
 }
 
 /* ====== Compteur de tours plein écran ====== */
@@ -2739,22 +2786,14 @@ function openGroupScores(items){
     <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">${multi ? '<b>' + esc(names) + '</b> · ' : ''}${e0.date ? esc(fmtDL(e0.date)) + ' · ' : ''}sur ${fr(+e0.max, 2)}. Laisse vide si pas encore noté.</span><button class="btn" type="button" id="es-edit">Modifier</button></div>
     <div class="list">${items.map(({c, e}) => (multi ? `<div class="lsub">${esc(c.name)} <span>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}</span></div>` : '') + pupilsOf(c).map(p => { const s = e.s[p.id], abs = s === 'abs';
       return `<div class="prow" data-pid="${p.id}"><span class="who">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b>${evLapsTxt(e, p)}</span></span>
-        <span class="sin"><input class="inp num" inputmode="decimal" enterkeyhint="next" aria-label="Note de ${esc(p.n)}" data-in="${p.id}" data-cid="${c.id}" value="${typeof s === 'number' ? esc(fr(s, 2)) : ''}" ${abs ? 'disabled' : ''} placeholder="—"><button class="btn abs" type="button" data-abs="${p.id}" data-cid="${c.id}" aria-pressed="${abs}">Abs</button></span></div>`; }).join('')).join('')}</div>`;
+        ${evSinHTML(p, s, c.id)}</div>`; }).join('')).join('')}</div>`;
+  items.forEach(({c, e}) => evCertFill(c, e));
   openSheet(e0.name, body());
   const sb = document.querySelector('.sheet .sb'), it = cid => items.find(x => x.c.id === cid);
   const bind = () => {
     $('es-edit').onclick = () => { closeSheet(); openGroupEvalForm(null, null, items); };
     if ($('es-endu')) $('es-endu').onclick = () => { closeSheet(); enOpen(items.map(({c, e}) => ({cid: c.id, eid: e.id}))); };
-    sb.querySelectorAll('[data-in]').forEach(inp => {
-      inp.oninput = () => { const v = parseNum(inp.value), pid = inp.dataset.in, {c, e} = it(inp.dataset.cid);
-        if (v == null){ delete e.s[pid]; inp.style.borderColor = ''; }
-        else if (v < 0 || v > +e.max){ inp.style.borderColor = 'var(--bad)'; return; }
-        else { e.s[pid] = v; inp.style.borderColor = ''; }
-        save(c.id); };
-      inp.onkeydown = ev => { if (ev.key === 'Enter'){ const all = [...sb.querySelectorAll('[data-in]:not([disabled])')]; const n = all[all.indexOf(inp) + 1]; if (n) n.focus(); else inp.blur(); } };
-    });
-    sb.querySelectorAll('[data-abs]').forEach(b => b.onclick = () => { const pid = b.dataset.abs, {c, e} = it(b.dataset.cid);
-      if (e.s[pid] === 'abs') delete e.s[pid]; else e.s[pid] = 'abs'; save(c.id); sb.innerHTML = body(); bind(); });
+    evBindSin(sb, el => it(el.dataset.cid), () => { sb.innerHTML = body(); bind(); });
   };
   bind();
   sheetOnClose = () => render();
@@ -2964,7 +3003,8 @@ function regCards(){
       <p class="small muted" style="margin:0">Chaque élève commence chaque période avec tous ses points, puis on retire.</p>
       <div class="row2"><label class="f" style="flex:1">Points de tenue par période<input class="inp num" id="s-T" inputmode="numeric" value="${st.T}"></label>
       <label class="f" style="flex:1">Points d'attitude par période<input class="inp num" id="s-C" inputmode="numeric" value="${st.C}"></label></div>
-      <label class="f">Savoir-être en % du bulletin (le reste = savoir-faire)<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
+      <label class="f">Savoir-être en % du bulletin<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
+      <p class="small" id="s-separt" style="margin:-4px 0 0">${regPart(st.se)}</p>
       <b class="small reg-sub">Points retirés</b>
       <div class="row2">${n('s-kit', 'kitPts', 'Oubli de tenue (salle ou maillot)', 'en tenue')}${n('s-d', 'dPts', 'Perturbe le cours', 'en attitude')}</div>
       <label class="f">Exclusion du cours<input class="inp num" id="s-X" inputmode="numeric" value="${st.X}"><span class="small muted" style="font-weight:400">en attitude</span></label>
@@ -2985,6 +3025,9 @@ function regCards(){
       ${tg('s-enl', 'enLast', 'Compteur : alerte « plus qu\'une minute » (bip, vibration)', '')}
     </div>`;
 }
+// partage du bulletin écrit en clair : savoir-être / savoir-faire
+function regPart(se){ se = Math.max(0, Math.min(100, Math.round(+se) || 0));
+  return `<b>${se} %</b> savoir-être (tenue, attitude, participation) et <b>${100 - se} %</b> savoir-faire (évaluations des sports pratiqués)`; }
 function regPerCard(){
   const cl = S.classes.filter(c => !c.act);
   return `<div class="card sec reg" style="padding-block:14px" id="reg-per">
@@ -2999,6 +3042,7 @@ function bindReg(){
     if (v == null || isNaN(v) || v < lo || v > hi){ e.target.value = k in REG_DEF ? fr(stN(k), 2) : st[k]; toast(`Entre ${lo} et ${hi}`); return; }
     st[k] = v; save(); toast('Enregistré'); }; };
   num('s-T', 'T', 0, 20); num('s-X', 'X', 0, 20); num('s-C', 'C', 0, 20); num('s-se', 'se', 0, 100);
+  if ($('s-se')) $('s-se').oninput = e => { const v = parseNum(e.target.value); if (v != null && v >= 0 && v <= 100) $('s-separt').innerHTML = regPart(v); };
   num('s-kit', 'kitPts', 0, 10); num('s-d', 'dPts', 0, 10); num('s-npp', 'npPts', 0, 10);
   num('s-evmax', 'evMax', 1, 1000, false); num('s-eng', 'enGuard', 0, 60, false);
   $('s-np').onchange = e => { st.npCounts = e.target.checked; $('s-npw').hidden = !st.npCounts; save(); };
@@ -3090,11 +3134,11 @@ function fiClassesOpen(c){
 }
 function fiClassView(c, m){
   const cs = fiClassesOpen(c), grp = cs.length > 1;
-  const sub = ['eleve', 'report'].includes(UI.ctab) || FI_TOOLS[UI.ctab] ? UI.ctab : 'eleve', tool = FI_TOOLS[sub];
+  const sub = ['eleve', 'report', 'evals'].includes(UI.ctab) || FI_TOOLS[UI.ctab] ? UI.ctab : 'eleve', tool = FI_TOOLS[sub], ong = sub === 'suivi';
   const n = cs.reduce((a, x) => a + x.pupils.length, 0);
   m.innerHTML = `<div class="cvh"><button class="ib" type="button" id="cv-back" aria-label="Toutes les classes">${IC.left}</button><span class="cvn">${cs.map(x => esc(x.name)).join(' + ')}</span><span class="small muted">${n} élèves</span></div>
-    <div class="seg full" role="tablist" aria-label="Rubriques de la classe">${[['eleve', 'Élève'], ['report', 'Bulletin']].map(([k, l]) => `<button type="button" data-ct="${k}" aria-pressed="${sub === k || (k === 'eleve' && !!tool)}">${l}</button>`).join('')}</div>
-    ${tool ? `<div class="fi-tool"><button class="btn" type="button" data-ct="eleve">‹ Élèves</button><b>${tool[0]}</b></div>
+    <div class="seg full" role="tablist" aria-label="Rubriques de la classe">${[['eleve', 'Élèves'], ['suivi', 'Suivi'], ['report', 'Bulletins'], ['evals', 'Évaluations']].map(([k, l]) => `<button type="button" data-ct="${k}" aria-pressed="${sub === k || (k === 'eleve' && !!tool && !ong)}">${l}</button>`).join('')}</div>
+    ${tool ? `${ong ? '' : `<div class="fi-tool"><button class="btn" type="button" data-ct="eleve">‹ Élèves</button><b>${tool[0]}</b></div>`}
       ${grp ? `<div class="chips">${cs.map(x => `<button class="chip" type="button" data-tc="${x.id}" aria-pressed="${x.id === c.id}">${esc(x.name)}</button>`).join('')}</div>` : ''}` : ''}
     <div id="cv"></div>`;
   $('cv-back').onclick = () => { UI.cview = false; fiSetGrp(null); saveUI(); render(); window.scrollTo(0, 0); };
@@ -3103,6 +3147,7 @@ function fiClassView(c, m){
   const cv = $('cv');
   if (tool) tool[1](c, cv);
   else if (sub === 'eleve') fiEleves(cs, cv);
+  else if (sub === 'evals') fiEvalsRecap(cs, cv);
   else if (!grp) renderReport(c, cv);
   else {
     // un bulletin par classe, l'un sous l'autre (les id des blocs déjà dessinés sont retirés pour ne pas se mélanger)
@@ -3113,6 +3158,34 @@ function fiClassView(c, m){
     xls.onclick = () => exportXlsx(cs.filter(x => !x.act).map(x => { const vp = viewPeriod(x); return [x, vp]; }).filter(z => z[1]), 'Bulletins EPS ' + cs.map(x => x.name).join(' + '));
   }
 }
+/* --- Onglet Évaluations : une colonne par évaluation de la période, le résultat de chaque élève --- */
+function fiEvalsRecap(cs, m){
+  const c0 = cs[0], vp = viewPeriod(c0);
+  const bloc = c => {
+    const v = viewPeriod(c), evs = c.evals.filter(e => v === 'year' || e.periodId === v?.id).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    if (!evs.length) return `${cs.length > 1 ? `<h3 class="fi-cl">${esc(c.name)}</h3>` : ''}<div class="card empty small muted">Pas encore d'évaluation ${v === 'year' ? 'cette année' : 'sur cette période'}.</div>`;
+    const cell = (e, p) => { const s = e.s[p.id];
+      if (evTag(s)) return `<td class="muted">${evTagTxt(s)}</td>`;
+      if (typeof s !== 'number') return '<td class="muted">—</td>';
+      return `<td class="${s < +e.max / 2 ? 'bad' : ''}">${fr(s, 2)}</td>`; };
+    const moy = e => { const x = c.pupils.map(p => e.s[p.id]).filter(s => typeof s === 'number'); return x.length ? fr(x.reduce((a, b) => a + b, 0) / x.length, 1) : '—'; };
+    return `${cs.length > 1 ? `<h3 class="fi-cl">${esc(c.name)}</h3>` : ''}<div class="tblw"><table class="bt num fi-evt">
+      <thead><tr><th>Élève</th>${evs.map(e => `<th data-ev="${c.id}|${e.id}" title="${esc(e.name)}">${esc(e.name.length > 14 ? e.name.slice(0, 13) + '…' : e.name)}${e.kind === 'form' ? ' (F)' : ''}<br>/${fr(+e.max, 2)}${e.date ? ' · ' + esc(fmtD(e.date)) : ''}</th>`).join('')}</tr></thead>
+      <tbody>${pupilsOf(c).map(p => `<tr data-pid="${p.id}" data-cid="${c.id}"><td>${esc(p.n)}</td>${evs.map(e => cell(e, p)).join('')}</tr>`).join('')}
+      <tr class="fi-moy"><td>Moyenne</td>${evs.map(e => `<td>${moy(e)}</td>`).join('')}</tr></tbody>
+    </table></div>`;
+  };
+  m.innerHTML = `<section class="sec">
+    <h2>Évaluations</h2>
+    ${periodChips(c0, true)}
+    <p class="small muted" style="margin:0">Toutes les évaluations ${vp === 'year' ? 'de l\'année' : 'de la période'} d'un coup d'œil. Touche le titre d'une colonne pour modifier ses notes, un élève pour sa fiche. (F) = formative, ne compte pas.</p>
+    ${cs.map(bloc).join('')}
+  </section>`;
+  // la période choisie vaut pour toutes les classes du groupe
+  m.querySelectorAll('#pchips [data-p]').forEach(b => b.onclick = () => { cs.forEach(x => { UI.period[x.id] = b.dataset.p === 'year' ? 'year' : ((x.periods.find(p => p.id === b.dataset.p) || periodOf(x, (c0.periods.find(p => p.id === b.dataset.p) || {}).start || today()) || {}).id || b.dataset.p); }); saveUI(); render(); });
+  m.querySelectorAll('[data-ev]').forEach(th => th.onclick = () => { const [cid, eid] = th.dataset.ev.split('|'), c = S.classes.find(x => x.id === cid), e = c && c.evals.find(x => x.id === eid); if (e) openEvalScores(c, e); });
+  m.querySelectorAll('tr[data-pid]').forEach(tr => tr.onclick = () => openPupil(S.classes.find(x => x.id === tr.dataset.cid), tr.dataset.pid));
+}
 function fiEleves(cs, m){
   const grp = cs.length > 1, d = today();
   const row = (c, p) => { const vp = periodOf(c, d), r = vp ? compute(c, vp).res[p.id] : null, al = fiAlertTxt(c, p, d), cert = certOn(p, d);
@@ -3122,7 +3195,7 @@ function fiEleves(cs, m){
     <h2>Élèves</h2>
     <p class="small muted" style="margin:0">Touche un élève pour sa fiche complète (tout, avec les dates) et son bulletin.</p>
     ${cs.map(c => `${grp ? `<h3 class="fi-cl">${esc(c.name)}</h3>` : ''}<div class="fi-list">${c.pupils.length ? pupilsOf(c).map(p => row(c, p)).join('') : '<div class="card empty small muted">Pas encore d\'élève.</div>'}</div>`).join('')}
-    <div class="fi-tools">${Object.entries(FI_TOOLS).map(([k, [l]]) => `<button class="btn" type="button" data-tool="${k}">${({points: '🧮 ', suivi: '📋 ', pupils: '✏️ '})[k]}${l}</button>`).join('')}</div>
+    <div class="fi-tools">${Object.entries(FI_TOOLS).filter(([k]) => k !== 'suivi').map(([k, [l]]) => `<button class="btn" type="button" data-tool="${k}">${({points: '🧮 ', suivi: '📋 ', pupils: '✏️ '})[k]}${l}</button>`).join('')}</div>
   </section>`;
   m.querySelectorAll('[data-fp]').forEach(b => b.onclick = () => openPupil(S.classes.find(x => x.id === b.dataset.fc), b.dataset.fp));
   m.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { UI.ctab = b.dataset.tool; saveUI(); render(); window.scrollTo(0, 0); });
@@ -3146,7 +3219,7 @@ function fiHistHTML(c, p, vp){
     if (m.x) add('Exclu du cours', '⛔', 'd'); else if (m.d) add('Perturbe le cours', '👎', 'd');
   });
   c.evals.filter(e => e.date ? inP(e.date) : (year || e.periodId === vp.id)).forEach(e => { const s = e.s[p.id]; if (s == null) return;
-    ev.push({date: e.date || '', k: (e.date || '') + '99', h: '', t: `${e.kind === 'form' ? 'Éval. formative' : 'Évaluation'} « ${e.name} » : ${s === 'abs' ? 'absent' : fr(s, 2) + '/' + fr(+e.max, 2)}`, ic: '📝', cls: 'fe', sp: ''}); });
+    ev.push({date: e.date || '', k: (e.date || '') + '99', h: '', t: `${e.kind === 'form' ? 'Éval. formative' : 'Évaluation'} « ${e.name} » : ${evTag(s) ? evTagLong(s) : fr(s, 2) + '/' + fr(+e.max, 2)}`, ic: '📝', cls: 'fe', sp: ''}); });
   (p.certs || []).forEach(x => { if (!(year || inP(x.from) || inP(x.to))) return;
     ev.push({date: x.from, k: x.from + '00', h: '', t: `Certificat médical jusqu'au ${dFR(x.to)}${zoneTxt(x) ? ' (' + zoneTxt(x) + ')' : ''}${x.note ? ' · ' + x.note : ''}`, ic: '🩺', cls: '', sp: ''}); });
   (year ? periodsOf(c) : [vp]).forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (!a) return;
@@ -3180,10 +3253,10 @@ function fiBulletin(c, pid, per){
       ${row('Savoir-être', `${fr(r.se)}<small>/${seP}</small>`, 'big')}
       ${year ? '' : row('&nbsp;&nbsp;Tenue', `${r.t}<small>/${T}</small>`) + row('&nbsp;&nbsp;Attitude', `${r.c}<small>/${Cc}</small>`)}
       ${row('Savoir-faire', `${fr(r.sf)}<small>/${100 - seP}</small>`, 'big')}
-      ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), s === 'abs' ? 'abs' : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
+      ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), evTag(s) ? evTagTxt(s) : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
       ${row(year ? 'Moyenne de l\'année' : 'Total', `${fr(r.total)}<small> %</small>`, 'big tot')}
     </div>
-    ${fo.length ? `<h3>Formatif (ne compte pas)</h3><div class="card fi-bt">${fo.map(e => row(esc(e.name), e.s[p.id] === 'abs' ? 'abs' : `${fr(e.s[p.id], 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}</div>` : ''}
+    ${fo.length ? `<h3>Formatif (ne compte pas)</h3><div class="card fi-bt">${fo.map(e => row(esc(e.name), evTag(e.s[p.id]) ? evTagTxt(e.s[p.id]) : `${fr(e.s[p.id], 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}</div>` : ''}
     <div class="card fi-bt">${row('Absences', k.abs)}${row('Retards', r.late || 0)}${row('Oublis de tenue', k.gym + k.adjT + k.pool)}${k.np ? row('Pas nagé', k.np) : ''}${row('Perturbations', k.d)}${row('Exclusions', k.x)}</div>
     <h3>Commentaire${mine != null ? ' <span class="tag com-man">✎ modifié</span>' : ''}</h3>
     <div class="card small">${esc(com) || '<span class="muted">Pas de commentaire.</span>'}</div>

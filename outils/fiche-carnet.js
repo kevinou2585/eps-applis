@@ -79,11 +79,11 @@ function fiClassesOpen(c){
 }
 function fiClassView(c, m){
   const cs = fiClassesOpen(c), grp = cs.length > 1;
-  const sub = ['eleve', 'report'].includes(UI.ctab) || FI_TOOLS[UI.ctab] ? UI.ctab : 'eleve', tool = FI_TOOLS[sub];
+  const sub = ['eleve', 'report', 'evals'].includes(UI.ctab) || FI_TOOLS[UI.ctab] ? UI.ctab : 'eleve', tool = FI_TOOLS[sub], ong = sub === 'suivi';
   const n = cs.reduce((a, x) => a + x.pupils.length, 0);
   m.innerHTML = `<div class="cvh"><button class="ib" type="button" id="cv-back" aria-label="Toutes les classes">${IC.left}</button><span class="cvn">${cs.map(x => esc(x.name)).join(' + ')}</span><span class="small muted">${n} élèves</span></div>
-    <div class="seg full" role="tablist" aria-label="Rubriques de la classe">${[['eleve', 'Élève'], ['report', 'Bulletin']].map(([k, l]) => `<button type="button" data-ct="${k}" aria-pressed="${sub === k || (k === 'eleve' && !!tool)}">${l}</button>`).join('')}</div>
-    ${tool ? `<div class="fi-tool"><button class="btn" type="button" data-ct="eleve">‹ Élèves</button><b>${tool[0]}</b></div>
+    <div class="seg full" role="tablist" aria-label="Rubriques de la classe">${[['eleve', 'Élèves'], ['suivi', 'Suivi'], ['report', 'Bulletins'], ['evals', 'Évaluations']].map(([k, l]) => `<button type="button" data-ct="${k}" aria-pressed="${sub === k || (k === 'eleve' && !!tool && !ong)}">${l}</button>`).join('')}</div>
+    ${tool ? `${ong ? '' : `<div class="fi-tool"><button class="btn" type="button" data-ct="eleve">‹ Élèves</button><b>${tool[0]}</b></div>`}
       ${grp ? `<div class="chips">${cs.map(x => `<button class="chip" type="button" data-tc="${x.id}" aria-pressed="${x.id === c.id}">${esc(x.name)}</button>`).join('')}</div>` : ''}` : ''}
     <div id="cv"></div>`;
   $('cv-back').onclick = () => { UI.cview = false; fiSetGrp(null); saveUI(); render(); window.scrollTo(0, 0); };
@@ -92,6 +92,7 @@ function fiClassView(c, m){
   const cv = $('cv');
   if (tool) tool[1](c, cv);
   else if (sub === 'eleve') fiEleves(cs, cv);
+  else if (sub === 'evals') fiEvalsRecap(cs, cv);
   else if (!grp) renderReport(c, cv);
   else {
     // un bulletin par classe, l'un sous l'autre (les id des blocs déjà dessinés sont retirés pour ne pas se mélanger)
@@ -102,6 +103,34 @@ function fiClassView(c, m){
     xls.onclick = () => exportXlsx(cs.filter(x => !x.act).map(x => { const vp = viewPeriod(x); return [x, vp]; }).filter(z => z[1]), 'Bulletins EPS ' + cs.map(x => x.name).join(' + '));
   }
 }
+/* --- Onglet Évaluations : une colonne par évaluation de la période, le résultat de chaque élève --- */
+function fiEvalsRecap(cs, m){
+  const c0 = cs[0], vp = viewPeriod(c0);
+  const bloc = c => {
+    const v = viewPeriod(c), evs = c.evals.filter(e => v === 'year' || e.periodId === v?.id).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    if (!evs.length) return `${cs.length > 1 ? `<h3 class="fi-cl">${esc(c.name)}</h3>` : ''}<div class="card empty small muted">Pas encore d'évaluation ${v === 'year' ? 'cette année' : 'sur cette période'}.</div>`;
+    const cell = (e, p) => { const s = e.s[p.id];
+      if (evTag(s)) return `<td class="muted">${evTagTxt(s)}</td>`;
+      if (typeof s !== 'number') return '<td class="muted">—</td>';
+      return `<td class="${s < +e.max / 2 ? 'bad' : ''}">${fr(s, 2)}</td>`; };
+    const moy = e => { const x = c.pupils.map(p => e.s[p.id]).filter(s => typeof s === 'number'); return x.length ? fr(x.reduce((a, b) => a + b, 0) / x.length, 1) : '—'; };
+    return `${cs.length > 1 ? `<h3 class="fi-cl">${esc(c.name)}</h3>` : ''}<div class="tblw"><table class="bt num fi-evt">
+      <thead><tr><th>Élève</th>${evs.map(e => `<th data-ev="${c.id}|${e.id}" title="${esc(e.name)}">${esc(e.name.length > 14 ? e.name.slice(0, 13) + '…' : e.name)}${e.kind === 'form' ? ' (F)' : ''}<br>/${fr(+e.max, 2)}${e.date ? ' · ' + esc(fmtD(e.date)) : ''}</th>`).join('')}</tr></thead>
+      <tbody>${pupilsOf(c).map(p => `<tr data-pid="${p.id}" data-cid="${c.id}"><td>${esc(p.n)}</td>${evs.map(e => cell(e, p)).join('')}</tr>`).join('')}
+      <tr class="fi-moy"><td>Moyenne</td>${evs.map(e => `<td>${moy(e)}</td>`).join('')}</tr></tbody>
+    </table></div>`;
+  };
+  m.innerHTML = `<section class="sec">
+    <h2>Évaluations</h2>
+    ${periodChips(c0, true)}
+    <p class="small muted" style="margin:0">Toutes les évaluations ${vp === 'year' ? 'de l\'année' : 'de la période'} d'un coup d'œil. Touche le titre d'une colonne pour modifier ses notes, un élève pour sa fiche. (F) = formative, ne compte pas.</p>
+    ${cs.map(bloc).join('')}
+  </section>`;
+  // la période choisie vaut pour toutes les classes du groupe
+  m.querySelectorAll('#pchips [data-p]').forEach(b => b.onclick = () => { cs.forEach(x => { UI.period[x.id] = b.dataset.p === 'year' ? 'year' : ((x.periods.find(p => p.id === b.dataset.p) || periodOf(x, (c0.periods.find(p => p.id === b.dataset.p) || {}).start || today()) || {}).id || b.dataset.p); }); saveUI(); render(); });
+  m.querySelectorAll('[data-ev]').forEach(th => th.onclick = () => { const [cid, eid] = th.dataset.ev.split('|'), c = S.classes.find(x => x.id === cid), e = c && c.evals.find(x => x.id === eid); if (e) openEvalScores(c, e); });
+  m.querySelectorAll('tr[data-pid]').forEach(tr => tr.onclick = () => openPupil(S.classes.find(x => x.id === tr.dataset.cid), tr.dataset.pid));
+}
 function fiEleves(cs, m){
   const grp = cs.length > 1, d = today();
   const row = (c, p) => { const vp = periodOf(c, d), r = vp ? compute(c, vp).res[p.id] : null, al = fiAlertTxt(c, p, d), cert = certOn(p, d);
@@ -111,7 +140,7 @@ function fiEleves(cs, m){
     <h2>Élèves</h2>
     <p class="small muted" style="margin:0">Touche un élève pour sa fiche complète (tout, avec les dates) et son bulletin.</p>
     ${cs.map(c => `${grp ? `<h3 class="fi-cl">${esc(c.name)}</h3>` : ''}<div class="fi-list">${c.pupils.length ? pupilsOf(c).map(p => row(c, p)).join('') : '<div class="card empty small muted">Pas encore d\'élève.</div>'}</div>`).join('')}
-    <div class="fi-tools">${Object.entries(FI_TOOLS).map(([k, [l]]) => `<button class="btn" type="button" data-tool="${k}">${({points: '🧮 ', suivi: '📋 ', pupils: '✏️ '})[k]}${l}</button>`).join('')}</div>
+    <div class="fi-tools">${Object.entries(FI_TOOLS).filter(([k]) => k !== 'suivi').map(([k, [l]]) => `<button class="btn" type="button" data-tool="${k}">${({points: '🧮 ', suivi: '📋 ', pupils: '✏️ '})[k]}${l}</button>`).join('')}</div>
   </section>`;
   m.querySelectorAll('[data-fp]').forEach(b => b.onclick = () => openPupil(S.classes.find(x => x.id === b.dataset.fc), b.dataset.fp));
   m.querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { UI.ctab = b.dataset.tool; saveUI(); render(); window.scrollTo(0, 0); });
@@ -135,7 +164,7 @@ function fiHistHTML(c, p, vp){
     if (m.x) add('Exclu du cours', '⛔', 'd'); else if (m.d) add('Perturbe le cours', '👎', 'd');
   });
   c.evals.filter(e => e.date ? inP(e.date) : (year || e.periodId === vp.id)).forEach(e => { const s = e.s[p.id]; if (s == null) return;
-    ev.push({date: e.date || '', k: (e.date || '') + '99', h: '', t: `${e.kind === 'form' ? 'Éval. formative' : 'Évaluation'} « ${e.name} » : ${s === 'abs' ? 'absent' : fr(s, 2) + '/' + fr(+e.max, 2)}`, ic: '📝', cls: 'fe', sp: ''}); });
+    ev.push({date: e.date || '', k: (e.date || '') + '99', h: '', t: `${e.kind === 'form' ? 'Éval. formative' : 'Évaluation'} « ${e.name} » : ${evTag(s) ? evTagLong(s) : fr(s, 2) + '/' + fr(+e.max, 2)}`, ic: '📝', cls: 'fe', sp: ''}); });
   (p.certs || []).forEach(x => { if (!(year || inP(x.from) || inP(x.to))) return;
     ev.push({date: x.from, k: x.from + '00', h: '', t: `Certificat médical jusqu'au ${dFR(x.to)}${zoneTxt(x) ? ' (' + zoneTxt(x) + ')' : ''}${x.note ? ' · ' + x.note : ''}`, ic: '🩺', cls: '', sp: ''}); });
   (year ? periodsOf(c) : [vp]).forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (!a) return;
@@ -169,10 +198,10 @@ function fiBulletin(c, pid, per){
       ${row('Savoir-être', `${fr(r.se)}<small>/${seP}</small>`, 'big')}
       ${year ? '' : row('&nbsp;&nbsp;Tenue', `${r.t}<small>/${T}</small>`) + row('&nbsp;&nbsp;Attitude', `${r.c}<small>/${Cc}</small>`)}
       ${row('Savoir-faire', `${fr(r.sf)}<small>/${100 - seP}</small>`, 'big')}
-      ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), s === 'abs' ? 'abs' : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
+      ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), evTag(s) ? evTagTxt(s) : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
       ${row(year ? 'Moyenne de l\'année' : 'Total', `${fr(r.total)}<small> %</small>`, 'big tot')}
     </div>
-    ${fo.length ? `<h3>Formatif (ne compte pas)</h3><div class="card fi-bt">${fo.map(e => row(esc(e.name), e.s[p.id] === 'abs' ? 'abs' : `${fr(e.s[p.id], 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}</div>` : ''}
+    ${fo.length ? `<h3>Formatif (ne compte pas)</h3><div class="card fi-bt">${fo.map(e => row(esc(e.name), evTag(e.s[p.id]) ? evTagTxt(e.s[p.id]) : `${fr(e.s[p.id], 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}</div>` : ''}
     <div class="card fi-bt">${row('Absences', k.abs)}${row('Retards', r.late || 0)}${row('Oublis de tenue', k.gym + k.adjT + k.pool)}${k.np ? row('Pas nagé', k.np) : ''}${row('Perturbations', k.d)}${row('Exclusions', k.x)}</div>
     <h3>Commentaire${mine != null ? ' <span class="tag com-man">✎ modifié</span>' : ''}</h3>
     <div class="card small">${esc(com) || '<span class="muted">Pas de commentaire.</span>'}</div>

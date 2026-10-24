@@ -19,6 +19,11 @@
 .fi-al-b{display:block; font-size:15px; padding:10px 12px; border-radius:10px}
 .fi-al-line{padding-left:49px}
 .fi-tools{display:grid; gap:8px; margin-top:6px}
+.fi-evt th{text-transform:none; letter-spacing:0; text-align:center; white-space:normal; min-width:70px; line-height:1.25}
+.fi-evt td{text-align:center}
+.fi-evt td.bad{color:var(--bad); font-weight:700}
+.fi-evt tr[data-pid]{cursor:pointer}
+.fi-moy td{font-weight:700; background:var(--surface2)}
 .fi-tools .btn{justify-content:flex-start}
 .fi-tool{display:flex; align-items:center; gap:12px; margin:12px 0 0}
 .fi-tool b{font:700 1.05rem var(--body)}

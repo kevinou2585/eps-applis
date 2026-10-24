@@ -215,22 +215,14 @@ function openGroupScores(items){
     <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">${multi ? '<b>' + esc(names) + '</b> · ' : ''}${e0.date ? esc(fmtDL(e0.date)) + ' · ' : ''}sur ${fr(+e0.max, 2)}. Laisse vide si pas encore noté.</span><button class="btn" type="button" id="es-edit">Modifier</button></div>
     <div class="list">${items.map(({c, e}) => (multi ? `<div class="lsub">${esc(c.name)} <span>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}</span></div>` : '') + pupilsOf(c).map(p => { const s = e.s[p.id], abs = s === 'abs';
       return `<div class="prow" data-pid="${p.id}"><span class="who">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b>${evLapsTxt(e, p)}</span></span>
-        <span class="sin"><input class="inp num" inputmode="decimal" enterkeyhint="next" aria-label="Note de ${esc(p.n)}" data-in="${p.id}" data-cid="${c.id}" value="${typeof s === 'number' ? esc(fr(s, 2)) : ''}" ${abs ? 'disabled' : ''} placeholder="—"><button class="btn abs" type="button" data-abs="${p.id}" data-cid="${c.id}" aria-pressed="${abs}">Abs</button></span></div>`; }).join('')).join('')}</div>`;
+        ${evSinHTML(p, s, c.id)}</div>`; }).join('')).join('')}</div>`;
+  items.forEach(({c, e}) => evCertFill(c, e));
   openSheet(e0.name, body());
   const sb = document.querySelector('.sheet .sb'), it = cid => items.find(x => x.c.id === cid);
   const bind = () => {
     $('es-edit').onclick = () => { closeSheet(); openGroupEvalForm(null, null, items); };
     if ($('es-endu')) $('es-endu').onclick = () => { closeSheet(); enOpen(items.map(({c, e}) => ({cid: c.id, eid: e.id}))); };
-    sb.querySelectorAll('[data-in]').forEach(inp => {
-      inp.oninput = () => { const v = parseNum(inp.value), pid = inp.dataset.in, {c, e} = it(inp.dataset.cid);
-        if (v == null){ delete e.s[pid]; inp.style.borderColor = ''; }
-        else if (v < 0 || v > +e.max){ inp.style.borderColor = 'var(--bad)'; return; }
-        else { e.s[pid] = v; inp.style.borderColor = ''; }
-        save(c.id); };
-      inp.onkeydown = ev => { if (ev.key === 'Enter'){ const all = [...sb.querySelectorAll('[data-in]:not([disabled])')]; const n = all[all.indexOf(inp) + 1]; if (n) n.focus(); else inp.blur(); } };
-    });
-    sb.querySelectorAll('[data-abs]').forEach(b => b.onclick = () => { const pid = b.dataset.abs, {c, e} = it(b.dataset.cid);
-      if (e.s[pid] === 'abs') delete e.s[pid]; else e.s[pid] = 'abs'; save(c.id); sb.innerHTML = body(); bind(); });
+    evBindSin(sb, el => it(el.dataset.cid), () => { sb.innerHTML = body(); bind(); });
   };
   bind();
   sheetOnClose = () => render();

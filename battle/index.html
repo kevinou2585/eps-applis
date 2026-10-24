@@ -114,21 +114,25 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 #accueil .etat{margin:4px 0 0;font-size:12px}
 #accueil .etat:empty{display:none}
 /* Accueil « L'ascension » (Kevin) : vrai petit chemin dans un décor fantasy sombre, du garde jusqu'au château */
-.chemin{position:relative;height:720px;margin:6px -16px 0;overflow:hidden;animation:chute .8s .2s cubic-bezier(.2,1.5,.4,1) both;
-  background:radial-gradient(circle at 86% 7%,#fff6d8 0 17px,rgba(255,236,190,.35) 19px,rgba(255,220,160,.1) 50px,transparent 90px),linear-gradient(180deg,transparent 0,rgba(22,6,30,.55) 18%,rgba(26,8,24,.75) 55%,#12040b 100%)}
-.chemin::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;pointer-events:none;background:linear-gradient(transparent,rgba(190,170,200,.12) 55%,#12040b)}
+/* Accueil « L'ascension » (Kevin) : tout tient sur un écran ; décor dessiné à la taille réelle (--k = échelle), titre dans le décor */
+#accueil.decor{padding-bottom:0}
+#accueil.decor h1.titre,#accueil.decor .defi{display:none}
+#accueil.decor .etat{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 84px);z-index:6;margin:0;color:#e9d8ff;text-shadow:0 1px 3px #000}
+.chemin{position:relative;margin:2px -16px 0;overflow:hidden;animation:chute .8s .2s cubic-bezier(.2,1.5,.4,1) both;--k:1}
 .chemin svg.decor{position:absolute;inset:0;width:100%;height:100%}
-.chemin .chateau{position:absolute;right:4px;top:26px;width:132px;height:150px}
-.chemin .arbre{position:absolute;width:70px;height:96px}
-.chemin .torche{position:absolute;width:8px;height:22px;margin:-22px 0 0 -4px;background:linear-gradient(#5a3a1a,#2a1a0a);border-radius:2px}
+.chemin .ttl{position:absolute;left:0;right:0;top:calc(2px * var(--k));z-index:1;text-align:center;pointer-events:none}
+.chemin .ttl b{display:block;font:900 calc(30px * var(--k))/1 system-ui,-apple-system,sans-serif;letter-spacing:.01em;text-transform:uppercase;color:#ffe7b0;text-shadow:0 3px 0 #5a0f14,0 0 18px rgba(255,110,40,.55)}
+.chemin .ttl span{display:block;margin-top:calc(5px * var(--k));font:800 calc(12.5px * var(--k)) system-ui,-apple-system,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--jaune);text-shadow:0 1px 3px #000}
+.chemin .torche{position:absolute;width:calc(8px * var(--k));height:calc(22px * var(--k));margin:calc(-22px * var(--k)) 0 0 calc(-4px * var(--k));background:linear-gradient(#5a3a1a,#2a1a0a);border-radius:2px}
 .chemin .torche::before{content:"";position:absolute;left:50%;top:-12px;width:12px;height:16px;margin-left:-6px;border-radius:50% 50% 45% 45%;background:radial-gradient(circle at 50% 70%,#fff3b0,#ffb020 45%,#e5420f 75%,transparent 80%);filter:drop-shadow(0 0 8px #ff8a20);animation:flamme .35s ease-in-out infinite alternate}
 .chemin .torche::after{content:"";position:absolute;left:50%;top:-30px;width:70px;height:70px;margin-left:-35px;border-radius:50%;background:radial-gradient(rgba(255,150,40,.32),transparent 65%);pointer-events:none}
 @keyframes flamme{to{transform:scale(1.12,.9) rotate(4deg)}}
 .chemin .b{position:absolute;display:flex;align-items:center;z-index:2}
 .chemin canvas{display:block;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55));animation:flotte 2.4s ease-in-out infinite}
-.chemin .b1{top:4px;left:0;flex-direction:column}
-.chemin .b2{top:330px;right:8px;flex-direction:row-reverse}
-.chemin .b3{top:528px;left:8px}
+.chemin .b1{top:calc(58px * var(--k));left:0;flex-direction:column}
+.chemin .b2{top:calc(378px * var(--k));right:8px;flex-direction:row-reverse}
+.chemin .b3{top:calc(562px * var(--k));left:8px}
+.chemin .tag{zoom:max(.72,var(--k))}
 .chemin .b2 canvas{animation-delay:-.8s}.chemin .b3 canvas{animation-delay:-1.6s}
 .chemin .b1{--c:#ffd23f;--t:#5a3a00}.chemin .b2{--c:#ff8c1a;--t:#fff}.chemin .b3{--c:#c9d1de;--t:#26304a}
 .chemin canvas{background:radial-gradient(circle at 50% 55%,color-mix(in srgb,var(--c) 45%,transparent),transparent 62%)}
@@ -3163,7 +3167,7 @@ window.addEventListener('keyup', e => {
 document.addEventListener('gesturestart', e => e.preventDefault());
 document.addEventListener('dblclick', e => e.preventDefault());
 document.addEventListener('visibilitychange', () => { if (document.hidden && etat === 'jeu') pause(); });
-window.addEventListener('resize', () => redim());
+window.addEventListener('resize', () => { redim(); if (etat === 'accueil') afficherAccueil(); });
 
 function montrer(id) { document.querySelectorAll('.ecran').forEach(s => s.classList.toggle('on', s.id === id)); }
 function pause() { if (etat !== 'jeu') return; etat = 'pause'; FL.forEach(f => f.appui = false); charge.src = {}; charge.actif = false; arreterCharge(); majMusique(); montrer('pause-ecran'); }
@@ -3265,40 +3269,77 @@ function dessinerPortrait(cnv, rang, genre, src, buste) { // portrait déguisé 
   };
   go(); if (img && !(img.complete && img.naturalWidth)) img.addEventListener('load', go, { once: true });
 }
-// décor de l'accueil : montagnes, château au bout du chemin, arbres morts, chemin pavé sinueux (Kevin : « un vrai petit chemin vers l'arène »)
-const DECOR_CHEMIN = `<svg class="decor" viewBox="0 0 360 720" preserveAspectRatio="none" aria-hidden="true">
-<path d="M0 210 L40 150 L75 190 L120 120 L165 185 L210 140 L250 175 L300 110 L360 170 L360 720 L0 720Z" fill="#2c1236" opacity=".8"/>
-<path d="M0 300 L50 250 L95 285 L150 235 L205 290 L260 245 L320 280 L360 255 L360 720 L0 720Z" fill="#1d0b22" opacity=".85"/>
-<path d="M0 470 Q90 430 180 455 T360 440 L360 720 L0 720Z" fill="#160812" opacity=".7"/>
-<defs><path id="route" d="M300 728 C 230 708, 160 722, 118 694 C 52 652, 70 592, 165 580 S 318 548, 292 492 C 268 438, 118 470, 110 408 S 168 330, 150 296 S 230 205, 288 168"/></defs>
-<g fill="none" stroke-linecap="round">
-<use href="#route" stroke="#0e0508" stroke-width="36"/>
-<use href="#route" stroke="#4a3a35" stroke-width="29"/>
-<use href="#route" stroke="#7a675a" stroke-width="21" stroke-dasharray="6 5"/>
-<use href="#route" stroke="#a08a76" stroke-width="6" stroke-dasharray="3 14" opacity=".6"/>
-</g></svg>
-<svg class="chateau" viewBox="0 0 132 150" aria-hidden="true"><g fill="#14060f">
-<rect x="8" y="60" width="26" height="90"/><path d="M4 62 L21 30 L38 62Z"/><rect x="98" y="52" width="28" height="98"/><path d="M94 54 L112 18 L130 54Z"/>
-<rect x="30" y="80" width="72" height="70"/><rect x="50" y="40" width="34" height="110"/><path d="M46 42 L67 0 L88 42Z"/>
-<path d="M30 80 h8 v-7 h8 v7 h8 v-7 h8 v7 h8 v-7 h8 v7 h8 v-7 h8 v7 h6 v4 h-72Z"/></g>
-<path d="M67 2 v-0 l14 5 l-14 5Z" fill="#c1121f"/><path d="M112 20 l12 4 l-12 4Z" fill="#c1121f"/>
-<g fill="#ffb347"><rect x="62" y="58" width="9" height="13" rx="4"/><rect x="17" y="80" width="6" height="9" rx="3"/><rect x="108" y="75" width="7" height="10" rx="3"/><rect x="108" y="100" width="7" height="10" rx="3"/></g>
-<path d="M55 150 v-22 a12 12 0 0 1 24 0 v22Z" fill="#2a0d08" stroke="#ff8a20" stroke-width="1.5"/></svg>
-<svg class="arbre" style="left:-6px;top:300px" viewBox="0 0 70 96" aria-hidden="true"><path d="M33 96 L35 52 L20 34 M35 60 L52 38 L60 30 M52 38 L50 24 M20 34 L8 30 M20 34 L22 18 M35 52 L36 30 L30 14" stroke="#120509" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
-<svg class="arbre" style="right:-4px;top:600px" viewBox="0 0 70 96" aria-hidden="true"><path d="M36 96 L34 50 L50 30 M34 58 L16 40 L8 34 M16 40 L18 24 M50 30 L62 26 M50 30 L46 14 M34 50 L32 26 L40 12" stroke="#120509" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`;
+// décor de l'accueil, dessiné à la taille réelle (W × H, échelle k) pour que le chemin de terre arrive pile à la porte du château
+const H_DECOR = 740; // hauteur de référence (k = 1)
+function decorChemin(W, H, k) {
+  const f = n => n.toFixed(1), X = x => f(x * W), Y = y => f(y * H);
+  const cw = 150 * k, ch = 172 * k, cx = W - 6 - cw, cy = 70 * k, px = cx + cw / 2, py = cy + ch - 2 * k; // château, porte
+  const route = `M ${X(.86)} ${f(H + 8)} C ${X(.62)} ${Y(.99)}, ${X(.44)} ${Y(.995)}, ${X(.3)} ${Y(.965)} C ${X(.05)} ${Y(.91)}, ${X(.1)} ${Y(.82)}, ${X(.42)} ${Y(.805)} `
+    + `S ${X(.88)} ${Y(.765)}, ${X(.8)} ${Y(.705)} C ${X(.72)} ${Y(.63)}, ${X(.3)} ${Y(.65)}, ${X(.33)} ${Y(.565)} S ${X(.58)} ${Y(.48)}, ${X(.62)} ${Y(.445)} S ${f(px)} ${f(py + 40 * k)}, ${f(px)} ${f(py)}`;
+  const arbre = (x, y, s, m) => `<g transform="translate(${f(x)} ${f(y)}) scale(${f(s * (m ? -1 : 1))} ${f(s)})"><path d="M0 0 L2 -44 L-13 -62 M2 -36 L19 -58 L27 -66 M19 -58 L17 -72 M-13 -62 L-25 -66 M-13 -62 L-11 -78 M2 -44 L3 -66 L-3 -82" stroke="#120509" stroke-width="5" fill="none" stroke-linecap="round"/></g>`;
+  const fen = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${w / 2}" fill="#ffb347"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${w / 2}" fill="url(#vitre)"/>`;
+  const creneaux = (x, y, w, n) => Array.from({ length: n }, (_, i) => `<rect x="${f(x + i * w / n)}" y="${y}" width="${f(w / n * 0.6)}" height="6"/>`).join('');
+  // château : donjon et 2 tours à toits pointus, remparts crénelés, fenêtres éclairées, porte à herse et 2 torches, liseré de lune à droite
+  const chateau = `<g transform="translate(${f(cx)} ${f(cy)}) scale(${f(k)})">
+    <defs><linearGradient id="pierre" x1="0" x2="1"><stop offset="0" stop-color="#1a0b1c"/><stop offset=".7" stop-color="#2b1631"/><stop offset="1" stop-color="#4a2c52"/></linearGradient>
+      <linearGradient id="toit" x1="0" x2="1"><stop offset="0" stop-color="#1d1030"/><stop offset=".65" stop-color="#3a2456"/><stop offset="1" stop-color="#6a4a8a"/></linearGradient>
+      <linearGradient id="vitre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2b0" stop-opacity=".9"/><stop offset="1" stop-color="#ff7a1a" stop-opacity=".2"/></linearGradient>
+      <radialGradient id="halo"><stop offset="0" stop-color="#ffb347" stop-opacity=".55"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient></defs>
+    <g fill="url(#pierre)">
+      <rect x="6" y="70" width="30" height="102"/>${creneaux(4, 64, 34, 4)}
+      <rect x="114" y="62" width="30" height="110"/>${creneaux(112, 56, 34, 4)}
+      <rect x="30" y="96" width="90" height="76"/>${creneaux(30, 90, 90, 9)}
+      <rect x="54" y="40" width="42" height="132"/>${creneaux(52, 34, 46, 5)}
+    </g>
+    <path d="M2 66 L21 22 L40 66Z M110 58 L129 10 L148 58Z M50 36 L75 -12 L100 36Z" fill="url(#toit)" stroke="#120612" stroke-width="1"/>
+    <g stroke="#2a1a1a" stroke-width="1.2"><path d="M75 -12 v-10 M21 22 v-9 M129 10 v-9"/></g>
+    <path d="M75 -22 l15 4 l-15 5Z M21 13 l11 3 l-11 4Z M129 1 l11 3 l-11 4Z" fill="#c1121f"/>
+    <path d="M144 62 v110 M96 40 v132 M120 96 v76" stroke="#6d4a7a" stroke-width="1.5" opacity=".7"/>
+    ${fen(69, 52, 12, 18)}${fen(16, 88, 9, 14)}${fen(124, 80, 9, 14)}${fen(124, 112, 9, 14)}${fen(40, 116, 8, 12)}${fen(104, 116, 8, 12)}
+    <circle cx="75" cy="160" r="34" fill="url(#halo)"/>
+    <path d="M60 172 v-24 a15 15 0 0 1 30 0 v24Z" fill="#1a0806" stroke="#8a5a2a" stroke-width="2"/>
+    <path d="M64 150 v22 M70 142 v30 M75 140 v32 M80 142 v30 M86 150 v22 M60 152 h30 M60 160 h30 M60 167 h30" stroke="#5a3a1a" stroke-width="1.4" opacity=".9"/>
+    <rect x="52" y="146" width="3" height="12" fill="#5a3a1a"/><circle cx="53.5" cy="143" r="4" fill="#ffb020"/><rect x="95" y="146" width="3" height="12" fill="#5a3a1a"/><circle cx="96.5" cy="143" r="4" fill="#ffb020"/>
+  </g>`;
+  return `<svg class="decor" viewBox="0 0 ${f(W)} ${f(H)}" aria-hidden="true">
+    <defs><radialGradient id="lune" cx="${f(W - 40 * k)}" cy="${f(46 * k)}" r="${f(90 * k)}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff6d8"/><stop offset=".19" stop-color="#fff6d8"/><stop offset=".22" stop-color="#ffecbe" stop-opacity=".35"/><stop offset=".55" stop-color="#ffdca0" stop-opacity=".1"/><stop offset="1" stop-color="#ffdca0" stop-opacity="0"/></radialGradient>
+      <linearGradient id="nuit" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16061e" stop-opacity=".2"/><stop offset=".5" stop-color="#1a0818" stop-opacity=".75"/><stop offset="1" stop-color="#12040b"/></linearGradient>
+      <linearGradient id="brume" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8a6c8" stop-opacity="0"/><stop offset=".6" stop-color="#b8a6c8" stop-opacity=".12"/><stop offset="1" stop-color="#12040b"/></linearGradient></defs>
+    <rect width="100%" height="100%" fill="url(#nuit)"/><rect width="100%" height="100%" fill="url(#lune)"/>
+    <path d="M0 ${Y(.3)} L${X(.11)} ${Y(.22)} L${X(.21)} ${Y(.27)} L${X(.33)} ${Y(.17)} L${X(.46)} ${Y(.26)} L${X(.58)} ${Y(.2)} L${X(.69)} ${Y(.24)} L${X(.83)} ${Y(.16)} L${W} ${Y(.23)} V${H} H0Z" fill="#2c1236" opacity=".8"/>
+    <path d="M0 ${Y(.42)} L${X(.14)} ${Y(.35)} L${X(.26)} ${Y(.4)} L${X(.42)} ${Y(.33)} L${X(.57)} ${Y(.41)} L${X(.72)} ${Y(.34)} L${X(.89)} ${Y(.39)} L${W} ${Y(.36)} V${H} H0Z" fill="#1d0b22" opacity=".85"/>
+    <path d="M0 ${Y(.64)} Q${X(.25)} ${Y(.59)} ${X(.5)} ${Y(.625)} T${W} ${Y(.6)} V${H} H0Z" fill="#160812" opacity=".7"/>
+    ${chateau}
+    ${arbre(W * .02, H * .5, k * 1.1, false)}${arbre(W * .985, H * .9, k * 1.05, true)}${arbre(W * .62, H * .37, k * .7, true)}
+    <path d="${route}" id="route" fill="none"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <use href="#route" stroke="#1a0c06" stroke-width="${f(30 * k)}"/>
+      <use href="#route" stroke="#5c3d22" stroke-width="${f(24 * k)}"/>
+      <use href="#route" stroke="#74502e" stroke-width="${f(15 * k)}" stroke-dasharray="${f(22 * k)} ${f(9 * k)} ${f(6 * k)} ${f(12 * k)}" opacity=".85"/>
+      <use href="#route" stroke="#3e2714" stroke-width="${f(3 * k)}" stroke-dasharray="${f(2 * k)} ${f(19 * k)}" opacity=".9"/>
+      <use href="#route" stroke="#9a7650" stroke-width="${f(2.5 * k)}" stroke-dasharray="${f(1 * k)} ${f(27 * k)}" opacity=".7"/>
+    </g>
+    <rect y="${Y(.78)}" width="100%" height="${Y(.22)}" fill="url(#brume)"/>
+  </svg>`;
+}
 let accueilDessine = false;
 function afficherAccueil() {
   const liste = listeBoss();
   let html;
+  // Kevin : tout l'accueil tient sur un écran : le décor prend la hauteur qui reste entre le haut et la barre « Jouer »
+  $('accueil').classList.toggle('decor', CLASSEMENT_OK);
+  const W = Math.min(innerWidth, 472), haut = $('bloc-boss').getBoundingClientRect().top + $('accueil').scrollTop;
+  const H = Math.max(420, innerHeight - (haut > 0 ? haut : 56) - (document.querySelector('.barre')?.offsetHeight || 90) + 14), k = Math.min(1, H / H_DECOR);
   if (!CLASSEMENT_OK) html = `<div class="boss"><img class="photo" alt=""><div class="lbl">ENTRAÎNEMENT</div><div class="nom">Joue pour le plaisir</div><div class="sc">Record ici : ${esc(fmt(lsGet('battle-record', 0)))} pts</div></div>`;
   else {
     const etape = r => { // un boss sur le chemin : portrait + étiquette
-      const b = liste.find(x => x.rang === r), t = b ? titreBoss(r, b.genre) : (r === 1 ? 'Le trône' : 'Place libre'), px = r === 1 ? 280 : 175; // Kevin : boss en grand (le n°1 encore plus), étiquettes petites
+      const b = liste.find(x => x.rang === r), t = b ? titreBoss(r, b.genre) : (r === 1 ? 'Le trône' : 'Place libre'), px = Math.round((r === 1 ? 280 : 175) * k); // Kevin : boss en grand (le n°1 encore plus), étiquettes petites
       return `<div class="b b${r}${b ? '' : ' vide'}"><canvas data-rang="${r}"${b ? ' data-boss="1"' : ''} style="width:${px}px;height:${px}px" aria-label="${esc(t)}"></canvas>`
         + `<div class="tag"><em>${r}</em><i>${esc(t)}</i><b>${b ? esc(b.nom) : 'Personne'}</b><span>${b ? esc(fmt(b.score)) + ' pts' : 'À prendre !'}</span></div></div>`;
     };
-    const T = [[56, 97], [14, 84], [86, 64], [50, 61], [64, 45]]; // torches le long du chemin (% largeur, % hauteur)
-    html = `<div class="chemin">${DECOR_CHEMIN}${T.map(([x, y]) => `<i class="torche" style="left:${x}%;top:${y}%"></i>`).join('')}${etape(1)}${etape(2)}${etape(3)}</div>`;
+    const T = [[50, 99], [10, 86], [92, 72], [54, 58], [76, 43]]; // torches au bord du chemin (% largeur, % hauteur)
+    html = `<div class="chemin" style="--k:${k.toFixed(3)};height:${Math.round(H)}px">${decorChemin(W, H, k)}<div class="ttl"><b>Battle des profs</b><span>Novembre · grimpe jusqu'au trône</span></div>`
+      + `${T.map(([x, y]) => `<i class="torche" style="left:${x}%;top:${y}%"></i>`).join('')}${etape(1)}${etape(2)}${etape(3)}</div>`;
   }
   const cle = html + JSON.stringify(liste.map(b => [b.photo.length, b.genre]));
   if (cle !== accueilDessine) {

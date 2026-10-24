@@ -108,3 +108,11 @@ header.top .sync{min-width:0; overflow:hidden}
 .ag-cb i{display:block; height:100%; background:var(--pc)}
 .ag-cn{text-align:right; font-size:12px; white-space:nowrap}
 .ag-cr.zero .ag-ct, .ag-cr.zero .ag-cn{color:var(--bad); font-weight:700}
+/* ordre de mes sports */
+.ag-ordb{align-self:flex-start; min-height:34px; padding:5px 10px; font-size:13px; margin-top:-4px}
+.ag-ord{display:flex; flex-direction:column; gap:6px; border:1.5px solid var(--line); border-radius:12px; padding:9px 10px; background:var(--surface)}
+.ag-ord[hidden]{display:none}
+.ag-ordr{display:flex; align-items:center; gap:6px; min-height:40px; border-bottom:1px solid var(--line)}
+.ag-ordr > span{flex:1; min-width:0; font-weight:600}
+.ag-ordr > b{width:22px; color:var(--muted)}
+.ag-ordr .ib:disabled{opacity:.3}

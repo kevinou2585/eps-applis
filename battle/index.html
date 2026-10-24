@@ -2989,7 +2989,7 @@ const SECOUSSE = {
   VX: 140,        // poussée sur le côté
   CHUTE: 7        // s : sécurité, après un TILT la bille finit par passer à travers la table
 };
-let secOn = lsGet('battle-secousses', true) !== false;
+let secOn = lsGet('battle-secousses2', false) === true; // Kevin : coupées par défaut (le bouton TILT les remplace), plus de demande d'accès au mouvement
 let secPerm = typeof DeviceMotionEvent === 'undefined' ? 'absent' : typeof DeviceMotionEvent.requestPermission === 'function' ? 'a-demander' : 'ok'; // iPhone : autorisation au 1er tap
 let secG = null, secArme = true, secPic = null, secDernier = -1e9;
 function demanderMouvement() { // iPhone (iOS 13+) : doit être appelé pendant un tap ; refus = le jeu marche sans
@@ -2999,7 +2999,7 @@ function demanderMouvement() { // iPhone (iOS 13+) : doit être appelé pendant 
 }
 function basculerSecousses() {
   if (secOn && secPerm === 'refuse') { demanderMouvement(); setTimeout(() => SON.clic(), 30); return; } // refusées : on redemande
-  secOn = !secOn; lsSet('battle-secousses', secOn);
+  secOn = !secOn; lsSet('battle-secousses2', secOn);
   if (secOn && secPerm === 'a-demander') demanderMouvement();
   secPic = null; majBoutonsSon(); setTimeout(() => SON.clic(), 30);
 }
@@ -3145,7 +3145,7 @@ window.addEventListener('popstate', () => {
 $('quitter-non').onclick = () => { $('quitter').hidden = true; $('reprendre').onclick(); };
 $('quitter-oui').onclick = () => { $('quitter').hidden = true; $('abandon').onclick(); };
 $('abandon').onclick = () => { montrer(null); etat = 'jeu'; balleNo = 4; balles = []; attenteBalle = 0; finPartie(); };
-$('jouer').onclick = () => { if (secOn && secPerm === 'a-demander') demanderMouvement(); deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); };
+$('jouer').onclick = () => { deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); };
 // bouton son 🔊 / 🔇 (mémorisé)
 function majBoutonsSon() {
   document.querySelectorAll('.btn-son').forEach(b => { b.textContent = muet ? '🔇 Son coupé' : '🔊 Son activé'; b.setAttribute('aria-pressed', String(!muet)); b.classList.toggle('coupe', muet); });

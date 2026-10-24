@@ -338,6 +338,14 @@ header.top .sync{min-width:0; overflow:hidden}
 .ag-cb i{display:block; height:100%; background:var(--pc)}
 .ag-cn{text-align:right; font-size:12px; white-space:nowrap}
 .ag-cr.zero .ag-ct, .ag-cr.zero .ag-cn{color:var(--bad); font-weight:700}
+/* ordre de mes sports */
+.ag-ordb{align-self:flex-start; min-height:34px; padding:5px 10px; font-size:13px; margin-top:-4px}
+.ag-ord{display:flex; flex-direction:column; gap:6px; border:1.5px solid var(--line); border-radius:12px; padding:9px 10px; background:var(--surface)}
+.ag-ord[hidden]{display:none}
+.ag-ordr{display:flex; align-items:center; gap:6px; min-height:40px; border-bottom:1px solid var(--line)}
+.ag-ordr > span{flex:1; min-width:0; font-weight:600}
+.ag-ordr > b{width:22px; color:var(--muted)}
+.ag-ordr .ib:disabled{opacity:.3}
 /* Évaluations formatives / endurance / filles et règles (outils/evals-carnet.js) */
 .tag.ev-form{background:var(--surface); color:var(--fg); border:1.5px dashed var(--fg); letter-spacing:.07em; padding:1px 8px; font-size:11.5px; vertical-align:2px}
 .tag.ev-endu{background:var(--accent-soft); color:var(--accent); padding:1px 8px; font-size:11.5px; vertical-align:2px}
@@ -1788,7 +1796,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sheetro
    - Horaire : S.settings.tt = [{id, d, h, h2, cls, salle?}] (le même que Réglages › Mon horaire).
    - Sport et note d'un cours daté : sur les leçons de chaque classe (l.sport, l.note).
      Avant l'appel (pas encore de leçon) : S.settings.ag['AAAA-MM-JJ|H1'] = {s, n}, repris dans les leçons au début de l'appel.
-   - Sports ajoutés par l'enseignant : S.settings.sports = [noms].
+   - Sports ajoutés par l'enseignant : S.settings.sports = [noms] ; mes sports en tête de liste, dans mon ordre : S.settings.sportsOrdre = [noms].
    - Programme : compétences travaillées pendant le cours, l.prog = ['HME2', …] (absent = option pas activée) ;
      cases cochées d'office par sport, modifiables : S.settings.progSport = {sport: [codes]}.
    Tout passe par save() / save(c.id) : appareil + Drive (réglages par S.ts, classes par c.ts). */
@@ -1805,22 +1813,47 @@ const clsById = id => S.classes.find(c => c.id === id);
 /* --- Sports --- */
 const sportsCustom = () => Array.isArray(S.settings.sports) ? S.settings.sports : [];
 const sameTxt = (a, b) => a.localeCompare(b, 'fr', {sensitivity: 'base'}) === 0;
-function sportsList(){
+function sportsAll(){
   const out = [...SPORTS0];
   [...sportsCustom()].sort((a, b) => a.localeCompare(b, 'fr')).forEach(s => { if (!out.some(x => sameTxt(x, s))) out.push(s); });
-  out.push('Autre'); return out;
+  return out;
 }
+/* Kevin : ses sports en premier, dans l'ordre qu'il choisit (les autres suivent) */
+const sportsOrdre = () => { const all = sportsAll(); return (Array.isArray(S.settings.sportsOrdre) ? S.settings.sportsOrdre : []).map(s => all.find(x => sameTxt(x, s))).filter((s, i, a) => s && a.indexOf(s) === i); };
+const sportsReste = () => { const o = sportsOrdre(); return sportsAll().filter(s => !o.includes(s)); };
+function sportsList(){ return [...sportsOrdre(), ...sportsReste(), 'Autre']; }
 function addSport(name){
   name = String(name || '').trim().replace(/\s+/g, ' '); if (!name) return null;
   const f = sportsList().find(x => sameTxt(x, name)); if (f) return f;
   S.settings.sports = [...sportsCustom(), name]; save(); return name;
 }
 function sportOptions(cur){
-  const l = sportsList(); if (cur && !l.includes(cur)) l.unshift(cur);
-  return '<option value="">— Choisir —</option>' + l.map(s => `<option value="${esc(s)}" ${s === cur ? 'selected' : ''}>${esc(s)}</option>`).join('') + '<option value="__add">➕ Ajouter un sport…</option>';
+  const o = sportsOrdre(), r = [...sportsReste(), 'Autre'], all = [...o, ...r], opt = s => `<option value="${esc(s)}" ${s === cur ? 'selected' : ''}>${esc(s)}</option>`;
+  return '<option value="">— Choisir —</option>' + (cur && !all.includes(cur) ? opt(cur) : '')
+    + (o.length ? `<optgroup label="Mes sports">${o.map(opt).join('')}</optgroup><optgroup label="Les autres">${r.map(opt).join('')}</optgroup>` : r.map(opt).join(''))
+    + '<option value="__add">➕ Ajouter un sport…</option>';
+}
+/* petit panneau « ⇅ Ordre » : mes sports en tête de liste, ▲ ▼ pour les ranger */
+function ordreField(pre){
+  return `<button class="btn ag-ordb" type="button" id="${pre}-ord" aria-expanded="false">⇅ Ordre de mes sports</button><div class="ag-ord" id="${pre}-ordp" hidden></div>`;
+}
+function bindOrdre(pre, onChange){
+  const b = $(pre + '-ord'), pn = $(pre + '-ordp'); if (!b) return;
+  const put = l => { S.settings.sportsOrdre = l; save(); draw(); if (onChange) onChange(); };
+  const draw = () => { const o = sportsOrdre();
+    pn.innerHTML = `<span class="small muted">Ces sports apparaissent en premier dans la liste, dans cet ordre.</span>
+      ${o.length ? o.map((s, i) => `<div class="ag-ordr"><b>${i + 1}.</b><span>${esc(s)}</span><button class="ib" type="button" data-oup="${i}" ${i ? '' : 'disabled'} aria-label="Monter ${esc(s)}">▲</button><button class="ib" type="button" data-odn="${i}" ${i < o.length - 1 ? '' : 'disabled'} aria-label="Descendre ${esc(s)}">▼</button><button class="ib" type="button" data-ox="${i}" aria-label="Retirer ${esc(s)} de mes sports">${IC.x}</button></div>`).join('') : '<span class="small">Aucun pour l\'instant : ajoute tes sports ci-dessous.</span>'}
+      <select class="inp" id="${pre}-ordadd" aria-label="Ajouter un sport à mes sports"><option value="">➕ Ajouter à mes sports…</option>${sportsReste().map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('')}</select>`;
+    pn.querySelectorAll('[data-oup]').forEach(x => x.onclick = () => { const l = sportsOrdre(), i = +x.dataset.oup; [l[i - 1], l[i]] = [l[i], l[i - 1]]; put(l); });
+    pn.querySelectorAll('[data-odn]').forEach(x => x.onclick = () => { const l = sportsOrdre(), i = +x.dataset.odn; [l[i + 1], l[i]] = [l[i], l[i + 1]]; put(l); });
+    pn.querySelectorAll('[data-ox]').forEach(x => x.onclick = () => { const l = sportsOrdre(); l.splice(+x.dataset.ox, 1); put(l); });
+    $(pre + '-ordadd').onchange = e => { if (e.target.value) put([...sportsOrdre(), e.target.value]); };
+  };
+  b.onclick = () => { pn.hidden = !pn.hidden; b.setAttribute('aria-expanded', !pn.hidden); b.textContent = pn.hidden ? '⇅ Ordre de mes sports' : '✓ Fermer'; if (!pn.hidden) draw(); };
 }
 function sportField(pre, cur){
   return `<label class="f">Sport / activité<select class="inp" id="${pre}-sp">${sportOptions(cur)}</select></label>
+    ${ordreField(pre)}
     <div class="row2 ag-addsp" id="${pre}-addrow" hidden><input class="inp" id="${pre}-new" placeholder="Nom du nouveau sport" style="flex:1 1 160px" autocomplete="off"><button class="btn" type="button" id="${pre}-newok">Ajouter</button></div>`;
 }
 function bindSportField(pre, onChange){
@@ -1832,6 +1865,7 @@ function bindSportField(pre, onChange){
   const ok = () => { const n = addSport(inp.value); if (!n){ toast('Écris le nom du sport'); return; }
     sel.innerHTML = sportOptions(n); sel.value = n; prev = n; inp.value = ''; row.hidden = true; onChange(n); toast(`« ${n} » est dans ta liste`); };
   $(pre + '-newok').onclick = ok;
+  bindOrdre(pre, () => { sel.innerHTML = sportOptions(sel.value); });
   inp.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); ok(); } };
 }
 
@@ -2116,11 +2150,13 @@ function agSportsCard(){
     <p class="small muted" style="margin:0">La liste de base (${SPORTS0.length} sports + Autre) est toujours là. Tes sports ajoutés :</p>
     ${cu.length ? cu.map((s, i) => `<div class="evt"><span class="l"><b>${esc(s)}</b></span><button class="ib" type="button" data-spdel="${i}" aria-label="Retirer ${esc(s)}">${IC.x}</button></div>`).join('') : '<span class="small muted">Aucun pour l\'instant.</span>'}
     <div class="row2"><input class="inp" id="sp-new" placeholder="Nouveau sport" style="flex:1 1 160px" autocomplete="off"><button class="btn" type="button" id="sp-add" style="flex:0 0 auto">Ajouter</button></div>
-    <span class="small muted">Retirer un sport de la liste ne change pas les cours déjà notés.</span></div>`;
+    <span class="small muted">Retirer un sport de la liste ne change pas les cours déjà notés.</span>
+    ${ordreField('spo')}</div>`;
 }
 function bindAgSports(){
   document.querySelectorAll('[data-spdel]').forEach(b => b.onclick = () => { const cu = [...sportsCustom()], s = cu.splice(+b.dataset.spdel, 1)[0]; S.settings.sports = cu; save(); render(); toast(`« ${s} » retiré de la liste`); });
   const add = () => { const v = $('sp-new').value.trim(); if (!v) return; const ex = sportsList().find(x => sameTxt(x, v)); if (ex){ toast(`« ${ex} » est déjà dans la liste`); return; } addSport(v); render(); toast(`« ${v} » ajouté`); };
+  bindOrdre('spo');
   $('sp-add').onclick = add; $('sp-new').onkeydown = e => { if (e.key === 'Enter') add(); };
 }
 

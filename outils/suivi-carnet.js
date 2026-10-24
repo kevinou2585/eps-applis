@@ -98,7 +98,7 @@ function renderSuivi(c, m){
   $('su-xls').onclick = () => suXlsx(c, vp, D, f);
   // Journal des leçons (déplacé ici depuis « Points de savoir-être », supprimé) : leçon par leçon, ce qu'on a fait
   const ls = vp === 'year' ? [...c.lessons].sort((a, b) => suKey(a) < suKey(b) ? -1 : 1) : compute(c, vp).lessons;
-  if (ls.length) m.insertAdjacentHTML('beforeend', `<section class="sec">${agJournal(ls)}</section>`);
+  if (ls.length) m.insertAdjacentHTML('beforeend', `<section class="sec">${agCouverture(c, ls)}${agJournal(ls)}</section>`);
 }
 /* Liste datée d'un élève */
 function suEvLabel(e){ const o = SU_COLS.find(x => x.k === e.k); return o.long; }

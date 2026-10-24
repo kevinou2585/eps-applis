@@ -99,7 +99,7 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .carte{position:relative;border-radius:20px;background:linear-gradient(160deg,#2b3a6b,#16224a);border:3px solid var(--bord,#9aa6c4);box-shadow:0 8px 22px rgba(0,0,0,.45);padding:6px 6px 10px;min-width:0}
 .carte.r1{--bord:#ffd23f;margin:10px auto 10px;max-width:270px}
 /* Accueil « L'ascension » (maquette 2 choisie par Kevin) : un chemin monte du garde au roi, Jouer collé en bas */
-#accueil{background:linear-gradient(180deg,#2a0f3d 0,#5b1530 45%,#c2410c 100%);padding-bottom:calc(env(safe-area-inset-bottom) + 100px)}
+#accueil{background:linear-gradient(180deg,#2a0f3d 0,#4a1230 35%,#12040b 85%);padding-bottom:calc(env(safe-area-inset-bottom) + 100px)}
 #accueil .haut{display:flex;justify-content:space-between;align-items:center;min-height:32px}
 #accueil .eps-retour{float:none;padding:2px 0;font-size:13px;color:#ffd9c2}
 #accueil #partage{border:0;border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.14);color:#fff;font:800 13px system-ui,-apple-system,sans-serif}
@@ -113,28 +113,32 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 #accueil .defi{margin:6px 0 0;font-size:13px;font-weight:800;color:var(--jaune);letter-spacing:.14em;text-transform:uppercase;opacity:1}
 #accueil .etat{margin:4px 0 0;font-size:12px}
 #accueil .etat:empty{display:none}
-.chemin{position:relative;height:610px;margin-top:6px;animation:chute .8s .2s cubic-bezier(.2,1.5,.4,1) both}
-.chemin svg{position:absolute;inset:0;width:100%;height:100%}
-.chemin .b{position:absolute;display:flex;align-items:center}
-.chemin canvas{display:block;filter:drop-shadow(0 8px 10px rgba(0,0,0,.5));animation:flotte 2.4s ease-in-out infinite}
-.chemin .b1{top:0;left:50%;transform:translateX(-50%);flex-direction:column}
-.chemin .b2{top:285px;right:-8px;flex-direction:row-reverse}
-.chemin .b3{top:435px;left:-8px}
+/* Accueil « L'ascension » (Kevin) : vrai petit chemin dans un décor fantasy sombre, du garde jusqu'au château */
+.chemin{position:relative;height:720px;margin:6px -16px 0;overflow:hidden;animation:chute .8s .2s cubic-bezier(.2,1.5,.4,1) both;
+  background:radial-gradient(circle at 86% 7%,#fff6d8 0 17px,rgba(255,236,190,.35) 19px,rgba(255,220,160,.1) 50px,transparent 90px),linear-gradient(180deg,transparent 0,rgba(22,6,30,.55) 18%,rgba(26,8,24,.75) 55%,#12040b 100%)}
+.chemin::after{content:"";position:absolute;left:0;right:0;bottom:0;height:160px;pointer-events:none;background:linear-gradient(transparent,rgba(190,170,200,.12) 55%,#12040b)}
+.chemin svg.decor{position:absolute;inset:0;width:100%;height:100%}
+.chemin .chateau{position:absolute;right:4px;top:26px;width:132px;height:150px}
+.chemin .arbre{position:absolute;width:70px;height:96px}
+.chemin .torche{position:absolute;width:8px;height:22px;margin:-22px 0 0 -4px;background:linear-gradient(#5a3a1a,#2a1a0a);border-radius:2px}
+.chemin .torche::before{content:"";position:absolute;left:50%;top:-12px;width:12px;height:16px;margin-left:-6px;border-radius:50% 50% 45% 45%;background:radial-gradient(circle at 50% 70%,#fff3b0,#ffb020 45%,#e5420f 75%,transparent 80%);filter:drop-shadow(0 0 8px #ff8a20);animation:flamme .35s ease-in-out infinite alternate}
+.chemin .torche::after{content:"";position:absolute;left:50%;top:-30px;width:70px;height:70px;margin-left:-35px;border-radius:50%;background:radial-gradient(rgba(255,150,40,.32),transparent 65%);pointer-events:none}
+@keyframes flamme{to{transform:scale(1.12,.9) rotate(4deg)}}
+.chemin .b{position:absolute;display:flex;align-items:center;z-index:2}
+.chemin canvas{display:block;filter:drop-shadow(0 8px 10px rgba(0,0,0,.55));animation:flotte 2.4s ease-in-out infinite}
+.chemin .b1{top:4px;left:0;flex-direction:column}
+.chemin .b2{top:330px;right:8px;flex-direction:row-reverse}
+.chemin .b3{top:528px;left:8px}
 .chemin .b2 canvas{animation-delay:-.8s}.chemin .b3 canvas{animation-delay:-1.6s}
 .chemin .b1{--c:#ffd23f;--t:#5a3a00}.chemin .b2{--c:#ff8c1a;--t:#fff}.chemin .b3{--c:#c9d1de;--t:#26304a}
-.chemin canvas{background:radial-gradient(circle at 50% 55%,color-mix(in srgb,var(--c) 55%,transparent),transparent 62%)}
-/* étiquettes (Kevin) : le titre du personnage en grand dans un bandeau à sa couleur, n° en médaille */
-.chemin .tag{position:relative;background:#fff;color:#2a0f3d;border:2px solid var(--c);border-radius:11px;padding:0 0 4px;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.3),0 0 18px color-mix(in srgb,var(--c) 45%,transparent);min-width:96px;max-width:130px}
-.chemin .b1 .tag{margin-top:-14px;min-width:120px}
+.chemin canvas{background:radial-gradient(circle at 50% 55%,color-mix(in srgb,var(--c) 45%,transparent),transparent 62%)}
+/* étiquettes : petites, titre du personnage dans un bandeau couleur du rang assombrie, n° en médaille */
+.chemin .tag{position:relative;background:#fbf4ea;color:#2a0f3d;border:2px solid var(--c);border-radius:11px;padding:0 0 4px;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.35),0 0 18px color-mix(in srgb,var(--c) 40%,transparent);min-width:96px;max-width:130px}
+.chemin .b1 .tag{margin-top:-16px;min-width:120px}
 .chemin .vide .tag{opacity:.85;border-style:dashed}
-.chemin .tag em{position:absolute;left:-10px;top:-10px;width:22px;height:22px;border-radius:50%;background:var(--c);color:var(--t);border:2px solid #fff;font:900 11px/18px system-ui,-apple-system,sans-serif;font-style:normal;box-shadow:0 3px 8px rgba(0,0,0,.4)}
-.chemin .tag i{display:block;margin-bottom:2px;padding:4px 8px 3px 13px;border-radius:9px 9px 0 0;background:var(--c);color:var(--t);font:900 13px/1.05 system-ui,-apple-system,sans-serif;font-style:normal;text-transform:uppercase;letter-spacing:.02em}
+.chemin .tag em{position:absolute;z-index:2;left:-10px;top:-10px;width:22px;height:22px;border-radius:50%;background:var(--c);color:var(--t);border:2px solid #fff;font:900 11px/18px system-ui,-apple-system,sans-serif;font-style:normal;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.chemin .tag i{display:block;margin-bottom:3px;padding:4px 8px 3px 13px;border-radius:9px 9px 0 0;background:linear-gradient(color-mix(in srgb,var(--c) 72%,#000),color-mix(in srgb,var(--c) 42%,#000));color:#fff4e0;font:900 13px/1.05 Georgia,"Times New Roman",serif;font-style:normal;text-transform:uppercase;letter-spacing:.06em;text-shadow:0 1px 2px #000}
 .chemin .b1 .tag i{font-size:16px;padding-left:10px}
-/* Kevin : titres plus dark, façon sang qui coule */
-.chemin .tag i{position:relative;background:linear-gradient(#2a0307,#0d0103);color:#e3121b;font-family:Georgia,"Times New Roman",serif;letter-spacing:.06em;text-shadow:0 0 6px rgba(255,20,30,.55),0 1px 0 #000;border-bottom:2px solid #8b0000}
-.chemin .tag i::after{content:"";position:absolute;left:12%;right:12%;top:100%;height:9px;pointer-events:none;background:radial-gradient(circle at 8% 0,#8b0000 2px,transparent 2.5px),radial-gradient(ellipse 2px 6px at 22% 0,#8b0000 98%,transparent),radial-gradient(ellipse 1.6px 4px at 47% 0,#8b0000 98%,transparent),radial-gradient(ellipse 2.2px 8px at 71% 0,#8b0000 98%,transparent),radial-gradient(circle at 90% 0,#8b0000 2px,transparent 2.5px)}
-.chemin .tag b{margin-top:3px}
-.chemin .tag em{z-index:2}
 .chemin .tag b{display:block;padding:0 7px;font-size:13px;font-weight:900;line-height:1.1;word-break:break-word}.chemin .b1 .tag b{font-size:15px}
 .chemin .tag span{font-size:10.5px;font-weight:800;color:#7a4a5a;font-variant-numeric:tabular-nums}
 .barre{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:12px 16px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(transparent,rgba(20,6,20,.85) 30%)}
@@ -3261,6 +3265,27 @@ function dessinerPortrait(cnv, rang, genre, src, buste) { // portrait déguisé 
   };
   go(); if (img && !(img.complete && img.naturalWidth)) img.addEventListener('load', go, { once: true });
 }
+// décor de l'accueil : montagnes, château au bout du chemin, arbres morts, chemin pavé sinueux (Kevin : « un vrai petit chemin vers l'arène »)
+const DECOR_CHEMIN = `<svg class="decor" viewBox="0 0 360 720" preserveAspectRatio="none" aria-hidden="true">
+<path d="M0 210 L40 150 L75 190 L120 120 L165 185 L210 140 L250 175 L300 110 L360 170 L360 720 L0 720Z" fill="#2c1236" opacity=".8"/>
+<path d="M0 300 L50 250 L95 285 L150 235 L205 290 L260 245 L320 280 L360 255 L360 720 L0 720Z" fill="#1d0b22" opacity=".85"/>
+<path d="M0 470 Q90 430 180 455 T360 440 L360 720 L0 720Z" fill="#160812" opacity=".7"/>
+<defs><path id="route" d="M300 728 C 230 708, 160 722, 118 694 C 52 652, 70 592, 165 580 S 318 548, 292 492 C 268 438, 118 470, 110 408 S 168 330, 150 296 S 230 205, 288 168"/></defs>
+<g fill="none" stroke-linecap="round">
+<use href="#route" stroke="#0e0508" stroke-width="36"/>
+<use href="#route" stroke="#4a3a35" stroke-width="29"/>
+<use href="#route" stroke="#7a675a" stroke-width="21" stroke-dasharray="6 5"/>
+<use href="#route" stroke="#a08a76" stroke-width="6" stroke-dasharray="3 14" opacity=".6"/>
+</g></svg>
+<svg class="chateau" viewBox="0 0 132 150" aria-hidden="true"><g fill="#14060f">
+<rect x="8" y="60" width="26" height="90"/><path d="M4 62 L21 30 L38 62Z"/><rect x="98" y="52" width="28" height="98"/><path d="M94 54 L112 18 L130 54Z"/>
+<rect x="30" y="80" width="72" height="70"/><rect x="50" y="40" width="34" height="110"/><path d="M46 42 L67 0 L88 42Z"/>
+<path d="M30 80 h8 v-7 h8 v7 h8 v-7 h8 v7 h8 v-7 h8 v7 h8 v-7 h8 v7 h6 v4 h-72Z"/></g>
+<path d="M67 2 v-0 l14 5 l-14 5Z" fill="#c1121f"/><path d="M112 20 l12 4 l-12 4Z" fill="#c1121f"/>
+<g fill="#ffb347"><rect x="62" y="58" width="9" height="13" rx="4"/><rect x="17" y="80" width="6" height="9" rx="3"/><rect x="108" y="75" width="7" height="10" rx="3"/><rect x="108" y="100" width="7" height="10" rx="3"/></g>
+<path d="M55 150 v-22 a12 12 0 0 1 24 0 v22Z" fill="#2a0d08" stroke="#ff8a20" stroke-width="1.5"/></svg>
+<svg class="arbre" style="left:-6px;top:300px" viewBox="0 0 70 96" aria-hidden="true"><path d="M33 96 L35 52 L20 34 M35 60 L52 38 L60 30 M52 38 L50 24 M20 34 L8 30 M20 34 L22 18 M35 52 L36 30 L30 14" stroke="#120509" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
+<svg class="arbre" style="right:-4px;top:600px" viewBox="0 0 70 96" aria-hidden="true"><path d="M36 96 L34 50 L50 30 M34 58 L16 40 L8 34 M16 40 L18 24 M50 30 L62 26 M50 30 L46 14 M34 50 L32 26 L40 12" stroke="#120509" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`;
 let accueilDessine = false;
 function afficherAccueil() {
   const liste = listeBoss();
@@ -3268,11 +3293,12 @@ function afficherAccueil() {
   if (!CLASSEMENT_OK) html = `<div class="boss"><img class="photo" alt=""><div class="lbl">ENTRAÎNEMENT</div><div class="nom">Joue pour le plaisir</div><div class="sc">Record ici : ${esc(fmt(lsGet('battle-record', 0)))} pts</div></div>`;
   else {
     const etape = r => { // un boss sur le chemin : portrait + étiquette
-      const b = liste.find(x => x.rang === r), t = b ? titreBoss(r, b.genre) : (r === 1 ? 'Le trône' : 'Place libre'), px = r === 1 ? 250 : 175; // Kevin : boss en grand, étiquettes petites
+      const b = liste.find(x => x.rang === r), t = b ? titreBoss(r, b.genre) : (r === 1 ? 'Le trône' : 'Place libre'), px = r === 1 ? 280 : 175; // Kevin : boss en grand (le n°1 encore plus), étiquettes petites
       return `<div class="b b${r}${b ? '' : ' vide'}"><canvas data-rang="${r}"${b ? ' data-boss="1"' : ''} style="width:${px}px;height:${px}px" aria-label="${esc(t)}"></canvas>`
         + `<div class="tag"><em>${r}</em><i>${esc(t)}</i><b>${b ? esc(b.nom) : 'Personne'}</b><span>${b ? esc(fmt(b.score)) + ' pts' : 'À prendre !'}</span></div></div>`;
     };
-    html = `<div class="chemin"><svg viewBox="0 0 361 540" preserveAspectRatio="none" aria-hidden="true"><path d="M70 500 C 40 420, 330 450, 290 320 S 180 250, 180 190" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="6" stroke-dasharray="2 14" stroke-linecap="round"/></svg>${etape(1)}${etape(2)}${etape(3)}</div>`;
+    const T = [[56, 97], [14, 84], [86, 64], [50, 61], [64, 45]]; // torches le long du chemin (% largeur, % hauteur)
+    html = `<div class="chemin">${DECOR_CHEMIN}${T.map(([x, y]) => `<i class="torche" style="left:${x}%;top:${y}%"></i>`).join('')}${etape(1)}${etape(2)}${etape(3)}</div>`;
   }
   const cle = html + JSON.stringify(liste.map(b => [b.photo.length, b.genre]));
   if (cle !== accueilDessine) {

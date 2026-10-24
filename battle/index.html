@@ -1403,7 +1403,7 @@ function verifierBoss() {
 }
 function lancerCombat(boss) {
   const N = NIV_BOSS[boss.rang];
-  combat = { boss, N, rang: boss.rang, phase: 'alerte', t: 0, x: PORTE.x, y: PORTE.y + 30, echelle: 0.55, pv: boss.pv, pvMax: N.pv, inv: 0, recul: 0, stun: 0, ph: 0, dx: 0, vdx: 0,
+  combat = { boss, N, rang: boss.rang, score0: score, phase: 'alerte', t: 0, x: PORTE.x, y: PORTE.y + 30, echelle: 0.55, pv: boss.pv, pvMax: N.pv, inv: 0, recul: 0, stun: 0, ph: 0, dx: 0, vdx: 0,
     esqCd: 0, boucl: 0, bouclCd: 5, billes: N.billes, pas: 0, porte: 0, coup: 0, pare: 0, rage: false, sauve: null, tambour: 0, bulle: '', x0: 0, y0: 0, chapeau: null };
   charge.src = {}; charge.actif = false; arreterCharge();
   annonce('ALERTE BOSS !', 'N°' + boss.rang + ' · ' + titreBoss(boss.rang, boss.genre) + ' arrive…', '#ff4d4d', 38, 1.6);
@@ -1521,6 +1521,8 @@ function bossVaincu() {
 }
 function combatPerdu(cause) { // Kevin : le boss passe les flippers, ou la dernière bille du combat tombe → ÉLIMINÉ, partie finie
   const C = combat, B = C.boss, F = B.genre === 'F'; C.phase = 'elimine'; C.t = 0; C.x0 = C.x; C.y0 = C.y; C.boucl = 0; C.rage = false;
+  // Kevin : battu par le boss = les points du combat ne comptent pas, on reste derrière lui au classement
+  if (C.score0 != null) score = Math.min(score, C.score0, B.score > 0 ? B.score - 1 : Infinity);
   charge.src = {}; charge.actif = false; arreterCharge(); FL.forEach(f => f.appui = false);
   C.bulle = pick(['HA HA HA !', 'Trop lent !', 'Retourne t’échauffer !', 'Même pas mal !', 'Au vestiaire !', 'Game over, collègue !']);
   SON.elimine(); vib([120, 60, 120, 60, 300]); flash = 0.5; secousse = 0.35;
@@ -3413,6 +3415,9 @@ function montrerFin() {
     let img; try { img = await chargerPhoto(f); } catch (err) { alert('Photo impossible à utiliser, essaie encore.'); return; }
     const data = await cadrerPhoto(img, rang, genre); if (!data) return;
     photoData = data; majPortrait(); $('photo-lbl').firstChild.textContent = '📸 Reprendre la photo';
+    // Kevin : la photo validée, le score part tout de suite (si le prénom et roi / reine sont déjà là)
+    if ($('envoyer') && !$('envoyer').disabled && $('nom').value.trim() && genre) $('envoyer').onclick();
+    else if (!$('nom').value.trim()) $('nom').focus();
   };
   if ($('envoyer')) $('envoyer').onclick = async () => {
     const nom = $('nom').value.trim().replace(/\s+/g, ' ').slice(0, 24);

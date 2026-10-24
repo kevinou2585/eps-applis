@@ -160,6 +160,11 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .i-annonce small{display:block;margin-top:6px;font:800 13px system-ui,-apple-system,sans-serif;letter-spacing:.14em;color:var(--jaune)}
 .i-passer{position:absolute;right:10px;top:calc(64px * var(--k));pointer-events:auto;border:0;border-radius:999px;padding:7px 14px;background:rgba(0,0,0,.55);color:#fff;font:800 13px system-ui,-apple-system,sans-serif}
 .i-couronne{position:absolute;font-size:34px;line-height:1;transform:translate(-50%,-50%)}
+.i-proj{position:absolute;font-size:30px;line-height:1;transform:translate(-50%,-50%);filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
+.i-coiffe{position:absolute;filter:drop-shadow(0 6px 6px rgba(0,0,0,.5))}
+.i-onde{position:absolute;width:60px;height:60px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 14px #fff;transform:translate(-50%,-50%)}
+.i-carton{position:absolute;padding:10px 12px;border-radius:6px;background:#e10f1f;color:#fff;border:3px solid #fff;font:900 15px/1.05 system-ui,-apple-system,sans-serif;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.4);transform:translate(-50%,-50%)}
+.i-confetti{position:absolute;width:8px;height:12px;border-radius:2px}
 .chemin .b.nouveau canvas{animation:sacre 1.1s ease-in-out 3,flotte 2.4s ease-in-out 3.3s infinite}
 @keyframes sacre{50%{filter:drop-shadow(0 0 22px #ffd23f) drop-shadow(0 8px 10px rgba(0,0,0,.55));transform:scale(1.06)}}
 .chemin .tag span{font-size:10.5px;font-weight:800;color:#7a4a5a;font-variant-numeric:tabular-nums}
@@ -954,6 +959,7 @@ function nouvellePartie() {
 }
 function points(n, x, y) {
   if (tiltOn) return; // TILT : plus aucun point jusqu'à la bille suivante
+  if (table === 'boss') return; // Kevin : les combats de boss ne rapportent aucun point (le battre sert juste à continuer)
   const p = n * mult * (multiball ? 2 : 1); score += p;
   if (x != null) popups.push({ t: '+' + fmt(p), x, y, age: 0, vie: 0.8, petit: true });
   if (!recordFait && score > cibleRecord && etat === 'jeu') { recordFait = true; popups.push({ t: '🏆 RECORD BATTU !', x: 185, y: 250, age: 0, vie: 2.2, coul: '#ffe600' }); SON.record(); vib([30, 30, 30, 30, 80]); }
@@ -1609,11 +1615,10 @@ function bossVaincu() {
   flash = 0.5; secousse = 0.35; etincelles(C.x, C.y, 60, '#ffe600'); etincelles(C.x, C.y, 40, '#ffffff'); etincelles(C.x, C.y, 30, '#ff4d4d');
   C.chapeau = { vx: rnd(60, 110) * (C.x < 185 ? 1 : -1), vy: -330 };
   SON.vaincu(C.rang); vib([60, 40, 60, 40, 200]);
-  const bonus = '+' + fmt(C.N.bonus * mult);
   // vaincre le n°1 ne donne pas encore la couronne : c'est le score final qui compte (nom + roi/reine + photo en fin de partie)
-  if (C.ultime) { ultimeBattu = true; annonce('BOSS CACHÉ VAINCU !', 'Le château est à toi · ' + bonus, '#d9b3ff', 34, 3); confettis(); }
-  else if (C.rang === 1) { annonce('LE TRÔNE EST VIDE !', 'Tiens jusqu’au bout ! ' + bonus, '#ffe600', 30, 2.8); confettis(); }
-  else annonce(F ? 'VAINCUE !' : 'VAINCU !', titreBoss(C.rang, B.genre) + ' est à terre · ' + bonus, C.N.bord, 44, 2.6);
+  if (C.ultime) { ultimeBattu = true; annonce('BOSS CACHÉ VAINCU !', 'Le château est à toi', '#d9b3ff', 34, 3); confettis(); }
+  else if (C.rang === 1) { annonce('LE TRÔNE EST VIDE !', 'Tiens jusqu’au bout !', '#ffe600', 30, 2.8); confettis(); }
+  else annonce(F ? 'VAINCUE !' : 'VAINCU !', titreBoss(C.rang, B.genre) + ' est à terre', C.N.bord, 44, 2.6);
 }
 function combatPerdu(cause) { // Kevin : le boss passe les flippers, ou la dernière bille du combat tombe → ÉLIMINÉ, partie finie
   const C = combat, B = C.boss, F = B.genre === 'F'; C.phase = 'elimine'; C.t = 0; C.x0 = C.x; C.y0 = C.y; C.boucl = 0; C.rage = false;
@@ -3516,9 +3521,9 @@ window.addEventListener('online', viderAttente);
 // Kevin : un joueur qui entre dans le top 3 arrive sur le chemin de l'accueil avec sa photo, bat un par un les boss qu'il a dépassés
 // (du garde jusqu'au roi), chacun avec sa défaite, puis prend la place du dernier battu. Joué une fois, sur l'écran d'accueil.
 const INTRO = {
-  3: { boom: 'CLANG !', c: '#c9d1de', son: 'poteau', boss: 'Aïe… ma pique !', heros: 'Laisse-moi passer !' },
-  2: { boom: 'TCHAK !', c: '#ff8c1a', son: 'bloque', boss: 'Ma hache !!', heros: 'Pas de tête qui tombe aujourd’hui !' },
-  1: { boom: 'DÉTRÔNÉ !', c: '#ffd23f', son: 'record', boss: 'Ma couronne !!', heros: 'Le trône est à moi !' }
+  3: { c: '#c9d1de', son: 'poteau', defi: 'Halte ! On ne passe pas !', boss: 'Mon casque !!', heros: 'But ! Laisse-moi passer !' },
+  2: { c: '#ff8c1a', son: 'bloque', defi: 'Approche… si tu oses !', boss: 'Pas dans le panier…', heros: 'Pas de tête qui tombe aujourd’hui !' },
+  1: { c: '#ffd23f', son: 'record', defi: 'À genoux devant ton roi !', boss: 'Ma couronne !!', heros: 'Le trône est à moi !' }
 };
 function garderIntro(r, avant, rang, nom, genre) { // r : réponse du serveur, ou null (hors ligne : on se place soi-même dans le classement gardé)
   const sc = Math.round(score), moi = { nom, score: sc, genre, photo: photoData };
@@ -3562,47 +3567,114 @@ async function jouerIntro(d) {
   const bulle = async (txt, x, y) => { const e = ajoute('i-bul', esc(txt), Math.min(W - 92, Math.max(92, x)), Math.max(40, y));
     await anim(e, [{ opacity: 0, transform: 'translate(-50%,-100%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-100%) scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,1.6,.4,1)' });
     await attendre(950); await anim(e, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }); e.remove(); };
-  const boom = (txt, x, y, c) => { const e = ajoute('i-boom', esc(txt), Math.min(W - 70, Math.max(70, x)), y); e.style.setProperty('--c', c);
+  const boom = (txt, x, y, c, taille) => { const e = ajoute('i-boom', esc(txt), Math.min(W - 70, Math.max(70, x)), y); e.style.setProperty('--c', c); if (taille) e.style.fontSize = taille + 'px';
     anim(e, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(-20deg)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.25) rotate(-8deg)', offset: .3 }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(-6deg)', offset: .75 }, { opacity: 0, transform: 'translate(-50%,-70%) scale(1.1) rotate(-6deg)' }], { duration: 1100 }).then(() => e.remove()); };
   const eclats = (x, y, c, n) => { for (let i = 0; i < n; i++) { const e = ajoute('i-ecl', '', x, y), a = Math.random() * 6.28, r = 40 + Math.random() * 70; e.style.setProperty('--c', c);
     anim(e, [{ transform: 'none', opacity: 1 }, { transform: `translate(${Math.cos(a) * r}px,${Math.sin(a) * r}px) scale(.3)`, opacity: 0 }], { duration: 600 + Math.random() * 400, easing: 'cubic-bezier(.1,.8,.3,1)' }).then(() => e.remove()); } };
   const centre = el => { const r = el.getBoundingClientRect(); return { x: r.left - cr.left + r.width / 2, y: r.top - cr.top + r.height / 2, w: r.width }; };
   const places = {}; [1, 2, 3].forEach(r => { const cv = ch.querySelector('.b' + r + ' canvas'); if (cv) places[r] = centre(cv); }); // mesurées avant que les boss tombent
   // le nouveau boss, en costume de sa future place
-  const s = Math.round(175 * k), h = ajoute('heros', `<canvas style="width:${s}px;height:${s}px"></canvas><b>${esc(d.nom)}</b>`);
-  h.style.transformOrigin = `${s / 2}px ${s / 2}px`;
-  dessinerPortrait(h.querySelector('canvas'), d.rang, d.genre, d.photo || AVATAR, true);
-  const T = p => `translate(${p.x - s / 2}px,${p.y - s / 2}px) scale(${p.sc})`;
+  // Kevin : le nouveau boss en pied, qui marche sur ses petits pieds (jambes animées, petits nuages de poussière à chaque pas)
+  const s = Math.round(175 * k), hw = Math.round(s * .78), h = ajoute('heros', `<canvas style="width:${hw}px;height:${s}px"></canvas><b>${esc(d.nom)}</b>`);
+  h.style.transformOrigin = `${hw / 2}px ${s / 2}px`;
+  const hc = h.querySelector('canvas'), himg = imageDe(d.photo || AVATAR);
+  let pasH = 0, enMarche = false, tPrec = 0, tPouf = 0;
+  const peindre = t => {
+    if (!h.isConnected) return;
+    const dt = Math.min(0.05, (t - (tPrec || t)) / 1000); tPrec = t;
+    if (enMarche) { pasH += dt * 13; tPouf -= dt; if (tPouf <= 0) { tPouf = 0.26; const r = h.getBoundingClientRect(); pouf(r.left - cr.left + r.width / 2, r.top - cr.top + r.width * 1.22); } }
+    else pasH += (Math.round(pasH / Math.PI) * Math.PI - pasH) * Math.min(1, dt * 10); // pieds joints à l'arrêt
+    const dp = Math.min(window.devicePixelRatio || 1, 2); if (hc.width !== Math.round(hw * dp)) { hc.width = Math.round(hw * dp); hc.height = Math.round(s * dp); }
+    const c = hc.getContext('2d'), kk = Math.min(hw / 100, s / 132) * dp;
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, hc.width, hc.height);
+    c.setTransform(kk, 0, 0, kk, hc.width / 2 - 5 * kk, hc.height / 2 - 2 * kk); dessinerPerso(c, d.rang, d.genre, himg, { pas: pasH });
+    requestAnimationFrame(peindre);
+  };
+  requestAnimationFrame(peindre);
+  const pouf = (x, y) => { if (saute) return; for (let i = 0; i < 3; i++) { const e = ajoute('i-ecl', '', x + (i - 1) * 6, y); e.style.setProperty('--c', 'rgba(200,170,140,.7)'); e.style.boxShadow = 'none';
+    anim(e, [{ transform: 'scale(.6)', opacity: .8 }, { transform: `translate(${(i - 1) * 12}px,-8px) scale(1.6)`, opacity: 0 }], { duration: 450, easing: 'ease-out' }).then(() => e.remove()); } };
+  const T = p => `translate(${p.x - hw / 2}px,${p.y - s / 2}px) scale(${p.sc})`;
   let pos = { x: W * .8, y: H + s * .6, sc: .7 };
-  const marche = async (p1, ms, sauts = 3) => { const p0 = pos, kf = [];
-    for (let i = 0; i <= 12; i++) { const t = i / 12, e = t * t * (3 - 2 * t); kf.push({ transform: T({ x: p0.x + (p1.x - p0.x) * e, y: p0.y + (p1.y - p0.y) * e - Math.abs(Math.sin(t * Math.PI * sauts)) * 16 * k, sc: p0.sc + (p1.sc - p0.sc) * e }) }); }
-    pos = p1; await anim(h, kf, { duration: ms, easing: 'linear' }); };
+  const marche = async (p1, ms) => { const p0 = pos, kf = [], n = Math.max(2, Math.round(ms / 230));
+    for (let i = 0; i <= 24; i++) { const t = i / 24, e = t < .1 ? t * t * 5 : t > .9 ? 1 - (1 - t) * (1 - t) * 5 : t; // démarre et s'arrête en douceur
+      kf.push({ transform: T({ x: p0.x + (p1.x - p0.x) * e, y: p0.y + (p1.y - p0.y) * e - Math.abs(Math.sin(t * Math.PI * n)) * 5 * k, sc: p0.sc + (p1.sc - p0.sc) * e }) + ` rotate(${Math.sin(t * Math.PI * n) * 4}deg)` }); }
+    pos = p1; enMarche = true; await anim(h, kf, { duration: ms, easing: 'linear' }); enMarche = false; };
+  const secouer = f => anim(ch, [0, 1, 2, 3, 4, 5, 6].map(i => ({ transform: i === 6 ? 'none' : `translate(${(i % 2 ? -1 : 1) * 6 * f}px,${((i % 3) - 1) * 4 * f}px)` })), { duration: 360, fill: 'none' });
+  const impact = (txt, p, c, f) => { boom(txt, p.x, p.y - 30 * k, c, 30 + 4 * f); eclats(p.x, p.y, c, 22); eclats(p.x, p.y, '#fff', 10); secouer(f); vib(40); };
+  const projectile = async (txt, a, b, ms, haut) => { const e = ajoute('i-proj', txt, a.x, a.y), kf = [];
+    for (let i = 0; i <= 16; i++) { const t = i / 16; kf.push({ left: (a.x + (b.x - a.x) * t) + 'px', top: (a.y + (b.y - a.y) * t - haut * 4 * t * (1 - t)) + 'px', transform: `translate(-50%,-50%) rotate(${t * 720}deg)` }); }
+    await anim(e, kf, { duration: ms, easing: 'linear' }); e.remove(); };
+  const marcheVol = async (p1, ms) => { const p0 = pos; pos = p1; await anim(h, [{ transform: T(p0) }, { transform: T(p1) }], { duration: ms, easing: 'ease-in-out' }); };
+  const onde = (a, b, delai) => { const e = ajoute('i-onde', '', a.x, a.y);
+    anim(e, [{ transform: 'translate(-50%,-50%) scale(.2)', opacity: .9 }, { transform: `translate(calc(-50% + ${b.x - a.x}px), calc(-50% + ${b.y - a.y}px)) scale(2.4)`, opacity: 0 }], { duration: 650, delay: delai, easing: 'ease-out' }).then(() => e.remove()); };
+  const etoiles = p => { for (let i = 0; i < 3; i++) { const e = ajoute('i-proj', '⭐', p.x, p.y - 20 * k), kf = [];
+      for (let j = 0; j <= 12; j++) { const a = j / 12 * 6.28 * 2 + i * 2.09; kf.push({ transform: `translate(calc(-50% + ${Math.cos(a) * 30 * k}px), calc(-50% + ${Math.sin(a) * 9 * k}px)) scale(.6)` }); }
+      anim(e, kf, { duration: 1500, easing: 'linear' }).then(() => e.remove()); } };
+  const carton = b => { const e = ajoute('i-carton', 'CARTON<br>ROUGE', Math.min(W - 50, Math.max(50, b.x)), b.y); son('rate');
+    anim(e, [{ transform: 'translate(-50%,-50%) rotate(-30deg) scale(3)', opacity: 0 }, { transform: 'translate(-50%,-50%) rotate(-8deg) scale(1)', opacity: 1, offset: .25 }, { transform: 'translate(-50%,-50%) rotate(-8deg) scale(1)', opacity: 1, offset: .8 }, { transform: 'translate(-50%,-60%) rotate(-8deg) scale(.9)', opacity: 0 }], { duration: 1400, easing: 'ease-out' }).then(() => e.remove()); };
+  const coiffe = (r, bd, b, vers, ms, garder) => { // le couvre-chef du boss s'envole (et le boss est redessiné tête nue)
+    const w = Math.round(b.w), cvh = document.createElement('canvas'); cvh.className = 'i-coiffe'; cvh.style.cssText = `width:${w}px;height:${w}px;left:${b.x - w / 2}px;top:${b.y - w / 2}px`; calque.appendChild(cvh);
+    const buste = (cnv, o) => { const dp = Math.min(window.devicePixelRatio || 1, 2); cnv.width = Math.round(cnv.clientWidth * dp); cnv.height = Math.round(cnv.clientHeight * dp);
+      const c = cnv.getContext('2d'), kb = Math.min(cnv.width / 92, cnv.height / 106); c.setTransform(kb, 0, 0, kb, cnv.width / 2 - 5 * kb, cnv.height * 0.565); dessinerPerso(c, r, bd.genre, imageDe(bd.photo || AVATAR), Object.assign({ pas: 0.6 }, o)); };
+    buste(cvh, { chapeauSeul: true }); const cvb = ch.querySelector('.b' + r + ' canvas'); if (cvb) buste(cvb, { sansChapeau: true, flash: true });
+    const sc = vers.sc || .8, kbw = w / 106, dx = vers.x - (b.x - 5 * kbw * sc), dy = vers.y - (b.y + .065 * w * sc); // vers = point où doit arriver la tête
+    anim(cvh, [{ transform: 'none' }, { transform: `translate(${dx * .5}px,${Math.min(dy, 0) * .5 - 90 * k}px) rotate(${garder ? 200 : 300}deg) scale(${(1 + sc) / 2})`, offset: .5 }, { transform: `translate(${dx}px,${dy}px) rotate(${garder ? 360 : 720}deg) scale(${sc})`, opacity: garder ? 1 : 0 }], { duration: ms, easing: 'ease-out' })
+      .then(() => garder ? anim(cvh, [{ opacity: 1 }, { opacity: 0 }], { duration: 400, delay: 900 }) : null).then(() => cvh.remove()); };
+  const youpi = async () => { son('clic'); await anim(h, [{ transform: T(pos) }, { transform: T({ x: pos.x, y: pos.y + 6 * k, sc: pos.sc * 1.06 }) + ' scaleY(.85)', offset: .15 }, { transform: T({ x: pos.x, y: pos.y - 52 * k, sc: pos.sc }) + ' rotate(-180deg)', offset: .55 }, { transform: T(pos) + ' rotate(-360deg)', offset: .9 }, { transform: T({ x: pos.x, y: pos.y + 4 * k, sc: pos.sc * 1.04 }) + ' rotate(-360deg) scaleY(.9)' }], { duration: 750, easing: 'ease-out' }); };
   h.style.transform = T(pos);
   const an = ajoute('i-annonce', `Un nouveau boss arrive !<small>${esc(d.nom)}</small>`);
   anim(an, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.08)', offset: .25 }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .8 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 2200 }).then(() => an.remove());
   son('lance');
-  await marche({ x: W * .62, y: H * .84 - s * .2, sc: 1 }, 1200);
+  await marche({ x: W * .62, y: H * .84 - s * .2, sc: 1 }, 1500);
+  await youpi(); await bulle(pick(['Me voilà !', 'Place, place !', 'Attention, j’arrive !']), pos.x, pos.y - s * .55);
   for (const r of d.battus) {
     const el = ch.querySelector('.b' + r), cv = el && el.querySelector('canvas'); if (!cv || el.classList.contains('vide')) continue;
     const b = places[r], I = INTRO[r], gauche = r === 2; // le bourreau est à droite : on l'attaque par la gauche
     const px = Math.min(W - s * .45, Math.max(s * .45, gauche ? b.x - b.w * .5 - s * .3 : b.x + b.w * (r === 1 ? .38 : .5) + s * .3)), py = b.y + (r === 1 ? b.w * .22 : 0);
     await marche({ x: px, y: py, sc: 1 }, 950);
-    await bulle(I.boss, b.x, b.y - b.w * .45);
-    const dir = gauche ? 1 : -1, choc = { x: (px + b.x) / 2, y: b.y };
-    await anim(h, [{ transform: T(pos) }, { transform: T({ x: px - dir * 14 * k, y: py + 4, sc: 1.05 }), offset: .35 }, { transform: T({ x: px + dir * 34 * k, y: py - 6, sc: 1.08 }), offset: .6 }, { transform: T(pos) }], { duration: 520 });
-    boom(I.boom, choc.x, choc.y - 20 * k, I.c); eclats(choc.x, choc.y, I.c, 18); son(I.son);
-    el.style.transformOrigin = '50% 100%';
-    if (r === 3) // le garde : il chancelle et tombe à la renverse, sa pique avec lui
-      await anim(el, [{ transform: 'none' }, { transform: 'rotate(10deg)', offset: .2 }, { transform: 'rotate(-6deg)', offset: .4 }, { transform: 'rotate(-88deg) translate(-10%,10%)', offset: .8, opacity: 1 }, { transform: 'rotate(-92deg) translate(-12%,40%)', opacity: 0, filter: 'grayscale(1)' }], { duration: 1300, easing: 'cubic-bezier(.5,0,.8,.6)' });
-    else if (r === 2) { // le bourreau : il tremble, puis s'enfonce sous terre dans un nuage de fumée
+    const bd = (d.avant || []).find(x => x.rang === r) || { genre: '', photo: '' }, tete = { x: b.x, y: b.y - b.w * .28 };
+    await bulle(I.defi, b.x, b.y - b.w * .45);
+    if (r === 3) { // LE GARDE : coup de pique (on se baisse), puis frappe de foot en pleine tête : son casque s'envole
+      el.style.transformOrigin = '50% 100%';
+      anim(el, [{ transform: 'none' }, { transform: 'rotate(-6deg)', offset: .4 }, { transform: 'rotate(16deg) translateX(8%)', offset: .7 }, { transform: 'none' }], { duration: 650 });
+      await attendre(380); boom('ZIOU !', pos.x, pos.y - s * .45, '#c9d1de', 22);
+      await anim(h, [{ transform: T(pos) }, { transform: T({ x: pos.x, y: pos.y + s * .18, sc: pos.sc }) + ' scale(1.15,.55)', offset: .4 }, { transform: T(pos) }], { duration: 520 });
+      await anim(h, [{ transform: T(pos) }, { transform: T(pos) + ' rotate(14deg)', offset: .6 }, { transform: T(pos) + ' rotate(-10deg)' }, ], { duration: 260 });
+      son('cible'); await projectile('⚽', { x: pos.x, y: pos.y + s * .32 }, tete, 560, 90 * k);
+      impact('BONK !', tete, I.c, 1); son(I.son); coiffe(r, bd, b, { x: b.x - 140 * k, y: -60 * k }, 1100);
+      etoiles(tete); await bulle(I.boss, b.x, b.y - b.w * .45);
+      el.style.transformOrigin = '50% 100%';
+      await anim(el, [{ transform: 'none' }, { transform: 'rotate(10deg)', offset: .2 }, { transform: 'rotate(-6deg)', offset: .4 }, { transform: 'rotate(-88deg) translate(-10%,10%)', offset: .8, opacity: 1 }, { transform: 'rotate(-92deg) translate(-12%,40%)', opacity: 0, filter: 'grayscale(1)' }], { duration: 1200, easing: 'cubic-bezier(.5,0,.8,.6)' });
+    } else if (r === 2) { // LE BOURREAU : coup de hache (on saute par-dessus), puis SLAM DUNK sur sa tête : il s'enfonce dans le sol
+      el.style.transformOrigin = '50% 100%';
+      anim(el, [{ transform: 'none' }, { transform: 'rotate(18deg)', offset: .45 }, { transform: 'rotate(-24deg) translateX(-10%)', offset: .7 }, { transform: 'none' }], { duration: 700 });
+      await attendre(300); const p0 = pos;
+      await anim(h, [{ transform: T(p0) }, { transform: T({ x: p0.x, y: p0.y - 85 * k, sc: p0.sc }) + ' rotate(-20deg)', offset: .5 }, { transform: T(p0) }], { duration: 620, easing: 'ease-out' });
+      boom('RATÉ !', p0.x, p0.y - s * .5, '#ff8c1a', 22); await attendre(250);
+      const ballon = ajoute('i-proj', '🏀', p0.x + 18 * k, p0.y - s * .4); anim(ballon, [{ transform: 'translate(-50%,-50%) scale(.2)' }, { transform: 'translate(-50%,-50%) scale(1)' }], { duration: 200 });
+      const haut = { x: b.x, y: b.y - b.w * .75, sc: 1.05 };
+      await Promise.all([marcheVol(haut, 520), anim(ballon, [{ left: (p0.x + 18 * k) + 'px', top: (p0.y - s * .4) + 'px' }, { left: haut.x + 'px', top: (haut.y - s * .45) + 'px' }], { duration: 520, easing: 'ease-out' })]);
+      boom('SLAM DUNK !', b.x, b.y - b.w * .7, I.c, 30);
+      await Promise.all([marcheVol({ x: b.x, y: b.y - b.w * .25, sc: 1 }, 180), anim(ballon, [{ top: (haut.y - s * .45) + 'px' }, { top: tete.y + 'px' }], { duration: 180, easing: 'ease-in' })]);
+      ballon.remove(); impact('BOUM !', tete, I.c, 2); son(I.son); coiffe(r, bd, b, { x: W + 40 * k, y: -40 * k }, 1000);
+      anim(el, [{ transform: 'none' }, { transform: 'scale(1.2,.55)' }], { duration: 160 });
+      await marcheVol({ x: px, y: py, sc: 1 }, 420);
+      etoiles(tete); await bulle(I.boss, b.x, b.y - b.w * .2);
       eclats(b.x, b.y + b.w * .3, '#3a1020', 14);
-      await anim(el, [{ transform: 'none' }, { transform: 'translateX(-7px)', offset: .1 }, { transform: 'translateX(7px)', offset: .2 }, { transform: 'translateX(-5px)', offset: .3 }, { transform: 'translateX(4px)', offset: .4 }, { transform: 'translateY(6%) scale(1,.95)', offset: .5 }, { transform: 'translateY(55%) scale(.4,.05)', opacity: 0, filter: 'brightness(.2)' }], { duration: 1400 });
-    } else { // le roi : sa couronne s'envole sur la tête du nouveau boss, il tourbillonne et disparaît
-      const c = ajoute('i-couronne', '👑', b.x, b.y - b.w * .4);
-      anim(c, [{ transform: 'translate(-50%,-50%)' }, { transform: `translate(calc(-50% + ${(px - b.x) * .5}px), calc(-50% - ${80 * k}px)) rotate(200deg) scale(1.4)`, offset: .5 }, { transform: `translate(calc(-50% + ${px - b.x}px), calc(-50% + ${py - s * .42 - (b.y - b.w * .4)}px)) rotate(360deg)` }], { duration: 1200, easing: 'ease-out' }).then(() => anim(c, [{ opacity: 1 }, { opacity: 0 }], { duration: 400, delay: 500 }));
-      await anim(el, [{ transform: 'none' }, { transform: 'rotate(-14deg) scale(1.05)', offset: .2 }, { transform: 'rotate(720deg) scale(0)', opacity: 0 }], { duration: 1400, easing: 'cubic-bezier(.6,0,.9,.5)' });
+      await anim(el, [{ transform: 'scale(1.2,.55)' }, { transform: 'translateX(-6px) scale(1.2,.55)', offset: .15 }, { transform: 'translateX(6px) scale(1.2,.55)', offset: .3 }, { transform: 'translateY(60%) scale(.4,.05)', opacity: 0, filter: 'brightness(.2)' }], { duration: 1100 });
+    } else { // LE ROI : il rit… coup de sifflet géant, sa couronne s'envole sur ta tête, il part en toupie
+      el.style.transformOrigin = '50% 100%';
+      anim(el, [{ transform: 'none' }, { transform: 'rotate(-4deg)' }, { transform: 'rotate(4deg)' }, { transform: 'rotate(-4deg)' }, { transform: 'none' }], { duration: 700 });
+      await attendre(500); boom('FUIIIIIT !', pos.x, pos.y - s * .55, '#fff', 26); if (!saute) try { SON.bumper('sifflet'); SON.bumper('sifflet'); } catch (e) {}
+      for (let i = 0; i < 4; i++) onde({ x: pos.x - 12 * k, y: pos.y - s * .2 }, tete, i * 140);
+      await anim(h, [{ transform: T(pos) }, { transform: T(pos) + ' scale(1.12)', offset: .3 }, { transform: T(pos) }], { duration: 700 });
+      impact('DÉTRÔNÉ !', tete, I.c, 1.5); son(I.son);
+      { const kkH = s / 132; coiffe(r, bd, b, { x: pos.x - 5 * kkH, y: pos.y - 2 * kkH, sc: kkH / (b.w / 106) }, 1200, true); } // pile sur ta tête
+      etoiles(tete); await bulle(I.boss, b.x, b.y - b.w * .5);
+      await anim(el, [{ transform: 'none' }, { transform: 'rotate(-14deg) scale(1.05)', offset: .2 }, { transform: 'rotate(1080deg) scale(0) translateY(-40%)', opacity: 0 }], { duration: 1400, easing: 'cubic-bezier(.6,0,.9,.5)' });
     }
-    await bulle(d.ultime && r === 1 ? 'Le trône ? Je vise plus haut…' : I.heros, px, py - s * .5);
+    carton(b);
+    await youpi(); await bulle(d.ultime && r === 1 ? 'Le trône ? Je vise plus haut…' : I.heros, px, py - s * .55);
   }
   if (d.ultime) await entrerChateau();
   // la place du dernier battu (ou la place libre)
@@ -3610,10 +3682,12 @@ async function jouerIntro(d) {
   if (cv) {
     if (!d.battus.includes(d.rang)) anim(cible, [{ opacity: 1 }, { opacity: 0, transform: 'scale(.6)' }], { duration: 500 });
     const b = places[d.rang]; await marche({ x: b.x, y: b.y, sc: b.w / s }, 1100, 2);
-    son(d.rang === 1 ? 'fanfare' : 'sauve'); eclats(b.x, b.y, '#ffd23f', 30); eclats(b.x, b.y, '#fff', 14);
-    const an2 = ajoute('i-annonce', `${esc(titreBoss(d.rang, d.genre))}<small>${esc(d.nom)} · n°${d.rang}</small>`);
-    anim(an2, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 400, easing: 'cubic-bezier(.2,1.6,.4,1)' });
-    await attendre(1700);
+    await youpi(); son(d.rang === 1 ? 'fanfare' : 'sauve'); eclats(b.x, b.y, '#ffd23f', 30); eclats(b.x, b.y, '#fff', 14); secouer(1.5);
+    if (!saute) for (let i = 0; i < 46; i++) { const e = ajoute('i-confetti', '', Math.random() * W, -20), dx = (Math.random() - .5) * 120; e.style.background = pick(['#ffd23f', '#ef3e4a', '#3a86ff', '#2ec27e', '#ff8fab', '#fff', '#b26bff']);
+      anim(e, [{ transform: 'translate(0,0) rotate(0)' }, { transform: `translate(${dx}px,${H + 40}px) rotate(${720 + Math.random() * 720}deg)` }], { duration: 1800 + Math.random() * 1400, delay: Math.random() * 600, easing: 'cubic-bezier(.3,.1,.6,1)' }).then(() => e.remove()); }
+    const an2 = ajoute('i-annonce', `${esc(titreBoss(d.rang, d.genre))} !<small>${esc(d.nom)} · n°${d.rang}</small>`);
+    anim(an2, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(3) rotate(-12deg)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(.95) rotate(-4deg)', offset: .6 }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(-4deg)' }], { duration: 450, easing: 'ease-in' });
+    await attendre(450); secouer(2); await attendre(2000);
   }
   await anim(calque, [{ opacity: 1 }, { opacity: 0 }], { duration: 350 });
   calque.remove();
@@ -3828,7 +3902,7 @@ function montrerFin() {
       else ret.innerHTML = `<div class="msg ok">Score enregistré ✔</div>`;
     }
     btn.classList.add('cache'); if ($('photo-lbl')) $('photo-lbl').classList.add('cache');
-    if (lsGet('battle-intro', null)) { const v = $('vers-accueil'); v.textContent = '⚔ Voir mon entrée sur le chemin'; v.classList.add('jaune'); }
+    if (lsGet('battle-intro', null)) setTimeout(() => { if (etat === 'fin') $('vers-accueil').onclick(); }, 1500); // Kevin : la séquence part d'office, puis le top 3
   };
 }
 

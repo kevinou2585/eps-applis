@@ -144,6 +144,21 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .chemin .tag i{display:block;margin-bottom:3px;padding:4px 8px 3px 13px;border-radius:9px 9px 0 0;background:linear-gradient(color-mix(in srgb,var(--c) 72%,#000),color-mix(in srgb,var(--c) 42%,#000));color:#fff4e0;font:900 13px/1.05 Georgia,"Times New Roman",serif;font-style:normal;text-transform:uppercase;letter-spacing:.06em;text-shadow:0 1px 2px #000}
 .chemin .b1 .tag i{font-size:16px;padding-left:10px}
 .chemin .tag b{display:block;padding:0 7px;font-size:13px;font-weight:900;line-height:1.1;word-break:break-word}.chemin .b1 .tag b{font-size:15px}
+/* intronisation : le nouveau boss bat les boss un par un sur le chemin, puis prend la place du dernier battu */
+.intro-calque{position:absolute;inset:0;z-index:5;pointer-events:none}
+.heros{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;will-change:transform}
+.heros canvas{animation:none;background:radial-gradient(circle at 50% 55%,rgba(255,240,170,.55),transparent 62%);filter:drop-shadow(0 0 14px rgba(255,220,120,.8)) drop-shadow(0 8px 10px rgba(0,0,0,.55))}
+.heros b{position:relative;margin-top:-10px;padding:3px 10px;border-radius:999px;background:#ffd23f;color:#2a0f3d;font:900 13px system-ui,-apple-system,sans-serif;box-shadow:0 3px 0 #7a5200;white-space:nowrap}
+.i-bul{position:absolute;max-width:180px;transform:translate(-50%,-100%);background:#fbf4ea;color:#2a0f3d;border:2px solid #2a0f3d;border-radius:12px;padding:5px 9px;font:900 13px/1.15 system-ui,-apple-system,sans-serif;text-align:center;box-shadow:0 4px 0 rgba(0,0,0,.4)}
+.i-bul::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-6px;border:6px solid transparent;border-top-color:#2a0f3d;border-bottom:0}
+.i-boom{position:absolute;transform:translate(-50%,-50%);font:900 30px/1 system-ui,-apple-system,sans-serif;color:#fff2a8;-webkit-text-stroke:2px #3a0a0a;text-shadow:0 4px 0 #3a0a0a,0 0 20px var(--c,#ff8a20);white-space:nowrap;letter-spacing:.02em}
+.i-ecl{position:absolute;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--c,#ffd23f);box-shadow:0 0 8px var(--c,#ffd23f)}
+.i-annonce{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:86%;text-align:center;font:900 26px/1.05 Georgia,"Times New Roman",serif;text-transform:uppercase;color:#ffe7b0;text-shadow:0 3px 0 #5a0f14,0 0 22px rgba(255,110,40,.8)}
+.i-annonce small{display:block;margin-top:6px;font:800 13px system-ui,-apple-system,sans-serif;letter-spacing:.14em;color:var(--jaune)}
+.i-passer{position:absolute;right:10px;top:calc(64px * var(--k));pointer-events:auto;border:0;border-radius:999px;padding:7px 14px;background:rgba(0,0,0,.55);color:#fff;font:800 13px system-ui,-apple-system,sans-serif}
+.i-couronne{position:absolute;font-size:34px;line-height:1;transform:translate(-50%,-50%)}
+.chemin .b.nouveau canvas{animation:sacre 1.1s ease-in-out 3,flotte 2.4s ease-in-out 3.3s infinite}
+@keyframes sacre{50%{filter:drop-shadow(0 0 22px #ffd23f) drop-shadow(0 8px 10px rgba(0,0,0,.55));transform:scale(1.06)}}
 .chemin .tag span{font-size:10.5px;font-weight:800;color:#7a4a5a;font-variant-numeric:tabular-nums}
 .barre{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:12px 16px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(transparent,rgba(20,6,20,.85) 30%)}
 .barre .gros{max-width:440px;margin:0 auto;background:var(--jaune);color:#2a0f3d;font-size:24px;letter-spacing:.08em;box-shadow:0 6px 0 #b38a00,0 12px 24px rgba(0,0,0,.4)}
@@ -3225,6 +3240,7 @@ document.querySelectorAll('.btn-sec').forEach(b => b.addEventListener('click', b
 majBoutonsSon();
 
 // ---------------------------------------------------------------- Classement
+let introAvant = null, introEnCours = false;
 let classement = (() => { const c = lsGet('battle-classement', null); return c && c.jeu === JEU ? c : null; })();
 function avecTimeout(url, opts = {}) {
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 8000);
@@ -3250,6 +3266,7 @@ function garderClassement(r) {
   lsSet('battle-classement', classement);
 }
 function listeBoss() { // les 3 boss à battre : { rang, nom, score, genre ('H' / 'F' / '' si inconnu), photo }
+  if (introAvant) return introAvant; // pendant l'intronisation : l'ancien classement reste affiché
   if (!classement) return [];
   const top = (classement.top || []).slice(0, 3), boss = classement.boss;
   return top.map((t, i) => ({
@@ -3370,6 +3387,7 @@ function afficherAccueil() {
     });
   }
   $('etat').textContent = etatTxt;
+  if (CLASSEMENT_OK && !introEnCours && $('accueil').classList.contains('on') && lsGet('battle-intro', null)) verifierIntro();
 }
 async function envoyer(p) {
   // renvoie la réponse du serveur, ou null si hors ligne (score mis en attente)
@@ -3399,6 +3417,104 @@ async function viderAttente() {
   if (etat === 'accueil') chargerClassement();
 }
 window.addEventListener('online', viderAttente);
+
+// ---------------------------------------------------------------- Intronisation
+// Kevin : un joueur qui entre dans le top 3 arrive sur le chemin de l'accueil avec sa photo, bat un par un les boss qu'il a dépassés
+// (du garde jusqu'au roi), chacun avec sa défaite, puis prend la place du dernier battu. Joué une fois, sur l'écran d'accueil.
+const INTRO = {
+  3: { boom: 'CLANG !', c: '#c9d1de', son: 'poteau', boss: 'Aïe… ma pique !', heros: 'Laisse-moi passer !' },
+  2: { boom: 'TCHAK !', c: '#ff8c1a', son: 'bloque', boss: 'Ma hache !!', heros: 'Pas de tête qui tombe aujourd’hui !' },
+  1: { boom: 'DÉTRÔNÉ !', c: '#ffd23f', son: 'record', boss: 'Ma couronne !!', heros: 'Le trône est à moi !' }
+};
+function garderIntro(r, avant, rang, nom, genre) { // r : réponse du serveur, ou null (hors ligne : on se place soi-même dans le classement gardé)
+  const sc = Math.round(score), moi = { nom, score: sc, genre, photo: photoData };
+  if (r === null) {
+    const top = (classement && classement.top || []).slice(); top.splice(rang - 1, 0, moi);
+    classement = Object.assign({ boss: null }, classement, { jeu: JEU, top: top.slice(0, 3), t: Date.now() }); lsSet('battle-classement', classement);
+  } else if (!r.ok) return;
+  else {
+    const i = r.rang > 0 ? r.rang - 1 : (classement ? classement.top : []).findIndex(t => String(t.nom).trim().toLowerCase() === nom.toLowerCase() && +t.score === sc);
+    rang = i >= 0 ? i + 1 : r.record ? 1 : 0;
+  }
+  if (!(rang >= 1 && rang <= 3)) return;
+  const battus = avant.filter(b => b.score < sc && b.rang >= rang).map(b => b.rang).sort((a, b) => b - a); // du garde vers le roi
+  lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang, battus, avant });
+}
+function verifierIntro() {
+  const d = lsGet('battle-intro', null); lsSet('battle-intro', null);
+  if (!d || Date.now() - d.t > 2 * 864e5 || !Array.isArray(d.avant)) return;
+  introEnCours = true; introAvant = d.avant; accueilDessine = false; afficherAccueil();
+  setTimeout(() => jouerIntro(d).catch(() => {}).finally(() => { introEnCours = false; introAvant = null; accueilDessine = false; afficherAccueil(); const c = document.querySelector('.chemin'); if (c) c.style.animation = 'none'; const n = document.querySelector('.chemin .b' + d.rang); if (n) n.classList.add('nouveau'); }), 1100);
+}
+async function jouerIntro(d) {
+  const ch = document.querySelector('.chemin'); if (!ch) return;
+  const k = parseFloat(ch.style.getPropertyValue('--k')) || 1, W = ch.clientWidth, H = ch.clientHeight, cr = ch.getBoundingClientRect();
+  let saute = false; const anims = [], stops = [];
+  const son = n => { if (!saute) try { SON[n](); } catch (e) {} };
+  const anim = (el, kf, o) => { const a = el.animate(kf, Object.assign({ fill: 'forwards', easing: 'ease-in-out' }, o)); anims.push(a); if (saute) a.finish(); return a.finished.catch(() => {}); };
+  const attendre = ms => saute ? Promise.resolve() : new Promise(ok => { const t = setTimeout(ok, ms); stops.push(() => { clearTimeout(t); ok(); }); });
+  const calque = document.createElement('div'); calque.className = 'intro-calque'; ch.appendChild(calque);
+  const passer = document.createElement('button'); passer.className = 'i-passer'; passer.textContent = 'Passer ⏭'; calque.appendChild(passer);
+  passer.onclick = () => { saute = true; anims.forEach(a => a.finish()); stops.forEach(f => f()); };
+  const ajoute = (cls, html, x, y) => { const e = document.createElement('div'); e.className = cls; e.innerHTML = html; if (x != null) { e.style.left = x + 'px'; e.style.top = y + 'px'; } calque.appendChild(e); return e; };
+  const bulle = async (txt, x, y) => { const e = ajoute('i-bul', esc(txt), Math.min(W - 92, Math.max(92, x)), Math.max(40, y));
+    await anim(e, [{ opacity: 0, transform: 'translate(-50%,-100%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-100%) scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,1.6,.4,1)' });
+    await attendre(950); await anim(e, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }); e.remove(); };
+  const boom = (txt, x, y, c) => { const e = ajoute('i-boom', esc(txt), Math.min(W - 70, Math.max(70, x)), y); e.style.setProperty('--c', c);
+    anim(e, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.2) rotate(-20deg)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.25) rotate(-8deg)', offset: .3 }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(-6deg)', offset: .75 }, { opacity: 0, transform: 'translate(-50%,-70%) scale(1.1) rotate(-6deg)' }], { duration: 1100 }).then(() => e.remove()); };
+  const eclats = (x, y, c, n) => { for (let i = 0; i < n; i++) { const e = ajoute('i-ecl', '', x, y), a = Math.random() * 6.28, r = 40 + Math.random() * 70; e.style.setProperty('--c', c);
+    anim(e, [{ transform: 'none', opacity: 1 }, { transform: `translate(${Math.cos(a) * r}px,${Math.sin(a) * r}px) scale(.3)`, opacity: 0 }], { duration: 600 + Math.random() * 400, easing: 'cubic-bezier(.1,.8,.3,1)' }).then(() => e.remove()); } };
+  const centre = el => { const r = el.getBoundingClientRect(); return { x: r.left - cr.left + r.width / 2, y: r.top - cr.top + r.height / 2, w: r.width }; };
+  const places = {}; [1, 2, 3].forEach(r => { const cv = ch.querySelector('.b' + r + ' canvas'); if (cv) places[r] = centre(cv); }); // mesurées avant que les boss tombent
+  // le nouveau boss, en costume de sa future place
+  const s = Math.round(175 * k), h = ajoute('heros', `<canvas style="width:${s}px;height:${s}px"></canvas><b>${esc(d.nom)}</b>`);
+  h.style.transformOrigin = `${s / 2}px ${s / 2}px`;
+  dessinerPortrait(h.querySelector('canvas'), d.rang, d.genre, d.photo || AVATAR, true);
+  const T = p => `translate(${p.x - s / 2}px,${p.y - s / 2}px) scale(${p.sc})`;
+  let pos = { x: W * .8, y: H + s * .6, sc: .7 };
+  const marche = async (p1, ms, sauts = 3) => { const p0 = pos, kf = [];
+    for (let i = 0; i <= 12; i++) { const t = i / 12, e = t * t * (3 - 2 * t); kf.push({ transform: T({ x: p0.x + (p1.x - p0.x) * e, y: p0.y + (p1.y - p0.y) * e - Math.abs(Math.sin(t * Math.PI * sauts)) * 16 * k, sc: p0.sc + (p1.sc - p0.sc) * e }) }); }
+    pos = p1; await anim(h, kf, { duration: ms, easing: 'linear' }); };
+  h.style.transform = T(pos);
+  const an = ajoute('i-annonce', `Un nouveau boss arrive !<small>${esc(d.nom)}</small>`);
+  anim(an, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.08)', offset: .25 }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .8 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 2200 }).then(() => an.remove());
+  son('lance');
+  await marche({ x: W * .62, y: H * .84 - s * .2, sc: 1 }, 1200);
+  for (const r of d.battus) {
+    const el = ch.querySelector('.b' + r), cv = el && el.querySelector('canvas'); if (!cv || el.classList.contains('vide')) continue;
+    const b = places[r], I = INTRO[r], gauche = r === 2; // le bourreau est à droite : on l'attaque par la gauche
+    const px = Math.min(W - s * .45, Math.max(s * .45, gauche ? b.x - b.w * .5 - s * .3 : b.x + b.w * (r === 1 ? .38 : .5) + s * .3)), py = b.y + (r === 1 ? b.w * .22 : 0);
+    await marche({ x: px, y: py, sc: 1 }, 950);
+    await bulle(I.boss, b.x, b.y - b.w * .45);
+    const dir = gauche ? 1 : -1, choc = { x: (px + b.x) / 2, y: b.y };
+    await anim(h, [{ transform: T(pos) }, { transform: T({ x: px - dir * 14 * k, y: py + 4, sc: 1.05 }), offset: .35 }, { transform: T({ x: px + dir * 34 * k, y: py - 6, sc: 1.08 }), offset: .6 }, { transform: T(pos) }], { duration: 520 });
+    boom(I.boom, choc.x, choc.y - 20 * k, I.c); eclats(choc.x, choc.y, I.c, 18); son(I.son);
+    el.style.transformOrigin = '50% 100%';
+    if (r === 3) // le garde : il chancelle et tombe à la renverse, sa pique avec lui
+      await anim(el, [{ transform: 'none' }, { transform: 'rotate(10deg)', offset: .2 }, { transform: 'rotate(-6deg)', offset: .4 }, { transform: 'rotate(-88deg) translate(-10%,10%)', offset: .8, opacity: 1 }, { transform: 'rotate(-92deg) translate(-12%,40%)', opacity: 0, filter: 'grayscale(1)' }], { duration: 1300, easing: 'cubic-bezier(.5,0,.8,.6)' });
+    else if (r === 2) { // le bourreau : il tremble, puis s'enfonce sous terre dans un nuage de fumée
+      eclats(b.x, b.y + b.w * .3, '#3a1020', 14);
+      await anim(el, [{ transform: 'none' }, { transform: 'translateX(-7px)', offset: .1 }, { transform: 'translateX(7px)', offset: .2 }, { transform: 'translateX(-5px)', offset: .3 }, { transform: 'translateX(4px)', offset: .4 }, { transform: 'translateY(6%) scale(1,.95)', offset: .5 }, { transform: 'translateY(55%) scale(.4,.05)', opacity: 0, filter: 'brightness(.2)' }], { duration: 1400 });
+    } else { // le roi : sa couronne s'envole sur la tête du nouveau boss, il tourbillonne et disparaît
+      const c = ajoute('i-couronne', '👑', b.x, b.y - b.w * .4);
+      anim(c, [{ transform: 'translate(-50%,-50%)' }, { transform: `translate(calc(-50% + ${(px - b.x) * .5}px), calc(-50% - ${80 * k}px)) rotate(200deg) scale(1.4)`, offset: .5 }, { transform: `translate(calc(-50% + ${px - b.x}px), calc(-50% + ${py - s * .42 - (b.y - b.w * .4)}px)) rotate(360deg)` }], { duration: 1200, easing: 'ease-out' }).then(() => anim(c, [{ opacity: 1 }, { opacity: 0 }], { duration: 400, delay: 500 }));
+      await anim(el, [{ transform: 'none' }, { transform: 'rotate(-14deg) scale(1.05)', offset: .2 }, { transform: 'rotate(720deg) scale(0)', opacity: 0 }], { duration: 1400, easing: 'cubic-bezier(.6,0,.9,.5)' });
+    }
+    await bulle(I.heros, px, py - s * .5);
+  }
+  // la place du dernier battu (ou la place libre)
+  const cible = ch.querySelector('.b' + d.rang), cv = cible && cible.querySelector('canvas');
+  if (cv) {
+    if (!d.battus.includes(d.rang)) anim(cible, [{ opacity: 1 }, { opacity: 0, transform: 'scale(.6)' }], { duration: 500 });
+    const b = places[d.rang]; await marche({ x: b.x, y: b.y, sc: b.w / s }, 1100, 2);
+    son(d.rang === 1 ? 'fanfare' : 'sauve'); eclats(b.x, b.y, '#ffd23f', 30); eclats(b.x, b.y, '#fff', 14);
+    const an2 = ajoute('i-annonce', `${esc(titreBoss(d.rang, d.genre))}<small>${esc(d.nom)} · n°${d.rang}</small>`);
+    anim(an2, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 400, easing: 'cubic-bezier(.2,1.6,.4,1)' });
+    await attendre(1700);
+  }
+  await anim(calque, [{ opacity: 1 }, { opacity: 0 }], { duration: 350 });
+  calque.remove();
+}
 
 // ---------------------------------------------------------------- Photo
 function chargerPhoto(file) {
@@ -3558,6 +3674,7 @@ function montrerFin() {
     const btn = $('envoyer'); btn.disabled = true; btn.textContent = 'Envoi…';
     const p = { code: CODE, action: 'jeu', jeu: JEU, nom, score: Math.round(score), photo: mode === 'top' && photoData.length < 48000 ? photoData : '', genre: mode === 'top' ? genre : '' };
     const r = await envoyer(p);
+    if (mode === 'top' && r !== false) garderIntro(r, liste, rang, nom, genre);
     const ret = $('retour') || document.createElement('div');
     if (r === null) ret.innerHTML = `<div class="msg">📡 Hors ligne : ton score est gardé et sera envoyé dès que possible.</div>`;
     else if (!r.ok) { ret.innerHTML = `<div class="msg ko">Envoi refusé${r.erreur || r.error ? ' : ' + esc(r.erreur || r.error) : ''}.</div>`; btn.disabled = false; btn.textContent = 'Réessayer'; return; }
@@ -3569,6 +3686,7 @@ function montrerFin() {
       else ret.innerHTML = `<div class="msg ok">Score enregistré ✔</div>`;
     }
     btn.classList.add('cache'); if ($('photo-lbl')) $('photo-lbl').classList.add('cache');
+    if (lsGet('battle-intro', null)) { const v = $('vers-accueil'); v.textContent = '⚔ Voir mon entrée sur le chemin'; v.classList.add('jaune'); }
   };
 }
 

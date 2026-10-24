@@ -36,7 +36,8 @@ function regCards(){
       <p class="small muted" style="margin:0">Chaque élève commence chaque période avec tous ses points, puis on retire.</p>
       <div class="row2"><label class="f" style="flex:1">Points de tenue par période<input class="inp num" id="s-T" inputmode="numeric" value="${st.T}"></label>
       <label class="f" style="flex:1">Points d'attitude par période<input class="inp num" id="s-C" inputmode="numeric" value="${st.C}"></label></div>
-      <label class="f">Savoir-être en % du bulletin (le reste = savoir-faire)<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
+      <label class="f">Savoir-être en % du bulletin<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
+      <p class="small" id="s-separt" style="margin:-4px 0 0">${regPart(st.se)}</p>
       <b class="small reg-sub">Points retirés</b>
       <div class="row2">${n('s-kit', 'kitPts', 'Oubli de tenue (salle ou maillot)', 'en tenue')}${n('s-d', 'dPts', 'Perturbe le cours', 'en attitude')}</div>
       <label class="f">Exclusion du cours<input class="inp num" id="s-X" inputmode="numeric" value="${st.X}"><span class="small muted" style="font-weight:400">en attitude</span></label>
@@ -57,6 +58,9 @@ function regCards(){
       ${tg('s-enl', 'enLast', 'Compteur : alerte « plus qu\'une minute » (bip, vibration)', '')}
     </div>`;
 }
+// partage du bulletin écrit en clair : savoir-être / savoir-faire
+function regPart(se){ se = Math.max(0, Math.min(100, Math.round(+se) || 0));
+  return `<b>${se} %</b> savoir-être (tenue, attitude, participation) et <b>${100 - se} %</b> savoir-faire (évaluations des sports pratiqués)`; }
 function regPerCard(){
   const cl = S.classes.filter(c => !c.act);
   return `<div class="card sec reg" style="padding-block:14px" id="reg-per">
@@ -71,6 +75,7 @@ function bindReg(){
     if (v == null || isNaN(v) || v < lo || v > hi){ e.target.value = k in REG_DEF ? fr(stN(k), 2) : st[k]; toast(`Entre ${lo} et ${hi}`); return; }
     st[k] = v; save(); toast('Enregistré'); }; };
   num('s-T', 'T', 0, 20); num('s-X', 'X', 0, 20); num('s-C', 'C', 0, 20); num('s-se', 'se', 0, 100);
+  if ($('s-se')) $('s-se').oninput = e => { const v = parseNum(e.target.value); if (v != null && v >= 0 && v <= 100) $('s-separt').innerHTML = regPart(v); };
   num('s-kit', 'kitPts', 0, 10); num('s-d', 'dPts', 0, 10); num('s-npp', 'npPts', 0, 10);
   num('s-evmax', 'evMax', 1, 1000, false); num('s-eng', 'enGuard', 0, 60, false);
   $('s-np').onchange = e => { st.npCounts = e.target.checked; $('s-npw').hidden = !st.npCounts; save(); };

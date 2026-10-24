@@ -1152,6 +1152,7 @@ function entrerCasier(b) {
     CASIER.visites = 0;
     if (COLLE.balle) { // le casier ouvert libère aussi la bille en colle : deux billes en jeu
       const bc = COLLE.balle; COLLE.balle = null; bc.collee = false; bc.y = COLLE.y + COLLE.r + R + 2; bc.vx = 90; bc.vy = 120; bc.ax = bc.x; bc.ay = bc.y; bc.at = temps;
+      if (!balles.includes(bc)) balles.push(bc);
       blague('Fin de la colle ! 🎉', COLLE.x, COLLE.y - 30, '#d9b3ff'); etincelles(COLLE.x, COLLE.y, 14, '#d9b3ff');
     }
     if (!multiball) { points(10000); sauveT = Math.max(sauveT, 12); annonce('CASIER OUVERT !', 'Dispense trouvée : balle sauvée 12 s', '#00e5ff', 32, 2); SON.sauve(); }
@@ -1675,7 +1676,7 @@ function basculeCss() { // retournement 3D de la table : 0→90° (face jour), p
 }
 function perdreBalle() {
   finMulti(); charge.src = {}; arreterCharge();
-  if (COLLE.balle) { COLLE.balle = null; blague('Fin de la colle', COLLE.x, COLLE.y - 30, '#d9b3ff'); } charge.actif = false; SON.perdu(); vib([80, 50, 120]); secousse = 0.3;
+  charge.actif = false; // Kevin : la bille en colle reste en colle (avec le casier déjà rempli) pour la bille suivante SON.perdu(); vib([80, 50, 120]); secousse = 0.3;
   balleNo++; annonce('Retenue !', pick(TXT.perdu), '#ff6b6b');
   if (attenteBalle <= 0) attenteBalle = 1.8;
   if (balleNo > 3) grandMsg = { t: 'Fin du cours !', sous: fmt(score) + ' points', age: 0, vie: 3, coul: '#ffd23f' };

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Script Google du Carnet EPS</title>
+<style>
+:root{--bg:#f3f5f1;--surface:#fff;--fg:#18201a;--muted:#5d6a60;--line:#d9ded4;--accent:#1f5fc8}
+@media (prefers-color-scheme:dark){:root{--bg:#111613;--surface:#1a211c;--fg:#e8eee9;--muted:#9aa89e;--line:#2c362f;--accent:#4f9bff;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0 auto;max-width:900px;padding:16px;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--fg)}
+a{color:var(--accent)}
+h1{font-size:24px;margin:8px 0 4px}
+.sub{color:var(--muted);margin:0 0 16px}
+ol{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px 14px 36px;margin:0 0 16px}
+li{margin:6px 0}
+code{background:var(--line);padding:1px 5px;border-radius:5px;font-size:14px}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:12px 18px;background:var(--accent);color:#fff;cursor:pointer}
+#m{margin-left:8px;font-weight:600;color:var(--muted)}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;overflow:auto;font-size:12.5px;line-height:1.4;max-height:60vh;white-space:pre}
+</style>
+</head>
+<body>
+<p><a href="../">‹ Carnet EPS</a></p>
+<h1>Script Google du Carnet EPS</h1>
+<p class="sub">Une seule fois, sur un ordinateur : ton carnet se copiera ensuite tout seul dans un tableau de ton Google Drive.</p>
+<ol>
+  <li>Ouvre <a href="https://sheets.new" target="_blank" rel="noopener">sheets.new</a> (connecté à ton compte Google) : un tableau vide se crée sur ton Drive. Nomme-le « Carnet EPS ».</li>
+  <li>Menu <b>Extensions › Apps Script</b>. Efface tout ce qui s'y trouve.</li>
+  <li>Touche <b>📋 Copier le script</b> ci-dessous, colle-le dans Apps Script, puis 💾 <b>Enregistrer</b>. Rien à modifier dedans.</li>
+  <li><b>Déployer › Nouveau déploiement</b>, roue dentée › <b>Application Web</b>. Exécuter en tant que : <b>Moi</b>. Qui a accès : <b>Tout le monde</b>. Touche <b>Déployer</b>, puis <b>Autoriser l'accès</b> (choisis ton compte ; si Google affiche « Google n'a pas validé cette application », touche <b>Paramètres avancés</b> › <b>Accéder à … (non sécurisé)</b> : c'est ton propre script).</li>
+  <li>Copie l'<b>URL de l'application Web</b> (elle finit par <code>/exec</code>) et envoie-la-toi (mail, WhatsApp).</li>
+  <li>Sur ton téléphone : Carnet › ⚙️ Réglages › <b>Sauvegarde</b> › <b>Google Drive</b>. Colle l'adresse, garde le code proposé et touche <b>Lier à mon Google Drive</b>.</li>
+</ol>
+<p><button id="c" type="button">📋 Copier le script</button><span id="m"></span></p>
+<pre id="p">Chargement…</pre>
+<script>
+fetch('Code.gs', {cache: 'no-cache'}).then(r => r.text()).then(t => { document.getElementById('p').textContent = t; });
+document.getElementById('c').onclick = async () => {
+  const m = document.getElementById('m');
+  try { await navigator.clipboard.writeText(document.getElementById('p').textContent); m.textContent = 'Copié ✓'; }
+  catch (e) { const r = document.createRange(); r.selectNodeContents(document.getElementById('p')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); m.textContent = 'Tout est sélectionné : fais Ctrl+C (ou Cmd+C).'; }
+};
+</script>
+</body>
+</html>

@@ -4727,7 +4727,7 @@ function openComments(c, vp){
     }
     d.innerHTML = `<h3>☁️ Google Drive</h3>
       <p class="small muted" style="margin:0">Une copie de ton carnet dans ton Google Drive, mise à jour toute seule à chaque changement. Tu peux la lire comme un Excel et tout récupérer si tu changes de téléphone.</p>
-      <ol><li>Prépare ton tableau Google avec le script (une seule fois, sur ordinateur).</li><li>Colle ici l'adresse du script (elle finit par /exec).</li><li>Garde le code : il protège ta sauvegarde.</li></ol>
+      <ol><li>Prépare ton tableau Google avec <a href="google/" target="_blank" rel="noopener">le script</a> (une seule fois, sur ordinateur ; les étapes sont sur la page du script et dans Aide).</li><li>Colle ici l'adresse du script (elle finit par /exec).</li><li>Garde le code : il protège ta sauvegarde.</li></ol>
       <label class="f">Adresse du script<input class="inp" id="drv-url" placeholder="https://script.google.com/macros/s/…/exec" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
       <label class="f">Code du carnet (nouveau téléphone : mets le code de l'onglet « Lisez-moi »)<input class="inp" id="drv-cle" value="${o.cle || nouveauCode()}" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
       <button class="btn pri" type="button" id="drv-lier">Lier à mon Google Drive</button>
@@ -4756,6 +4756,7 @@ function openComments(c, vp){
 })();
 </script>
 
+<script src="aide.js"></script>
 <script>
 // Mise a jour automatique : on verifie a chaque ouverture et a chaque retour dans l'appli,
 // et on recharge une fois quand la nouvelle version est prete (les donnees restent sur le telephone).

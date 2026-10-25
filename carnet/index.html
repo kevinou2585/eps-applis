@@ -2022,7 +2022,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sheetro
    Tout passe par save() / save(c.id) : appareil + Drive (réglages par S.ts, classes par c.ts). */
 IC.cal = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7 13.5h2M11 13.5h2M15 13.5h2M7 17h2M11 17h2"/></svg>';
 /* en tête : les sports qui ont des prépas toutes faites (demande de Kevin), puis les autres */
-const SPORTS0 = ['Basket-ball','Volley-ball','Handball','Natation',"Course d'endurance",'Badminton','Danse','Acrosport','Balle aux prisonniers','Athlétisme','Football',"Jeux d'hiver",'Unihoc (floorball)','Gymnastique','Tennis de table','Jeux de raquettes','Rugby (flag/tag)','Ultimate','Kin-ball','Tchoukball','Baseball/Softball','Jeux collectifs',"Jeux d'opposition / Lutte",'Corde à sauter','Escalade','Musculation / Renforcement','Condition physique','Orientation','Cirque / Jonglerie','Koh-Lanta','Évaluation'];
+const SPORTS0 = ['Basket-ball','Volley-ball','Handball','Natation',"Course d'endurance",'Badminton','Danse','Acrosport','Balle aux prisonniers','Athlétisme','Football','Sports divers','Unihoc (floorball)','Gymnastique','Tennis de table','Jeux de raquettes','Rugby (flag/tag)','Ultimate','Kin-ball','Tchoukball','Baseball/Softball','Jeux collectifs',"Jeux d'opposition / Lutte",'Corde à sauter','Escalade','Musculation / Renforcement','Condition physique','Orientation','Cirque / Jonglerie','Koh-Lanta','Évaluation'];
 const lastH = d => d === 3 ? 'H5' : 'H8';          // le mercredi s'arrête à H5
 const DAYS2 = ['', 'Lu', 'Ma', 'Me', 'Je', 'Ve'];
 const dayName = d => (DAYS.find(x => x[0] === d) || [0, ''])[1];
@@ -2411,7 +2411,7 @@ const PROG = [
 const PROG_CODES = PROG.flatMap(g => g.l.map(x => x[0]));
 /* cases cochées d'office selon le sport (suggestions ; Kevin peut retenir les siennes par sport) */
 const PROG_SPORT0 = [
-  [/hiver/i, ['HSC1', 'HSC3', 'GSS1']],
+  [/hiver|sports? divers/i, ['HSC1', 'HSC3', 'GSS1']],
   [/basket|hand|foot|rugby|ultimate|unihoc|floorball|kin-ball|tchouk|baseball|softball|jeux collectifs|prisonnier/i, ['HME2', 'HME4', 'HSC1', 'HSC2', 'HSC3']],
   [/volley/i, ['HME2', 'HME4', 'HSC1', 'HSC2']],
   [/badminton|tennis|raquette/i, ['HME2', 'HME4', 'HSC1', 'HSC3']],
@@ -2488,16 +2488,20 @@ function agCouverture(c, ls){
    Format : PREPA_ADD({id, sport, an: {1: {th, comp, mat, l: [{t, o, comp?, mat?, e: [[nom, min, texte, schéma?]], c: [[nom, min, texte, réussite, variante, schéma]], r: [[nom, min, texte]]}]}}}) ; jeux d'hiver : an[0].
    Cycles : 6 leçons par cycle (5 + l'évaluation en leçon 6) ; une année peut en avoir plusieurs (l = 12 ou 18 leçons, cy = [thème de chaque cycle]).
    Leçon d'évaluation : crit = [[critère, points, indicateur]] → grille de notation (module « Évaluation de fin de cycle » plus bas). */
-const PREPA_CAT = [['hiver', "Jeux d'hiver", /hiver/i], ['basket', 'Basket-ball', /basket/i], ['volley', 'Volley-ball', /volley/i], ['hand', 'Handball', /hand/i], ['natation', 'Natation · nageurs (grande profondeur)', /natation|piscine|nage/i], ['natdeb', 'Natation · débutants (petite profondeur)', /natation|piscine|nage/i],
+const PREPA_CAT = [['hiver', 'Sports divers (une leçon)', /hiver|sports? divers/i], ['basket', 'Basket-ball', /basket/i], ['volley', 'Volley-ball', /volley/i], ['hand', 'Handball', /hand/i], ['natation', 'Natation · nageurs (grande profondeur)', /natation|piscine|nage/i], ['natdeb', 'Natation · débutants (petite profondeur)', /natation|piscine|nage/i],
   ['endurance', "Course d'endurance", /endurance|course en dur/i], ['bad', 'Badminton', /badminton/i], ['danse', 'Danse', /danse/i], ['acro', 'Acrosport', /acro/i],
   ['prisonnier', 'Balle aux prisonniers', /prisonnier/i], ['athle', 'Athlétisme', /athl/i], ['foot', 'Football', /foot/i],
   ['corde', 'Corde à sauter', /corde/i], ['lutte', "Lutte (sport d'opposition)", /lutte|opposition/i]];
 const PREPA_PRETS = ['hiver', 'basket', 'volley', 'hand', 'natation', 'natdeb', 'endurance', 'bad', 'danse', 'acro', 'prisonnier', 'athle', 'foot', 'corde', 'lutte'];  // bibliothèques écrites (carnet/prepas/<id>.js)
 const prepaCat = () => PREPA_CAT.filter(([id]) => PREPA_PRETS.includes(id));
-/* « Jeux divers » (Kevin) : sports hors des grands sports, un seul cycle de 6 leçons valable pour toutes les années (corde, lutte) + les jeux d'hiver */
+/* « Sports divers » (Kevin) : sports hors des grands sports. Corde et lutte = un cycle de 6 leçons valable pour toutes les années ;
+   les jeux de la bibliothèque 'hiver' (une leçon chacun) sont listés un par un (valeur « hiver:N »), sans rubrique à part. */
 const PREPA_DIVERS = ['corde', 'lutte', 'hiver'];
-const prepaOpts = sel => { const o = ([id, n]) => `<option value="${id}" ${id === sel ? 'selected' : ''}>${esc(n)}</option>`, c = prepaCat();
-  return c.filter(x => !PREPA_DIVERS.includes(x[0])).map(o).join('') + `<optgroup label="Jeux divers">${PREPA_DIVERS.map(id => c.find(x => x[0] === id)).filter(Boolean).map(o).join('')}</optgroup>`; };
+const prepaOpts = sel => { const o = ([id, n]) => `<option value="${id}" ${id === sel ? 'selected' : ''}>${esc(n)}</option>`, c = prepaCat(), H = PREPA_LIB.hiver;
+  const hv = !c.some(x => x[0] === 'hiver') ? [] : H ? H.an[0].l.map((l, i) => [`hiver:${i + 1}`, l.t]).sort((a, b) => a[1].localeCompare(b[1], 'fr')) : [['hiver', 'Sports divers (une leçon)']];
+  return c.filter(x => !PREPA_DIVERS.includes(x[0])).map(o).join('') + `<optgroup label="Sports divers">${PREPA_DIVERS.map(id => c.find(x => x[0] === id && id !== 'hiver')).filter(Boolean).map(o).join('')}${hv.map(o).join('')}</optgroup>`; };
+// valeur d'une liste de sports → [id de la bibliothèque, n° du jeu pour « hiver:N »]
+const prepaVal = v => { const m = /^hiver:(\d+)$/.exec(v || ''); return m ? ['hiver', +m[1]] : [v || '', 0]; };
 const PREPA_LIB = window.PREPA_LIB = window.PREPA_LIB || {};
 window.PREPA_ADD = o => { PREPA_LIB[o.id] = o; };
 const prepaCatOf = sp => sp ? PREPA_CAT.find(([, , re]) => re.test(sp)) : null;
@@ -2512,7 +2516,7 @@ const prepaRef = ref => { const [id, an, n] = String(ref || '').split('|'), L = 
 function prepaCourt(pp){
   if (!pp) return '';
   const hv = /^hiver\|/.test(pp.ref || '');
-  return [hv ? "Jeu d'hiver" : pp.sp, !hv && pp.n ? `L${pp.n}/${pp.nt || 6}` : '', pp.t].filter(Boolean).join(' · ');
+  return [hv ? '' : pp.sp, !hv && pp.n ? `L${pp.n}/${pp.nt || 6}` : '', pp.t].filter(Boolean).join(' · ');
 }
 /* une leçon de la bibliothèque → texte modifiable */
 const ppLines = (items, full) => (items || []).map(([n, m, d, ok, va]) => `• ${n}${m ? ` (${m} min)` : ''} : ${d}${full && ok ? `\n   ✓ Réussite : ${ok}` : ''}${full && va ? `\n   ↻ Variante : ${va}` : ''}`).join('\n');
@@ -2554,7 +2558,7 @@ function openPrepa(date, slotId, ids){
   openSheet(title, `
     <div class="card ag-sum"><b class="ag-who">${esc(clsName(ids))}</b><span class="small muted">${esc(fmtDL(date))} · ${esc(slotLabel(it))} · ${esc(slotTime(it))}${g.s ? ' · ' + esc(g.s) : ''}</span></div>
     <div class="card sec pp-lib"><h3>📚 Prépa toute faite</h3>
-      <div class="row2"><label class="f" style="flex:1 1 150px">Sport<select class="inp" id="pp-lsp"><option value="">— Choisir —</option>${prepaOpts(libId)}</select></label>
+      <div class="row2"><label class="f" style="flex:1 1 150px">Sport<select class="inp" id="pp-lsp"><option value="">— Choisir —</option>${prepaOpts(libId === 'hiver' && /^hiver\|0\|\d+$/.test(pp.ref || '') ? 'hiver:' + pp.ref.split('|')[2] : libId)}</select></label>
       <label class="f" id="pp-lanw" style="flex:1 1 110px">Année<select class="inp" id="pp-lan">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}" ${a === libAn ? 'selected' : ''}>${AN_TXT(a)} secondaire</option>`).join('')}</select></label></div>
       <div id="pp-llist"><span class="small muted">Choisis un sport : ses leçons apparaissent ici.</span></div></div>
     <div class="card sec"><h3>En-tête</h3>
@@ -2595,11 +2599,12 @@ function openPrepa(date, slotId, ids){
     $('pp-llist').insertAdjacentHTML('afterbegin', `<div class="confirm" id="pp-repl"><b>Remplacer ce qui est déjà écrit par « ${esc(o.t)} » ?</b><div class="row2"><button class="btn" type="button" id="pp-rno">Garder</button><button class="btn pri" type="button" id="pp-ryes">Remplacer</button></div></div>`);
     $('pp-rno').onclick = () => $('pp-repl').remove(); $('pp-ryes').onclick = go; };
   const drawList = () => {
-    const box = $('pp-llist'), L = PREPA_LIB[libId]; $('pp-lanw').hidden = libId === 'hiver';
+    const box = $('pp-llist'), L = PREPA_LIB[libId]; $('pp-lanw').hidden = PREPA_DIVERS.includes(libId);
     if (!libId){ box.innerHTML = '<span class="small muted">Choisis un sport : ses leçons apparaissent ici.</span>'; return; }
     if (!L){ box.innerHTML = '<span class="small muted">Chargement…</span>'; prepaLoad([libId]).then(() => { if (PREPA_LIB[libId]) drawList(); else box.innerHTML = '<span class="small">Pas de connexion : la bibliothèque n\'a pas pu se charger.</span>'; }); return; }
     if (libId === 'hiver'){
-      const J = L.an[0].l;
+      const J = L.an[0].l, hn = prepaVal($('pp-lsp').value)[1] || +(/^hiver\|0\|(\d+)$/.exec(pp.ref || '') || [])[1] || 0;
+      if (hn && J[hn - 1]){ box.innerHTML = `<div class="pp-hl"><button type="button" class="pp-lb${pp.ref === `hiver|0|${hn}` ? ' on' : ''}" data-pl="${hn}"><b>${esc(J[hn - 1].t)}</b><span>${esc(J[hn - 1].tags || '')} · une leçon</span></button></div>`; box.querySelector('[data-pl]').onclick = () => fill('hiver', 0, hn); return; }
       box.innerHTML = `<input class="inp" id="pp-hq" placeholder="Chercher un jeu (ex. ballon, cerceaux, petite salle)" autocomplete="off">
         <div class="pp-hl">${J.map((j, i) => `<button type="button" class="pp-lb${pp.ref === `hiver|0|${i + 1}` ? ' on' : ''}" data-pl="${i + 1}" data-q="${esc((j.t + ' ' + (j.tags || '') + ' ' + (j.mat || '')).toLowerCase())}"><b>${esc(j.t)}</b><span>${esc(j.tags || '')}</span></button>`).join('')}</div>`;
       $('pp-hq').oninput = e => { const q = e.target.value.toLowerCase().trim(); box.querySelectorAll('[data-pl]').forEach(b => b.hidden = q && !b.dataset.q.includes(q)); };
@@ -2618,7 +2623,7 @@ function openPrepa(date, slotId, ids){
   };
   const sb = document.querySelector('#sheetroot .sb'); ['input', 'change', 'click'].forEach(ev => sb.addEventListener(ev, () => setTimeout(snap), true));
   setTimeout(() => { snap(); grow(); });
-  $('pp-lsp').onchange = e => { libId = e.target.value; drawList(); };
+  $('pp-lsp').onchange = e => { const [k, hn] = prepaVal(e.target.value); libId = k; drawList(); if (hn && PREPA_LIB.hiver) fill('hiver', 0, hn); };
   $('pp-lan').onchange = e => { libAn = +e.target.value; drawList(); };
   prepaLoad(libId ? [libId] : []).then(() => { drawList(); drawSch(); });
   if (pp.ref) prepaLoad([pp.ref.split('|')[0]]).then(drawSch);
@@ -2907,14 +2912,15 @@ function openPrepaPrint(){
       cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); putEn({logo: cv.toDataURL('image/png')}); openPrepaPrint(); toast('Logo changé'); }; im.src = rd.result; }; rd.readAsDataURL(f); };
   $('pr-go').onclick = () => prepaPrint(pick(), `Préparations EPS ${sy}${prepaEn().prof ? ' · ' + prepaEn().prof : ''}`, true);
   $('pr-rec').onclick = () => prepaRecueil();
-  $('pr-bgo').onclick = () => { const id = $('pr-bs').value, a = id === 'hiver' ? 0 : +$('pr-ba').value;
+  $('pr-bgo').onclick = () => { const [id, hn] = prepaVal($('pr-bs').value), a = id === 'hiver' ? 0 : PREPA_DIVERS.includes(id) ? 1 : +$('pr-ba').value;
     prepaLoad([id]).then(() => { const L = PREPA_LIB[id]; if (!L || !L.an[a]){ toast('Bibliothèque pas disponible (internet ?)'); return; }
-      prepaPrint(L.an[a].l.map((l, i) => ({date: '', h: '', cls: [], pp: prepaFromLib(id, a, i + 1), prog: null})), `${L.sport} · ${a ? AN_TXT(a) + ' secondaire' : 'jeux d\'hiver'}`); }); };
+      const ns = hn ? [hn] : L.an[a].l.map((l, i) => i + 1);
+      prepaPrint(ns.map(i => ({date: '', h: '', cls: [], pp: prepaFromLib(id, a, i), prog: null})), hn ? L.an[0].l[hn - 1].t : `${L.sport} · ${PREPA_DIVERS.includes(id) ? 'toutes années' : AN_TXT(a) + ' secondaire'}`); }); };
 }
 
 /* --- Recueil papier : toutes les prépas de la bibliothèque pour une farde (classées par année puis par sport, pages de garde, onglets au bord droit) --- */
 const RC_PAGE = '@page{size:A4 portrait;margin:12mm 0 12mm 12mm}';  // marge droite à 0 : les onglets vont jusqu'au bord de la feuille
-const RC_ONGLETS = [1, 2, 3, 4, 5, 6, 'natdeb', 'divers', 'hiver'];  // position verticale de l'onglet de chaque section
+const RC_ONGLETS = [1, 2, 3, 4, 5, 6, 'natdeb', 'divers'];  // position verticale de l'onglet de chaque section
 function rcTab(pos, haut, bas){
   const i = RC_ONGLETS.indexOf(pos);
   return `<div class="rc-tab" style="top:${8 + i * 29}mm"><b>${esc(haut)}</b>${bas ? `<span>${esc(bas)}</span>` : ''}</div>`;
@@ -2936,12 +2942,12 @@ async function prepaRecueilHTML(){
   let h = `<article class="pr-page rc-p rc-cover">${rcEnTete(en, 'Recueil des préparations de leçons')}
     <h1>Recueil des préparations de leçons</h1><p class="rc-sub">Éducation physique · ${esc(sy)}${en.prof ? ' · ' + esc(en.prof) : ''}</p>
     <p>Chaque séquence compte 6 leçons : 5 leçons d'apprentissage et une leçon d'évaluation (la 6e), avec sa grille de critères. En natation (1re à 3e), deux cycles de plus sont prévus pour les classes qui ont 12 ou 18 semaines de piscine, et un parcours séparé existe pour le groupe débutants.</p>
-    <h2>Comment trouver une prépa</h2><p>Les onglets noirs au bord droit des pages indiquent l'année (1re en haut, 6e plus bas), puis les sections « Natation débutants », « Jeux divers » (corde à sauter, lutte) et « Jeux d'hiver ». Dans chaque année, les sports sont classés par ordre alphabétique, chacun précédé d'une page de garde avec la liste de ses leçons.</p>
+    <h2>Comment trouver une prépa</h2><p>Les onglets noirs au bord droit des pages indiquent l'année (1re en haut, 6e plus bas), puis les sections « Natation débutants » et « Sports divers » (corde à sauter, lutte, puis les sports en une leçon). Dans chaque année, les sports sont classés par ordre alphabétique, chacun précédé d'une page de garde avec la liste de ses leçons.</p>
     <table class="rc-ls rc-som"><tr><th>Section</th><th>Contenu</th></tr>
       ${[1, 2, 3, 4, 5, 6].map(a => `<tr><td><b>${AN_TXT(a)} secondaire</b></td><td>${sp.filter(id => PREPA_LIB[id].an[a]).map(id => `${esc(nom(id).replace(/ \(.*\)$/, ''))} (${PREPA_LIB[id].an[a].l.length})`).join(' · ')}</td></tr>`).join('')}
       ${PREPA_LIB.natdeb ? `<tr><td><b>Natation débutants</b></td><td>3 cycles de 6 leçons (petite profondeur), toutes années</td></tr>` : ''}
-      ${PREPA_DIVERS.some(id => id !== 'hiver' && PREPA_LIB[id]) ? `<tr><td><b>Jeux divers</b></td><td>${PREPA_DIVERS.filter(id => id !== 'hiver' && PREPA_LIB[id]).map(id => esc(nom(id))).join(' · ')} : un cycle de 6 leçons, toutes années</td></tr>` : ''}
-      ${PREPA_LIB.hiver ? `<tr><td><b>Jeux d'hiver</b></td><td>${PREPA_LIB.hiver.an[0].l.length} jeux d'une leçon (petite salle, peu de matériel)</td></tr>` : ''}</table>
+      ${PREPA_DIVERS.some(id => id !== 'hiver' && PREPA_LIB[id]) ? `<tr><td><b>Sports divers</b></td><td>${PREPA_DIVERS.filter(id => id !== 'hiver' && PREPA_LIB[id]).map(id => esc(nom(id))).join(' · ')} : un cycle de 6 leçons, toutes années</td></tr>` : ''}
+      ${PREPA_LIB.hiver ? `<tr><td><b>Sports divers en une leçon</b></td><td>${PREPA_LIB.hiver.an[0].l.length} sports et jeux complets en une leçon (petite salle, peu de matériel)</td></tr>` : ''}</table>
     <h2>Légende des schémas</h2>${window.PSCH_LEGENDE || ''}</article>`;
   [1, 2, 3, 4, 5, 6].forEach(a => {
     const lst = sp.filter(id => PREPA_LIB[id].an[a]), A_ = AN_TXT(a);
@@ -2958,11 +2964,11 @@ async function prepaRecueilHTML(){
       <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || '')}</p><p class="rc-mat">Pour le groupe qui n'est pas encore à l'aise dans l'eau, en même temps que le groupe nageurs. L'évaluation du cycle 3 sert de test de passage vers le groupe nageurs.</p>${rcLecons(A, 'natdeb')}</article>`;
     A.l.forEach((l, i) => h += lecon('natdeb', 1, i + 1, tab).replace(/<span>1re secondaire<\/span>/, '<span>toutes années</span>')); }
   PREPA_DIVERS.filter(id => id !== 'hiver' && PREPA_LIB[id]).forEach(id => { const A = PREPA_LIB[id].an[1], tab = rcTab('divers', 'Divers', planAbbr(PREPA_LIB[id].sport));
-    h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Jeux divers')}<div class="rc-sph"><small>Jeux divers · toutes années</small><h1>${esc(nom(id))}</h1><p>${esc(A.th)}</p></div>
+    h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Sports divers')}<div class="rc-sph"><small>Sports divers · toutes années</small><h1>${esc(nom(id))}</h1><p>${esc(A.th)}</p></div>
       <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || '')}</p><p class="rc-mat">Un seul cycle de 6 leçons, le même pour toutes les années : adapte les exigences à l'âge des élèves.</p>${rcLecons(A, id)}</article>`;
     A.l.forEach((l, i) => h += lecon(id, 1, i + 1, tab).replace(/<span>1re secondaire<\/span>/, '<span>toutes années</span>')); });
-  if (PREPA_LIB.hiver){ const A = PREPA_LIB.hiver.an[0], tab = rcTab('hiver', 'Hiver', 'jeux');
-    h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, "Jeux d'hiver")}<div class="rc-sph"><small>Toutes années · une leçon par jeu</small><h1>Jeux d'hiver</h1><p>Jeux pour la petite salle ou les jours sans installation, classés par mots-clés.</p></div>${rcLecons(A, 'hiver')}</article>`;
+  if (PREPA_LIB.hiver){ const A = PREPA_LIB.hiver.an[0], tab = rcTab('divers', 'Divers', 'une leçon');
+    h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Sports divers')}<div class="rc-sph"><small>Toutes années · une leçon par sport</small><h1>Sports divers en une leçon</h1><p>Jeux pour la petite salle ou les jours sans installation, classés par mots-clés.</p></div>${rcLecons(A, 'hiver')}</article>`;
     A.l.forEach((l, i) => h += lecon('hiver', 0, i + 1, tab).replace(/<span>(toutes années|\d+r?e) secondaire<\/span>/, '<span>toutes années</span>')); }
   return h;
 }

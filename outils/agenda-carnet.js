@@ -5,9 +5,13 @@
    - Sports ajoutés par l'enseignant : S.settings.sports = [noms] ; mes sports en tête de liste, dans mon ordre : S.settings.sportsOrdre = [noms].
    - Programme : compétences travaillées pendant le cours, l.prog = ['HME2', …] (absent = option pas activée) ;
      cases cochées d'office par sport, modifiables : S.settings.progSport = {sport: [codes]}.
+   - Prépa de leçon : l.prepa = {ref, sp, an, n, t, o, mat, e, c, r, d: [min, min, min], bil} (ref = 'basket|1|3' si prise dans la bibliothèque).
+     Bibliothèque (séquences de 6 leçons par année, jeux d'hiver) : carnet/prepas/*.js, chargée seulement quand on ouvre une prépa.
+     En-tête imprimé (école, prof, logo) : S.settings.prepaEn. Onglet « Prépas » dans le tableau Google : prepaFeuille().
    Tout passe par save() / save(c.id) : appareil + Drive (réglages par S.ts, classes par c.ts). */
 IC.cal = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7 13.5h2M11 13.5h2M15 13.5h2M7 17h2M11 17h2"/></svg>';
-const SPORTS0 = ['Natation','Badminton','Basket-ball','Volley-ball','Football','Handball','Unihoc (floorball)','Athlétisme','Gymnastique','Acrosport',"Course d'endurance",'Tennis de table','Jeux de raquettes','Danse','Rugby (flag/tag)','Ultimate','Kin-ball','Tchoukball','Baseball/Softball','Jeux collectifs',"Jeux d'opposition / Lutte",'Escalade','Musculation / Renforcement','Condition physique','Orientation','Cirque / Jonglerie','Koh-Lanta','Évaluation'];
+/* en tête : les sports qui ont des prépas toutes faites (demande de Kevin), puis les autres */
+const SPORTS0 = ['Basket-ball','Volley-ball','Handball','Natation',"Course d'endurance",'Badminton','Danse','Acrosport','Balle aux prisonniers','Athlétisme','Football',"Jeux d'hiver",'Unihoc (floorball)','Gymnastique','Tennis de table','Jeux de raquettes','Rugby (flag/tag)','Ultimate','Kin-ball','Tchoukball','Baseball/Softball','Jeux collectifs',"Jeux d'opposition / Lutte",'Escalade','Musculation / Renforcement','Condition physique','Orientation','Cirque / Jonglerie','Koh-Lanta','Évaluation'];
 const lastH = d => d === 3 ? 'H5' : 'H8';          // le mercredi s'arrête à H5
 const DAYS2 = ['', 'Lu', 'Ma', 'Me', 'Je', 'Ve'];
 const dayName = d => (DAYS.find(x => x[0] === d) || [0, ''])[1];
@@ -81,22 +85,23 @@ function agLessons(date, it, ids){
   return (ids || it.cls).map(id => { const c = clsById(id), l = c && lessonOn(c, date, it.h); return l ? [c, l] : null; }).filter(Boolean);
 }
 function agGet(date, it){
-  const f = agLessons(date, it).find(([, l]) => l.sport || l.note || l.prog);
-  if (f) return {s: f[1].sport || '', n: f[1].note || '', p: f[1].prog || null};
+  const f = agLessons(date, it).find(([, l]) => l.sport || l.note || l.prog || l.prepa);
+  if (f) return {s: f[1].sport || '', n: f[1].note || '', p: f[1].prog || null, pp: f[1].prepa || null};
   const p = (S.settings.ag || {})[agKey(date, it.h)];
-  return p ? {s: p.s || '', n: p.n || '', p: p.p || null, plan: true} : {s: '', n: '', p: null};
+  return p ? {s: p.s || '', n: p.n || '', p: p.p || null, pp: p.pp || null, plan: true} : {s: '', n: '', p: null, pp: null};
 }
-function agSet(date, it, ids, s, n, pr){
+function agSet(date, it, ids, s, n, pr, pp){
   const ls = agLessons(date, it, ids), k = agKey(date, it.h);
-  ls.forEach(([c, l]) => { if (s) l.sport = s; else delete l.sport; if (n) l.note = n; else delete l.note; if (pr) l.prog = [...pr]; else delete l.prog; save(c.id); });
-  if (ls.length < ids.length && (s || n || pr)){ if (!S.settings.ag) S.settings.ag = {}; S.settings.ag[k] = pr ? {s, n, p: [...pr]} : {s, n}; }
+  ls.forEach(([c, l]) => { if (s) l.sport = s; else delete l.sport; if (n) l.note = n; else delete l.note; if (pr) l.prog = [...pr]; else delete l.prog;
+    if (pp) l.prepa = JSON.parse(JSON.stringify(pp)); else delete l.prepa; save(c.id); });
+  if (ls.length < ids.length && (s || n || pr || pp)){ if (!S.settings.ag) S.settings.ag = {}; S.settings.ag[k] = {s, n, ...(pr ? {p: [...pr]} : {}), ...(pp ? {pp: JSON.parse(JSON.stringify(pp))} : {})}; }
   else if (S.settings.ag) delete S.settings.ag[k];
   save();
 }
 /* au début de l'appel : ce qui avait été prévu dans l'agenda passe dans les leçons */
 function agApply(date, h, cls){
   const k = agKey(date, h), p = (S.settings.ag || {})[k]; if (!p) return;
-  cls.forEach(c => { const l = lessonOn(c, date, h); if (l && !l.sport && !l.note && !l.prog){ if (p.s) l.sport = p.s; if (p.n) l.note = p.n; if (p.p) l.prog = [...p.p]; save(c.id); } });
+  cls.forEach(c => { const l = lessonOn(c, date, h); if (l && !l.sport && !l.note && !l.prog && !l.prepa){ if (p.s) l.sport = p.s; if (p.n) l.note = p.n; if (p.p) l.prog = [...p.p]; if (p.pp) l.prepa = JSON.parse(JSON.stringify(p.pp)); save(c.id); } });
   delete S.settings.ag[k]; save();
 }
 
@@ -127,7 +132,7 @@ function agCard(date, it){
   return `<button type="button" class="ag-slot${st.done ? ' done' : ''}" data-ag="${it.id}" data-date="${date}" aria-label="${esc(lab)}">
     <span class="ag-l1"><b>${esc(slotLabel(it))}</b><span class="muted">${esc(slotTime(it))}</span>${n > 1 ? `<span class="ag-blk">Bloc ${n}h</span>` : ''}${st.done ? '<span class="ag-ok">✓ appel fait</span>' : ''}</span>
     <span class="ag-who">${esc(st.who)}</span>${it.pick && !st.done ? `<span class="small">${esc(actName(it.cls))}</span>` : ''}
-    <span class="ag-tags">${st.type === 'piscine' ? `<span class="tag piscine">${IC.wave} Piscine</span>` : ''}${st.g.s ? `<span class="tag ag-sp">🏷 ${esc(st.g.s)}</span>` : ''}${st.g.p && st.g.p.length ? `<span class="tag ag-prt">📚 ${st.g.p.length} compét.</span>` : ''}${st.g.n ? `<span class="ag-note">${esc(st.g.n)}</span>` : ''}</span>
+    <span class="ag-tags">${st.type === 'piscine' ? `<span class="tag piscine">${IC.wave} Piscine</span>` : ''}${st.g.s ? `<span class="tag ag-sp">🏷 ${esc(st.g.s)}</span>` : agPlanned(date, it) ? `<span class="tag ag-plt">🗓 prévu : ${esc(agPlanned(date, it))}</span>` : ''}${st.g.p && st.g.p.length ? `<span class="tag ag-prt">📚 ${st.g.p.length} compét.</span>` : ''}${st.g.pp ? `<span class="tag ag-prt">📋 ${esc(prepaCourt(st.g.pp))}</span>` : ''}${st.g.n ? `<span class="ag-note">${esc(st.g.n)}</span>` : ''}</span>
   </button>`;
 }
 function agMini(date, it){
@@ -173,6 +178,7 @@ function agWeekHTML(mon){
 
 let AGM = null; try { AGM = localStorage.getItem('carnet-eps-agenda-vue'); } catch(e){}
 function renderAgenda(m){
+  if (UI.agPlan){ renderPlanAn(m); return; }
   if (!UI.agDate || [0, 6].includes(wdOf(UI.agDate))) UI.agDate = agToday();
   const mon = mondayOf(UI.agDate), fri = addDays(mon, 4), mode = AGM || (window.innerWidth >= 720 ? 'week' : 'day');
   const a = dOf(mon), b = dOf(fri), d = wdOf(UI.agDate);
@@ -180,6 +186,7 @@ function renderAgenda(m){
   const isNow = mon === mondayOf(agToday());
   let h = `<section class="sec">
     <div class="ag-top"><h2>Agenda</h2><button class="btn" type="button" id="ag-today" ${isNow && UI.agDate === agToday() ? 'disabled' : ''}>Aujourd'hui</button>
+      <button class="btn" type="button" id="ag-plan">📅 Planning de l'année</button><button class="btn" type="button" id="ag-prt">🖨 Mes prépas</button>
       <div class="seg" role="group" aria-label="Affichage"><button type="button" data-agmode="day" aria-pressed="${mode === 'day'}">Jour</button><button type="button" data-agmode="week" aria-pressed="${mode === 'week'}">Semaine</button></div></div>
     <div class="daybar"><button class="dnav" type="button" id="ag-prev" aria-label="Semaine précédente">${IC.left}</button>
       <div class="daypick"><b>${isNow ? 'Cette semaine' : 'Semaine'}</b><span>${esc(wl)}</span><input type="date" id="ag-pick" value="${UI.agDate}" aria-label="Choisir une date"></div>
@@ -197,6 +204,8 @@ function renderAgenda(m){
   $('ag-prev').onclick = () => go(addDays(UI.agDate, -7));
   $('ag-next').onclick = () => go(addDays(UI.agDate, 7));
   $('ag-today').onclick = () => go(agToday());
+  $('ag-prt').onclick = () => openPrepaPrint();
+  $('ag-plan').onclick = () => { UI.agPlan = true; render(); window.scrollTo(0, 0); };
   $('ag-pick').onchange = e => { if (e.target.value) go(e.target.value); };
   m.querySelectorAll('[data-agmode]').forEach(x => x.onclick = () => { AGM = x.dataset.agmode; try { localStorage.setItem('carnet-eps-agenda-vue', AGM); } catch(e){} render(); });
   m.querySelectorAll('[data-agd]').forEach(x => x.onclick = () => { if (x.dataset.agday){ AGM = 'day'; try { localStorage.setItem('carnet-eps-agenda-vue', AGM); } catch(e){} } go(x.dataset.agd); });
@@ -204,6 +213,14 @@ function renderAgenda(m){
   m.querySelectorAll('[data-agnew]').forEach(x => x.onclick = () => openAgEdit(x.dataset.date, x.dataset.agnew, null));
 }
 
+function planWeekHTML(c, w){
+  const wk = planWeekLessons(c, w);
+  if (!wk.length) return '<span class="small muted">Aucun cours noté cette semaine.</span>';
+  return wk.map(x => { const it = agItems(wdOf(x.date)).find(s => s.h === x.h && s.cls.includes(c.id));
+    return `<div class="evt pl-evt"><span class="d">${esc(fmtD(x.date))}${x.h ? '<br>' + esc(x.h) : ''}</span><span class="l">${x.sport ? `<b>${esc(x.sport)}</b>` : '<span class="muted">Sport non noté</span>'}${x.pp ? `<br><span class="small">📋 ${esc(prepaCourt(x.pp))}</span>` : x.note ? `<br><span class="small">${esc(x.note)}</span>` : ''}</span>
+      ${it ? `<button class="btn" type="button" data-plo-open="${x.date}|${it.id}">${x.pp ? 'Voir la prépa' : '＋ Prépa'}</button>` : ''}</div>`; }).join('');
+}
+const agPlanned = (date, it) => it.cls.map(id => planOf(id, date)).find(Boolean) || '';
 /* --- Feuille d'un cours (date précise) --- */
 function openAgSlot(date, id){
   const d = wdOf(date), it = agItems(d).find(x => x.id === id); if (!it){ render(); return; }
@@ -218,8 +235,10 @@ function openAgSlot(date, id){
     <button class="btn pri block" type="button" id="ag-roll">${IC.lesson.replace('<svg', '<svg width="20" height="20"')} ${st.done ? 'Voir l\'appel' : 'Faire l\'appel'}</button>
     <div class="card sec" style="padding-block:14px"><h3>Ce cours · ${esc(fmtD(date))}</h3>
       ${sportField('ags', g.s)}
+      ${!g.s && agPlanned(date, it) && agPlanned(date, it) !== 'Congé' ? `<button class="btn ag-plb" type="button" id="ags-plan">🗓 Prévu au planning : <b>${esc(agPlanned(date, it))}</b> · choisir</button>` : ''}
       ${progField('ags', g.p, it.cls)}
       <label class="f">Ce que j'ai fait<textarea class="inp" id="ags-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>${micBtn('ags-note')}
+      <button class="btn block ag-ppb" type="button" id="ags-prepa">📋 ${g.pp ? `Prépa : ${esc(prepaCourt(g.pp))}` : 'Préparer cette leçon (échauffement, corps, retour au calme)'}</button>
       ${st.done ? '' : '<span class="small muted">Pas encore d\'appel : c\'est gardé et repris dans l\'appel de ce cours.</span>'}
       <button class="btn block" type="button" id="ags-save">Enregistrer</button></div>
     <div class="card sec" style="padding-block:14px"><h3>Semaine type · chaque ${esc(dayName(d).toLowerCase())}</h3>
@@ -230,12 +249,14 @@ function openAgSlot(date, id){
   const ids = () => it.pick ? (grp ? [grp] : it.cls) : it.cls;
   const PF = bindProgField('ags', g.p, () => cur, () => keep());
   const keep = () => { const nv = $('ags-note') ? $('ags-note').value.trim() : n0, pv = JSON.stringify(PF.get());
-    if (cur === s0 && nv === n0 && pv === p0) return false; agSet(date, it, ids(), cur, nv, PF.get()); s0 = cur; n0 = nv; p0 = pv; return true; };
-  bindSportField('ags', v => { cur = v; PF.sport(v); keep(); });
+    if (cur === s0 && nv === n0 && pv === p0) return false; agSet(date, it, ids(), cur, nv, PF.get(), g.pp); s0 = cur; n0 = nv; p0 = pv; return true; };
+  bindSportField('ags', v => { cur = v; PF.sport(v); keep(); if ($('ags-plan')) $('ags-plan').remove(); });
+  if ($('ags-plan')) $('ags-plan').onclick = () => { const sp = agPlanned(date, it), sel = $('ags-sp'); if (![...sel.options].some(o => o.value === sp)) sel.innerHTML = sportOptions(sp); sel.value = sp; sel.onchange(); };
   bindMic('ags-note');
   sheetOnClose = () => { micStop(); keep(); render(); };
   document.querySelectorAll('[data-grp]').forEach(x => x.onclick = () => { grp = x.dataset.grp; document.querySelectorAll('[data-grp]').forEach(y => y.setAttribute('aria-pressed', y === x)); });
   $('ags-save').onclick = () => { keep(); closeSheet(); toast('Enregistré'); };
+  $('ags-prepa').onclick = () => { keep(); micStop(); sheetOnClose = null; openPrepa(date, it.id, ids()); };
   $('ag-roll').onclick = () => {
     keep();
     UI.tab = 'today'; UI.date = date; UI._moved = date !== today(); UI.sess = {date, key: 's' + it.id};
@@ -346,7 +367,7 @@ function agJournal(ls){
   if (!ls.length) return '';
   const w = ls.filter(l => l.sport || l.note).length;
   return `<details class="card ag-jr"><summary><b>📅 Journal des leçons</b><span class="small muted">${ls.length} leçon${ls.length > 1 ? 's' : ''}${w ? ` · ${w} avec sport ou note` : ''}</span></summary>
-    ${[...ls].reverse().map(l => `<div class="evt"><span class="d">${esc(fmtD(l.date))}${l.h ? '<br>' + esc(slotLabel(l)) : ''}</span><span class="l">${l.sport ? `<b>${esc(l.sport)}</b>` : '<span class="muted">Sport non noté</span>'}${l.type === 'piscine' ? ' <span class="small muted">· piscine</span>' : ''}${l.note ? `<br><span class="small">${esc(l.note)}</span>` : ''}${l.prog && l.prog.length ? `<br><span class="small ag-jp">📚 ${esc(l.prog.join(' · '))}</span>` : ''}</span></div>`).join('')}</details>`;
+    ${[...ls].reverse().map(l => `<div class="evt"><span class="d">${esc(fmtD(l.date))}${l.h ? '<br>' + esc(slotLabel(l)) : ''}</span><span class="l">${l.sport ? `<b>${esc(l.sport)}</b>` : '<span class="muted">Sport non noté</span>'}${l.type === 'piscine' ? ' <span class="small muted">· piscine</span>' : ''}${l.note ? `<br><span class="small">${esc(l.note)}</span>` : ''}${l.prog && l.prog.length ? `<br><span class="small ag-jp">📚 ${esc(l.prog.join(' · '))}</span>` : ''}${l.prepa ? `<br><span class="small ag-jp">📋 ${esc(prepaCourt(l.prepa))}</span>` : ''}</span></div>`).join('')}</details>`;
 }
 
 /* --- Réglages : sports ajoutés --- */
@@ -379,7 +400,8 @@ const PROG = [
 const PROG_CODES = PROG.flatMap(g => g.l.map(x => x[0]));
 /* cases cochées d'office selon le sport (suggestions ; Kevin peut retenir les siennes par sport) */
 const PROG_SPORT0 = [
-  [/basket|hand|foot|rugby|ultimate|unihoc|floorball|kin-ball|tchouk|baseball|softball|jeux collectifs/i, ['HME2', 'HME4', 'HSC1', 'HSC2', 'HSC3']],
+  [/hiver/i, ['HSC1', 'HSC3', 'GSS1']],
+  [/basket|hand|foot|rugby|ultimate|unihoc|floorball|kin-ball|tchouk|baseball|softball|jeux collectifs|prisonnier/i, ['HME2', 'HME4', 'HSC1', 'HSC2', 'HSC3']],
   [/volley/i, ['HME2', 'HME4', 'HSC1', 'HSC2']],
   [/badminton|tennis|raquette/i, ['HME2', 'HME4', 'HSC1', 'HSC3']],
   [/natation|piscine/i, ['HME1', 'HME4', 'GSS1', 'GSS2']],
@@ -447,4 +469,331 @@ function agCouverture(c, ls){
     ${done.length ? `<span class="small muted">${esc(progLabel([c.id]))}</span>` + PROG.map(g => `<div class="ag-cg" style="--pc:${g.col}"><b class="ag-cgn">${g.k} · ${esc(g.n)}</b>${g.l.map(([k, t]) => { const v = n[k] || 0;
       return `<div class="ag-cr${v ? '' : ' zero'}"><span class="ag-cc">${k}</span><span class="ag-ct">${esc(t)}</span><span class="ag-cb"><i style="width:${v / mx * 100}%"></i></span><b class="ag-cn">${v ? v + '×' : 'jamais'}</b></div>`; }).join('')}</div>`).join('')
       : '<span class="small muted">Dans l\'agenda, touche un cours, choisis le sport et active « Lien avec le programme » : la couverture de la période apparaîtra ici.</span>'}</details>`;
+}
+
+/* ====== Prépas de leçon : en-tête, échauffement, corps de leçon, retour au calme ======
+   Bibliothèque chargée à la demande (carnet/prepas/<id>.js) : séquences de 6 leçons par année (1re à 6e secondaire), jeux d'hiver en une leçon.
+   Format : PREPA_ADD({id, sport, an: {1: {th, comp, mat, l: [{t, o, comp?, mat?, e: [[nom, min, texte, schéma?]], c: [[nom, min, texte, réussite, variante, schéma]], r: [[nom, min, texte]]}]}}}) ; jeux d'hiver : an[0]. */
+const PREPA_CAT = [['hiver', "Jeux d'hiver", /hiver/i], ['basket', 'Basket-ball', /basket/i], ['volley', 'Volley-ball', /volley/i], ['hand', 'Handball', /hand/i], ['natation', 'Natation', /natation|piscine|nage/i],
+  ['endurance', "Course d'endurance", /endurance|course en dur/i], ['bad', 'Badminton', /badminton/i], ['danse', 'Danse', /danse/i], ['acro', 'Acrosport', /acro/i],
+  ['prisonnier', 'Balle aux prisonniers', /prisonnier/i], ['athle', 'Athlétisme', /athl/i], ['foot', 'Football', /foot/i]];
+const PREPA_PRETS = ['basket'];  // bibliothèques déjà écrites (les autres arrivent sport par sport)
+const prepaCat = () => PREPA_CAT.filter(([id]) => PREPA_PRETS.includes(id));
+const PREPA_LIB = window.PREPA_LIB = window.PREPA_LIB || {};
+window.PREPA_ADD = o => { PREPA_LIB[o.id] = o; };
+const prepaCatOf = sp => sp ? PREPA_CAT.find(([, , re]) => re.test(sp)) : null;
+const AN_TXT = a => a ? (a === 1 ? '1re' : a + 'e') : 'toutes années';
+function prepaLoad(ids){
+  return Promise.all(['schemas', ...ids].filter((id, i, a) => a.indexOf(id) === i && (id === 'schemas' ? !window.PSCH : !PREPA_LIB[id]))
+    .map(id => new Promise(ok => { const s = document.createElement('script'); s.src = 'prepas/' + id + '.js'; s.onload = s.onerror = () => ok(); document.head.appendChild(s); })));
+}
+const prepaRef = ref => { const [id, an, n] = String(ref || '').split('|'), L = PREPA_LIB[id], A = L && L.an && L.an[+an], l = A && A.l[+n - 1]; return l ? {L, A, l, id, an: +an, n: +n} : null; };
+function prepaCourt(pp){
+  if (!pp) return '';
+  const hv = /^hiver\|/.test(pp.ref || '');
+  return [hv ? "Jeu d'hiver" : pp.sp, !hv && pp.n ? `L${pp.n}/6` : '', pp.t].filter(Boolean).join(' · ');
+}
+/* une leçon de la bibliothèque → texte modifiable */
+const ppLines = (items, full) => (items || []).map(([n, m, d, ok, va]) => `• ${n}${m ? ` (${m} min)` : ''} : ${d}${full && ok ? `\n   ✓ Réussite : ${ok}` : ''}${full && va ? `\n   ↻ Variante : ${va}` : ''}`).join('\n');
+const ppMin = items => (items || []).reduce((a, x) => a + (+x[1] || 0), 0);
+function prepaFromLib(id, an, n){
+  const r = prepaRef(`${id}|${an}|${n}`); if (!r) return null; const {L, A, l} = r;
+  return {ref: `${id}|${an}|${n}`, sp: L.sport, an: an || 0, n: id === 'hiver' ? 0 : n, t: l.t, o: l.o || '', mat: l.mat || A.mat || L.mat || '',
+    e: ppLines(l.e), c: ppLines(l.c, true), r: ppLines(l.r), d: [ppMin(l.e), ppMin(l.c), ppMin(l.r)], comp: l.comp || A.comp || [], bil: ''};
+}
+/* toutes les leçons datées avec une prépa : [{date, h, c (classe), l (leçon), pp}] + celles prévues avant l'appel */
+function prepaAll(){
+  const out = [];
+  S.classes.forEach(c => c.lessons.forEach(l => { if (l.prepa) out.push({date: l.date, h: l.h, cls: [c], pp: l.prepa, prog: l.prog || null}); }));
+  Object.entries(S.settings.ag || {}).forEach(([k, v]) => { if (!v.pp) return; const [date, h] = k.split('|'); const it = agItems(wdOf(date)).find(x => x.h === h);
+    out.push({date, h, cls: (it ? it.cls : []).map(clsById).filter(Boolean), pp: v.pp, prog: v.p || null, plan: true}); });
+  /* une même leçon pour un groupe mixte : une seule prépa, plusieurs classes */
+  const m = new Map();
+  out.forEach(x => { const k = x.date + '|' + x.h + '|' + (x.pp.ref || '') + '|' + x.pp.t; const y = m.get(k); if (y) x.cls.forEach(c => { if (!y.cls.includes(c)) y.cls.push(c); }); else m.set(k, {...x, cls: [...x.cls]}); });
+  return [...m.values()].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : hI(a.h || 'H1') - hI(b.h || 'H1'));
+}
+/* où en est ce cycle pour ces classes ? dernière leçon de la bibliothèque faite avant cette date */
+function prepaSuite(ids, id, an, date){
+  const done = prepaAll().filter(x => x.date < date && x.cls.some(c => ids.includes(c.id)) && String(x.pp.ref || '').startsWith(`${id}|${an}|`));
+  if (!done.length) return null;
+  const last = done[done.length - 1]; return {n: +last.pp.ref.split('|')[2], date: last.date, faites: new Set(done.map(x => +x.pp.ref.split('|')[2]))};
+}
+
+function openPrepa(date, slotId, ids){
+  const d = wdOf(date), it = agItems(d).find(x => x.id === slotId); if (!it){ render(); return; }
+  const g = agGet(date, it), cls = ids.map(clsById).filter(Boolean);
+  const an0 = cls.map(progYear).find(Boolean) || 1;
+  let pp = g.pp ? JSON.parse(JSON.stringify(g.pp)) : {ref: '', sp: g.s || '', an: an0, n: 0, t: '', o: '', mat: '', e: '', c: '', r: '', d: [10, 25, 5], bil: ''};
+  let comp = Array.isArray(g.p) ? [...g.p] : (g.pp && g.pp.comp) || progDefault(g.s);
+  /* sport proposé : celui du cours, sinon celui prévu au planning, sinon le dernier cycle de la classe */
+  const lastPp = prepaAll().filter(x => x.date < date && x.cls.some(c => ids.includes(c.id)) && x.pp.ref && !/^hiver/.test(x.pp.ref)).pop();
+  const cat0 = prepaCatOf(pp.sp || g.s || agPlanned(date, it)) || (lastPp && !g.s ? prepaCatOf(lastPp.pp.sp) : null);
+  let libId = cat0 && PREPA_PRETS.includes(cat0[0]) ? cat0[0] : '', libAn = pp.an || an0;
+  const title = `Prépa · ${fmtD(date)} · ${slotLabel(it)}`;
+  openSheet(title, `
+    <div class="card ag-sum"><b class="ag-who">${esc(clsName(ids))}</b><span class="small muted">${esc(fmtDL(date))} · ${esc(slotLabel(it))} · ${esc(slotTime(it))}${g.s ? ' · ' + esc(g.s) : ''}</span></div>
+    <div class="card sec pp-lib"><h3>📚 Prépa toute faite</h3>
+      <div class="row2"><label class="f" style="flex:1 1 150px">Sport<select class="inp" id="pp-lsp"><option value="">— Choisir —</option>${prepaCat().map(([id, n]) => `<option value="${id}" ${id === libId ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
+      <label class="f" id="pp-lanw" style="flex:1 1 110px">Année<select class="inp" id="pp-lan">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}" ${a === libAn ? 'selected' : ''}>${AN_TXT(a)} secondaire</option>`).join('')}</select></label></div>
+      <div id="pp-llist"><span class="small muted">Choisis un sport : ses leçons apparaissent ici.</span></div></div>
+    <div class="card sec"><h3>En-tête</h3>
+      <div class="row2"><label class="f" style="flex:2 1 180px">Sport / activité<input class="inp" id="pp-sp" value="${esc(pp.sp)}"></label>
+      <label class="f" style="flex:1 1 100px">Année<select class="inp" id="pp-an">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}" ${a === (pp.an || an0) ? 'selected' : ''}>${AN_TXT(a)}</option>`).join('')}</select></label>
+      <label class="f" style="flex:1 1 90px">Leçon n°<input class="inp" id="pp-n" inputmode="numeric" value="${pp.n || ''}" placeholder="—"></label></div>
+      <label class="f">Thème de la leçon<input class="inp" id="pp-t" value="${esc(pp.t)}" placeholder="ex. Passer et recevoir en mouvement"></label>
+      <label class="f">Objectif(s) de la leçon<textarea class="inp" id="pp-o" rows="2" placeholder="L'élève sera capable de…">${esc(pp.o)}</textarea></label>
+      <label class="f">Matériel<textarea class="inp" id="pp-mat" rows="2">${esc(pp.mat)}</textarea></label>
+      <span class="small muted" style="font-weight:600">Compétences du programme · touche pour cocher / décocher</span>
+      <div id="pp-pcs">${progChips(comp)}</div></div>
+    ${[['e', 'Échauffement', 0], ['c', 'Corps de leçon', 1], ['r', 'Retour au calme', 2]].map(([k, n, i]) => `<div class="card sec pp-ph"><div class="pp-phh"><h3>${n}</h3><label class="pp-min"><input class="inp" id="pp-d${i}" inputmode="numeric" value="${pp.d && pp.d[i] || ''}"> min</label></div>
+      <textarea class="inp" id="pp-${k}" rows="${k === 'c' ? 9 : 4}">${esc(pp[k])}</textarea><div class="pp-schs" id="pp-s${k}"></div></div>`).join('')}
+    <div class="card sec"><h3>Bilan après la leçon</h3><textarea class="inp" id="pp-bil" rows="2" placeholder="Ce qui a marché, à revoir la prochaine fois…">${esc(pp.bil || '')}</textarea></div>
+    <div class="row2"><button class="btn pri" type="button" id="pp-ok">Enregistrer la prépa</button><button class="btn" type="button" id="pp-print">🖨 Imprimer</button></div>
+    <div class="row2"><button class="btn" type="button" id="pp-back">‹ Retour au cours</button><button class="btn danger" type="button" id="pp-del" ${g.pp ? '' : 'hidden'}>Effacer la prépa</button></div>
+    <div id="pp-delc"></div>`);
+  const F = k => $('pp-' + k);
+  let live = null; const snap = () => { if (F('t')) live = read(); return live; };
+  const grow = () => ['e', 'c', 'r'].forEach(k => { const t = F(k); if (t){ t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight + 4, 900) + 'px'; } });
+  const read = () => ({...pp, sp: F('sp').value.trim(), an: +F('an').value, n: +F('n').value || 0, t: F('t').value.trim(), o: F('o').value.trim(), mat: F('mat').value.trim(),
+    e: F('e').value.trim(), c: F('c').value.trim(), r: F('r').value.trim(), d: [0, 1, 2].map(i => +$('pp-d' + i).value || 0), bil: F('bil').value.trim(), comp: [...comp]});
+  const empty = o => !o.t && !o.e && !o.c && !o.r && !o.o;
+  const drawSch = () => { const r = prepaRef(pp.ref);
+    ['e', 'c', 'r'].forEach(k => { const box = $('pp-s' + k); box.innerHTML = r && window.PSCH ? (r.l[k] || []).map(x => x[k === 'c' ? 5 : 3] ? PSCH(x[k === 'c' ? 5 : 3], esc(x[0])) : '').join('') : ''; }); };
+  const pcs = $('pp-pcs');
+  pcs.onclick = e => { const b = e.target.closest('[data-pc]'); if (!b) return; const k = b.dataset.pc;
+    comp = comp.includes(k) ? comp.filter(x => x !== k) : PROG_CODES.filter(x => x === k || comp.includes(x)); pcs.innerHTML = progChips(comp); };
+  const fill = (id, an, n) => {
+    const o = prepaFromLib(id, an, n); if (!o) return;
+    const go = () => { const keepBil = F('bil').value; pp = {...o, bil: keepBil};
+      ['sp', 't', 'o', 'mat', 'e', 'c', 'r'].forEach(k => F(k).value = pp[k]); F('an').value = id === 'hiver' ? (+F('an').value || an0) : an; F('n').value = pp.n || '';
+      if (id === 'hiver') pp.an = +F('an').value;
+      [0, 1, 2].forEach(i => $('pp-d' + i).value = pp.d[i] || ''); comp = [...pp.comp]; pcs.innerHTML = progChips(comp); drawSch(); drawList(); grow(); snap();
+      toast(`${prepaCourt(pp)} : prépa remplie, tu peux la modifier`); F('t').scrollIntoView({behavior: 'smooth', block: 'center'}); };
+    const cur = read(); if (empty(cur) || cur.ref === o.ref){ go(); return; }
+    $('pp-llist').insertAdjacentHTML('afterbegin', `<div class="confirm" id="pp-repl"><b>Remplacer ce qui est déjà écrit par « ${esc(o.t)} » ?</b><div class="row2"><button class="btn" type="button" id="pp-rno">Garder</button><button class="btn pri" type="button" id="pp-ryes">Remplacer</button></div></div>`);
+    $('pp-rno').onclick = () => $('pp-repl').remove(); $('pp-ryes').onclick = go; };
+  const drawList = () => {
+    const box = $('pp-llist'), L = PREPA_LIB[libId]; $('pp-lanw').hidden = libId === 'hiver';
+    if (!libId){ box.innerHTML = '<span class="small muted">Choisis un sport : ses leçons apparaissent ici.</span>'; return; }
+    if (!L){ box.innerHTML = '<span class="small muted">Chargement…</span>'; prepaLoad([libId]).then(() => { if (PREPA_LIB[libId]) drawList(); else box.innerHTML = '<span class="small">Pas de connexion : la bibliothèque n\'a pas pu se charger.</span>'; }); return; }
+    if (libId === 'hiver'){
+      const J = L.an[0].l;
+      box.innerHTML = `<input class="inp" id="pp-hq" placeholder="Chercher un jeu (ex. ballon, cerceaux, petite salle)" autocomplete="off">
+        <div class="pp-hl">${J.map((j, i) => `<button type="button" class="pp-lb${pp.ref === `hiver|0|${i + 1}` ? ' on' : ''}" data-pl="${i + 1}" data-q="${esc((j.t + ' ' + (j.tags || '') + ' ' + (j.mat || '')).toLowerCase())}"><b>${esc(j.t)}</b><span>${esc(j.tags || '')}</span></button>`).join('')}</div>`;
+      $('pp-hq').oninput = e => { const q = e.target.value.toLowerCase().trim(); box.querySelectorAll('[data-pl]').forEach(b => b.hidden = q && !b.dataset.q.includes(q)); };
+    } else {
+      const A = L.an[libAn]; if (!A){ box.innerHTML = '<span class="small muted">Pas encore de séquence pour cette année.</span>'; return; }
+      const su = prepaSuite(ids, libId, libAn, date), nx = su ? Math.min(6, su.n + 1) : 1;
+      box.innerHTML = `<b class="pp-th">${esc(A.th)}</b>
+        ${su ? `<div class="pp-suite">${su.n >= 6 ? `✓ Cycle terminé (leçon 6 le ${esc(fmtD(su.date))}).` : `Dernière leçon faite : <b>leçon ${su.n}</b> le ${esc(fmtD(su.date))}`}
+          ${su.n < 6 ? `<button class="btn pri block" type="button" data-pl="${nx}">▶ Continuer le cycle : leçon ${nx} · ${esc(A.l[nx - 1].t)}</button>` : ''}</div>`
+          : `<button class="btn pri block" type="button" data-pl="1">▶ Commencer le cycle : leçon 1 · ${esc(A.l[0].t)}</button>`}
+        <div class="pp-ll">${A.l.map((l, i) => `<button type="button" class="pp-lb${pp.ref === `${libId}|${libAn}|${i + 1}` ? ' on' : ''}" data-pl="${i + 1}"><b>L${i + 1}</b><span>${esc(l.t)}</span>${su && su.faites.has(i + 1) ? '<i>✓ faite</i>' : ''}</button>`).join('')}</div>`;
+    }
+    box.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => fill(libId, libId === 'hiver' ? 0 : libAn, +b.dataset.pl));
+  };
+  const sb = document.querySelector('#sheetroot .sb'); ['input', 'change', 'click'].forEach(ev => sb.addEventListener(ev, () => setTimeout(snap), true));
+  setTimeout(() => { snap(); grow(); });
+  $('pp-lsp').onchange = e => { libId = e.target.value; drawList(); };
+  $('pp-lan').onchange = e => { libAn = +e.target.value; drawList(); };
+  prepaLoad(libId ? [libId] : []).then(() => { drawList(); drawSch(); });
+  if (pp.ref) prepaLoad([pp.ref.split('|')[0]]).then(drawSch);
+  const saveIt = given => {
+    const o = given || read(); if (empty(o)){ toast('Écris au moins le thème ou une partie de la leçon'); return false; }
+    const lib = prepaRef(o.ref); if (lib && o.t !== lib.l.t && !o.c.includes(lib.l.c[0] && lib.l.c[0][0] || '§')) o.ref = '';  // tout réécrit : plus de schémas de la bibliothèque
+    pp = o; const sport = g.s || addSport(o.sp) || o.sp, note = g.n || [prepaCourt(o)].join('');
+    agSet(date, it, ids, sport, note, comp.length || Array.isArray(g.p) ? comp : null, o);
+    Object.assign(g, {s: sport, n: note, p: comp, pp: o}); if ($('pp-del')) $('pp-del').hidden = false; return true; };
+  $('pp-ok').onclick = () => { if (saveIt()){ toast('Prépa enregistrée'); closeSheet(); } };
+  $('pp-print').onclick = () => { const o = read(); if (empty(o)){ toast('La prépa est vide'); return; } saveIt();
+    prepaPrint([{date, h: it.h, cls, pp: o, prog: comp}], `Prépa ${prepaCourt(o)}`); };
+  $('pp-back').onclick = () => { const o = read(); if (!empty(o)) saveIt(); openAgSlot(date, slotId); };
+  $('pp-del').onclick = () => { $('pp-delc').innerHTML = `<div class="confirm"><b>Effacer la prépa de ce cours ?</b><span class="small">Le sport et la note restent.</span><div class="row2"><button class="btn" type="button" id="ppd-no">Garder</button><button class="btn pri" style="background:var(--bad);border-color:var(--bad)" type="button" id="ppd-yes">Effacer</button></div></div>`;
+    $('ppd-no').onclick = () => $('pp-delc').innerHTML = '';
+    $('ppd-yes').onclick = () => { agSet(date, it, ids, g.s, g.n, g.p, null); toast('Prépa effacée'); openAgSlot(date, slotId); }; };
+  sheetOnClose = () => { const o = live; if (o && !empty(o) && JSON.stringify(o) !== JSON.stringify(g.pp ? {...g.pp, comp: o.comp} : null)) saveIt(o); render(); };
+}
+
+/* --- En-tête imprimé : école, professeur, logo --- */
+const PREPA_LOGO0 = 'https://www.saintlouis.be/secondaire/sites/default/files/stlouis_logo_208.png';
+const prepaEn = () => ({ecole: 'Institut Saint-Louis', prof: '', logo: PREPA_LOGO0, ...(S.settings.prepaEn || {})});
+const schoolYear = iso => { const d = dOf(iso), y = d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1; return [y + '-08-20', (y + 1) + '-07-10', `${y}-${y + 1}`]; };
+
+function prepaPage(x, en){
+  const pp = x.pp, r = prepaRef(pp.ref), comp = (x.prog && x.prog.length ? x.prog : pp.comp) || [];
+  /* à l'impression : pas les schémas « décor » (regroupement, étirements), pour tenir sur une page */
+  const sch = k => r && window.PSCH ? (r.l[k] || []).map(it => { const z = it[k === 'c' ? 5 : 3]; return z && !/^(explication|etirements)/.test(z) ? PSCH(z, esc(it[0])) : ''; }).join('') : '';
+  const lab = k => { for (const g of PROG) { const f = g.l.find(z => z[0] === k); if (f) return f[1]; } return ''; };
+  const tot = (pp.d || []).reduce((a, b) => a + (+b || 0), 0);
+  const ph = (n, i, k) => `<section class="pr-ph"><h3><span>${n}</span>${pp.d && pp.d[i] ? `<em>${pp.d[i]} min</em>` : ''}</h3><div class="pr-tx">${esc(pp[k] || '—')}</div>${sch(k) ? `<div class="pr-sch">${sch(k)}</div>` : ''}</section>`;
+  return `<article class="pr-page">
+    <header class="pr-hd">${en.logo ? `<img src="${esc(en.logo)}" alt="" onerror="this.remove()">` : ''}<div><b>${esc(en.ecole || '')}</b><span>Éducation physique · Préparation de leçon</span>${en.prof ? `<span>Professeur : ${esc(en.prof)}</span>` : ''}</div>
+      <div class="pr-hn">${pp.n ? `<b>Leçon ${pp.n}${/^hiver/.test(pp.ref || '') ? '' : '/6'}</b>` : ''}<span>${esc(AN_TXT(pp.an))} secondaire</span></div></header>
+    <table class="pr-tb"><tr><th>Date</th><td>${x.date ? esc(fmtDL(x.date)) : '…………………'}${x.h ? ' · ' + esc(x.h) : ''}</td><th>Classe(s)</th><td>${esc(x.cls.map(c => c.name).join(', ') || '…………')}</td></tr>
+      <tr><th>Activité</th><td>${esc(pp.sp || '')}${r && r.A.th && r.id !== 'hiver' ? `<br><small>Séquence : ${esc(r.A.th)}</small>` : ''}</td><th>Durée</th><td>${tot ? tot + ' min de pratique' : '50 min'}</td></tr>
+      <tr><th>Thème</th><td colspan="3"><b>${esc(pp.t || '')}</b></td></tr>
+      <tr><th>Objectif(s)</th><td colspan="3">${esc(pp.o || '')}</td></tr>
+      <tr><th>Compétences</th><td colspan="3">${comp.length ? comp.map(k => `<span class="pr-k"><b>${k}</b> ${esc(lab(k))}</span>`).join('') : '—'}</td></tr>
+      <tr><th>Matériel</th><td colspan="3">${esc(pp.mat || '')}</td></tr></table>
+    ${ph('Échauffement', 0, 'e')}${ph('Corps de leçon', 1, 'c')}${ph('Retour au calme', 2, 'r')}
+    ${pp.bil ? `<section class="pr-ph"><h3><span>Bilan</span></h3><div class="pr-tx">${esc(pp.bil)}</div></section>` : ''}
+    ${r ? window.PSCH_LEGENDE || '' : ''}</article>`;
+}
+function prepaPrint(list, titre, avecResume){
+  const en = prepaEn(), ids = [...new Set(list.map(x => String(x.pp.ref || '').split('|')[0]).filter(Boolean))];
+  toast('Préparation de l\'impression…');
+  prepaLoad(ids).then(() => {
+    let h = '';
+    if (avecResume){
+      const par = {}; list.forEach(x => (par[x.pp.an || 0] = par[x.pp.an || 0] || []).push(x));
+      h += `<article class="pr-page pr-cover"><header class="pr-hd">${en.logo ? `<img src="${esc(en.logo)}" alt="" onerror="this.remove()">` : ''}<div><b>${esc(en.ecole || '')}</b><span>Éducation physique</span>${en.prof ? `<span>Professeur : ${esc(en.prof)}</span>` : ''}</div></header>
+        <h1>${esc(titre)}</h1><p>${list.length} leçon${list.length > 1 ? 's' : ''} préparée${list.length > 1 ? 's' : ''} · imprimé le ${esc(fmtDL(today()))}</p>
+        ${Object.keys(par).sort().map(a => `<h2>${a > 0 ? esc(AN_TXT(+a)) + ' secondaire' : 'Autres'} · ${par[a].length} leçon${par[a].length > 1 ? 's' : ''}</h2>
+          <table class="pr-sum"><tr><th>Date</th><th>Classe(s)</th><th>Activité</th><th>Leçon</th><th>Thème</th><th>Compétences</th></tr>
+          ${par[a].map(x => `<tr><td>${esc(fmtD(x.date))}</td><td>${esc(x.cls.map(c => c.name).join(', '))}</td><td>${esc(x.pp.sp || '')}</td><td>${x.pp.n || ''}</td><td>${esc(x.pp.t || '')}</td><td>${esc(((x.prog && x.prog.length ? x.prog : x.pp.comp) || []).join(' '))}</td></tr>`).join('')}</table>`).join('')}</article>`;
+      Object.keys(par).sort().forEach(a => par[a].forEach(x => h += prepaPage(x, en)));
+    } else list.forEach(x => h += prepaPage(x, en));
+    printHTML(h, titre);
+  });
+}
+/* impression : la page est remplacée par #prt le temps de l'impression (Enregistrer en PDF sur téléphone) */
+function printHTML(h, titre, paysage){
+  let root = $('prt'); if (!root){ root = document.createElement('div'); root.id = 'prt'; document.body.appendChild(root); }
+  root.innerHTML = h; root.classList.toggle('pr-land', !!paysage); document.documentElement.classList.add('prt');
+  let st = $('prt-page'); if (!st){ st = document.createElement('style'); st.id = 'prt-page'; document.head.appendChild(st); }
+  st.textContent = `@page{size:A4 ${paysage ? 'landscape' : 'portrait'};margin:12mm}`;
+  const old = document.title; document.title = titre;
+  const fin = () => { document.documentElement.classList.remove('prt'); root.innerHTML = ''; document.title = old; window.removeEventListener('afterprint', fin); };
+  window.addEventListener('afterprint', fin);
+  const imgs = [...root.querySelectorAll('img')].filter(i => !i.complete);
+  Promise.race([Promise.all(imgs.map(i => new Promise(ok => { i.onload = i.onerror = ok; }))), new Promise(ok => setTimeout(ok, 2500))]).then(() => setTimeout(() => window.print(), 60));
+}
+
+/* --- « 🖨 Mes prépas » : tout imprimer par année (contrôle de l'inspection), en-tête, bibliothèque vierge --- */
+function openPrepaPrint(){
+  const en = prepaEn(), [d0, d1, sy] = schoolYear(today()), all = prepaAll();
+  openSheet('Mes prépas', `
+    <div class="card sec"><h3>🖨 Imprimer mes prépas</h3>
+      <p class="small muted" style="margin:0">Une page de résumé par année (1re, 2e…), puis chaque prépa sur sa page. Sur téléphone, choisis « Enregistrer en PDF » ou une imprimante.</p>
+      <div class="row2"><label class="f" style="flex:1 1 140px">Du<input class="inp" type="date" id="pr-d0" value="${d0}"></label><label class="f" style="flex:1 1 140px">Au<input class="inp" type="date" id="pr-d1" value="${d1}"></label></div>
+      <span class="small muted" style="font-weight:600">Classes</span><div class="row2" id="pr-cls">${S.classes.map(c => `<button class="chip" type="button" data-prc="${c.id}" aria-pressed="true">${esc(c.name)}</button>`).join('')}</div>
+      <span class="small" id="pr-n"></span>
+      <button class="btn pri block" type="button" id="pr-go">🖨 Imprimer / PDF</button></div>
+    <div class="card sec"><h3>En-tête des prépas</h3>
+      <label class="f">École<input class="inp" id="pr-ec" value="${esc(en.ecole)}"></label>
+      <label class="f">Professeur<input class="inp" id="pr-pf" value="${esc(en.prof)}" placeholder="Ton nom"></label>
+      <div class="pr-logo">${en.logo ? `<img src="${esc(en.logo)}" alt="Logo" id="pr-lg" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'small muted',textContent:'Logo pas visible sans internet'}))">` : '<span class="small muted">Pas de logo</span>'}
+        <label class="btn">Changer le logo<input type="file" accept="image/*" id="pr-lf" hidden></label>${en.logo ? '<button class="btn" type="button" id="pr-lx">Sans logo</button>' : '<button class="btn" type="button" id="pr-l0">Logo de Saint-Louis</button>'}</div></div>
+    <div class="card sec"><h3>📚 Bibliothèque</h3><p class="small muted" style="margin:0">Imprimer une séquence vierge (sans date ni classe) pour la préparer ou l'emporter.</p>
+      <div class="row2"><select class="inp" id="pr-bs" style="flex:2 1 150px">${prepaCat().map(([id, n]) => `<option value="${id}">${esc(n)}</option>`).join('')}</select>
+      <select class="inp" id="pr-ba" style="flex:1 1 100px">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}">${AN_TXT(a)}</option>`).join('')}</select></div>
+      <button class="btn block" type="button" id="pr-bgo">🖨 Imprimer la séquence</button></div>`);
+  const on = new Set(S.classes.map(c => c.id));
+  const pick = () => { const a = $('pr-d0').value, b = $('pr-d1').value; return all.filter(x => (!a || x.date >= a) && (!b || x.date <= b) && x.cls.some(c => on.has(c.id))); };
+  const count = () => { const l = pick(), par = {}; l.forEach(x => par[x.pp.an || 0] = (par[x.pp.an || 0] || 0) + 1);
+    $('pr-n').textContent = l.length ? `${l.length} prépa${l.length > 1 ? 's' : ''} : ${Object.keys(par).sort().map(a => `${a > 0 ? AN_TXT(+a) : 'autres'} ${par[a]}`).join(' · ')}` : 'Aucune prépa sur cette période : prépare un cours depuis l\'agenda (bouton 📋).';
+    $('pr-go').disabled = !l.length; };
+  document.querySelectorAll('[data-prc]').forEach(b => b.onclick = () => { const id = b.dataset.prc; if (on.has(id)) on.delete(id); else on.add(id); b.setAttribute('aria-pressed', on.has(id)); count(); });
+  $('pr-d0').onchange = $('pr-d1').onchange = count; count();
+  const putEn = o => { S.settings.prepaEn = {...prepaEn(), ...o}; save(); };
+  $('pr-ec').onchange = e => putEn({ecole: e.target.value.trim()}); $('pr-pf').onchange = e => putEn({prof: e.target.value.trim()});
+  if ($('pr-lx')) $('pr-lx').onclick = () => { putEn({logo: ''}); openPrepaPrint(); };
+  if ($('pr-l0')) $('pr-l0').onclick = () => { putEn({logo: PREPA_LOGO0}); openPrepaPrint(); };
+  $('pr-lf').onchange = e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader();
+    rd.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, 240 / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k);
+      cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); putEn({logo: cv.toDataURL('image/png')}); openPrepaPrint(); toast('Logo changé'); }; im.src = rd.result; }; rd.readAsDataURL(f); };
+  $('pr-go').onclick = () => prepaPrint(pick(), `Préparations EPS ${sy}${prepaEn().prof ? ' · ' + prepaEn().prof : ''}`, true);
+  $('pr-bgo').onclick = () => { const id = $('pr-bs').value, a = id === 'hiver' ? 0 : +$('pr-ba').value;
+    prepaLoad([id]).then(() => { const L = PREPA_LIB[id]; if (!L || !L.an[a]){ toast('Bibliothèque pas disponible (internet ?)'); return; }
+      prepaPrint(L.an[a].l.map((l, i) => ({date: '', h: '', cls: [], pp: prepaFromLib(id, a, i + 1), prog: null})), `${L.sport} · ${a ? AN_TXT(a) + ' secondaire' : 'jeux d\'hiver'}`); }); };
+}
+
+/* --- Onglet « Prépas » du tableau Google (une ligne par leçon) --- */
+window.prepaFeuille = () => {
+  const l = prepaAll(); if (!l.length) return null;
+  const H = ['Date', 'Heure', 'Classe(s)', 'Année', 'Activité', 'Leçon', 'Thème', 'Compétences', 'Objectif(s)', 'Échauffement', 'Corps de leçon', 'Retour au calme', 'Bilan'];
+  const lignes = [{h: 26, c: [['Mes prépas de leçon', XS.TITLE]]}, {h: 30, c: H.map(t => [t, XS.HEAD])}];
+  l.forEach(x => { const p = x.pp; lignes.push({h: 60, c: [[x.date, XS.TXT], [x.h || '', XS.TXT], [x.cls.map(c => c.name).join(', '), XS.TXT], [AN_TXT(p.an), XS.TXT], [p.sp || '', XS.TXT], [p.n || '', XS.INT], [p.t || '', XS.TXTB],
+    [((x.prog && x.prog.length ? x.prog : p.comp) || []).join(' '), XS.TXT], [p.o || '', XS.NOTE], [p.e || '', XS.NOTE], [p.c || '', XS.NOTE], [p.r || '', XS.NOTE], [p.bil || '', XS.NOTE]]}); });
+  return {nom: 'Prépas', lignes, fusions: ['A1:M1'], largeurs: [11, 6, 14, 7, 14, 6, 26, 16, 34, 44, 60, 34, 30], figer: 2};
+};
+
+/* ====== Planning de l'année : quel sport, pour quelle classe, quelles semaines ======
+   S.settings.planAn = {idClasse: {'AAAA-MM-JJ' (lundi): 'Basket-ball' | 'Congé'}}. Simple prévision : rien n'est imposé aux cours. */
+const PLAN_COL = ['#1f63d6', '#f06400', '#8a3ffc', '#0f8a5f', '#c2185b', '#00838f', '#7a5a00', '#5d4037', '#3949ab', '#b23c17', '#2e7d32', '#6a1b9a'];
+const planSet = () => S.settings.planAn && typeof S.settings.planAn === 'object' ? S.settings.planAn : {};
+const planOf = (cid, iso) => (planSet()[cid] || {})[mondayOf(iso)] || '';
+const PLAN_ABR = [[/basket/i, 'Basket'], [/volley/i, 'Volley'], [/hand/i, 'Hand'], [/natation/i, 'Nat.'], [/endurance/i, 'Endur.'], [/badminton/i, 'Bad'], [/acro/i, 'Acro'], [/prisonnier/i, 'Prison'], [/athl/i, 'Athlé'], [/foot/i, 'Foot'], [/hiver/i, 'Hiver'], [/gym/i, 'Gym'], [/tennis de table/i, 'Ping'], [/unihoc|floorball/i, 'Unihoc'], [/évaluation/i, 'Éval']];
+const planAbbr = s => s === 'Congé' ? 'congé' : (PLAN_ABR.find(([re]) => re.test(s)) || [0, s.replace(/[-'’ ]/g, ' ').split(' ').filter(Boolean)[0].slice(0, 6)])[1];
+function planWeeks(iso){
+  const d = dOf(iso), y = d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1;
+  const out = []; let m = mondayOf(`${y}-09-01`); const end = `${y + 1}-07-03`;
+  while (m <= end){ out.push(m); m = addDays(m, 7); }
+  return {weeks: out, sy: `${y}-${y + 1}`};
+}
+function planColor(sp){
+  const used = [...new Set(Object.values(planSet()).flatMap(o => Object.values(o)).filter(s => s !== 'Congé'))].sort((a, b) => sportsList().indexOf(a) - sportsList().indexOf(b));
+  const i = used.indexOf(sp); return i < 0 ? PLAN_COL[0] : PLAN_COL[i % PLAN_COL.length];
+}
+function planHTML(weeks, forPrint){
+  const t0 = mondayOf(today()), cls = S.classes;
+  let h = `<div class="pl-wrap"><table class="pl-tb"><thead><tr><th class="pl-c">Classe</th>`;
+  weeks.forEach((w, i) => { const d = dOf(w), nm = i === 0 || dOf(weeks[i - 1]).getMonth() !== d.getMonth();
+    h += `<th class="${w === t0 ? 'pl-now' : ''}${nm ? ' pl-m' : ''}"><small>${nm ? MOIS[d.getMonth()] : ''}</small>${d.getDate()}</th>`; });
+  h += '</tr></thead><tbody>';
+  cls.forEach(c => {
+    h += `<tr><th class="pl-c">${esc(c.name)}</th>`;
+    weeks.forEach(w => { const sp = (planSet()[c.id] || {})[w] || '', wk = planWeekLessons(c, w), done = wk.filter(x => x.sport).map(x => x.sport), np = wk.filter(x => x.pp).length;
+      const lab = `${c.name}, semaine du ${fmtD(w)}${sp ? ' : ' + sp : ''}${done.length ? ', fait : ' + [...new Set(done)].join(', ') : ''}${np ? ', ' + np + ' prépa' + (np > 1 ? 's' : '') : ''}`;
+      const inner = `${sp ? `<b>${esc(planAbbr(sp))}</b>` : done.length ? `<b class="pl-fait">${esc(planAbbr(done[0]))}</b>` : ''}${np ? `<i>📋${np > 1 ? np : ''}</i>` : done.length ? '<i>✓</i>' : ''}`;
+      h += forPrint ? `<td class="${sp === 'Congé' ? 'pl-off' : ''}" style="${sp && sp !== 'Congé' ? `--pc:${planColor(sp)}` : ''}">${inner}</td>`
+        : `<td class="${w === t0 ? 'pl-now' : ''}${sp === 'Congé' ? ' pl-off' : ''}" style="${sp && sp !== 'Congé' ? `--pc:${planColor(sp)}` : ''}"><button type="button" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(lab)}">${inner}</button></td>`; });
+    h += '</tr>';
+  });
+  h += '</tbody></table></div>';
+  const used = [...new Set(Object.values(planSet()).flatMap(o => Object.values(o)))];
+  if (used.length) h += `<div class="pl-leg">${used.sort((a, b) => sportsList().indexOf(a) - sportsList().indexOf(b)).map(s => `<span style="--pc:${s === 'Congé' ? '#888' : planColor(s)}"><b>${esc(planAbbr(s))}</b>${esc(s)}</span>`).join('')}<span><i>✓</i> sport noté dans un cours</span><span><i>📋</i> prépa faite (touche la case pour la voir)</span></div>`;
+  return h;
+}
+/* ce qui a été fait (ou préparé) cette semaine-là par une classe : leçons + cours prévus avant l'appel */
+function planWeekLessons(c, w){
+  const end = addDays(w, 6), out = c.lessons.filter(l => l.date >= w && l.date <= end).map(l => ({date: l.date, h: l.h, sport: l.sport || '', pp: l.prepa || null, note: l.note || ''}));
+  Object.entries(S.settings.ag || {}).forEach(([k, v]) => { const [date, h] = k.split('|'); if (date < w || date > end) return;
+    const it = agItems(wdOf(date)).find(x => x.h === h); if (it && it.cls.includes(c.id) && !out.some(x => x.date === date && x.h === h)) out.push({date, h, sport: v.s || '', pp: v.pp || null, note: v.n || '', plan: true}); });
+  return out.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : hI(a.h || 'H1') - hI(b.h || 'H1'));
+}
+function renderPlanAn(m){
+  const {weeks, sy} = planWeeks(UI.agDate || today());
+  m.innerHTML = `<section class="sec"><div class="ag-top"><button class="btn" type="button" id="pl-back">‹ Agenda</button><h2 class="pl-h">Planning <small>${esc(sy)}</small></h2><button class="btn" type="button" id="pl-prt" aria-label="Imprimer le planning">🖨</button></div>
+    <p class="small muted" style="margin:0">Touche une case pour prévoir un sport à une classe, sur une ou plusieurs semaines. C'est juste ta prévision : dans l'agenda, le sport prévu est proposé, tu fais ce que tu veux.</p>
+    ${S.classes.length ? planHTML(weeks) : '<p class="small">Ajoute d\'abord tes classes.</p>'}</section>`;
+  $('pl-back').onclick = () => { UI.agPlan = false; render(); };
+  $('pl-prt').onclick = () => printHTML(`<article class="pr-page pr-plan"><h1>Planning EPS ${esc(sy)}${prepaEn().prof ? ' · ' + esc(prepaEn().prof) : ''}</h1>${planHTML(weeks, true)}</article>`, `Planning EPS ${sy}`, true);
+  m.querySelectorAll('[data-plc]').forEach(b => b.onclick = () => openPlanCell(b.dataset.plc, b.dataset.plw));
+  const now = m.querySelector('th.pl-now'), wrap = m.querySelector('.pl-wrap'); if (now && wrap) wrap.scrollLeft = Math.max(0, now.offsetLeft - 140);
+}
+function openPlanCell(cid, w){
+  const c = clsById(cid); if (!c) return;
+  const cur = (planSet()[cid] || {})[w] || '';
+  let n = 1; if (cur){ let k = w; while ((planSet()[cid] || {})[addDays(k, 7)] === cur){ n++; k = addDays(k, 7); } }
+  const same = S.classes.filter(x => x.id !== cid && progYear(x) && progYear(x) === progYear(c));
+  openSheet(`${c.name} · semaine du ${fmtD(w)}`, `
+    <div class="card sec"><h3>Fait cette semaine</h3>${planWeekHTML(c, w)}</div>
+    <h3 style="margin:4px 0 0">Prévoir</h3>
+    <label class="f">Sport prévu<select class="inp" id="plc-sp"><option value="">— Rien de prévu —</option><option value="Congé" ${cur === 'Congé' ? 'selected' : ''}>🏖 Congé / pas cours</option>${sportsList().filter(s => s !== 'Autre').map(s => `<option ${s === cur ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
+    <span class="small muted" style="font-weight:600">Pendant</span>
+    <div class="row2" id="plc-n">${[1, 2, 3, 4, 5, 6, 8].map(k => `<button class="chip" type="button" data-pln="${k}" aria-pressed="${k === Math.min(n, 8)}">${k} sem.</button>`).join('')}</div>
+    <span class="small muted">Un cycle de 6 leçons à 2 cours par semaine ≈ 3 semaines ; à 1 cours ≈ 6 semaines.</span>
+    ${same.length ? `<span class="small muted" style="font-weight:600">Aussi pour</span><div class="row2" id="plc-o">${same.map(x => `<button class="chip" type="button" data-plo="${x.id}" aria-pressed="false">${esc(x.name)}</button>`).join('')}</div>` : ''}
+    <button class="btn pri block" type="button" id="plc-ok">Enregistrer</button>`);
+  document.querySelectorAll('[data-plo-open]').forEach(b => b.onclick = () => { const [date, sid] = b.dataset.ploOpen.split('|'); sheetOnClose = null; openPrepa(date, sid, [cid]); });
+  document.querySelectorAll('[data-pln]').forEach(b => b.onclick = () => { n = +b.dataset.pln; document.querySelectorAll('[data-pln]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  document.querySelectorAll('[data-plo]').forEach(b => b.onclick = () => b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'));
+  if (!document.querySelector('[data-pln][aria-pressed="true"]')) n = 1;
+  $('plc-ok').onclick = () => {
+    const sp = $('plc-sp').value, ids = [cid, ...[...document.querySelectorAll('[data-plo][aria-pressed="true"]')].map(b => b.dataset.plo)], P = {...planSet()};
+    ids.forEach(id => { const o = {...(P[id] || {})}; for (let i = 0; i < n; i++){ const k = addDays(w, 7 * i); if (sp) o[k] = sp; else delete o[k]; } P[id] = o; });
+    S.settings.planAn = P; save(); closeSheet(); toast(sp ? `${sp} prévu ${n} semaine${n > 1 ? 's' : ''}` : 'Retiré du planning');
+  };
+  sheetOnClose = () => render();
 }

@@ -950,14 +950,27 @@ function prepaRecueil(){
   prepaRecueilHTML().then(h => printHTML(h, `Recueil des prépas EPS ${schoolYear(today())[2]}`, false, RC_PAGE));
 }
 
-/* --- Onglet « Prépas » du tableau Google (une ligne par leçon) --- */
+/* --- Onglet « Prépas » du tableau Google : un bloc par classe (classes dans l'ordre des années), leçons par date --- */
 window.prepaFeuille = () => {
   const l = prepaAll(); if (!l.length) return null;
   const H = ['Date', 'Heure', 'Classe(s)', 'Année', 'Activité', 'Leçon', 'Thème', 'Compétences', 'Objectif(s)', 'Échauffement', 'Corps de leçon', 'Retour au calme', 'Bilan'];
-  const lignes = [{h: 26, c: [['Mes prépas de leçon', XS.TITLE]]}, {h: 30, c: H.map(t => [t, XS.HEAD])}];
-  l.forEach(x => { const p = x.pp; lignes.push({h: 60, c: [[x.date, XS.TXT], [x.h || '', XS.TXT], [x.cls.map(c => c.name).join(', '), XS.TXT], [AN_TXT(p.an), XS.TXT], [p.sp || '', XS.TXT], [p.n || '', XS.INT], [p.t || '', XS.TXTB],
-    [((x.prog && x.prog.length ? x.prog : p.comp) || []).join(' '), XS.TXT], [p.o || '', XS.NOTE], [p.e || '', XS.NOTE], [p.c || '', XS.NOTE], [p.r || '', XS.NOTE], [p.bil || '', XS.NOTE]]}); });
-  return {nom: 'Prépas', lignes, fusions: ['A1:M1'], largeurs: [11, 6, 14, 7, 14, 6, 26, 16, 34, 44, 60, 34, 30], figer: 2};
+  const lignes = [{h: 26, c: [['Mes prépas de leçon, par classe', XS.TITLE]]}], fusions = ['A1:M1'];
+  const ligne = x => { const p = x.pp; return {h: 60, c: [[x.date, XS.TXT], [x.h || '', XS.TXT], [x.cls.map(c => c.name).join(', '), XS.TXT], [AN_TXT(p.an), XS.TXT], [p.sp || '', XS.TXT], [p.n || '', XS.INT], [p.t || '', XS.TXTB],
+    [((x.prog && x.prog.length ? x.prog : p.comp) || []).join(' '), XS.TXT], [p.o || '', XS.NOTE], [p.e || '', XS.NOTE], [p.c || '', XS.NOTE], [p.r || '', XS.NOTE], [p.bil || '', XS.NOTE]]}; };
+  const bloc = (titre, xs) => {
+    lignes.push({h: 14, c: []});
+    const r = lignes.length + 1; lignes.push({h: 24, c: H.map((t, i) => [i ? '' : titre, XS.GROUP])}); fusions.push(`A${r}:M${r}`);
+    lignes.push({h: 30, c: H.map(t => [t, XS.HEAD])});
+    xs.forEach(x => lignes.push(ligne(x)));
+  };
+  /* une leçon de groupe mixte apparaît dans chacune de ses classes ; prepaAll est déjà trié par date et par heure */
+  const an = c => progYear(c) || 9;
+  [...S.classes].sort((a, b) => an(a) - an(b) || a.name.localeCompare(b.name, 'fr', {numeric: true})).forEach(c => {
+    const xs = l.filter(x => x.cls.includes(c)); if (!xs.length) return;
+    bloc(`${c.name}${progYear(c) ? ' · ' + AN_TXT(progYear(c)) + ' secondaire' : ''} · ${xs.length} leçon${xs.length > 1 ? 's' : ''}`, xs);
+  });
+  const sans = l.filter(x => !x.cls.length); if (sans.length) bloc(`Sans classe · ${sans.length} leçon${sans.length > 1 ? 's' : ''}`, sans);
+  return {nom: 'Prépas', lignes, fusions, largeurs: [11, 6, 14, 7, 14, 6, 26, 16, 34, 44, 60, 34, 30], figer: 1};
 };
 
 /* ====== Planning de l'année : quel sport, pour quelle classe, quelles semaines ======

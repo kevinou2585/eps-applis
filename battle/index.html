@@ -1084,6 +1084,7 @@ function pas(h) {
     f.w = (f.a - old) / h;
   }
   if (tiltOn) for (const f of FL) f.appui = false; // TILT : flippers bloqués
+  sauveVirage();
   if (table === 'goth') { pasGoth(h); return; }
   if (table === 'boss') { pasBoss(h); return; }
   { const g = GARDIEN, sg = g.seg; sg.ax = g.x - g.l; sg.bx = g.x + g.l; sg.ay = sg.by = g.y; }
@@ -3202,6 +3203,7 @@ function secousseTable(m, dx = 0, dy = 0) { // une secousse détectée : poussé
   for (const b of balles) {
     if (!libre(b) || dansLanceur(b)) continue;
     const centre = b.x < 185 ? 1 : -1; // un peu vers le milieu, comme quand on bouscule le côté du flipper
+    if (sauverCouloir(b)) { b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
     b.vy -= SECOUSSE.VY * f; b.vx += SECOUSSE.VX * f * (0.65 * cote + 0.35 * centre);
     const v = Math.hypot(b.vx, b.vy); if (v > VMAX) { b.vx *= VMAX / v; b.vy *= VMAX / v; }
     b.ax = b.x; b.ay = b.y; b.at = temps;
@@ -3293,17 +3295,31 @@ $('recommencer').onclick = () => { pleinEcran(); deverrouiller(); SON.depart(); 
 // Android : plein écran (barres du téléphone cachées) dès qu'on joue ; iPhone : sans effet
 function pleinEcran() { try { const d = document.documentElement; if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen({ navigationUI: 'hide' }).catch(() => {}); } catch (e) {} }
 // Bouton TILT : bouscule la table (bille coincée dans une rigole). Ne compte pas pour le vrai TILT des secousses.
+// Kevin : la bille qui file dans un couloir de sortie doit pouvoir être sauvée par un TILT : la table part vers le haut et vers le milieu
+// (bille à droite → vers le haut et la gauche ; bille à gauche → vers le haut et la droite), assez fort pour repasser par-dessus le poteau.
+// Trop tard (bille déjà tout en bas du couloir) : plus rien à faire.
+const dansCouloirSortie = b => b.y > OUT.haut - 30 && (b.x < OUT.g || b.x > OUT.d) && !dansLanceur(b);
+function sauverCouloir(b) { // renvoie vrai si la bille était dans un couloir de sortie et a reçu la poussée de sauvetage
+  if (!dansCouloirSortie(b) || b.y > TH - 22) return false;
+  const haut = Math.max(0, b.y - (OUT.haut - 34)); // hauteur à remonter pour passer au-dessus du poteau
+  b.vy = -Math.min(900, Math.sqrt(2 * G * haut) + 60); b.vx = (b.x < OUT.g ? -1 : 1) * 25; // d'abord tout droit le long du mur (sinon elle bute sous le guide)
+  b.sauveDir = b.x < OUT.g ? 1 : -1; // … puis, une fois au-dessus du poteau, vers le milieu (voir sauveVirage)
+  return true;
+}
+function sauveVirage() { for (const b of balles) if (b.sauveDir && b.y < OUT.haut - 8) { b.vx = b.sauveDir * 55; b.sauveDir = 0; } else if (b.sauveDir && b.vy > 0 && b.y > OUT.haut + 40) b.sauveDir = 0; }
 function coupTable() {
   if (etat !== 'jeu' || tiltOn || spectacleT > 0 || gelT > 0 || bascule || (combat && combat.phase !== 'combat')) return;
-  let n = 0;
+  let n = 0, cote = 0;
   for (const b of balles) {
     if (!libre(b) || dansLanceur(b)) continue;
-    b.vy -= SECOUSSE.VY * 1.15; b.vx += SECOUSSE.VX * 0.6 * (b.x < 185 ? 1 : -1);
+    const vers = b.x < 185 ? 1 : -1; // vers le milieu de la table
+    if (sauverCouloir(b)) cote = vers;
+    else { b.vy -= SECOUSSE.VY * 1.35; b.vx += SECOUSSE.VX * 0.8 * vers; if (!cote) cote = vers * 0.6; }
     const v = Math.hypot(b.vx, b.vy); if (v > VMAX) { b.vx *= VMAX / v; b.vy *= VMAX / v; }
     b.ax = b.x; b.ay = b.y; b.at = temps; n++;
   }
   if (!n) return;
-  stats.nudges++; derniereAction = temps; secousse = Math.max(secousse, 0.2); acoup = { x: 0, y: -12, t: temps }; SON.nudge(1.1); vib([70, 30, 50]);
+  stats.nudges++; derniereAction = temps; secousse = Math.max(secousse, 0.28); acoup = { x: cote * 12, y: -16, t: temps }; SON.nudge(1.25); vib([90, 30, 70]);
 }
 $('tilt').addEventListener('pointerdown', e => { e.preventDefault(); audio(); coupTable(); });
 $('tilt').addEventListener('touchstart', e => e.preventDefault(), { passive: false });
@@ -3825,9 +3841,11 @@ function finPartie() {
   const rec = lsGet('battle-record-' + JEU, 0); if (score > rec) lsSet('battle-record-' + JEU, score);
   setTimeout(montrerFin, 1300);
 }
-function blocNom(label) { // Kevin : le 1er prénom envoyé depuis ce téléphone reste le sien pour toutes les parties suivantes
+function blocNom(label, top) { // Kevin : le prénom (demandé à la 1re ouverture) reste celui de ce téléphone pour toutes les parties
   const fixe = lsGetTxt('battle-nom').trim();
-  return `<input class="champ" id="nom" maxlength="24" placeholder="Ton prénom (collègue)" autocomplete="off" value="${esc(fixe)}"${fixe ? ' readonly style="opacity:.8"' : ''}>${fixe ? '<div class="aide" style="margin:-4px 0 8px">Joueur de ce téléphone : ' + esc(fixe) + '</div>' : ''}
+  if (fixe) return `<input type="hidden" id="nom" value="${esc(fixe)}"><div class="aide" style="margin:4px 0 8px">Joueur de ce téléphone : <b>${esc(fixe)}</b></div>
+    <button class="btn${top ? ' cache' : ' jaune'}" id="envoyer">${esc(top ? 'Envoyer sans photo' : label)}</button><div id="retour"></div>`;
+  return `<input class="champ" id="nom" maxlength="24" placeholder="Ton prénom (collègue)" autocomplete="off">
     <button class="btn jaune" id="envoyer">${esc(label)}</button><div id="retour"></div>`;
 }
 let photoData = '';
@@ -3838,6 +3856,7 @@ function montrerFin() {
   const ult = CLASSEMENT_OK && ultimeBattu && score > 0, ultAvant = ult ? bossUltime() || bossUlt : null;
   const rang = ult ? 0 : 1 + liste.filter(b => b.score >= score).length, dansTop = CLASSEMENT_OK && score > 0 && rang <= 3;
   photoData = '';
+  const nomFixe = !!lsGetTxt('battle-nom').trim(); // prénom connu : en fin de partie, on choisit roi / reine → photo → envoi → animation
   let html = '', mode = 'simple', genre = lsGetTxt('battle-genre'), moqueur = null;
   if (genre !== 'H' && genre !== 'F') genre = '';
   if (!CLASSEMENT_OK) {
@@ -3855,9 +3874,9 @@ function montrerFin() {
         <label${genre === 'H' ? ' class="on"' : ''}><input type="radio" name="genre" value="H"${genre === 'H' ? ' checked' : ''}>🤴 Un empereur</label>
         <label${genre === 'F' ? ' class="on"' : ''}><input type="radio" name="genre" value="F"${genre === 'F' ? ' checked' : ''}>👸 Une impératrice</label>
       </div>
-      <label class="btn photo-btn" id="photo-lbl">📸 Prends une photo terrifiante<input type="file" accept="image/*" capture="user" id="photo"></label>
+      <label class="btn photo-btn${nomFixe ? ' cache' : ''}" id="photo-lbl">📸 Prends une photo terrifiante<input type="file" accept="image/*" capture="user" id="photo"></label>
       <div class="aide" style="margin:0 0 10px">Ta tête attendra dans le château. Seuls ceux qui battent le roi ET atteignent ton score te verront. Le roi garde sa place au classement.</div>
-      ${blocNom('Devenir le boss caché 💀')}`;
+      ${blocNom('Devenir le boss caché 💀', true)}`;
   } else if (dansTop) {
     mode = 'top';
     const detrone = liste.find(b => b.rang === rang);
@@ -3870,9 +3889,9 @@ function montrerFin() {
         <label${genre === 'H' ? ' class="on"' : ''}><input type="radio" name="genre" value="H"${genre === 'H' ? ' checked' : ''}>🤴 Je suis un roi</label>
         <label${genre === 'F' ? ' class="on"' : ''}><input type="radio" name="genre" value="F"${genre === 'F' ? ' checked' : ''}>👸 Je suis une reine</label>
       </div>
-      <label class="btn photo-btn" id="photo-lbl">📸 Prends une photo rigolote<input type="file" accept="image/*" capture="user" id="photo"></label>
+      <label class="btn photo-btn${nomFixe ? ' cache' : ''}" id="photo-lbl">📸 Prends une photo rigolote<input type="file" accept="image/*" capture="user" id="photo"></label>
       <div class="aide" style="margin:0 0 10px">Ta tête deviendra le boss n°${rang} que les collègues devront abattre sur le flipper.</div>
-      ${blocNom('Envoyer mon score 🏆')}`;
+      ${blocNom('Envoyer mon score 🏆', true)}`;
   } else {
     mode = 'moque';
     moqueur = liste.slice().reverse().find(b => b.score >= score) || boss1; // le boss juste au-dessus de toi
@@ -3889,12 +3908,18 @@ function montrerFin() {
   const majPortrait = () => {
     if (!$('portrait-fin')) return;
     dessinerPortrait($('portrait-fin'), rang, genre, photoData || AVATAR);
-    $('titre-fin').textContent = genre ? 'Tu deviens : ' + titreBoss(rang, genre) : rang ? 'Roi ou reine ? Coche ta case :' : 'Empereur ou impératrice ? Coche ta case :';
+    $('titre-fin').textContent = nomFixe && !photoData ? (rang ? 'Touche ce que tu es, puis prends ta photo :' : 'Touche ce que tu es, puis prends ta photo terrifiante :') : genre ? 'Tu deviens : ' + titreBoss(rang, genre) : rang ? 'Roi ou reine ? Coche ta case :' : 'Empereur ou impératrice ? Coche ta case :';
     document.querySelectorAll('#genre label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
   };
   if (mode === 'top') { majPortrait(); if (rang <= 1) { SON.fanfare(); vib([60, 40, 60, 40, 200]); confettis(); } else { SON.sauve(); confettis(70); } }
   else if (mode === 'moque') { SON.fin(); vib([100, 80, 300]); if (moqueur) dessinerPortrait($('moq'), moqueur.rang, moqueur.genre, moqueur.photo || AVATAR); }
   document.querySelectorAll('#genre input').forEach(i => i.onchange = () => { genre = i.value; $('genre').classList.remove('manque-choix'); majPortrait(); });
+  // Kevin : prénom connu → toucher « roi » ou « reine » ouvre tout de suite l'appareil photo (même si la case était déjà cochée)
+  if (nomFixe) document.querySelectorAll('#genre input').forEach(i => i.addEventListener('click', () => {
+    genre = i.value; lsSetTxt('battle-genre', genre); $('genre').classList.remove('manque-choix'); majPortrait();
+    $('photo-lbl').classList.remove('cache'); if ($('envoyer') && !$('envoyer').disabled) $('envoyer').classList.remove('cache');
+    if (!photoData) $('photo').click();
+  }));
   $('rejouer').onclick = () => { pleinEcran(); deverrouiller(); montrer(null); nouvellePartie(); };
   $('vers-accueil').onclick = () => { etat = 'accueil'; balles = []; table = 'base'; combat = null; montrer('accueil'); accueilDessine = false; chargerClassement(); };
   if ($('montrer-nom')) $('montrer-nom').onclick = () => { $('zone-nom').classList.remove('cache'); $('montrer-nom').classList.add('cache'); $('nom').focus(); };
@@ -3929,7 +3954,7 @@ function montrerFin() {
       else ret.innerHTML = `<div class="msg ok">Score enregistré ✔</div>`;
     }
     btn.classList.add('cache'); if ($('photo-lbl')) $('photo-lbl').classList.add('cache');
-    if (lsGet('battle-intro', null)) setTimeout(() => { if (etat === 'fin') $('vers-accueil').onclick(); }, 1500); // Kevin : la séquence part d'office, puis le top 3
+    if (lsGet('battle-intro', null)) setTimeout(() => { if (etat === 'fin') $('vers-accueil').onclick(); }, nomFixe ? 900 : 1500); // Kevin : la séquence part d'office, puis le top 3
   };
 }
 
@@ -3987,7 +4012,7 @@ window.__battle = {
 redim(); afficherAccueil(); chargerClassement(); viderAttente();
 // Kevin : à la toute première ouverture, un mot d'accueil avant le chemin des boss (une seule fois par appareil)
 function montrerBienvenue() {
-  if (lsGet('battle-bienvenue', null) || $('bienvenue')) return;
+  if ((lsGet('battle-bienvenue', null) && lsGetTxt('battle-nom').trim()) || $('bienvenue')) return; // déjà vu ET prénom connu (sinon on le redemande une fois)
   const d = document.createElement('div'); d.id = 'bienvenue'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', 'Bienvenue');
   const L = [
     'Trois boss gardent le chemin du château : <b>la Garde</b>, <b>le Bourreau</b>… et tout en haut, sur son trône, <b>le Roi</b>.',
@@ -3999,10 +4024,15 @@ function montrerBienvenue() {
       ${L.map((t, i) => `<p class="bv-l" style="animation-delay:${0.9 + i * 0.7}s">${t}</p>`).join('')}
       <div class="bv-l bv-mois" style="animation-delay:2.4s">📅 <b>Chaque mois, un nouveau jeu.</b> Le classement repart à zéro.<br>Le meilleur score du mois recevra une récompense…<span class="bv-rec">INCOMMENSURABLE</span></div>
       <p class="bv-l bv-chut" style="animation-delay:3.2s">On n’en dira pas plus. Certains secrets se méritent.</p>
+      <div class="bv-l" style="animation-delay:3.5s"><input class="champ" id="bv-nom" maxlength="24" placeholder="Ton prénom" autocomplete="given-name" value="${esc(lsGetTxt('battle-nom'))}" style="margin:14px 0 0;text-align:center"><div class="aide" style="margin:4px 0 0">Il restera ton nom dans le jeu, sur ce téléphone.</div></div>
       <button class="gros" type="button" id="bv-ok" style="animation-delay:3.7s">⚔ J’accepte le défi</button></div></div>`;
   document.body.appendChild(d);
   d.querySelectorAll('canvas').forEach(c => { try { dessinerPortrait(c, +c.dataset.r, '', '', true); } catch (e) {} });
-  $('bv-ok').onclick = () => { lsSet('battle-bienvenue', Date.now()); d.style.transition = 'opacity .35s'; d.style.opacity = '0'; setTimeout(() => d.remove(), 360); };
+  $('bv-nom').onkeydown = e => { if (e.key === 'Enter') $('bv-ok').click(); };
+  $('bv-ok').onclick = () => {
+    const nom = $('bv-nom').value.trim().replace(/\s+/g, ' ').slice(0, 24);
+    if (!nom) { $('bv-nom').style.borderColor = 'var(--rouge)'; $('bv-nom').placeholder = 'Écris d’abord ton prénom'; $('bv-nom').focus(); return; }
+    lsSetTxt('battle-nom', nom); lsSet('battle-bienvenue', Date.now()); d.style.transition = 'opacity .35s'; d.style.opacity = '0'; setTimeout(() => d.remove(), 360); };
 }
 montrerBienvenue();
 requestAnimationFrame(boucle);

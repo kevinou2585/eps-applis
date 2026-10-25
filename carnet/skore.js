@@ -8,7 +8,7 @@
    Presse-papiers : notes « SKORE:v1;v2;… » ; commentaires « SKORECOM:[{n:"Prénom Nom", t:"texte"}] » (le favori lit le nom
    affiché dans la fenêtre de Skore et met le bon texte ; un élève de Skore absent du carnet est laissé tel quel). */
 (() => {
-  const LS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch(e){ return null; } };
+  const LS = (k, v) => { const ls = window.DEMO_LS || localStorage; try { if (v === undefined) return ls.getItem(k); ls.setItem(k, v); } catch(e){ return null; } };
   const SANS = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   const cmp = (a, b) => SANS(a).localeCompare(SANS(b), 'fr', {numeric: true});
   const skClasses = cs => [...cs].filter(c => !c.act).sort((a, b) => cmp(a.name, b.name));

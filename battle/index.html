@@ -238,7 +238,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 
 <script>
 'use strict';
-const JEU = 'flipper-2026-11'; // changer ce nom = classement remis à zéro (Kevin, 24/10/2026 ; l'ancien reste dans le tableur)
+const JEU = 'flipper-2026-11b'; // changer ce nom = classement remis à zéro (Kevin, 24/10/2026 ; l'ancien reste dans le tableur)
 const URL_SCRIPT = (() => { try { return localStorage.getItem('eps-script') || ''; } catch (e) { return ''; } })();
 const CODE = (() => { try { return localStorage.getItem('eps-code') || ''; } catch (e) { return ''; } })();
 const CLASSEMENT_OK = !!(URL_SCRIPT && CODE);
@@ -1463,7 +1463,7 @@ function imageDe(src) { // images des photos (data URL), gardées en cache ; nul
 }
 function preparerBoss() { // file des boss de la partie : du n°3 au n°1 (on peut aussi affronter ses propres places)
   bossFile = listeBoss().sort((a, b) => a.score - b.score)
-    .map(b => Object.assign({}, b, { pv: NIV_BOSS[b.rang].pv, vaincu: false, img: imageDe(b.photo || AVATAR) }));
+    .map(b => Object.assign({}, b, { pv: NIV_BOSS[b.rang].pv, vaincu: false, img: imageDe(b.defaut ? '' : b.photo || AVATAR) }));
   const u = bossUltime(); ultimeTente = false; ultimeBattu = false;
   bossUlt = u && Object.assign(u, { pv: NIV_BOSS[0].pv, vaincu: false, img: imageDe(u.photo || (u.inconnu ? '' : AVATAR)) }); // pas encore de boss caché : une ombre « ? »
 }
@@ -1623,7 +1623,11 @@ function bossVaincu() {
 function combatPerdu(cause) { // Kevin : le boss passe les flippers, ou la dernière bille du combat tombe → ÉLIMINÉ, partie finie
   const C = combat, B = C.boss, F = B.genre === 'F'; C.phase = 'elimine'; C.t = 0; C.x0 = C.x; C.y0 = C.y; C.boucl = 0; C.rage = false;
   // Kevin : battu par le boss = les points du combat ne comptent pas, on reste derrière lui au classement
-  if (C.score0 != null) score = Math.min(score, C.score0, B.score > 0 ? B.score - 1 : Infinity);
+  // Kevin : tu restes entre le boss battu juste avant et celui-ci (plus tu lui as pris de cœurs, plus tu es près de lui) : plus de scores à 1 point près
+  if (C.score0 != null && B.score > 0) {
+    const avant = Math.max(0, ...bossFile.filter(x => x.vaincu && x.score < B.score).map(x => x.score)), pris = (C.pvMax - Math.max(0, C.pv)) / C.pvMax;
+    score = Math.min(score, C.score0, avant + 1 + Math.floor((B.score - avant - 2) * pris * 0.98));
+  }
   charge.src = {}; charge.actif = false; arreterCharge(); FL.forEach(f => f.appui = false);
   C.bulle = pick(['HA HA HA !', 'Trop lent !', 'Retourne t’échauffer !', 'Même pas mal !', 'Au vestiaire !', 'Game over, collègue !']);
   SON.elimine(); vib([120, 60, 120, 60, 300]); flash = 0.5; secousse = 0.35;
@@ -3322,7 +3326,7 @@ const JEU_CACHE = JEU + '-cache';
 let ultime = (() => { const u = lsGet('battle-ultime', null); return u && +u.score > 0 && u.jeu === JEU_CACHE ? u : null; })();
 function bossUltime() { // le boss caché de la partie, toujours au-dessus du roi ; personne encore : une ombre « ? » à 1,5 × le score du roi
   const roi = listeBoss().find(b => b.rang === 1); if (!roi) return null;
-  const u = ultime, sc = u ? +u.score : Math.max(150000, Math.round(roi.score * 1.5 / 1000) * 1000);
+  const u = ultime, sc = u ? +u.score : ULTIME_DEPART;
   return { rang: 0, nom: u ? String(u.nom || '').trim() || '???' : '???', score: Math.max(sc, roi.score + 1), genre: u && u.genre === 'F' ? 'F' : 'H', photo: u && photoOk(u.photo) ? u.photo : '', inconnu: !u };
 }
 function garderUltime(r) {
@@ -3360,13 +3364,18 @@ function garderClassement(r) {
 }
 function listeBoss() { // les 3 boss à battre : { rang, nom, score, genre ('H' / 'F' / '' si inconnu), photo }
   if (introAvant) return introAvant; // pendant l'intronisation : l'ancien classement reste affiché
-  if (!classement) return [];
-  const top = (classement.top || []).slice(0, 3), boss = classement.boss;
-  return top.map((t, i) => ({
-    rang: i + 1, nom: String(t.nom || '').trim(), score: +t.score || 0, genre: t.genre === 'F' || t.genre === 'H' ? t.genre : '',
+  const top = classement ? (classement.top || []).slice(0, 3) : [], boss = classement && classement.boss;
+  const reels = top.map((t, i) => ({
+    nom: String(t.nom || '').trim(), score: +t.score || 0, genre: t.genre === 'F' || t.genre === 'H' ? t.genre : '',
     photo: photoOk(t.photo) ? t.photo : i === 0 && boss && photoOk(boss.photo) && String(boss.nom).trim().toLowerCase() === String(t.nom).trim().toLowerCase() ? boss.photo : ''
   })).filter(b => b.nom && b.score > 0);
+  // Kevin : 3 boss de départ « ??? » (50 000 / 100 000 / 150 000) pour qu'on doive les battre dans l'ordre ; un vrai score les pousse vers le bas
+  const defauts = BOSS_DEPART.map(score => ({ nom: '???', score, genre: '', photo: '', defaut: true }));
+  return reels.concat(defauts).sort((a, b) => b.score - a.score).slice(0, 3).map((b, i) => Object.assign(b, { rang: i + 1 }));
 }
+const BOSS_DEPART = [150000, 100000, 50000], ULTIME_DEPART = 200000;
+// place de quelqu'un dans le classement affiché (vrais scores + boss de départ) ; 0 = hors du top 3
+const rangDe = (nom, sc) => { const j = listeBoss().findIndex(b => !b.defaut && b.nom.toLowerCase() === String(nom).trim().toLowerCase() && b.score === sc); return j + 1; };
 function dessinerPortrait(cnv, rang, genre, src, buste) { // portrait déguisé (accueil / fin de partie) dans un <canvas> ; buste = zoom sur la tête
   const w = cnv.clientWidth || +cnv.getAttribute('width'), h = cnv.clientHeight || +cnv.getAttribute('height'), d = Math.min(window.devicePixelRatio || 1, 2);
   cnv.width = Math.round(w * d); cnv.height = Math.round(h * d);
@@ -3482,7 +3491,7 @@ function afficherAccueil() {
     };
     $('bloc-boss').querySelectorAll('canvas').forEach(cnv => {
       const r = +cnv.dataset.rang, b = liste.find(x => x.rang === r);
-      dessinerPortrait(cnv, r, b ? b.genre : '', b ? (b.photo || AVATAR) : '', true);
+      dessinerPortrait(cnv, r, b ? b.genre : '', b && !b.defaut ? (b.photo || AVATAR) : '', true); // boss de départ : silhouette « ? »
     });
   }
   $('etat').textContent = etatTxt;
@@ -3528,13 +3537,10 @@ const INTRO = {
 function garderIntro(r, avant, rang, nom, genre) { // r : réponse du serveur, ou null (hors ligne : on se place soi-même dans le classement gardé)
   const sc = Math.round(score), moi = { nom, score: sc, genre, photo: photoData };
   if (r === null) {
-    const top = (classement && classement.top || []).slice(); top.splice(rang - 1, 0, moi);
+    const top = (classement && classement.top || []).concat(moi).sort((a, b) => b.score - a.score);
     classement = Object.assign({ boss: null }, classement, { jeu: JEU, top: top.slice(0, 3), t: Date.now() }); lsSet('battle-classement', classement);
   } else if (!r.ok) return;
-  else {
-    const i = r.rang > 0 ? r.rang - 1 : (classement ? classement.top : []).findIndex(t => String(t.nom).trim().toLowerCase() === nom.toLowerCase() && +t.score === sc);
-    rang = i >= 0 ? i + 1 : r.record ? 1 : 0;
-  }
+  rang = rangDe(nom, sc); // place parmi les vrais scores ET les boss de départ
   if (!(rang >= 1 && rang <= 3)) return;
   const battus = avant.filter(b => b.score < sc && b.rang >= rang).map(b => b.rang).sort((a, b) => b - a); // du garde vers le roi
   lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang, battus, avant });
@@ -3895,8 +3901,8 @@ function montrerFin() {
     else if (!r.ok) { ret.innerHTML = `<div class="msg ko">Envoi refusé${r.erreur || r.error ? ' : ' + esc(r.erreur || r.error) : ''}.</div>`; btn.disabled = false; btn.textContent = 'Réessayer'; return; }
     else if (ult) ret.innerHTML = `<div class="msg ok">💀 C’est fait : tu es ${genre === 'F' ? 'l’impératrice cachée' : 'l’empereur caché'} du château. Chut…</div>`;
     else {
-      const i = r.rang > 0 ? r.rang - 1 : (Array.isArray(r.top) ? r.top : []).slice(0, 3).findIndex(t => String(t.nom).trim().toLowerCase() === nom.toLowerCase() && +t.score === Math.round(score));
-      if (i === 0 || (i < 0 && r.record)) ret.innerHTML = `<div class="msg ok">👑 C’est officiel : ${genre === 'F' ? 'tu es la nouvelle reine' : genre === 'H' ? 'tu es le nouveau roi' : 'tu es n°1'} !</div>`;
+      const i = rangDe(nom, Math.round(score)) - 1;
+      if (i === 0) ret.innerHTML = `<div class="msg ok">👑 C’est officiel : ${genre === 'F' ? 'tu es la nouvelle reine' : genre === 'H' ? 'tu es le nouveau roi' : 'tu es n°1'} !</div>`;
       else if (i > 0) ret.innerHTML = `<div class="msg ok">⚔ C’est officiel : tu es n°${i + 1}, ${esc(titreBoss(i + 1, genre).toLowerCase())} !</div>`;
       else if (mode === 'top') ret.innerHTML = `<div class="msg ok">Score enregistré ✔ (quelqu’un a fait mieux entre-temps !)</div>`;
       else ret.innerHTML = `<div class="msg ok">Score enregistré ✔</div>`;

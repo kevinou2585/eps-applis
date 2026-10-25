@@ -39,11 +39,20 @@ window.CARNET_AIDE = [
   {ic: '👥', t: 'Classes et bulletins', pts: [
     ['Élèves', 'La liste avec le pourcentage de chacun et ses absences, oublis et perturbations. Touche un élève pour sa <b>fiche complète</b> et son bulletin. ✏️ <b>Gérer les élèves</b> : ajouter, renommer, retirer.'],
     ['Suivi', 'Tenue et attitude de la période, avec les dates : la fiche à montrer à un parent ou à l\'éducateur. Jamais de notes d\'évaluation dedans.'],
-    ['Bulletins', 'Savoir-être (sur 60) + savoir-faire (sur 40) = total en %, pour la période ou l\'année. Tri par nom, note, absences. 📝 <b>Commentaires bulletin</b> : un texte tout prêt par élève, à modifier. <b>Bulletin Excel</b> prêt à imprimer.'],
+    ['Bulletins', 'Savoir-être (sur 60) + savoir-faire (sur 40) = total en %, pour la période ou l\'année. Tri par nom, note, absences. 📝 <b>Commentaires bulletin</b> : un texte tout prêt par élève (savoir-être en % avec tenue et attitude, savoir-faire en % avec les évaluations, oublis, perturbations, exclusions), à modifier. <b>Bulletin Excel</b> prêt à imprimer. Boutons 📋 pour Skore : voir « Copier dans Skore ».'],
     ['Évaluations', 'Toutes les notes de la période d\'un coup d\'œil, un élève par ligne. Touche le titre d\'une colonne pour modifier ses notes.'],
     ['Certificats médicaux', 'Dans la fiche de l\'élève : <b>+ Ajouter un certificat</b>, prends-le en photo ; le carnet le redresse comme un scanner. Pendant ses dates, l\'élève est noté dispensé.'],
     ['Groupes', 'La case <b>Regrouper par groupes</b> réunit les classes qui ont cours ensemble (même heure dans ton horaire). Les bulletins restent séparés.'],
     ['Toutes les classes', '<b>Bulletin Excel de toutes les classes</b> : un fichier, un onglet par classe.']
+  ]},
+  {ic: '📤', t: 'Copier dans Skore (Smartschool)', intro: 'En fin de période, sur un ordinateur : le carnet copie, le favori « Remplir Skore » tape dans Skore à ta place.', pts: [
+    ['1. Installer le favori (une fois)', 'Sur l\'ordinateur, dans Chrome ou Edge : ouvre le Carnet, ⚙️ Réglages › <b>Skore</b>. Affiche la barre des favoris (Ctrl+Maj+B) et fais <b>glisser</b> le bouton ⭐ Remplir Skore dedans. Sinon : « Copier le favori », clic droit sur la barre › Ajouter une page, URL : colle. Après une mise à jour du carnet, réinstalle-le.'],
+    ['2. Savoir-faire et savoir-être', 'Classes › ta classe › <b>Bulletins</b> › « Copier pour Skore » : 📋 <b>Savoir-faire</b> ou 📋 <b>Savoir-être</b>. Indique sur combien est la colonne dans Skore : les notes sont converties. Touche <b>Copier pour Skore</b>.'],
+    ['3. Une évaluation', 'Classes › ta classe › <b>Évaluations</b> › 📋 <b>Copier une évaluation pour Skore</b>, puis choisis l\'évaluation. Absent, dispensé ou certificat : la case reste vide.'],
+    ['4. Taper les notes', 'Dans Skore, clique la case du <b>1er élève</b> de la colonne, puis le favori ⭐ <b>Remplir Skore</b>. Il tape les notes une à une, dans l\'ordre de Skore (nom de famille), et saute les lignes grises des classes. Vérifie, puis enregistre dans Skore.'],
+    ['5. Les commentaires', 'Bulletins › 📋 <b>Copier les commentaires pour Skore</b> (sous « Commentaires bulletin »). Dans Skore, clique la case Commentaire du 1er élève : sa fenêtre s\'ouvre. Clique le favori. OK = remplacer ce qui est déjà écrit, Annuler = le garder. Il lit le nom de l\'élève, écrit son commentaire, touche Insérer et passe au suivant. Ne touche à rien jusqu\'au message de fin.'],
+    ['Classes regroupées', 'Si la classe est ouverte en groupe (ex. 1G + 1H), tout est copié à la suite, classe par classe, comme dans Skore. Une seule classe ouverte : seulement elle.'],
+    ['Si ça bloque', 'Le favori demande parfois d\'autoriser la lecture du presse-papiers : accepte. Sinon une petite fenêtre s\'ouvre : colle (Ctrl+V) et OK. Un élève de Skore qui n\'est pas dans le carnet est laissé tel quel.']
   ]},
   {ic: '⚙️', t: 'Réglages', intro: 'La roue dentée en haut à droite. Elle s\'ouvre sur la rubrique qui va avec l\'onglet où tu es.', pts: [
     ['Horaire et sports', 'Ta semaine type, et tes sports en plus de la liste de base (avec leur ordre).'],
@@ -51,6 +60,7 @@ window.CARNET_AIDE = [
     ['Piscine', '« Ne nage pas » retire ou non des points ; les règles ne coûtent jamais de point. Texte du message aux éducateurs quand tu laisses un travail.'],
     ['Évaluations', '« Sur combien » proposé, arrondi des notes d\'endurance, réglages du compteur de tours.'],
     ['Commentaires', 'Commentaire de bulletin automatique, ou cases vides que tu remplis toi-même.'],
+    ['Skore', 'Le favori ⭐ Remplir Skore à installer sur l\'ordinateur (voir « Copier dans Skore »).'],
     ['Périodes', 'Le nom, la date de début et le lieu (salle ou piscine) de chaque période, classe par classe.'],
     ['Sauvegarde', '<b>Télécharger une copie</b> (un fichier) et <b>Google Drive</b> (copie automatique, voir « Sauvegarde et Drive »).']
   ]},

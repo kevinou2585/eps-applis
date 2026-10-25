@@ -1,7 +1,7 @@
-/* Jeux d'hiver : une leçon = un jeu, pour toutes les années (on adapte les règles à l'âge). Peu de matériel ; petite ou grande salle indiquée dans les tags.
+/* Sports divers en une leçon (ex-« jeux d'hiver », id 'hiver' gardé pour les prépas déjà enregistrées) : une leçon = un jeu, pour toutes les années (on adapte les règles à l'âge). Peu de matériel ; petite ou grande salle indiquée dans les tags.
    Chaque leçon : un échauffement lié au jeu, le jeu avec ses étapes et variantes, un retour au calme. Sécurité : ballons en mousse, toucher sous les épaules. */
-PREPA_ADD({id: 'hiver', sport: 'Jeux d\'hiver', mat: 'Ballons en mousse, chasubles, cônes, foulards ; le matériel particulier est indiqué pour chaque jeu.', an: {
-0: {th: 'Jeux d\'hiver : des jeux complets en une leçon, peu de matériel', comp: ['HSC1', 'HSC3', 'GSS1'], l: [
+PREPA_ADD({id: 'hiver', sport: 'Sports divers', mat: 'Ballons en mousse, chasubles, cônes, foulards ; le matériel particulier est indiqué pour chaque jeu.', an: {
+0: {th: 'Sports divers : des sports et des jeux complets en une leçon, peu de matériel', comp: ['HSC1', 'HSC3', 'GSS1'], l: [
   {t: 'Balle aux prisonniers', tags: 'ballons mousse · petite ou grande salle · classique', mat: '2 ballons en mousse, chasubles, cônes pour la ligne médiane.', o: 'Lancer précis sous les épaules, attraper, esquiver ; respecter les règles et le fair-play.', comp: ['HME2', 'HSC1', 'HSC3'], e: [
     ['Passes à deux', 5, 'Par deux à 6 m : passes à une main de plus en plus fortes vers le ventre ; le receveur serre la balle contre lui.', 'deux'],
     ['La bouteille chanceuse', 5, 'En cercle autour d\'une bouteille qui tourne : celui qu\'elle désigne prend la balle et essaie de toucher quelqu\'un qui s\'enfuit dans les limites.', 'cercle']],

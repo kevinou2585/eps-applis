@@ -477,7 +477,7 @@ function agCouverture(c, ls){
 const PREPA_CAT = [['hiver', "Jeux d'hiver", /hiver/i], ['basket', 'Basket-ball', /basket/i], ['volley', 'Volley-ball', /volley/i], ['hand', 'Handball', /hand/i], ['natation', 'Natation', /natation|piscine|nage/i],
   ['endurance', "Course d'endurance", /endurance|course en dur/i], ['bad', 'Badminton', /badminton/i], ['danse', 'Danse', /danse/i], ['acro', 'Acrosport', /acro/i],
   ['prisonnier', 'Balle aux prisonniers', /prisonnier/i], ['athle', 'Athlétisme', /athl/i], ['foot', 'Football', /foot/i]];
-const PREPA_PRETS = ['basket', 'volley', 'hand', 'natation', 'endurance'];  // bibliothèques déjà écrites (les autres arrivent sport par sport)
+const PREPA_PRETS = ['hiver', 'basket', 'volley', 'hand', 'natation', 'endurance', 'bad', 'danse', 'acro', 'prisonnier', 'athle', 'foot'];  // bibliothèques écrites (carnet/prepas/<id>.js)
 const prepaCat = () => PREPA_CAT.filter(([id]) => PREPA_PRETS.includes(id));
 const PREPA_LIB = window.PREPA_LIB = window.PREPA_LIB || {};
 window.PREPA_ADD = o => { PREPA_LIB[o.id] = o; };

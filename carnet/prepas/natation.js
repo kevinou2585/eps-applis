@@ -1,6 +1,7 @@
-/* Natation : 6 leçons par année (1re → 6e secondaire). Groupes de niveau conseillés (couloirs facile / moyen / fort).
+/* Natation · nageurs (grande profondeur) : 6 leçons par année (1re → 6e secondaire) ; en 1re, 2e et 3e, 2 cycles de plus (18 leçons) en bas du fichier. Groupe débutants : natdeb.js. Groupes de niveau conseillés (couloirs facile / moyen / fort).
    Sécurité à chaque leçon : comptage des élèves à l'entrée et à la sortie, un prof au bord, pas de plongeon en petite profondeur. */
-PREPA_ADD({id: 'natation', sport: 'Natation', mat: 'Planches, pull-buoys, frites, anneaux lestés, lignes d\'eau, chronomètre, tableau des groupes, sifflet.', an: {
+(() => {
+const N = ({id: 'natation', sport: 'Natation', mat: 'Planches, pull-buoys, frites, anneaux lestés, lignes d\'eau, chronomètre, tableau des groupes, sifflet.', an: {
 1: {th: 'Être à l\'aise et en sécurité dans l\'eau : flotter, glisser, crawl et dos', comp: ['HME1', 'HME4', 'GSS1', 'GSS2'], l: [
   {t: 'Test de départ et règles de sécurité', o: 'Connaître les règles de la piscine ; se situer (groupe de niveau) par un test simple.', comp: ['HME1', 'GSS2', 'GSS3', 'GSS4'], e: [
     ['Règles et entrée dans l\'eau', 5, 'Au bord : règles (on ne court pas, on attend le signal, on sort quand le prof siffle 3 fois). Entrée par l\'échelle ou assis au bord ; on se mouille la nuque.', 'explication'],
@@ -35,7 +36,7 @@ PREPA_ADD({id: 'natation', sport: 'Natation', mat: 'Planches, pull-buoys, frites
    c: [['Dos crawlé', 12, 'Battements sur le dos, puis bras alternés : le bras sort tendu par le pouce, entre par le petit doigt.', 'Je fais 25 m de dos sans m\'arrêter.', 'Un bras seulement.', 'piscine:sp:aller'],
     ['Survie', 10, 'Faire la planche, faire du « surplace » (godille et pédalage) 30 s, lever un bras pour appeler à l\'aide.', 'Je tiens 30 s sur place.', 'En grande profondeur pour le groupe fort.', 'piscine:sp:flotte']],
    r: [['Retour', 5, 'Jeu calme et comptage.', 'piscine:sp:flotte']]},
-  {t: 'Évaluation : nager et être en sécurité', o: 'Montrer ses progrès : distance nagée, crawl, dos, flottaison.', comp: ['HME1', 'GSS1', 'GSS2', 'GSS4'], e: [
+  {t: 'Évaluation : nager et être en sécurité', o: 'Montrer ses progrès : distance nagée, crawl, dos, flottaison.', comp: ['HME1', 'GSS1', 'GSS2', 'GSS4'], crit: [['Distance en 5 minutes', 6, '6 : améliore nettement la distance du test de départ (au moins 2 longueurs de plus) · 4 : améliore d\'1 longueur · 2 : même distance · 1 : nage moins mais sans s\'arrêter'], ['25 m crawl : respiration sur le côté', 4, '4 : souffle dans l\'eau et inspire sur le côté sans lever la tête · 2 : respire en levant la tête · 0 : nage en apnée ou s\'arrête'], ['25 m crawl : corps allongé et jambes', 3, '3 : corps horizontal, battements depuis la hanche · 1 : jambes qui coulent · 0 : ne termine pas'], ['25 m dos', 4, '4 : corps allongé, oreilles dans l\'eau, bras tendus, 25 m sans arrêt · 2 : bassin assis ou arrêt · 0 : ne termine pas'], ['Flottaison 15 s', 3, '3 : 15 s sur le ventre ou le dos sans bouger · 1 : moins de 15 s · 0 : ne flotte pas']], e: [
     ['Échauffement', 6, '4 longueurs libres dans son couloir.', 'piscine:sp:aller'],
     ['Rappel des consignes', 4, 'Au bord : explication des épreuves (ce qui est observé, l\'ordre de passage par couloir) et rappel des règles de sécurité.', 'explication']],
    c: [['Épreuve 1 : distance', 12, 'Nager le plus loin possible en 5 minutes (on peut changer de nage, pas s\'arrêter au bord).', 'J\'améliore la distance du test de départ.', '', 'piscine:sp:aller'],
@@ -74,7 +75,7 @@ PREPA_ADD({id: 'natation', sport: 'Natation', mat: 'Planches, pull-buoys, frites
    c: [['Nage continue', 15, 'Nager 6 à 10 minutes sans s\'arrêter (changer de nage si besoin).', 'Je nage 200 m sans m\'arrêter.', '', 'piscine:sp:aller'],
     ['Relais par équipes', 10, 'Équipes de 4 équilibrées (un nageur fort, deux moyens, un facile) : relais 4 × 25 m, chacun choisit sa nage. Deux manches ; les équipes discutent de l\'ordre entre les manches.', 'Mon équipe termine le relais sans faute de passage (on ne part qu\'après le toucher).', '', 'piscine:sp:relais']],
    r: [['Retour', 5, 'Flottaison.', 'piscine:sp:flotte']]},
-  {t: 'Évaluation : 3 nages et distance', o: 'Montrer crawl, dos, brasse et une distance continue.', comp: ['HME1', 'GSS1', 'GSS2', 'GSS4'], e: [
+  {t: 'Évaluation : 3 nages et distance', o: 'Montrer crawl, dos, brasse et une distance continue.', comp: ['HME1', 'GSS1', 'GSS2', 'GSS4'], crit: [['25 m crawl', 4, '4 : respiration latérale, corps allongé, sans arrêt · 2 : technique partielle · 0 : ne termine pas'], ['25 m dos', 4, '4 : corps allongé, bras tendus, sans arrêt · 2 : bassin assis · 0 : ne termine pas'], ['25 m brasse : jambes', 4, '4 : talons aux fesses, pieds en flexion, fouet symétrique · 2 : ciseaux ou pieds en extension · 0 : ne termine pas'], ['200 m sans arrêt', 6, '6 : 200 m sans s\'arrêter ni toucher le fond · 4 : 1 arrêt · 2 : 150 m · 1 : 100 m'], ['Connaître son temps', 2, '2 : connaît son temps et le compare au test de départ · 1 : connaît son temps · 0 : ne sait pas']], e: [
     ['Échauffement', 6, '4 longueurs.', 'piscine:sp:aller'],
     ['Consignes', 4, 'Au bord : ordre de passage, ce que le prof observe pour chaque nage, rôle du partenaire qui compte les longueurs et chronomètre.', 'explication']],
    c: [['Épreuve 1 : 3 nages', 12, 'Chaque élève nage 25 m crawl, 25 m dos et 25 m brasse, avec 1 minute de repos entre chaque. Le prof observe avec la grille (respiration, position du corps, jambes).', 'Je nage les 3 × 25 m sans m\'arrêter, avec la bonne technique de jambes en brasse.', '', 'piscine:sp:aller'],
@@ -112,7 +113,7 @@ PREPA_ADD({id: 'natation', sport: 'Natation', mat: 'Planches, pull-buoys, frites
    c: [['400 m', 15, 'Nage continue ; le partenaire au bord note le temps à chaque 100 m.', 'Mes 100 m sont réguliers.', '', 'piscine:sp:aller'],
     ['Jeu', 10, 'Water-polo simplifié en petite profondeur : 2 équipes de 4-5, ballon souple, but = toucher le bord adverse avec le ballon. On ne garde pas le ballon plus de 3 s ; pas de contact.', 'Je fais des passes et je me déplace pour être démarqué.', '', 'piscine:sp:relais']],
    r: [['Retour', 5, 'Flottaison sur le dos et relâchement ; on note dans quelle allure on tiendrait 400 m.', 'piscine:sp:flotte']]},
-  {t: 'Évaluation', o: 'Montrer brasse coordonnée, canard, survie et nage longue.', comp: ['HME1', 'GSS1', 'GSS2', 'GSS4'], e: [
+  {t: 'Évaluation', o: 'Montrer brasse coordonnée, canard, survie et nage longue.', comp: ['HME1', 'GSS1', 'GSS2', 'GSS4'], crit: [['Plongeon et 25 m', 4, '4 : entrée tête la première, 25 m sans arrêt · 2 : saut pieds puis 25 m · 0 : ne termine pas'], ['Canard et anneau', 4, '4 : canard en un mouvement, remonte l\'anneau du premier coup · 2 : 2 essais · 0 : ne remonte pas l\'anneau'], ['Retour sur le dos', 2, '2 : retour sur le dos sans arrêt, anneau tenu · 1 : avec arrêt · 0 : ne termine pas'], ['400 m sans arrêt', 7, '7 : 400 m sans arrêt · 5 : 1 arrêt · 3 : 300 m · 1 : 200 m'], ['Régularité (deux 200 m)', 3, '3 : écart de moins de 10 s entre les deux 200 m · 2 : moins de 20 s · 1 : plus de 20 s']], e: [
     ['Échauffement', 6, '200 m à allure facile, dont 50 m de brasse coordonnée.', 'piscine:sp:aller'],
     ['Consignes', 4, 'Au bord : ordre des épreuves (brasse coordonnée, canard, 400 m), rôle du partenaire (compter, chronométrer), critères observés.', 'explication']],
    c: [['Épreuve 1 : parcours de sauvetage', 12, 'Plonger, nager 25 m, canard pour un anneau, revenir sur le dos.', 'Parcours complet.', '', 'piscine:sp:aller'],
@@ -149,7 +150,7 @@ PREPA_ADD({id: 'natation', sport: 'Natation', mat: 'Planches, pull-buoys, frites
     ['Nages', 5, '25 m de chaque nage dans l\'ordre du 4 nages (papillon ou ondulation, dos, brasse, crawl) ; on vérifie les virages entre nages.', 'piscine:sp:aller']],
    c: [['Relais 4 nages', 20, 'Équipes de 4 ; on change d\'ordre à chaque course.', 'Mon passage de relais est correct.', '', 'piscine:sp:relais']],
    r: [['Retour', 5, 'Flottaison sur le dos ; rappel de l\'ordre des nages du relais (dos, brasse, papillon, crawl).', 'piscine:sp:flotte']]},
-  {t: 'Évaluation', o: 'Montrer culbute, papillon (ou ondulation), sauvetage et série.', comp: ['HME1', 'GSS1', 'GSS2', 'GSS4'], e: [
+  {t: 'Évaluation', o: 'Montrer culbute, papillon (ou ondulation), sauvetage et série.', comp: ['HME1', 'GSS1', 'GSS2', 'GSS4'], crit: [['Épreuve choisie terminée', 5, '5 : 100 m 4 nages ou 100 m crawl avec culbutes terminés sans arrêt · 3 : 1 arrêt · 1 : 50 m'], ['Technique des nages', 4, '4 : chaque nage correcte (respiration, coordination) · 2 : une nage faible · 0 : technique très faible'], ['Virages (culbute ou virage réglementaire)', 3, '3 : tous les virages corrects · 2 : la plupart · 1 : virages non réglementaires'], ['Sauvetage : canard et objet', 4, '4 : remonte l\'objet du premier essai · 2 : 2 essais · 0 : ne remonte pas'], ['Sauvetage : remorquage 15 m', 4, '4 : 15 m, prise sous les aisselles, visage du camarade hors de l\'eau · 2 : visage qui passe sous l\'eau ou arrêt · 0 : ne termine pas']], e: [
     ['Échauffement', 6, '200 m au choix, dont 2 culbutes et 2 × 15 m d\'ondulation.', 'piscine:sp:aller'],
     ['Consignes', 4, 'Au bord : choix de l\'épreuve 1 par chaque élève, ordre de passage, déroulement du parcours de sauvetage.', 'explication']],
    c: [['Épreuve 1 : 100 m 4 nages ou 100 m crawl avec culbutes', 10, 'Au choix de l\'élève : 100 m 4 nages ou 100 m crawl avec culbutes. Le prof observe la technique avec la grille ; le partenaire chronomètre.', 'Je termine l\'épreuve choisie avec des virages corrects.', '', 'piscine:sp:aller'],
@@ -185,7 +186,7 @@ PREPA_ADD({id: 'natation', sport: 'Natation', mat: 'Planches, pull-buoys, frites
    c: [['Palmes', 10, '4 × 50 m avec palmes, 30 s de repos : crawl, dos, ondulation sur le dos, au choix. Accent sur le gainage et l\'allongement.', 'Je garde le corps aligné et je respire régulièrement.', '', 'piscine:sp:aller'],
     ['Apnée dynamique', 10, 'Encadrée : nager 15 m sous l\'eau (brasse coulée ou ondulation). Un binôme au bord suit son partenaire des yeux tout le long. Jamais d\'hyperventilation avant ; 1 minute de repos entre chaque essai.', 'Je parcours 15 m sous l\'eau en restant calme ; je respecte les règles de sécurité.', '', 'piscine:sp:aller']],
    r: [['Retour', 5, 'Flottaison sur le dos, respiration lente ; rappel des règles de l\'apnée (jamais seul, jamais d\'hyperventilation).', 'piscine:sp:flotte']]},
-  {t: 'Évaluation', o: 'Montrer sa séance, son sauvetage et sa performance.', comp: ['HME1', 'GSS1', 'GSS2', 'GSS5'], e: [
+  {t: 'Évaluation', o: 'Montrer sa séance, son sauvetage et sa performance.', comp: ['HME1', 'GSS1', 'GSS2', 'GSS5'], crit: [['Conception de la séance', 4, '4 : échauffement, série principale et récupération écrits avec distances et repos · 2 : incomplet · 0 : pas de séance écrite'], ['Réalisation de la séance', 5, '5 : respecte temps et distances prévus · 3 : quelques écarts · 1 : séance très différente'], ['Explication des choix', 3, '3 : explique clairement pourquoi la séance est construite ainsi · 1 : explication vague · 0 : aucune'], ['Sauvetage : parcours enchaîné', 4, '4 : entrée sautée, 25 m tête hors de l\'eau, canard, sans arrêt · 2 : un arrêt · 0 : ne termine pas'], ['Sauvetage : remorquage et sortie', 4, '4 : remorque 15 m et sort le camarade en sécurité · 2 : sortie aidée · 0 : ne termine pas']], e: [
     ['Échauffement personnel', 6, 'Chacun réalise l\'échauffement écrit dans son carnet (environ 200 à 300 m).', 'piscine:sp:aller'],
     ['Consignes', 4, 'Au bord : ordre de passage, rôle du partenaire (vérifier la séance, chronométrer), déroulement du parcours de sauvetage.', 'explication']],
    c: [['Épreuve 1 : séance', 12, 'Chaque élève réalise la série d\'entraînement qu\'il a préparée (échauffement, série principale, récupération) ; le partenaire vérifie le respect des temps et des distances notés.', 'Je réalise ma séance comme prévue et je peux expliquer pourquoi je l\'ai construite ainsi.', '', 'piscine:sp:aller'],
@@ -219,10 +220,289 @@ PREPA_ADD({id: 'natation', sport: 'Natation', mat: 'Planches, pull-buoys, frites
     ['Mouvements', 5, 'Sauts groupés, rotations, battements de jambes au bord, mouvements de bras avec frite, en suivant le rythme de la musique.', 'piscine:sp:flotte']],
    c: [['Séance d\'aquagym', 20, 'En petite profondeur, en musique : un groupe d\'élèves mène une séance de 10 minutes (marche, sauts, mouvements de bras avec frites) préparée à l\'avance ; les autres suivent.', 'Nous menons la séance en donnant des consignes claires et en montrant les mouvements.', '', 'piscine:sp:flotte']],
    r: [['Retour', 5, 'Relaxation sur le dos avec frite sous la nuque et sous les genoux, 2 minutes.', 'piscine:sp:flotte']]},
-  {t: 'Évaluation : projet', o: 'Réaliser le test final de son projet et l\'analyser.', comp: ['HME1', 'GSS1', 'GSS4', 'GSS5'], e: [
+  {t: 'Évaluation : projet', o: 'Réaliser le test final de son projet et l\'analyser.', comp: ['HME1', 'GSS1', 'GSS4', 'GSS5'], crit: [['Test final réalisé', 6, '6 : test du projet réalisé en entier, conforme au règlement · 4 : réalisé avec un arrêt · 2 : partiel'], ['Progrès par rapport au départ', 6, '6 : progrès net · 4 : léger progrès · 2 : même résultat · 1 : régression'], ['Comparaison et analyse', 4, '4 : compare chiffres à l\'appui et explique la différence · 2 : compare sans expliquer · 0 : rien'], ['Carnet de projet tenu', 4, '4 : carnet complet (tests, séances, ressentis) · 2 : incomplet · 0 : absent']], e: [
     ['Échauffement personnel', 6, 'Chacun réalise l\'échauffement prévu dans son carnet.', 'piscine:sp:aller'],
     ['Consignes', 4, 'Ordre de passage des tests selon les projets, rôle du partenaire qui chronomètre et vérifie.', 'explication']],
    c: [['Test final', 20, 'Chaque élève passe le test correspondant à son projet (ex. 400 m chronométré, 1 500 m, 25 m papillon, parcours de sauvetage) et compare au test de départ dans son carnet.', 'Je compare mon résultat final à mon point de départ et j\'explique la différence.', '', 'piscine:sp:aller']],
    r: [['Bilan', 5, 'Analyse écrite dans le carnet : résultat final, comparaison avec le test de départ, ce qui a marché et ce qu\'on ferait autrement.', 'explication']]}
 ]}
 }});
+
+/* Nageurs (grande profondeur), 1re à 3e : cycles 2 et 3 (6 leçons chacun : 5 leçons + 1 évaluation), à la suite du cycle 1.
+   On les fait quand la natation dure 12 ou 18 semaines. */
+N.an[1].cy = ["Être à l'aise et en sécurité : flotter, glisser, crawl et dos", "Nager plus longtemps en grande profondeur : crawl coordonné, dos, jambes de brasse", "Autonomie en grande profondeur : plongeon, brasse, objet au fond, 200 m"];
+N.an[1].l.push(
+  {t: "Sauter en grande profondeur et faire du surplace", o: "Entrer seul dans l'eau profonde, remonter, s'orienter et tenir sur place 30 s.", e: [
+    ["Nage libre et rappel des règles", 5, "4 longueurs à son rythme dans son couloir. Au bord : rappel des règles de la grande profondeur (on saute seulement au signal, un seul élève à la fois par couloir, on s'écarte tout de suite du point de chute).", "piscine:sp:aller"],
+    ["Godille au bord", 5, "Tenant le bord d'une main en grande profondeur : godille de l'autre main (mouvement en 8, paume vers le bas) et pédalage des jambes ; puis lâcher le bord 5 s, 10 s.", "piscine:sp:flotte"]],
+   c: [["Saut droit et retour au bord", 10, "Saut pieds joints depuis le bord (bras le long du corps), on se laisse remonter, on souffle, on regarde le prof puis on nage 5 m jusqu'à l'échelle. 4 sauts chacun, le suivant attend que le précédent ait rejoint le bord.", "Je remonte seul, je m'oriente et je rejoins le bord sans m'accrocher à un camarade.", "Groupe moins à l'aise : saut près de la perche tenue par le prof.", "piscine:sp:plongeon"],
+    ["Surplace", 10, "Au milieu du couloir profond : surplace 15 s, 30 s puis 45 s (godille + pédalage, tête hors de l'eau, respiration calme). Entre deux essais, repos au bord 30 s.", "Je tiens 30 s sur place sans m'accrocher.", "Lever une main hors de l'eau (« j'appelle à l'aide ») pendant 10 s.", "piscine:sp:flotte"],
+    ["Le chronomètre humain", 5, "Par deux : l'un saute, fait 20 s de surplace et rejoint le bord ; l'autre, au bord, compte les secondes à voix haute et vérifie qu'il ne s'accroche pas. On inverse.", "Je fais le saut, le surplace et le retour sans aide.", "Surplace avec un bras levé.", "piscine:sp:flotte"]],
+   r: [["Flottaison et sortie", 5, "Étoile de mer sur le dos 30 s en grande profondeur, puis sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Crawl : coordonner bras et respiration", o: "Nager le crawl en respirant sur le côté sans casser le rythme des bras.", e: [
+    ["Nage libre", 5, "4 longueurs dans son couloir : 2 de crawl lent en soufflant dans l'eau, 2 de dos, sans s'arrêter au mur.", "piscine:sp:aller"],
+    ["Battements sur le côté", 5, "Un bras tendu devant, l'autre le long de la cuisse : battements sur le côté, tête dans l'eau, on tourne la tête pour respirer toutes les 6 battements. 2 longueurs (une par côté).", "piscine:sp:aller"]],
+   c: [["Crawl un bras", 8, "Un bras tendu devant tient la planche, l'autre fait le crawl ; on respire du côté du bras qui tire, au moment où la main passe à la cuisse. 2 × 25 m par bras.", "Ma tête tourne quand ma main passe près de la cuisse, sans se lever vers l'avant.", "Sans planche, bras tendu devant.", "piscine:sp:aller"],
+    ["Crawl en comptant", 10, "4 × 25 m crawl en respirant tous les 2 temps (toujours du même côté), 20 s de repos entre chaque. Le partenaire au bord observe : tête qui se lève vers l'avant ? oui / non.", "Je nage 25 m sans lever la tête vers l'avant.", "Respiration tous les 3 temps pour les plus à l'aise.", "piscine:sp:aller"],
+    ["Relais crawl", 7, "Équipes de 4 par couloir : relais 4 × 25 m crawl, départ dans l'eau quand le nageur précédent touche le mur. Deux manches, on change l'ordre.", "Je nage mon relais sans m'arrêter, en respirant sur le côté.", "Groupe moins à l'aise : 12,5 m.", "piscine:sp:relais"]],
+   r: [["Nage souple", 5, "2 longueurs de dos lent, puis flottaison ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Le dos : bras continus et position du corps", o: "Nager 50 m en dos crawlé avec des bras continus et le corps allongé.", e: [
+    ["Nage libre", 5, "4 longueurs à son rythme dans son couloir, nages au choix, en soufflant longuement dans l'eau à chaque respiration.", "piscine:sp:aller"],
+    ["Battements sur le dos", 5, "Bras le long du corps, oreilles dans l'eau, regard au plafond : battements sur 2 longueurs, le nombril reste à la surface.", "piscine:sp:aller"]],
+   c: [["Dos un bras", 8, "Un bras le long du corps, l'autre fait le dos : il sort tendu par le pouce, passe près de l'oreille, entre par le petit doigt. 2 × 25 m par bras.", "Mon bras passe tendu près de l'oreille.", "Planche tenue sur le ventre par l'autre main.", "piscine:sp:aller"],
+    ["Dos complet en continu", 10, "4 × 25 m dos complet : quand un bras entre dans l'eau, l'autre sort (comme un moulin), 20 s de repos entre chaque. On compte ses mouvements de bras par longueur.", "Je nage 25 m de dos sans m'asseoir, avec des bras qui ne s'arrêtent pas.", "50 m d'un coup pour les plus à l'aise.", "piscine:sp:aller"],
+    ["Repère de fin de bassin", 7, "On repère les fanions (5 m du mur) : en dos, on compte ses bras entre les fanions et le mur pour arriver sans se cogner. 4 arrivées chacun.", "J'arrive au mur sans me cogner la tête, grâce à mon compte de bras.", "", "piscine:sp:aller"]],
+   r: [["Flottaison", 5, "Étoile de mer sur le dos, respiration lente ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Les jambes de brasse", o: "Faire un mouvement de jambes de brasse symétrique, pieds en flexion, qui fait avancer.", e: [
+    ["Nage libre", 5, "4 longueurs dans son couloir en alternant crawl et dos, allure lente, on double seulement par la gauche.", "piscine:sp:aller"],
+    ["Jambes au bord", 5, "Assis au bord puis tenant le bord à plat ventre : talons aux fesses, pieds en flexion (orteils vers les genoux), pieds écartés vers l'extérieur puis on serre jambes tendues. 3 séries de 8.", "piscine:sp:flotte"]],
+   c: [["Brasse jambes avec planche", 10, "Planche tenue bras tendus : jambes de brasse sur 4 × 15 m, on glisse 2 secondes après chaque fouet (« plier, ouvrir, serrer, glisser »).", "J'avance en 10 mouvements de jambes ou moins sur 15 m.", "Sur le dos, planche sur le ventre : on voit ses genoux.", "piscine:sp:aller"],
+    ["Le test des pieds", 8, "Par deux : l'un nage jambes de brasse, l'autre marche au bord et observe les pieds (flexion ? symétrie ? ciseaux ?). Il donne un conseil, on inverse.", "Mes deux pieds font le même mouvement, en flexion.", "", "piscine:sp:aller"],
+    ["Course jambes de brasse", 7, "Relais 2 × 15 m jambes de brasse avec planche, par équipes de 4 dans son couloir.", "Je garde un mouvement correct même en allant vite.", "", "piscine:sp:relais"]],
+   r: [["Nage libre lente", 5, "2 longueurs de dos lent ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Nager 100 m sans s'arrêter", o: "Nager 100 m en continu, en choisissant ses nages et en gérant son souffle.", e: [
+    ["Échauffement", 6, "3 longueurs à son rythme, puis 1 longueur de battements avec planche.", "piscine:sp:aller"],
+    ["Rappel des repères", 4, "Au bord : pour durer, on part lentement, on souffle dans l'eau à chaque respiration, et si on est fatigué on passe sur le dos au lieu de s'arrêter.", "explication"]],
+   c: [["2 × 50 m", 8, "2 × 50 m à allure lente, 1 minute de repos entre les deux. Le partenaire au bord compte les longueurs.", "Je nage 50 m sans m'arrêter.", "Groupe moins à l'aise : 4 × 25 m.", "piscine:sp:aller"],
+    ["100 m en continu", 12, "100 m sans s'arrêter ni toucher le fond, nages au choix (on peut passer du crawl au dos). Le partenaire compte les longueurs et note le temps.", "Je nage 100 m sans m'arrêter et je connais mon temps.", "Les plus forts : 150 m.", "piscine:sp:aller"],
+    ["Bilan à deux", 5, "Chacun dit à son partenaire : ma nage la plus facile, le moment où j'ai eu envie de m'arrêter, ce qui m'a aidé.", "Je sais quelle nage m'aide à récupérer.", "", "explication"]],
+   r: [["Flottaison", 5, "Étoile de mer sur le dos ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Évaluation : nager 100 m et être en sécurité en grande profondeur", o: "Montrer ses progrès : 100 m sans arrêt, crawl coordonné, saut et surplace, jambes de brasse.", comp: ["HME1", "GSS1", "GSS2", "GSS4"],
+   crit: [["100 m sans arrêt", 6, "6 : 100 m sans s'arrêter ni toucher le fond · 4 : 1 arrêt au mur · 2 : 75 m · 1 : 50 m"], ["50 m crawl : respiration et bras", 5, "5 : respire sur le côté sans lever la tête, bras continus · 3 : respire en levant la tête ou s'arrête une fois · 1 : crawl très saccadé"], ["Saut en grande profondeur et retour au bord", 3, "3 : saute seul, remonte, s'oriente et rejoint le bord · 2 : hésite ou cherche la perche · 0 : refuse"], ["Surplace 30 s", 3, "3 : 30 s sans s'accrocher, tête hors de l'eau · 2 : 15 s · 1 : moins de 15 s"], ["15 m jambes de brasse", 3, "3 : pieds en flexion, mouvement symétrique, avance bien · 2 : ciseaux ou pieds en extension · 1 : n'avance presque pas"]],
+   e: [
+    ["Échauffement", 6, "4 longueurs libres dans son couloir à allure lente, puis 2 coulées au mur pour se préparer.", "piscine:sp:aller"],
+    ["Rappel des épreuves", 4, "Au bord : ordre de passage par couloir, ce qui est observé, rôle du partenaire (compter les longueurs, chronométrer).", "explication"]],
+   c: [["Épreuve 1 : 100 m", 10, "100 m sans arrêt, nages au choix, par vagues de 4 (un par couloir). Le partenaire compte les longueurs et note le temps.", "Je nage 100 m sans m'arrêter.", "", "piscine:sp:aller"],
+    ["Épreuve 2 : 50 m crawl et 15 m jambes de brasse", 8, "50 m crawl observé (respiration, bras), puis après 1 minute de repos 15 m jambes de brasse avec planche.", "Je respire sur le côté et mes pieds sont en flexion en brasse.", "", "piscine:sp:aller"],
+    ["Épreuve 3 : saut et surplace", 7, "Saut pieds joints en grande profondeur, 30 s de surplace, retour au bord à la nage.", "Je tiens 30 s et je reviens seul.", "", "piscine:sp:plongeon"]],
+   r: [["Bilan", 5, "Chacun compare avec le test de la leçon 1 (distance, nages) ; sortie et comptage.", "explication"]]},
+  {t: "Le plongeon : assis, à genoux, puis debout", o: "Entrer dans l'eau tête la première, bras tendus, sans faire de « plat ».", e: [
+    ["Nage libre", 5, "4 longueurs à son rythme dans son couloir, nages au choix, en soufflant dans l'eau ; on double par la gauche.", "piscine:sp:aller"],
+    ["Coulées", 5, "Flèche ventrale au mur : bras tendus, mains l'une sur l'autre, tête entre les bras ; glisser le plus loin possible. 6 coulées.", "piscine:sp:plongeon"]],
+   c: [["Plongeon assis", 6, "Assis au bord, pieds sur la goulotte, bras tendus au-dessus de la tête, menton sur la poitrine : on bascule vers l'avant et on vise un point dans l'eau à 1 m. 4 essais. Uniquement en grande profondeur.", "J'entre dans l'eau mains en premier, sans plat.", "", "piscine:sp:plongeon"],
+    ["Plongeon à genoux puis accroupi", 8, "Un genou au bord, l'autre pied aux orteils sur le bord ; même position des bras, on bascule. Puis accroupi. 4 essais par position ; le prof corrige la tête (entre les bras).", "Mes mains, ma tête puis mon corps passent par le même trou.", "Rester à genoux si l'accroupi fait peur.", "piscine:sp:plongeon"],
+    ["Plongeon debout et coulée", 11, "Debout, pieds au bord, orteils accrochés, jambes un peu fléchies : on pousse vers l'avant, bras tendus, et on glisse sous l'eau avant de nager 10 m de crawl. 6 essais.", "Je plonge et je glisse au moins 3 m avant de nager.", "Les plus à l'aise : plongeon puis 25 m.", "piscine:sp:plongeon"]],
+   r: [["Flottaison et sortie", 5, "Étoile de mer sur le dos ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "La brasse : bras et coordination", o: "Coordonner bras et jambes de brasse : « tirer, respirer, pousser, glisser ».", e: [
+    ["Nage libre", 5, "2 longueurs crawl, 2 longueurs jambes de brasse avec planche.", "piscine:sp:aller"],
+    ["Bras debout", 5, "Debout en petite profondeur, buste penché : les mains s'écartent, tirent jusqu'aux épaules (pas plus loin), se rejoignent sous le menton et repartent devant. On souffle quand les bras s'allongent.", "piscine:sp:flotte"]],
+   c: [["Bras de brasse avec pull-buoy", 7, "Pull-buoy entre les cuisses : bras de brasse sur 2 × 25 m, on lève le menton pour respirer quand les mains tirent.", "Mes mains ne dépassent pas mes épaules.", "Battements de crawl à la place du pull-buoy.", "piscine:sp:aller"],
+    ["Coordination 1 bras - 1 jambe", 10, "On décompose : bras (et respiration), puis jambes, puis glisse 2 s bras tendus. 4 × 25 m en disant dans sa tête « bras, jambes, glisse ».", "Mes jambes poussent quand mes bras repartent devant.", "2 coups de jambes pour 1 coup de bras pour ceux qui mélangent.", "piscine:sp:aller"],
+    ["Brasse comptée", 8, "25 m de brasse en comptant ses cycles ; on recommence en essayant d'en faire 2 de moins en glissant plus longtemps.", "Je fais 25 m de brasse coordonnée et je gagne au moins un cycle.", "", "piscine:sp:aller"]],
+   r: [["Nage souple", 5, "2 longueurs de dos lent ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Aller chercher un objet au fond", o: "Descendre en grande profondeur par un canard et remonter un objet.", e: [
+    ["Nage libre", 5, "4 longueurs à son rythme dans son couloir, nages au choix, en soufflant dans l'eau ; on double par la gauche.", "piscine:sp:aller"],
+    ["Apnée et bulles", 5, "Tenant le bord : s'immerger entièrement en soufflant doucement par le nez, compter jusqu'à 5, remonter. Puis s'asseoir au fond en petite profondeur.", "piscine:sp:flotte"]],
+   c: [["Le canard", 10, "En nageant la brasse : bras tendus devant, on plie le buste vers le fond, on lève les jambes tendues hors de l'eau : leur poids fait descendre. On commence vers 1,5 m de fond, puis plus profond. 6 essais.", "Je descends en un mouvement, sans pédaler.", "Descendre le long d'une perche ou de l'échelle.", "piscine:sp:plongeon"],
+    ["Ramasse-anneaux", 10, "Anneaux lestés posés au fond (couleurs = points). Par équipes de 3 : chacun à son tour descend chercher un anneau et le ramène au bord. On compte les points de l'équipe en 5 minutes.", "Je remonte un anneau à chaque descente.", "Les plus à l'aise : 2 anneaux en une descente.", "piscine:sp:flotte"],
+    ["Canard et nage", 5, "Canard, remonter un anneau, puis le ramener au bord en nageant sur le dos 10 m.", "J'enchaîne descente, remontée et retour sans m'arrêter.", "", "piscine:sp:aller"]],
+   r: [["Flottaison", 5, "Étoile de mer, respiration lente ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Nager longtemps : 200 m en alternant les nages", o: "Nager 200 m en continu en utilisant le dos ou la brasse pour récupérer.", e: [
+    ["Échauffement", 6, "4 longueurs dans son couloir : 2 de crawl, 1 de dos, 1 de brasse, à allure lente.", "piscine:sp:aller"],
+    ["Plan de nage", 4, "Au bord : chacun choisit son plan pour 200 m (ex. 2 longueurs crawl, 1 longueur dos, et on recommence) et le dit à son partenaire.", "explication"]],
+   c: [["2 × 100 m", 8, "2 × 100 m en suivant son plan, 1 minute de repos entre les deux. Le partenaire note les temps.", "Mes deux 100 m ont presque le même temps.", "Groupe moins à l'aise : 4 × 50 m.", "piscine:sp:aller"],
+    ["200 m en continu", 12, "200 m sans arrêt en suivant son plan. Le partenaire compte les longueurs et note le temps à 100 m et à l'arrivée.", "Je nage 200 m sans m'arrêter.", "Les plus forts : 300 m.", "piscine:sp:aller"],
+    ["Bilan", 5, "On compare les deux 100 m : plus rapide au début ou à la fin ? Chacun ajuste son plan pour la prochaine fois.", "J'explique comment j'ai géré mon effort.", "", "explication"]],
+   r: [["Flottaison", 5, "Étoile de mer sur le dos 30 s en respirant lentement ; sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Aider un camarade : premiers gestes de sauvetage", o: "Porter secours sans se mettre en danger : tendre un objet, rassurer, remorquer une planche.", comp: ["HME1", "HME4", "GSS2", "GSS3"], e: [
+    ["Nage libre", 5, "4 longueurs à son rythme : crawl, dos, brasse.", "piscine:sp:aller"],
+    ["La règle d'or", 5, "Au bord : face à quelqu'un en difficulté, on donne l'alerte (crier, appeler un adulte), puis on aide du bord en tendant un objet (perche, planche, frite). On ne saute jamais à l'eau pour agripper quelqu'un qui panique.", "explication"]],
+   c: [["Tendre la perche ou la frite", 8, "Par deux : l'un fait semblant d'être en difficulté à 2 m du bord (en grande profondeur, en s'agitant), l'autre se couche au bord (pour ne pas être tiré dans l'eau), lui tend la frite ou la perche et le ramène au bord en lui parlant. On inverse.", "Je reste stable au bord et je ramène mon camarade en lui parlant.", "Le camarade est en petite profondeur.", "piscine:sp:flotte"],
+    ["Lancer une planche", 7, "Depuis le bord, lancer une planche à côté (pas sur) d'un camarade à 4 m ; il l'attrape et revient en battements.", "Ma planche arrive à portée de main de mon camarade.", "Distance réduite à 2 m.", "piscine:sp:flotte"],
+    ["Remorquer une planche", 10, "Sur le dos, jambes de brasse ou battements, une planche tenue sur la poitrine (c'est le « camarade fatigué ») : 2 × 15 m. Puis par deux : le camarade flotte sur le dos en tenant une frite, le sauveteur tire la frite sur 10 m.", "Je remorque 10 m en gardant la tête du camarade hors de l'eau.", "Remorquer la frite seule.", "piscine:sp:aller"]],
+   r: [["Bilan et sortie", 5, "Chacun redit les 3 gestes : alerter, tendre un objet, rassurer ; sortie et comptage.", "explication"]]},
+  {t: "Évaluation : autonomie en grande profondeur", o: "Montrer plongeon, brasse, objet au fond et 200 m.", comp: ["HME1", "GSS1", "GSS2", "GSS4"],
+   crit: [["Plongeon et 25 m", 4, "4 : plongeon debout sans plat, coulée, 25 m sans arrêt · 3 : plongeon accroupi ou petit plat · 2 : entrée sautée puis 25 m · 0 : ne termine pas"], ["25 m brasse coordonnée", 4, "4 : bras, jambes, glisse bien enchaînés · 2 : coordination incomplète · 1 : ciseaux ou mains au-delà des épaules"], ["Canard et objet au fond", 4, "4 : canard en un mouvement, objet remonté du premier coup · 2 : en 2 essais · 0 : ne remonte pas l'objet"], ["200 m sans arrêt", 6, "6 : 200 m sans arrêt · 4 : 1 arrêt · 2 : 150 m · 1 : 100 m"], ["Gestion de l'effort", 2, "2 : écart de moins de 15 s entre les deux 100 m · 1 : plus de 15 s"]],
+   e: [
+    ["Échauffement", 6, "4 longueurs libres à allure lente dans son couloir, puis 2 coulées au mur.", "piscine:sp:aller"],
+    ["Rappel des épreuves", 4, "Au bord : ordre de passage, ce qui est observé, rôle du partenaire.", "explication"]],
+   c: [["Épreuve 1 : plongeon, 25 m et brasse", 10, "Plongeon, 25 m crawl, puis après 1 minute de repos 25 m brasse observée.", "Je plonge sans plat et ma brasse est coordonnée.", "", "piscine:sp:plongeon"],
+    ["Épreuve 2 : objet au fond", 5, "Canard pour remonter un anneau en grande profondeur (2 essais).", "Je remonte l'anneau.", "", "piscine:sp:flotte"],
+    ["Épreuve 3 : 200 m", 10, "200 m sans arrêt, nages au choix ; le partenaire compte les longueurs et note le temps à 100 m et à l'arrivée.", "Je nage 200 m sans m'arrêter.", "", "piscine:sp:aller"]],
+   r: [["Bilan de l'année", 5, "Chacun compare avec le test de la leçon 1 : distance, nages, profondeur ; sortie et comptage.", "explication"]]}
+);
+
+N.an[2].cy = ["Nager mieux et plus longtemps : crawl, dos, brasse, entrées dans l'eau", "Nager efficacement : brasse complète, crawl respiré des deux côtés, canard, séries", "Endurance et sécurité : 300 m, virage, nage habillée, remorquage, départ plongé"];
+N.an[2].l.push(
+  {t: "La brasse complète", o: "Nager 50 m de brasse coordonnée en glissant après chaque cycle.", e: [
+    ["Nage libre", 5, "4 longueurs dans son couloir en alternant crawl et dos, allure lente, on double seulement par la gauche.", "piscine:sp:aller"],
+    ["Jambes de brasse", 5, "2 longueurs jambes de brasse avec planche, en glissant 2 s après chaque fouet.", "piscine:sp:aller"]],
+   c: [["Bras et respiration", 7, "Pull-buoy entre les cuisses : bras de brasse sur 2 × 25 m ; on lève le menton pour inspirer quand les mains tirent, on souffle quand les bras repartent devant.", "Mes mains restent devant mes épaules.", "", "piscine:sp:aller"],
+    ["Brasse « bras, jambes, glisse »", 10, "4 × 25 m de brasse en décomposant : bras (et inspiration), jambes, glisse 2 s bras tendus. 20 s de repos entre chaque.", "Mes jambes poussent quand mes bras sont déjà devant.", "2 coups de jambes pour 1 coup de bras pour ceux qui mélangent.", "piscine:sp:aller"],
+    ["50 m de brasse", 8, "50 m de brasse en comptant les cycles par longueur ; le partenaire observe la glisse.", "Je nage 50 m de brasse coordonnée avec une glisse à chaque cycle.", "Les plus forts : 100 m.", "piscine:sp:aller"]],
+   r: [["Nage souple", 5, "2 longueurs de dos lent ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Crawl : respirer des deux côtés", o: "Respirer tous les 3 temps en crawl pour nager droit et équilibré.", e: [
+    ["Nage libre", 5, "4 longueurs à son rythme dans son couloir, nages au choix, en soufflant dans l'eau ; on double par la gauche.", "piscine:sp:aller"],
+    ["Battements sur le côté", 5, "Battements sur le côté droit puis gauche, bras devant tendu, respiration en tournant la tête. 2 longueurs.", "piscine:sp:aller"]],
+   c: [["Respiration 3 temps", 10, "4 × 25 m crawl en respirant tous les 3 mouvements de bras (une fois à droite, une fois à gauche), 20 s de repos.", "Je respire des deux côtés sans m'arrêter.", "Respirer tous les 2 temps puis passer au 3 temps sur la dernière longueur.", "piscine:sp:aller"],
+    ["Crawl rattrapé", 7, "Crawl rattrapé (une main attend l'autre devant) en 3 temps sur 2 × 25 m : on s'allonge et on a le temps de tourner la tête.", "Mon corps reste allongé quand je respire.", "Avec planche tenue devant.", "piscine:sp:aller"],
+    ["Nager droit", 8, "Par deux : l'un nage 25 m en 3 temps au milieu du couloir, l'autre observe s'il dérive vers la ligne d'eau. On inverse.", "Je nage droit au milieu de mon couloir.", "", "piscine:sp:aller"]],
+   r: [["Dos lent", 5, "2 longueurs de dos lent ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Le dos : rotation des épaules et départ", o: "Nager le dos en roulant des épaules et partir du mur en coulée dorsale.", e: [
+    ["Nage libre", 5, "4 longueurs dans son couloir en alternant crawl et dos, allure lente, on double seulement par la gauche.", "piscine:sp:aller"],
+    ["Battements sur le dos", 5, "2 longueurs de battements, bras tendus derrière la tête, mains l'une sur l'autre.", "piscine:sp:aller"]],
+   c: [["Épaule au menton", 8, "Dos complet : l'épaule du bras qui sort vient toucher le menton (rotation du corps). 4 × 25 m.", "Mes épaules roulent à chaque mouvement de bras.", "Avec un bras seulement.", "piscine:sp:aller"],
+    ["Départ de dos", 9, "Dans l'eau face au mur, mains à la goulotte, pieds contre le mur : on pousse en arrière, bras tendus derrière la tête, coulée sur le dos puis on nage. 6 départs.", "Je glisse au moins 3 m avant de nager.", "Départ sans les mains à la goulotte.", "piscine:sp:aller"],
+    ["Relais dos", 8, "Relais 4 × 25 m dos par équipes de 4 ; chaque nageur part en départ de dos quand le précédent touche le mur.", "Je pars en coulée et je nage droit.", "", "piscine:sp:relais"]],
+   r: [["Flottaison", 5, "Étoile de mer sur le dos 30 s en respirant lentement ; sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Le canard et l'apnée", o: "Descendre à 2-3 m par un canard, se déplacer sous l'eau et remonter un objet.", e: [
+    ["Nage libre", 5, "4 longueurs à son rythme dans son couloir, nages au choix, en soufflant dans l'eau ; on double par la gauche.", "piscine:sp:aller"],
+    ["Apnée au bord", 5, "Tenant le bord : immersion 5 s, 8 s, 10 s en soufflant lentement par le nez. Jamais d'hyperventilation (on ne respire pas vite avant).", "piscine:sp:flotte"]],
+   c: [["Canard", 8, "Canard depuis la brasse : buste plié vers le fond, jambes tendues levées hors de l'eau. Toucher le fond en grande profondeur, 6 essais.", "Je touche le fond en un seul canard.", "Le long d'une perche.", "piscine:sp:plongeon"],
+    ["Parcours sous l'eau", 10, "Deux cerceaux lestés au fond à 3 m l'un de l'autre : canard, passer dans les deux cerceaux, remonter. Un camarade surveille au bord, un seul élève sous l'eau par couloir.", "Je passe dans les deux cerceaux sans remonter.", "Un seul cerceau.", "piscine:sp:flotte"],
+    ["Pêche aux anneaux", 7, "Anneaux au fond : par équipes de 3, à tour de rôle, on ramène un anneau à chaque descente. 5 minutes.", "Je remonte un anneau à chaque descente.", "2 anneaux par descente.", "piscine:sp:flotte"]],
+   r: [["Flottaison", 5, "Étoile de mer, respiration lente ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Séries : 4 × 50 m avec repos", o: "Nager une série à allure régulière et utiliser l'horloge (temps de départ).", e: [
+    ["Échauffement", 6, "4 longueurs dans son couloir : 2 de crawl, 1 de dos, 1 de brasse, à allure lente.", "piscine:sp:aller"],
+    ["Lire l'horloge", 4, "Au bord : comment partir « sur le 0 » de la trotteuse et lire son temps à l'arrivée ; on calcule son repos.", "explication"]],
+   c: [["4 × 50 m", 12, "4 × 50 m crawl (ou nage au choix), 30 s de repos entre chaque. Le partenaire note les 4 temps.", "Mes 4 temps ont moins de 5 s d'écart.", "Groupe moins à l'aise : 4 × 25 m.", "piscine:sp:aller"],
+    ["Analyse des temps", 5, "Chacun regarde ses 4 temps : suis-je parti trop vite ? On fixe le temps à viser par 50 m.", "Je sais quel temps je peux tenir.", "", "explication"],
+    ["Série visée", 8, "2 × 50 m en essayant de nager exactement le temps visé (± 2 s).", "Je nage dans le temps que j'ai annoncé.", "", "piscine:sp:aller"]],
+   r: [["Nage souple", 5, "2 longueurs de dos lent ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Évaluation : nager efficacement", o: "Montrer brasse coordonnée, crawl respiré des deux côtés, canard et régularité.", comp: ["HME1", "GSS1", "GSS2", "GSS4"],
+   crit: [["50 m brasse coordonnée", 5, "5 : bras, jambes et glisse bien enchaînés, sans arrêt · 3 : coordination incomplète · 1 : ciseaux ou arrêt"], ["50 m crawl respiration 3 temps", 5, "5 : respire des deux côtés, nage droit, sans arrêt · 3 : respire d'un seul côté · 1 : tête qui se lève ou arrêt"], ["Canard et parcours sous l'eau", 4, "4 : canard, passe les deux cerceaux · 2 : un cerceau · 0 : ne descend pas"], ["4 × 50 m : régularité", 4, "4 : moins de 5 s d'écart entre les 4 temps · 3 : 5 à 10 s · 2 : plus de 10 s · 1 : série non terminée"], ["Départ de dos et 25 m dos", 2, "2 : coulée puis dos continu · 1 : départ sans coulée ou dos assis"]],
+   e: [
+    ["Échauffement", 6, "4 longueurs libres à allure lente dans son couloir, puis 2 coulées au mur.", "piscine:sp:aller"],
+    ["Rappel des épreuves", 4, "Au bord : ordre de passage, ce qui est observé, rôle du partenaire (chronométrer, noter).", "explication"]],
+   c: [["Épreuve 1 : 50 m brasse et 50 m crawl", 9, "50 m brasse observée, 1 minute de repos, 50 m crawl en respirant tous les 3 temps.", "Je nage les deux 50 m avec la bonne technique.", "", "piscine:sp:aller"],
+    ["Épreuve 2 : canard et dos", 6, "Canard et parcours des deux cerceaux, puis départ de dos et 25 m dos.", "Je passe les cerceaux et je pars en coulée.", "", "piscine:sp:flotte"],
+    ["Épreuve 3 : 4 × 50 m", 10, "4 × 50 m, 30 s de repos ; le partenaire note les 4 temps.", "Mes temps sont réguliers.", "", "piscine:sp:aller"]],
+   r: [["Bilan", 5, "Chacun compare ses temps avec ceux de la leçon 5 ; sortie et comptage.", "explication"]]},
+  {t: "Nager 300 m à son allure", o: "Nager 300 m en continu en tenant une allure régulière.", e: [
+    ["Échauffement", 6, "4 longueurs à son rythme en changeant de nage à chaque longueur (crawl, dos, brasse, au choix).", "piscine:sp:aller"],
+    ["Allure", 4, "Au bord : « nager à une allure où je peux encore parler ». Chacun annonce son temps visé au 100 m.", "explication"]],
+   c: [["3 × 100 m", 10, "3 × 100 m, 45 s de repos ; le partenaire note les temps.", "Mes 3 temps ont moins de 10 s d'écart.", "Groupe moins à l'aise : 3 × 50 m.", "piscine:sp:aller"],
+    ["300 m en continu", 12, "300 m sans arrêt, nages au choix ; le partenaire note les temps à 100, 200 et 300 m.", "Je nage 300 m sans m'arrêter.", "Les plus forts : 400 m.", "piscine:sp:aller"],
+    ["Bilan", 3, "On compare les trois 100 m : ai-je ralenti ? Pourquoi ?", "J'explique ma gestion d'allure.", "", "explication"]],
+   r: [["Flottaison", 5, "Étoile de mer sur le dos 30 s en respirant lentement ; sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Le virage : toucher, pivoter, pousser", o: "Faire un virage rapide (toucher-pivoter) en crawl et en brasse, puis une initiation à la culbute.", e: [
+    ["Nage libre", 5, "4 longueurs à son rythme dans son couloir, nages au choix, en soufflant dans l'eau ; on double par la gauche.", "piscine:sp:aller"],
+    ["Coulées", 5, "Pousser au mur sur le ventre, bras tendus : 6 coulées, on cherche à aller le plus loin.", "piscine:sp:plongeon"]],
+   c: [["Virage toucher-pivoter", 10, "À 5 m du mur : on arrive, on touche d'une main (deux mains en brasse), on ramène les genoux, on pivote sur le côté et on pousse en coulée. 8 virages.", "Je repars en moins de 2 secondes après avoir touché.", "Virage décomposé debout en petite profondeur.", "piscine:sp:aller"],
+    ["Roulade avant dans l'eau", 7, "Au milieu du couloir : roulade avant groupée, en soufflant par le nez. Puis roulade après 3 mouvements de crawl.", "Je fais la roulade sans boire la tasse.", "Avec une frite sous le ventre.", "piscine:sp:flotte"],
+    ["Culbute au mur", 8, "En arrivant au mur en crawl : roulade, pieds au mur, pousser sur le dos puis tourner sur le ventre. 6 essais.", "Mes pieds touchent le mur et je repars en coulée.", "Rester sur le virage toucher-pivoter.", "piscine:sp:aller"]],
+   r: [["Nage souple", 5, "2 longueurs de dos très lent, en relâchant les épaules ; sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Nage habillée et survie", o: "Nager habillé (t-shirt, short) et adopter les bons gestes pour économiser ses forces.", comp: ["HME1", "HME4", "GSS2"], e: [
+    ["Nage libre", 5, "4 longueurs en maillot à son rythme, nages au choix, pour comparer ensuite avec la nage habillée.", "piscine:sp:aller"],
+    ["Ce qui change habillé", 5, "Au bord, avec t-shirt et short propres par-dessus le maillot : pourquoi les vêtements gênent (poids, frein), et la règle : on ne cherche pas à nager vite, on flotte et on appelle.", "explication"]],
+   c: [["Entrée et flottaison habillé", 8, "Saut pieds joints habillé en grande profondeur, remonter, flotter sur le dos 30 s, puis surplace 30 s en levant un bras.", "Je flotte et je fais du surplace habillé sans paniquer.", "Entrée par l'échelle.", "piscine:sp:flotte"],
+    ["Nager habillé", 10, "50 m habillé en brasse (la nage qui fatigue le moins), puis 25 m sur le dos. On compare avec le même trajet en maillot.", "Je nage 50 m habillé sans m'arrêter.", "25 m pour le groupe moins à l'aise.", "piscine:sp:aller"],
+    ["Position d'attente", 7, "Par 3 : on se serre en cercle et on flotte 1 minute (garder la chaleur), puis on se déshabille dans l'eau (t-shirt) et on s'en sert comme flotteur.", "Je reste calme et je sais économiser mes forces.", "", "piscine:sp:flotte"]],
+   r: [["Sortie et bilan", 5, "Sortie, on se change ; bilan : les 3 réflexes (flotter, appeler, rejoindre un appui).", "explication"]]},
+  {t: "Remorquer un camarade", o: "Remorquer un camarade sur 10 m en gardant son visage hors de l'eau.", comp: ["HME1", "HME4", "GSS2", "GSS3"], e: [
+    ["Nage libre", 5, "4 longueurs à son rythme dans son couloir, nages au choix, en soufflant dans l'eau ; on double par la gauche.", "piscine:sp:aller"],
+    ["Dos jambes de brasse", 5, "2 longueurs sur le dos avec jambes de brasse, bras le long du corps : c'est la nage du sauveteur.", "piscine:sp:aller"]],
+   c: [["Remorquer une planche", 7, "Sur le dos, jambes de brasse, une planche tenue sur la poitrine : 2 × 15 m.", "J'avance en jambes de brasse sur le dos.", "", "piscine:sp:aller"],
+    ["Prise sous les aisselles", 10, "Par deux de même taille : le « nageur fatigué » flotte sur le dos ; le sauveteur se place derrière, mains sous les aisselles, et le remorque en dos jambes de brasse. 2 × 10 m chacun, en petite puis en grande profondeur.", "Le visage de mon camarade reste hors de l'eau.", "Le camarade aide avec des battements.", "piscine:sp:aller"],
+    ["Rassurer et remorquer", 8, "Le sauveteur arrive, parle (« je suis là, mets-toi sur le dos »), fait la prise, remorque 10 m et l'aide à s'accrocher au bord.", "Je parle à mon camarade et je l'amène au bord.", "", "piscine:sp:aller"]],
+   r: [["Flottaison", 5, "Étoile de mer sur le dos 30 s en respirant lentement ; sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Départ plongé et relais", o: "Plonger depuis le bord avec une bonne coulée et passer le relais au bon moment.", e: [
+    ["Nage libre", 5, "4 longueurs à son rythme dans son couloir, nages au choix, en soufflant dans l'eau ; on double par la gauche.", "piscine:sp:aller"],
+    ["Plongeons", 5, "4 plongeons accroupis puis debout, coulée et 10 m de crawl.", "piscine:sp:plongeon"]],
+   c: [["Départ au signal", 8, "« À vos marques » : pieds au bord, regard vers l'eau ; au coup de sifflet, plongeon, coulée, 15 m de crawl vite. 4 départs, chronométrés par un camarade.", "Je pars au signal et je glisse avant de nager.", "Départ dans l'eau pour ceux qui ne plongent pas encore.", "piscine:sp:plongeon"],
+    ["Passage de relais", 7, "Le relayeur attend debout au bord et plonge quand la main du nageur touche le mur (pas avant). Par 2, 6 passages.", "Je plonge juste au moment où mon camarade touche le mur.", "", "piscine:sp:relais"],
+    ["Relais 4 × 25 m", 10, "Équipes de 4 de niveau équilibré : relais 4 × 25 m crawl, départ plongé. 2 manches avec un ordre différent ; un juge par couloir vérifie les passages.", "Notre équipe n'a aucun départ anticipé.", "Relais 4 nages simplifié pour les plus forts.", "piscine:sp:relais"]],
+   r: [["Nage souple", 5, "2 longueurs de dos très lent, en relâchant les épaules ; sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Évaluation : endurance et sécurité", o: "Montrer 300 m sans arrêt, virage, nage habillée, remorquage et départ plongé.", comp: ["HME1", "GSS1", "GSS2", "GSS4"],
+   crit: [["300 m sans arrêt", 6, "6 : 300 m sans arrêt · 4 : 1 arrêt · 2 : 200 m · 1 : 100 m"], ["Virages pendant le 300 m", 2, "2 : virages rapides (toucher-pivoter ou culbute) · 1 : s'arrête au mur avant de repartir"], ["Nage habillée : entrée, flottaison, 25 m", 4, "4 : saut, 30 s de flottaison calme, 25 m sans arrêt · 2 : arrêt ou panique · 0 : ne termine pas"], ["Remorquage 10 m", 5, "5 : prise sous les aisselles, visage hors de l'eau sur 10 m · 3 : visage qui passe sous l'eau · 1 : remorquage incomplet"], ["Départ plongé et 25 m", 3, "3 : départ au signal, coulée, 25 m crawl · 2 : sans coulée · 1 : départ sauté"]],
+   e: [
+    ["Échauffement", 6, "4 longueurs libres à allure lente dans son couloir, puis 2 coulées au mur.", "piscine:sp:aller"],
+    ["Rappel des épreuves", 4, "Au bord : ordre de passage, ce qui est observé, rôle du partenaire. Chacun a apporté un t-shirt et un short propres.", "explication"]],
+   c: [["Épreuve 1 : 300 m", 12, "300 m sans arrêt avec virages ; le partenaire compte les longueurs et note le temps.", "Je nage 300 m sans m'arrêter.", "", "piscine:sp:aller"],
+    ["Épreuve 2 : nage habillée et remorquage", 9, "Saut habillé, 30 s de flottaison, 25 m ; puis (en maillot) remorquage d'un camarade sur 10 m.", "Je reste calme habillé et je remorque 10 m.", "", "piscine:sp:flotte"],
+    ["Épreuve 3 : départ plongé", 4, "Départ plongé au signal (« À vos marques », coup de sifflet), puis 25 m de crawl chronométré par le partenaire.", "Je pars au signal avec une coulée.", "", "piscine:sp:plongeon"]],
+   r: [["Bilan de l'année", 5, "Chacun compare avec le test de la leçon 1 et écrit son objectif pour l'an prochain ; sortie et comptage.", "explication"]]}
+);
+
+N.an[3].cy = ["Perfectionner et survivre : brasse coordonnée, plongeon canard, nage habillée", "Vitesse : départs, virages réglementaires, ondulation, relais", "Sauvetage et nage longue : apnée, remorquages, parcours, 600 m"];
+N.an[3].l.push(
+  {t: "Virages réglementaires : brasse et dos", o: "Faire un virage réglementaire en brasse (deux mains) et en dos (sur le ventre puis culbute).", e: [
+    ["Nage libre", 5, "6 longueurs dans son couloir : 2 de crawl, 2 de dos, 2 de brasse, à allure lente.", "piscine:sp:aller"],
+    ["Coulées", 5, "Coulées ventrales et dorsales au mur, 3 de chaque, en cherchant la distance.", "piscine:sp:plongeon"]],
+   c: [["Virage de brasse", 8, "Arriver bras tendus, toucher à deux mains en même temps, ramener les genoux, pivoter, repousser en coulée : une traction de bras sous l'eau puis la nage. 6 virages.", "Je touche à deux mains et je repars en coulée.", "Sans traction sous l'eau.", "piscine:sp:aller"],
+    ["Virage de dos", 10, "Repérer les fanions, compter ses bras, se tourner sur le ventre au dernier mouvement, culbute, pousser sur le dos. 6 virages.", "Je fais le virage de dos sans m'arrêter.", "Toucher à la main puis pivoter.", "piscine:sp:aller"],
+    ["100 m avec virages", 7, "100 m dos ou brasse avec 3 virages réglementaires ; le partenaire vérifie chaque virage.", "Mes 3 virages sont réglementaires.", "", "piscine:sp:aller"]],
+   r: [["Nage souple", 5, "2 longueurs très lentes dans la nage de son choix, en soufflant longuement ; sortie et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "La culbute en crawl", o: "Faire une culbute en crawl sans s'arrêter au mur.", e: [
+    ["Nage libre", 5, "6 longueurs à son rythme dans son couloir, nages au choix ; on double par la gauche et on ne s'arrête pas au milieu du mur.", "piscine:sp:aller"],
+    ["Roulades", 5, "Roulades avant groupées au milieu du couloir en soufflant par le nez, 6 de suite.", "piscine:sp:flotte"]],
+   c: [["Culbute sans mur", 6, "3 mouvements de crawl, roulade, on finit sur le dos ; puis on se retourne sur le ventre.", "Je ne bois pas la tasse pendant la roulade.", "", "piscine:sp:flotte"],
+    ["Culbute au mur", 12, "Au dernier mouvement de bras (1 m du mur), roulade, pieds au mur jambes fléchies, pousser sur le dos et tourner sur le ventre en coulée. 8 essais, le prof observe la distance au mur.", "Mes pieds touchent le mur au bon endroit et je repars en coulée.", "Avec palmes.", "piscine:sp:aller"],
+    ["50 m avec culbute", 7, "50 m crawl avec une culbute ; puis 100 m avec 3 culbutes pour les plus à l'aise.", "Je fais la culbute sans m'arrêter.", "", "piscine:sp:aller"]],
+   r: [["Nage souple", 5, "2 longueurs de dos très lent, en relâchant les épaules ; sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "L'ondulation et le papillon", o: "Onduler à partir de la poitrine et découvrir le papillon sur 15 m.", e: [
+    ["Nage libre", 5, "6 longueurs à son rythme dans son couloir, nages au choix ; on double par la gauche et on ne s'arrête pas au milieu du mur.", "piscine:sp:aller"],
+    ["Ondulation au mur", 5, "Bras tendus devant, la poitrine appuie vers le bas puis relâche : le mouvement va jusqu'aux pieds (« dauphin »). 4 coulées ondulées.", "piscine:sp:plongeon"]],
+   c: [["Ondulation sur le ventre", 8, "Ondulation sur 4 × 15 m, bras tendus devant ; on respire en levant la tête à la fin d'une onde.", "Mes pieds suivent ma poitrine, sans plier les genoux à 90°.", "Avec palmes.", "piscine:sp:aller"],
+    ["Ondulation sur le côté et sur le dos", 7, "Ondulation 2 × 15 m sur le côté (un bras devant, l'autre le long du corps), puis 2 × 15 m sur le dos, bras tendus derrière la tête.", "J'ondule dans les trois positions.", "", "piscine:sp:aller"],
+    ["Papillon simplifié", 10, "Deux ondulations pour un mouvement de bras (les bras sortent ensemble et reviennent devant au-dessus de l'eau). 4 × 12,5 m.", "Je fais 12,5 m de papillon sans m'arrêter.", "Papillon un bras.", "piscine:sp:aller"]],
+   r: [["Nage souple", 5, "2 longueurs de dos très lent, en relâchant les épaules ; sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Vitesse : 25 m et 50 m départ plongé", o: "Nager vite sur 25 et 50 m : départ, coulée, fréquence de bras, arrivée.", e: [
+    ["Échauffement", 6, "6 longueurs en augmentant l'allure toutes les 2 longueurs.", "piscine:sp:aller"],
+    ["Départs", 4, "4 départs plongés au signal du prof : coulée bras tendus, puis 5 m de crawl vite et retour lent.", "piscine:sp:plongeon"]],
+   c: [["25 m vite", 8, "3 × 25 m vite, départ plongé, 1 minute de repos ; le partenaire chronomètre et compte les respirations.", "Je respire peu (tous les 3 ou 4 temps) et je garde ma fréquence.", "Départ dans l'eau.", "piscine:sp:plongeon"],
+    ["Arrivée", 5, "On s'entraîne à finir bras tendu, sans respirer sur les 5 derniers mètres. 4 arrivées.", "Je touche le mur bras tendu, sans ralentir.", "", "piscine:sp:aller"],
+    ["50 m chronométré", 12, "50 m départ plongé, nage au choix, chronométré ; 2 essais séparés de 3 minutes, on garde le meilleur.", "J'améliore mon temps au 2e essai.", "", "piscine:sp:aller"]],
+   r: [["Nage souple", 5, "2 longueurs très lentes dans la nage de son choix, en soufflant longuement ; sortie et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Relais 4 × 50 m", o: "Nager un relais en équipe : ordre des nageurs, passages sûrs et rapides.", e: [
+    ["Échauffement", 6, "6 longueurs en changeant de nage toutes les 2 longueurs (crawl, dos, brasse), à allure lente.", "piscine:sp:aller"],
+    ["Composer l'équipe", 4, "Par équipes de 4 de niveau équilibré : on choisit l'ordre (le plus rapide en dernier ?) et la nage de chacun.", "explication"]],
+   c: [["Passages de relais", 8, "Le relayeur plonge quand la main du nageur touche le mur. Par 4, 2 passages chacun ; le juge signale tout départ anticipé.", "Je plonge au moment où mon camarade touche.", "", "piscine:sp:relais"],
+    ["Relais 4 × 50 m", 12, "Relais 4 × 50 m crawl (ou 4 nages pour les plus forts), 2 manches, chronométrées. Un départ anticipé = 5 s de pénalité.", "Notre équipe améliore son temps à la 2e manche.", "4 × 25 m pour le groupe moins à l'aise.", "piscine:sp:relais"],
+    ["Bilan d'équipe", 5, "L'équipe analyse : passages, ordre, allure de chacun ; ce qu'elle changerait.", "Nous expliquons ce qui nous a fait gagner du temps.", "", "explication"]],
+   r: [["Nage souple", 5, "2 longueurs très lentes dans la nage de son choix, en soufflant longuement ; sortie et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Évaluation : vitesse et virages", o: "Montrer 50 m départ plongé, virages réglementaires, ondulation et relais.", comp: ["HME1", "GSS1", "GSS2", "GSS4"],
+   crit: [["50 m chronométré : progrès", 6, "6 : améliore son temps de la leçon 10 de plus de 2 s · 4 : de 0 à 2 s · 2 : même temps ou un peu moins bon · 1 : ne termine pas vite"], ["Départ plongé et arrivée", 3, "3 : départ au signal, coulée, arrivée bras tendu · 2 : un des trois manque · 1 : départ sauté"], ["Virages (culbute, brasse, dos)", 5, "5 : les 3 virages réglementaires et rapides · 3 : 2 sur 3 · 1 : 1 sur 3"], ["15 m ondulation ou papillon", 3, "3 : papillon ou ondulation fluide sur 15 m · 2 : ondulation saccadée · 1 : ne termine pas"], ["Relais : passage", 3, "3 : passage juste, sans départ anticipé · 2 : départ tardif · 0 : départ anticipé"]],
+   e: [
+    ["Échauffement", 6, "6 longueurs en augmentant l'allure toutes les 2 longueurs (lent, moyen, assez vite), nages au choix.", "piscine:sp:aller"],
+    ["Rappel des épreuves", 4, "Au bord : ordre de passage, ce qui est observé, rôle des juges et chronométreurs.", "explication"]],
+   c: [["Épreuve 1 : 50 m", 8, "50 m départ plongé chronométré, nage au choix.", "Je bats mon temps de la leçon 10.", "", "piscine:sp:plongeon"],
+    ["Épreuve 2 : virages et ondulation", 9, "75 m avec culbute en crawl, virage de brasse et virage de dos (observés), puis 15 m d'ondulation ou de papillon.", "Mes virages sont réglementaires.", "", "piscine:sp:aller"],
+    ["Épreuve 3 : relais", 8, "Relais 4 × 50 m par équipes ; le juge observe chaque passage.", "Je pars au bon moment.", "", "piscine:sp:relais"]],
+   r: [["Bilan", 5, "Comparaison des temps avec ceux de la leçon 10 ; sortie et comptage.", "explication"]]},
+  {t: "Apnée en profondeur et sécurité", o: "Descendre à 3-4 m, se déplacer en apnée en sécurité et remonter un objet lourd.", comp: ["HME1", "HME4", "GSS2"], e: [
+    ["Nage libre", 5, "6 longueurs à son rythme dans son couloir, nages au choix ; on double par la gauche et on ne s'arrête pas au milieu du mur.", "piscine:sp:aller"],
+    ["Règles de l'apnée", 5, "Au bord : jamais d'hyperventilation, jamais seul (un surveillant par plongeur), on remonte dès la première envie de respirer, on souffle en remontant.", "explication"]],
+   c: [["Canard pieds et canard tête", 8, "Canard tête (bras devant, jambes levées) puis canard pieds (on se laisse couler pieds en premier en poussant l'eau vers le haut). 4 de chaque jusqu'au fond.", "Je touche le fond avec les deux techniques.", "", "piscine:sp:plongeon"],
+    ["Apnée en déplacement", 9, "Par deux (un plonge, un surveille au bord) : canard, nager 5 m au fond, remonter. Puis 10 m pour les plus à l'aise.", "Je nage 5 m sous l'eau et je remonte calmement.", "Le long de la ligne d'eau.", "piscine:sp:flotte"],
+    ["Objet lourd", 8, "Remonter un mannequin ou une brique lestée (2-3 kg) et la ramener au bord en la tenant contre soi, sur le dos.", "Je remonte l'objet et je le ramène 10 m.", "Objet plus léger (anneau).", "piscine:sp:flotte"]],
+   r: [["Flottaison", 5, "Étoile de mer, respiration lente ; sortie et comptage.", "piscine:sp:flotte"]]},
+  {t: "Remorquages : aisselles et menton", o: "Remorquer un camarade sur 15 m avec deux prises et choisir la bonne.", comp: ["HME1", "HME4", "GSS2", "GSS3"], e: [
+    ["Nage libre", 5, "6 longueurs à son rythme dans son couloir, nages au choix ; on double par la gauche et on ne s'arrête pas au milieu du mur.", "piscine:sp:aller"],
+    ["Dos jambes de brasse", 5, "2 longueurs sur le dos en jambes de brasse, bras sur la poitrine.", "piscine:sp:aller"]],
+   c: [["Prise sous les aisselles", 8, "Par deux de même taille : remorquage du camarade sur le dos, mains sous les aisselles, 2 × 15 m chacun.", "Le visage de mon camarade reste hors de l'eau.", "", "piscine:sp:aller"],
+    ["Prise au menton", 9, "Une main sous le menton (sans serrer la gorge), le bras le long de la poitrine du camarade ; l'autre bras nage. 2 × 15 m.", "Je garde une prise sûre et j'avance droit.", "Le camarade aide avec des battements.", "piscine:sp:aller"],
+    ["Quelle prise ?", 8, "Le prof annonce une situation (camarade calme, camarade qui s'agite, camarade plus lourd) : chaque binôme choisit sa prise et la réalise sur 15 m.", "Je choisis une prise adaptée et je l'explique.", "", "piscine:sp:aller"]],
+   r: [["Flottaison", 5, "Étoile de mer sur le dos 30 s en respirant lentement ; sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Parcours de sauvetage chronométré", o: "Enchaîner entrée, nage tête hors de l'eau, objet au fond et remorquage.", comp: ["HME1", "HME4", "GSS2", "GSS3"], e: [
+    ["Nage libre", 5, "6 longueurs à son rythme dans son couloir, nages au choix ; on double par la gauche et on ne s'arrête pas au milieu du mur.", "piscine:sp:aller"],
+    ["Nage tête hors de l'eau", 5, "2 longueurs de crawl puis de brasse tête hors de l'eau, regard sur un camarade au bout du couloir (on ne le perd pas des yeux).", "piscine:sp:aller"]],
+   c: [["Le parcours décomposé", 10, "Entrée sautée (jambes écartées, tête hors de l'eau), 15 m de nage tête hors de l'eau, canard pour remonter l'anneau ou le mannequin, puis remorquage du camarade sur 10 m. On répète chaque partie 2 fois.", "Je réussis chaque partie.", "", "piscine:sp:flotte"],
+    ["Parcours complet chronométré", 10, "Le parcours enchaîné, chronométré ; 2 essais, on garde le meilleur. Le partenaire vérifie que le visage du remorqué reste hors de l'eau.", "J'enchaîne le parcours sans m'arrêter.", "Sans le remorquage pour le groupe moins à l'aise.", "piscine:sp:flotte"],
+    ["Sortie du camarade", 5, "Aider le camarade à sortir de l'eau par le bord : on le tient aux poignets, on le hisse et on l'allonge sur le côté.", "Je sors mon camarade en sécurité.", "", "explication"]],
+   r: [["Bilan", 5, "Ce qui ralentit le parcours, comment gagner du temps sans prendre de risque ; sortie et comptage.", "explication"]]},
+  {t: "Nager 600 m : gérer son allure", o: "Nager 600 m en continu en tenant l'allure annoncée.", e: [
+    ["Échauffement", 6, "6 longueurs en changeant de nage toutes les 2 longueurs (crawl, dos, brasse), à allure lente.", "piscine:sp:aller"],
+    ["Allure annoncée", 4, "Au bord : chacun annonce son temps au 100 m (d'après son 400 m de la leçon 5) et le note au tableau.", "explication"]],
+   c: [["4 × 100 m à l'allure", 10, "4 × 100 m à l'allure annoncée, 20 s de repos ; le partenaire note les temps.", "Mes 4 temps sont à ± 3 s de mon allure.", "4 × 50 m pour le groupe moins à l'aise.", "piscine:sp:aller"],
+    ["600 m en continu", 12, "600 m sans arrêt (ou 500 m), nages au choix ; le partenaire note le temps à chaque 100 m.", "Je nage 600 m sans m'arrêter, mes 100 m sont réguliers.", "Les plus forts : 800 m.", "piscine:sp:aller"],
+    ["Analyse", 3, "Chacun repère son 100 m le plus lent et explique pourquoi.", "J'explique ma gestion d'allure.", "", "explication"]],
+   r: [["Flottaison", 5, "Étoile de mer sur le dos 30 s en respirant lentement ; sortie par l'échelle et comptage des élèves.", "piscine:sp:flotte"]]},
+  {t: "Préparer son évaluation : séance au choix", o: "Construire et réaliser une séance pour progresser sur son point faible.", e: [
+    ["Échauffement", 6, "6 longueurs en changeant de nage toutes les 2 longueurs (crawl, dos, brasse), à allure lente.", "piscine:sp:aller"],
+    ["Choisir son point faible", 4, "Au bord : chacun choisit ce qu'il doit travailler pour l'évaluation (apnée, remorquage, 600 m, parcours) et écrit sa séance (3 exercices, distances, repos).", "explication"]],
+   c: [["Séance personnelle", 15, "Chacun réalise sa séance dans le couloir correspondant ; un camarade vérifie distances et repos. Le prof passe et corrige.", "Je réalise ma séance comme je l'ai écrite.", "Séance proposée par le prof pour ceux qui ne savent pas quoi choisir.", "piscine:sp:aller"],
+    ["Test blanc", 10, "On teste la partie travaillée (ex. parcours chronométré, 300 m à l'allure) et on note le résultat.", "Je sais où j'en suis avant l'évaluation.", "", "piscine:sp:aller"]],
+   r: [["Bilan", 5, "Chacun note dans son carnet ce qu'il doit encore améliorer ; sortie et comptage.", "explication"]]},
+  {t: "Évaluation : sauvetage et nage longue", o: "Montrer le parcours de sauvetage, le remorquage et 600 m à allure régulière.", comp: ["HME1", "GSS1", "GSS2", "GSS4"],
+   crit: [["Parcours : entrée et nage tête hors de l'eau", 3, "3 : entrée sautée tête hors de l'eau, 15 m sans perdre de vue la cible · 2 : tête qui plonge · 1 : arrêt"], ["Parcours : objet au fond", 4, "4 : objet remonté du premier canard · 2 : en 2 essais · 0 : pas remonté"], ["Remorquage 10 m et sortie", 5, "5 : prise sûre, visage hors de l'eau, sortie du camarade en sécurité · 3 : visage qui passe sous l'eau ou sortie aidée · 1 : remorquage incomplet"], ["600 m sans arrêt", 6, "6 : 600 m sans arrêt · 4 : 500 m · 2 : 400 m · 1 : moins"], ["Régularité de l'allure", 2, "2 : 100 m à ± 5 s de l'allure annoncée · 1 : plus irrégulier"]],
+   e: [
+    ["Échauffement", 6, "6 longueurs libres à allure lente dans son couloir, puis 2 coulées au mur.", "piscine:sp:aller"],
+    ["Rappel des épreuves", 4, "Au bord : ordre de passage, ce qui est observé, rôle du partenaire (chronométrer, vérifier le visage du remorqué).", "explication"]],
+   c: [["Épreuve 1 : parcours de sauvetage", 10, "Entrée sautée, 15 m tête hors de l'eau, canard pour l'objet, remorquage 10 m, sortie du camarade.", "J'enchaîne tout le parcours en sécurité.", "", "piscine:sp:flotte"],
+    ["Épreuve 2 : 600 m", 15, "600 m sans arrêt, nages au choix ; le partenaire note le temps à chaque 100 m.", "Je nage 600 m et je tiens mon allure.", "", "piscine:sp:aller"]],
+   r: [["Bilan de l'année", 5, "Comparaison avec le test de la leçon 1 et objectif pour l'an prochain ; sortie et comptage.", "explication"]]}
+);
+
+PREPA_ADD(N);
+})();

@@ -461,6 +461,73 @@ header.top .sync{min-width:0; overflow:hidden}
   .psch{-webkit-print-color-adjust:exact; print-color-adjust:exact}
 }
 .pl-h{flex:1 1 auto !important; min-width:0} .pl-h small{font-size:.6em; color:var(--muted)}
+
+/* Évaluation de fin de cycle : grille par critères */
+.pp-lb.ev{border-color:var(--warn)} .pp-lb.ev.on{border-color:var(--accent)}
+.pp-lb span small{display:block; font-size:12px; color:var(--muted)}
+.pp-cy{display:flex; flex-direction:column; gap:1px; margin:10px 0 4px; padding:6px 10px; border-left:4px solid var(--accent); background:var(--accent-soft); border-radius:6px}
+.pp-cy b{font:700 15px/1.1 var(--display); text-transform:uppercase; letter-spacing:.03em; color:var(--accent)} .pp-cy span{font-size:13px}
+.eg-btns .btn{flex:1 1 160px}
+.tag.ev-crit{background:var(--warn-soft); color:var(--warn)}
+.cr-card{display:grid; gap:8px; border-color:var(--warn)}
+.cr-k{display:grid; gap:6px; padding:8px 0; border-bottom:1px dashed var(--line)}
+.cr-kh{display:flex; align-items:center; gap:6px} .cr-kh b{font:700 15px/1 var(--display); min-width:24px}
+.cr-kh [data-kn]{flex:1; min-width:0} .cr-kh [data-kp]{width:58px; text-align:center}
+.cr-kx{min-width:40px; padding:0}
+.cr-seg{display:flex; flex:1 1 auto} .cr-seg button{flex:1; white-space:nowrap; padding-inline:8px}
+.cr-tot{font-size:14px; text-align:right}
+.cr-top{display:flex; align-items:center; gap:8px; margin-top:8px}
+.cr-nav{min-width:48px; min-height:48px; font-size:24px; padding:0}
+.cr-who{flex:1; min-width:0; display:flex; align-items:center; gap:10px; position:relative; border:1px solid var(--line); border-radius:12px; padding:6px 10px; background:var(--surface)}
+.cr-who > span{display:flex; flex-direction:column; min-width:0} .cr-who b{font-size:17px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.cr-who select{position:absolute; inset:0; opacity:0; width:100%; cursor:pointer}
+.cr-tags{display:flex; gap:6px; margin:8px 0} .cr-tags .btn{flex:1; min-height:40px; font-size:14px}
+.cr-tags .abs[aria-pressed="true"]{background:var(--bad-soft); color:var(--bad); border-color:var(--bad)}
+.cr-off{display:grid; gap:4px; background:var(--bad-soft)}
+.cr-c{border:1px solid var(--line); border-radius:12px; padding:9px 10px; margin-bottom:8px; background:var(--surface)}
+.cr-c.ok{border-color:var(--ok)}
+.cr-ch{display:flex; gap:8px; align-items:baseline} .cr-ch b{flex:1; font-size:15px} .cr-ch b span{color:var(--muted); font-size:13px; margin-right:2px}
+.cr-ch em{font-style:normal; font-weight:700; font-size:16px; white-space:nowrap}
+.cr-ci{display:block; font-size:13px; color:var(--muted); margin:2px 0 6px; line-height:1.3}
+.cr-pts{display:flex; flex-wrap:wrap; gap:6px}
+.cr-pts button{flex:1 0 46px; min-height:46px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--fg); font:700 17px/1 var(--body)}
+.cr-pts button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.cr-sum{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 12px; border-radius:12px; background:var(--accent-soft); margin:4px 0 10px}
+.cr-sum.ok{background:var(--ok-soft)} .cr-sum > span:first-child{font-weight:700}
+.cr-sum b{font:700 28px/1 var(--display)} .cr-sum b small{font-size:16px; color:var(--muted)}
+.cr-tbw{overflow-x:auto; border:1px solid var(--line); border-radius:10px; margin:8px 0}
+.cr-tb{border-collapse:collapse; width:100%; font-size:14px}
+.cr-tb th, .cr-tb td{border-bottom:1px solid var(--line); padding:7px 6px; text-align:center; white-space:nowrap}
+.cr-tb th:first-child, .cr-tb td:first-child{text-align:left; position:sticky; left:0; background:var(--surface); max-width:150px; overflow:hidden; text-overflow:ellipsis}
+.cr-tb th small{display:block; font-weight:400; color:var(--muted)}
+.cr-tb tbody tr{cursor:pointer} .cr-tb tr.todo td{color:var(--muted)} .cr-tb tr.todo td:first-child::before{content:'○ '}
+.cr-tb tfoot td{font-weight:700; background:var(--accent-soft)}
+.cr-leg{margin:6px 0; padding-left:22px; font-size:13px; display:grid; gap:3px}
+@media print{
+  .cr-prt{font-size:14pt; margin:2px 0 6px} .cr-prt small{font-weight:400; font-size:10pt}
+  .cr-prk{width:100%; border-collapse:collapse; font-size:8.5pt; margin-bottom:6px} .cr-prk th, .cr-prk td{border:1px solid #999; padding:2px 5px; text-align:left; vertical-align:top} .cr-prk th{background:#eee; width:28px}
+  .cr-prg{width:100%; border-collapse:collapse; font-size:10pt} .cr-prg th, .cr-prg td{border:1px solid #777; padding:0 5px; height:21px; text-align:center}
+  .cr-prg th{background:#eee; font-size:9pt; line-height:1.1; padding:3px} .cr-prg td:first-child{text-align:left; white-space:nowrap} .cr-prg td:last-child, .cr-prg th:last-child{width:22%}
+  .cr-prg tr{break-inside:avoid}
+}
+
+/* recueil papier : onglets au bord droit, pages de garde */
+@media print{
+  .pr-crit table{width:100%; border-collapse:collapse; font-size:8.5pt} .pr-crit th, .pr-crit td{border-top:1px solid #bbb; padding:2px 6px; text-align:left; vertical-align:top}
+  .pr-crit th{width:30%} .pr-crit td:nth-child(2){width:24px; text-align:center; font-weight:700}
+  .rc-p{position:relative; min-height:262mm; display:flow-root; margin-right:13mm}
+  html.prt{background:#fff !important}
+  .rc-tab{position:absolute; right:-13mm; width:11mm; height:31mm; background:#111; color:#fff; border-radius:3mm 0 0 3mm; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1mm; -webkit-print-color-adjust:exact; print-color-adjust:exact; padding-right:1mm; box-sizing:border-box}
+  .rc-tab b{font-size:11pt; line-height:1} .rc-tab span{font-size:7pt; writing-mode:vertical-rl; transform:rotate(180deg); max-height:20mm; overflow:hidden; letter-spacing:.03em}
+  .rc-cover h1{font-size:26pt; margin:40mm 0 4mm} .rc-sub{font-size:13pt; color:#444; margin:0 0 12mm} .rc-cover h2{font-size:13pt; margin:8mm 0 2mm}
+  .rc-big{display:flex; flex-direction:column; align-items:center; margin:30mm 0 12mm} .rc-big span{font-size:72pt; font-weight:800; line-height:1} .rc-big small{font-size:20pt; letter-spacing:.2em; text-transform:uppercase}
+  .rc-sph{border:2.5px solid #111; border-radius:4mm; padding:6mm 8mm; margin:6mm 0} .rc-sph small{font-size:10pt; text-transform:uppercase; letter-spacing:.1em} .rc-sph h1{font-size:24pt; margin:1mm 0} .rc-sph p{margin:0; font-size:11pt}
+  .rc-mat{font-size:9.5pt; margin:2mm 0}
+  .rc-cy{font-size:11pt; margin:5mm 0 1.5mm; border-bottom:1.5px solid #111}
+  .rc-ls{width:100%; border-collapse:collapse; font-size:9pt; margin-top:2mm} .rc-ls th, .rc-ls td{border:1px solid #999; padding:2px 5px; text-align:left; vertical-align:top} .rc-ls th{background:#eee}
+  .rc-ls td:first-child{white-space:nowrap} .rc-l3 th:first-child{width:12mm} .rc-l3 th:nth-child(2){width:38%} .rc-ls tr.rc-ev td{background:#f3f3f3; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .rc-som td{font-size:10pt; padding:3px 6px}
+}
 /* Évaluations formatives / endurance / filles et règles (outils/evals-carnet.js) */
 .tag.ev-form{background:var(--surface); color:var(--fg); border:1.5px dashed var(--fg); letter-spacing:.07em; padding:1px 8px; font-size:11.5px; vertical-align:2px}
 .tag.ev-endu{background:var(--accent-soft); color:var(--accent); padding:1px 8px; font-size:11.5px; vertical-align:2px}
@@ -2417,11 +2484,13 @@ function agCouverture(c, ls){
 
 /* ====== Prépas de leçon : en-tête, échauffement, corps de leçon, retour au calme ======
    Bibliothèque chargée à la demande (carnet/prepas/<id>.js) : séquences de 6 leçons par année (1re à 6e secondaire), jeux d'hiver en une leçon.
-   Format : PREPA_ADD({id, sport, an: {1: {th, comp, mat, l: [{t, o, comp?, mat?, e: [[nom, min, texte, schéma?]], c: [[nom, min, texte, réussite, variante, schéma]], r: [[nom, min, texte]]}]}}}) ; jeux d'hiver : an[0]. */
-const PREPA_CAT = [['hiver', "Jeux d'hiver", /hiver/i], ['basket', 'Basket-ball', /basket/i], ['volley', 'Volley-ball', /volley/i], ['hand', 'Handball', /hand/i], ['natation', 'Natation', /natation|piscine|nage/i],
+   Format : PREPA_ADD({id, sport, an: {1: {th, comp, mat, l: [{t, o, comp?, mat?, e: [[nom, min, texte, schéma?]], c: [[nom, min, texte, réussite, variante, schéma]], r: [[nom, min, texte]]}]}}}) ; jeux d'hiver : an[0].
+   Cycles : 6 leçons par cycle (5 + l'évaluation en leçon 6) ; une année peut en avoir plusieurs (l = 12 ou 18 leçons, cy = [thème de chaque cycle]).
+   Leçon d'évaluation : crit = [[critère, points, indicateur]] → grille de notation (module « Évaluation de fin de cycle » plus bas). */
+const PREPA_CAT = [['hiver', "Jeux d'hiver", /hiver/i], ['basket', 'Basket-ball', /basket/i], ['volley', 'Volley-ball', /volley/i], ['hand', 'Handball', /hand/i], ['natation', 'Natation · nageurs (grande profondeur)', /natation|piscine|nage/i], ['natdeb', 'Natation · débutants (petite profondeur)', /natation|piscine|nage/i],
   ['endurance', "Course d'endurance", /endurance|course en dur/i], ['bad', 'Badminton', /badminton/i], ['danse', 'Danse', /danse/i], ['acro', 'Acrosport', /acro/i],
   ['prisonnier', 'Balle aux prisonniers', /prisonnier/i], ['athle', 'Athlétisme', /athl/i], ['foot', 'Football', /foot/i]];
-const PREPA_PRETS = ['hiver', 'basket', 'volley', 'hand', 'natation', 'endurance', 'bad', 'danse', 'acro', 'prisonnier', 'athle', 'foot'];  // bibliothèques écrites (carnet/prepas/<id>.js)
+const PREPA_PRETS = ['hiver', 'basket', 'volley', 'hand', 'natation', 'natdeb', 'endurance', 'bad', 'danse', 'acro', 'prisonnier', 'athle', 'foot'];  // bibliothèques écrites (carnet/prepas/<id>.js)
 const prepaCat = () => PREPA_CAT.filter(([id]) => PREPA_PRETS.includes(id));
 const PREPA_LIB = window.PREPA_LIB = window.PREPA_LIB || {};
 window.PREPA_ADD = o => { PREPA_LIB[o.id] = o; };
@@ -2431,18 +2500,20 @@ function prepaLoad(ids){
   return Promise.all(['schemas', ...ids].filter((id, i, a) => a.indexOf(id) === i && (id === 'schemas' ? !window.PSCH : !PREPA_LIB[id]))
     .map(id => new Promise(ok => { const s = document.createElement('script'); s.src = 'prepas/' + id + '.js'; s.onload = s.onerror = () => ok(); document.head.appendChild(s); })));
 }
+/* cycles d'une année : 6 leçons chacun (cy = thèmes, sinon le thème de l'année) */
+const ppCycles = A => Array.from({length: Math.max(1, Math.ceil(A.l.length / 6))}, (_, i) => ({k: i + 1, th: (A.cy && A.cy[i]) || A.th, de: i * 6 + 1, a: Math.min(A.l.length, i * 6 + 6)}));
 const prepaRef = ref => { const [id, an, n] = String(ref || '').split('|'), L = PREPA_LIB[id], A = L && L.an && L.an[+an], l = A && A.l[+n - 1]; return l ? {L, A, l, id, an: +an, n: +n} : null; };
 function prepaCourt(pp){
   if (!pp) return '';
   const hv = /^hiver\|/.test(pp.ref || '');
-  return [hv ? "Jeu d'hiver" : pp.sp, !hv && pp.n ? `L${pp.n}/6` : '', pp.t].filter(Boolean).join(' · ');
+  return [hv ? "Jeu d'hiver" : pp.sp, !hv && pp.n ? `L${pp.n}/${pp.nt || 6}` : '', pp.t].filter(Boolean).join(' · ');
 }
 /* une leçon de la bibliothèque → texte modifiable */
 const ppLines = (items, full) => (items || []).map(([n, m, d, ok, va]) => `• ${n}${m ? ` (${m} min)` : ''} : ${d}${full && ok ? `\n   ✓ Réussite : ${ok}` : ''}${full && va ? `\n   ↻ Variante : ${va}` : ''}`).join('\n');
 const ppMin = items => (items || []).reduce((a, x) => a + (+x[1] || 0), 0);
 function prepaFromLib(id, an, n){
   const r = prepaRef(`${id}|${an}|${n}`); if (!r) return null; const {L, A, l} = r;
-  return {ref: `${id}|${an}|${n}`, sp: L.sport, an: an || 0, n: id === 'hiver' ? 0 : n, t: l.t, o: l.o || '', mat: l.mat || A.mat || L.mat || '',
+  return {ref: `${id}|${an}|${n}`, sp: L.sport, an: an || 0, n: id === 'hiver' ? 0 : n, nt: id === 'hiver' ? 0 : A.l.length, t: l.t, o: l.o || '', mat: l.mat || A.mat || L.mat || '',
     e: ppLines(l.e), c: ppLines(l.c, true), r: ppLines(l.r), d: [ppMin(l.e), ppMin(l.c), ppMin(l.r)], comp: l.comp || A.comp || [], bil: ''};
 }
 /* toutes les leçons datées avec une prépa : [{date, h, c (classe), l (leçon), pp}] + celles prévues avant l'appel */
@@ -2492,6 +2563,7 @@ function openPrepa(date, slotId, ids){
     ${[['e', 'Échauffement', 0], ['c', 'Corps de leçon', 1], ['r', 'Retour au calme', 2]].map(([k, n, i]) => `<div class="card sec pp-ph"><div class="pp-phh"><h3>${n}</h3><label class="pp-min"><input class="inp" id="pp-d${i}" inputmode="numeric" value="${pp.d && pp.d[i] || ''}"> min</label></div>
       <textarea class="inp" id="pp-${k}" rows="${k === 'c' ? 9 : 4}">${esc(pp[k])}</textarea><div class="pp-schs" id="pp-s${k}"></div></div>`).join('')}
     <div class="card sec"><h3>Bilan après la leçon</h3><textarea class="inp" id="pp-bil" rows="2" placeholder="Ce qui a marché, à revoir la prochaine fois…">${esc(pp.bil || '')}</textarea></div>
+    <button class="btn pri block" type="button" id="pp-note" hidden>🎯 Noter cette évaluation (grille par critères)</button>
     <div class="row2"><button class="btn pri" type="button" id="pp-ok">Enregistrer la prépa</button><button class="btn" type="button" id="pp-print">🖨 Imprimer</button></div>
     <div class="row2"><button class="btn" type="button" id="pp-back">‹ Retour au cours</button><button class="btn danger" type="button" id="pp-del" ${g.pp ? '' : 'hidden'}>Effacer la prépa</button></div>
     <div id="pp-delc"></div>`);
@@ -2501,7 +2573,7 @@ function openPrepa(date, slotId, ids){
   const read = () => ({...pp, sp: F('sp').value.trim(), an: +F('an').value, n: +F('n').value || 0, t: F('t').value.trim(), o: F('o').value.trim(), mat: F('mat').value.trim(),
     e: F('e').value.trim(), c: F('c').value.trim(), r: F('r').value.trim(), d: [0, 1, 2].map(i => +$('pp-d' + i).value || 0), bil: F('bil').value.trim(), comp: [...comp]});
   const empty = o => !o.t && !o.e && !o.c && !o.r && !o.o;
-  const drawSch = () => { const r = prepaRef(pp.ref);
+  const drawSch = () => { const r = prepaRef(pp.ref); $('pp-note').hidden = !(r && r.l.crit);
     ['e', 'c', 'r'].forEach(k => { const box = $('pp-s' + k); box.innerHTML = r && window.PSCH ? (r.l[k] || []).map(x => x[k === 'c' ? 5 : 3] ? PSCH(x[k === 'c' ? 5 : 3], esc(x[0])) : '').join('') : ''; }); };
   const pcs = $('pp-pcs');
   pcs.onclick = e => { const b = e.target.closest('[data-pc]'); if (!b) return; const k = b.dataset.pc;
@@ -2527,12 +2599,14 @@ function openPrepa(date, slotId, ids){
       $('pp-hq').oninput = e => { const q = e.target.value.toLowerCase().trim(); box.querySelectorAll('[data-pl]').forEach(b => b.hidden = q && !b.dataset.q.includes(q)); };
     } else {
       const A = L.an[libAn]; if (!A){ box.innerHTML = '<span class="small muted">Pas encore de séquence pour cette année.</span>'; return; }
-      const su = prepaSuite(ids, libId, libAn, date), nx = su ? Math.min(6, su.n + 1) : 1;
-      box.innerHTML = `<b class="pp-th">${esc(A.th)}</b>
-        ${su ? `<div class="pp-suite">${su.n >= 6 ? `✓ Cycle terminé (leçon 6 le ${esc(fmtD(su.date))}).` : `Dernière leçon faite : <b>leçon ${su.n}</b> le ${esc(fmtD(su.date))}`}
-          ${su.n < 6 ? `<button class="btn pri block" type="button" data-pl="${nx}">▶ Continuer le cycle : leçon ${nx} · ${esc(A.l[nx - 1].t)}</button>` : ''}</div>`
+      const tot = A.l.length, cys = ppCycles(A), su = prepaSuite(ids, libId, libAn, date), nx = su ? Math.min(tot, su.n + 1) : 1;
+      const cyTxt = n => cys.length > 1 ? ` (cycle ${Math.ceil(n / 6)})` : '';
+      box.innerHTML = `<b class="pp-th">${esc(cys.length > 1 ? `${cys.length} cycles de 6 leçons (5 leçons + 1 évaluation)` : A.th)}</b>
+        ${su ? `<div class="pp-suite">${su.n >= tot ? `✓ ${cys.length > 1 ? 'Tous les cycles sont terminés' : 'Cycle terminé'} (leçon ${su.n} le ${esc(fmtD(su.date))}).` : `<span>Dernière leçon faite : <b>leçon ${su.n}</b>${cyTxt(su.n)} le ${esc(fmtD(su.date))}</span>`}
+          ${su.n < tot ? `<button class="btn pri block" type="button" data-pl="${nx}">▶ ${su.n % 6 === 0 ? 'Commencer le cycle suivant' : 'Continuer le cycle'} : leçon ${nx} · ${esc(A.l[nx - 1].t)}</button>` : ''}</div>`
           : `<button class="btn pri block" type="button" data-pl="1">▶ Commencer le cycle : leçon 1 · ${esc(A.l[0].t)}</button>`}
-        <div class="pp-ll">${A.l.map((l, i) => `<button type="button" class="pp-lb${pp.ref === `${libId}|${libAn}|${i + 1}` ? ' on' : ''}" data-pl="${i + 1}"><b>L${i + 1}</b><span>${esc(l.t)}</span>${su && su.faites.has(i + 1) ? '<i>✓ faite</i>' : ''}</button>`).join('')}</div>`;
+        ${cys.map(cy => `${cys.length > 1 ? `<div class="pp-cy"><b>Cycle ${cy.k}</b><span>${esc(cy.th)}</span></div>` : ''}<div class="pp-ll">${A.l.slice(cy.de - 1, cy.a).map((l, j) => { const i = cy.de - 1 + j;
+          return `<button type="button" class="pp-lb${pp.ref === `${libId}|${libAn}|${i + 1}` ? ' on' : ''}${l.crit ? ' ev' : ''}" data-pl="${i + 1}"><b>L${i + 1}</b><span>${l.crit ? '🎯 ' : ''}${esc(l.t)}</span>${su && su.faites.has(i + 1) ? '<i>✓ faite</i>' : ''}</button>`; }).join('')}</div>`).join('')}`;
     }
     box.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => fill(libId, libId === 'hiver' ? 0 : libAn, +b.dataset.pl));
   };
@@ -2549,6 +2623,7 @@ function openPrepa(date, slotId, ids){
     agSet(date, it, ids, sport, note, comp.length || Array.isArray(g.p) ? comp : null, o);
     Object.assign(g, {s: sport, n: note, p: comp, pp: o}); if ($('pp-del')) $('pp-del').hidden = false; return true; };
   $('pp-ok').onclick = () => { if (saveIt()){ toast('Prépa enregistrée'); closeSheet(); } };
+  $('pp-note').onclick = () => { if (!saveIt()) return; sheetOnClose = null; closeSheet(); critFromPrepa(date, cls, pp); };
   $('pp-print').onclick = () => { const o = read(); if (empty(o)){ toast('La prépa est vide'); return; } saveIt();
     prepaPrint([{date, h: it.h, cls, pp: o, prog: comp}], `Prépa ${prepaCourt(o)}`); };
   $('pp-back').onclick = () => { const o = read(); if (!empty(o)) saveIt(); openAgSlot(date, slotId); };
@@ -2556,6 +2631,181 @@ function openPrepa(date, slotId, ids){
     $('ppd-no').onclick = () => $('pp-delc').innerHTML = '';
     $('ppd-yes').onclick = () => { agSet(date, it, ids, g.s, g.n, g.p, null); toast('Prépa effacée'); openAgSlot(date, slotId); }; };
   sheetOnClose = () => { const o = live; if (o && !empty(o) && JSON.stringify(o) !== JSON.stringify(g.pp ? {...g.pp, comp: o.comp} : null)) saveIt(o); render(); };
+}
+
+/* ====== Évaluation de fin de cycle : grille par critères ======
+   Une évaluation de classe comme les autres (c.evals : name, max, date, periodId, s → bulletin, Excel, Drive), avec en plus :
+   crit = [{n: critère, p: points, i: indicateur}], cs = {pid: [points par critère]}, pref = leçon d'évaluation de la bibliothèque, cmax = « sur » du dernier calcul.
+   Note = points obtenus ÷ total des points × « sur », au demi-point. Absent, dispensé, certificat : comme dans la feuille des notes. */
+const crTot = e => e.crit.reduce((a, k) => a + (+k.p || 0), 0);
+const crSum = v => (v || []).reduce((a, x) => a + (+x || 0), 0);
+const crNote = (e, v) => { const T = crTot(e); return T ? Math.round(crSum(v) / T * +e.max * 2) / 2 : 0; };
+const crDone = (e, pid) => { const v = (e.cs || {})[pid]; return !!v && e.crit.every((k, j) => typeof v[j] === 'number'); };
+const crSteps = p => { const st = p <= 3 || p % 1 ? .5 : 1, out = []; for (let x = 0; x <= p + 1e-9; x += st) out.push(Math.round(x * 2) / 2); return out; };
+function crSync(c, e){
+  e.cs = e.cs || {};
+  c.pupils.forEach(p => { if (crDone(e, p.id) && !evTag(e.s[p.id])) e.s[p.id] = crNote(e, e.cs[p.id]); });
+  e.cmax = +e.max;
+}
+/* les leçons d'évaluation (avec une grille) d'un sport et d'une année */
+function crLibEvals(id, an){
+  const L = PREPA_LIB[id], A = L && L.an && L.an[an]; if (!A) return [];
+  const ncy = Math.ceil(A.l.length / 6);
+  return A.l.map((l, i) => ({L, l, ref: `${id}|${an}|${i + 1}`, n: i + 1, cy: ncy > 1 ? Math.ceil((i + 1) / 6) : 0})).filter(x => x.l.crit);
+}
+const crLibName = x => `${x.L.sport} · ${x.cy ? `cycle ${x.cy} · ` : ''}${x.l.t}`;
+
+/* depuis la prépa d'une leçon d'évaluation : reprend l'évaluation déjà créée ce jour-là, sinon en crée une */
+function critFromPrepa(date, cls, pp){
+  cls = cls.filter(Boolean); if (!cls.length){ toast('Pas de classe pour ce cours'); return; }
+  const items = cls.map(c => ({c, e: c.evals.find(e => e.crit && e.pref === pp.ref && e.date === date)})).filter(x => x.e);
+  if (items.length) critOpen(items); else critNew(cls, null, {ref: pp.ref, date});
+}
+
+function critNew(cls, vp0, pre = {}){
+  cls = cls.filter(Boolean); if (!cls.length){ toast('Pas de classe'); return; }
+  const c0 = cls[0], multi = cls.length > 1, names = clsName(cls.map(c => c.id)), cat = prepaCat().filter(([k]) => k !== 'hiver');
+  const [rid, ran] = String(pre.ref || '').split('|');
+  let id = rid || (prepaCatOf((c0.lessons || []).filter(l => l.date <= today() && l.s).map(l => l.s).pop()) || [''])[0], an = +ran || progYear(c0) || 1;
+  if (!cat.some(([k]) => k === id)) id = '';
+  let ref = pre.ref || '', crit = [{n: '', p: 4, i: ''}], kind = 'cert', maxTouched = false, nameTouched = false;
+  openSheet('Évaluation de fin de cycle', `
+    <div class="card ag-sum"><b class="ag-who">${esc(names)}</b><span class="small muted">Choisis la grille, puis note chaque élève en touchant ses points, critère par critère. La note va dans le bulletin${multi ? ' de chaque classe' : ''}.</span></div>
+    <div class="card sec"><h3>1. Quelle évaluation ?</h3>
+      <div class="row2"><label class="f" style="flex:1 1 150px">Sport<select class="inp" id="cr-sp"><option value="">— Grille vide (je l'écris) —</option>${cat.map(([k, n]) => `<option value="${k}" ${k === id ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
+      <label class="f" style="flex:1 1 110px">Année<select class="inp" id="cr-an">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}" ${a === an ? 'selected' : ''}>${AN_TXT(a)} secondaire</option>`).join('')}</select></label></div>
+      <div id="cr-ll"></div></div>
+    <div class="card sec"><h3>2. Les critères</h3><p class="small muted" style="margin:0">Tu peux tout modifier : nom du critère, points, ce que tu observes.</p>
+      <div id="cr-ks"></div><button class="btn block" type="button" id="cr-add">+ Ajouter un critère</button><div class="cr-tot" id="cr-tot"></div></div>
+    <div class="card sec"><h3>3. Dans le bulletin</h3>
+      <label class="f">Nom de l'évaluation<input class="inp" id="cr-name" placeholder="ex. Basket · évaluation de fin de cycle"></label>
+      <div class="row2"><label class="f" style="flex:1">Date<input class="inp" type="date" id="cr-date" value="${esc(pre.date || today())}"></label><label class="f" style="flex:1">Note sur<input class="inp num" id="cr-max" inputmode="decimal"></label></div>
+      <div class="ev-kind"><button class="chip" type="button" data-crk="cert" aria-pressed="true">✔ Certificative (compte dans le bulletin)</button><button class="chip" type="button" data-crk="form" aria-pressed="false">ℹ Formative (pour info)</button></div></div>
+    <button class="btn pri block" type="button" id="cr-ok">Créer et noter les élèves ›</button>`);
+  const used = new Set(cls.flatMap(c => c.evals.map(e => e.pref).filter(Boolean)));
+  const drawTot = () => { const T = crit.reduce((a, k) => a + (+k.p || 0), 0);
+    $('cr-tot').innerHTML = `Total : <b>${fr(T, 2)} points</b>${T && !maxTouched ? '' : T ? ` · ramené sur ${esc($('cr-max').value || '…')}` : ''}`;
+    if (!maxTouched) $('cr-max').value = T ? fr(T, 2) : ''; };
+  const drawKs = () => {
+    $('cr-ks').innerHTML = crit.map((k, j) => `<div class="cr-k" data-k="${j}"><div class="cr-kh"><b>C${j + 1}</b><input class="inp" data-kn value="${esc(k.n)}" placeholder="Critère (ex. Passe à un partenaire démarqué)"><input class="inp num" data-kp inputmode="decimal" value="${k.p !== '' ? esc(fr(+k.p, 2)) : ''}" aria-label="Points"><span class="small">pts</span><button class="btn cr-kx" type="button" data-kx aria-label="Retirer ce critère">✕</button></div>
+      <textarea class="inp" data-ki rows="2" placeholder="Ce que j'observe et comment je donne les points">${esc(k.i)}</textarea></div>`).join('');
+    $('cr-ks').querySelectorAll('.cr-k').forEach(row => { const k = crit[+row.dataset.k];
+      row.querySelector('[data-kn]').oninput = ev => k.n = ev.target.value;
+      row.querySelector('[data-ki]').oninput = ev => k.i = ev.target.value;
+      row.querySelector('[data-kp]').oninput = ev => { const v = parseNum(ev.target.value); k.p = v == null ? '' : v; drawTot(); };
+      row.querySelector('[data-kx]').onclick = () => { crit.splice(+row.dataset.k, 1); if (!crit.length) crit.push({n: '', p: 4, i: ''}); drawKs(); }; });
+    drawTot(); };
+  let picked = false;
+  const pick = x => { picked = true; ref = x.ref; crit = x.l.crit.map(([n, p, i]) => ({n, p, i: i || ''})); maxTouched = false;
+    if (!nameTouched) $('cr-name').value = crLibName(x); drawKs(); drawList(); };
+  const drawList = () => {
+    const box = $('cr-ll');
+    if (!id){ box.innerHTML = '<span class="small muted">Écris tes critères ci-dessous (ou choisis un sport pour reprendre sa grille toute faite).</span>'; return; }
+    if (!PREPA_LIB[id]){ box.innerHTML = '<span class="small muted">Chargement…</span>'; prepaLoad([id]).then(() => PREPA_LIB[id] ? drawList() : box.innerHTML = '<span class="small">Pas de connexion : la grille n\'a pas pu se charger.</span>'); return; }
+    const xs = crLibEvals(id, an);
+    if (!xs.length){ box.innerHTML = '<span class="small muted">Pas de grille toute faite pour cette année : écris tes critères ci-dessous.</span>'; return; }
+    box.innerHTML = `<div class="pp-ll">${xs.map((x, j) => `<button type="button" class="pp-lb ev${x.ref === ref ? ' on' : ''}" data-cx="${j}"><b>${x.cy ? 'C' + x.cy : 'L' + x.n}</b><span>🎯 ${esc(x.cy ? `Cycle ${x.cy} · ${x.l.t}` : x.l.t)}<small>${x.l.crit.length} critères · ${fr(x.l.crit.reduce((a, k) => a + k[1], 0), 2)} points</small></span>${used.has(x.ref) ? '<i>déjà notée</i>' : ''}</button>`).join('')}</div>`;
+    box.querySelectorAll('[data-cx]').forEach(b => b.onclick = () => pick(xs[+b.dataset.cx]));
+    const cur = xs.find(x => x.ref === ref);
+    if (!cur) pick(xs.find(x => !used.has(x.ref)) || xs[0]); else if (!picked) pick(cur);
+  };
+  $('cr-sp').onchange = e => { id = e.target.value; ref = ''; if (!id){ crit = [{n: '', p: 4, i: ''}]; if (!nameTouched) $('cr-name').value = ''; drawKs(); } drawList(); };
+  $('cr-an').onchange = e => { an = +e.target.value; ref = ''; drawList(); };
+  $('cr-name').oninput = () => nameTouched = true;
+  $('cr-max').oninput = () => { maxTouched = true; drawTot(); };
+  $('cr-add').onclick = () => { crit.push({n: '', p: 4, i: ''}); drawKs(); const r = $('cr-ks').lastElementChild; if (r) r.querySelector('[data-kn]').focus(); };
+  document.querySelectorAll('[data-crk]').forEach(b => b.onclick = () => { kind = b.dataset.crk; document.querySelectorAll('[data-crk]').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+  drawKs(); drawList(); sheetOnClose = () => render();
+  $('cr-ok').onclick = () => {
+    const ks = crit.map(k => ({n: k.n.trim(), p: +k.p || 0, i: k.i.trim()})).filter(k => k.n || k.i);
+    if (!ks.length){ toast('Écris au moins un critère'); return; }
+    const bad = ks.findIndex(k => !k.n || !(k.p > 0));
+    if (bad >= 0){ toast(`Critère ${bad + 1} : il faut un nom et des points`); return; }
+    const max = parseNum($('cr-max').value); if (!max || max <= 0){ $('cr-max').focus(); toast('Indique sur combien est la note'); return; }
+    const date = $('cr-date').value || today(), name = $('cr-name').value.trim() || 'Évaluation de fin de cycle';
+    const p0 = periodOf(c0, date) || vp0; if (!p0){ toast('Ajoute d\'abord une période (Classes › Élèves)'); return; }
+    const pm = evPerMap(cls, p0), gid = nid('g'), out = [];
+    cls.forEach(c => { const o = {id: nid('v'), s: {}, name, max, date, periodId: (pm.get(c.id) || periodOf(c, date) || p0).id, crit: ks.map(k => ({...k})), cs: {}, cmax: max, dec: true};
+      if (ref && ks.length) o.pref = ref; if (kind === 'form') o.kind = 'form'; if (multi) o.gid = gid;
+      c.evals.push(o); UI.period[c.id] = o.periodId; save(c.id); out.push({c, e: o}); });
+    saveUI(); sheetOnClose = null; closeSheet(); render(); critOpen(out);
+  };
+}
+
+/* noter : un élève à la fois (on touche les points de chaque critère), ou le tableau de la classe */
+function critOpen(items, pid0){
+  items = items.filter(({c, e}) => S.classes.includes(c) && c.evals.includes(e) && e.crit && e.crit.length); if (!items.length){ render(); return; }
+  items.forEach(({c, e}) => { evCertFill(c, e); if (e.cmax !== +e.max){ crSync(c, e); save(c.id); } });
+  const e0 = items[0].e, multi = items.length > 1, P = items.flatMap(({c, e}) => pupilsOf(c).map(p => ({c, e, p})));
+  if (!P.length){ toast('Pas encore d\'élèves dans cette classe'); return; }
+  const ok = x => crDone(x.e, x.p.id) || !!evTag(x.e.s[x.p.id]) || (typeof x.e.s[x.p.id] === 'number' && !(x.e.cs || {})[x.p.id]);
+  let i = Math.max(0, P.findIndex(x => pid0 ? x.p.id === pid0 : !ok(x))), vue = 'el', tmo = null;
+  const nextTodo = () => { for (let k = 1; k <= P.length; k++){ const j = (i + k) % P.length; if (!ok(P[j])) return j; } return -1; };
+  const noteTxt = x => { const s = x.e.s[x.p.id], t = evTag(s); return t ? EV_TAGS[t] : typeof s === 'number' ? fr(s, 2) : ''; };
+  const elHTML = () => { const {c, e, p} = P[i], v = (e.cs || {})[p.id] || [], t = evTag(e.s[p.id]), nb = P.filter(ok).length, done = crDone(e, p.id);
+    return `<div class="cr-top"><button class="btn cr-nav" type="button" data-cgo="-1" ${i ? '' : 'disabled'} aria-label="Élève précédent">‹</button>
+        <label class="cr-who">${avatar(p)}<span><b>${esc(p.n)}</b><span class="small muted">${multi ? esc(c.name) + ' · ' : ''}${i + 1}/${P.length} · ${nb} noté${nb > 1 ? 's' : ''}</span></span>
+          <select id="cr-jump" aria-label="Aller à un élève">${P.map((x, j) => `<option value="${j}" ${j === i ? 'selected' : ''}>${ok(x) ? '✓ ' : '○ '}${esc(x.p.n)}${multi ? ' · ' + esc(x.c.name) : ''}${noteTxt(x) ? ' · ' + noteTxt(x) : ''}</option>`).join('')}</select></label>
+        <button class="btn cr-nav" type="button" data-cgo="1" ${i < P.length - 1 ? '' : 'disabled'} aria-label="Élève suivant">›</button></div>
+      <div class="cr-tags">${[['abs', 'Absent'], ['D', 'Dispensé'], ['CM', 'Certificat']].map(([k, l]) => `<button class="btn abs" type="button" data-ctag="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</div>
+      ${t ? `<div class="card cr-off"><b>${esc(p.n)} : ${esc(evTagLong(t))}</b><span class="small">Ne compte pas dans la note. Touche à nouveau le bouton pour annuler.</span></div>`
+        : e.crit.map((k, j) => `<div class="cr-c${typeof v[j] === 'number' ? ' ok' : ''}"><div class="cr-ch"><b><span>C${j + 1}</span> ${esc(k.n)}</b><em>${typeof v[j] === 'number' ? fr(v[j], 2) : '—'}/${fr(+k.p, 2)}</em></div>${k.i ? `<span class="cr-ci">${esc(k.i)}</span>` : ''}
+          <div class="cr-pts">${crSteps(+k.p).map(s => `<button type="button" data-cj="${j}" data-cv="${s}" aria-pressed="${v[j] === s}">${fr(s, 2)}</button>`).join('')}</div></div>`).join('')}
+      <div class="cr-sum${done ? ' ok' : ''}"><span>${t ? 'Pas de note' : done ? '✓ Note' : 'Note en cours'}</span><b>${t ? EV_TAGS[t] : `${fr(done || typeof e.s[p.id] !== 'number' ? crNote(e, v) : e.s[p.id], 2)}<small>/${fr(+e.max, 2)}</small>`}</b><span class="small">${t ? '' : `${fr(crSum(v), 2)} points sur ${fr(crTot(e), 2)}`}</span></div>
+      <button class="btn pri block" type="button" id="cr-nx">${nextTodo() >= 0 ? 'Élève suivant pas encore noté ›' : '✓ Tout le monde est noté : voir le tableau'}</button>`; };
+  const tbHTML = () => items.map(({c, e}) => { const ps = pupilsOf(c), vals = ps.map(p => e.s[p.id]).filter(s => typeof s === 'number'), avg = vals.length ? vals.reduce((a, x) => a + x, 0) / vals.length : null;
+    return `${multi ? `<div class="lsub">${esc(c.name)}</div>` : ''}<div class="cr-tbw"><table class="cr-tb"><thead><tr><th>Élève</th>${e.crit.map((k, j) => `<th title="${esc(k.n)}">C${j + 1}<small>/${fr(+k.p, 2)}</small></th>`).join('')}<th>Note<small>/${fr(+e.max, 2)}</small></th></tr></thead>
+      <tbody>${ps.map(p => { const x = P.findIndex(y => y.e === e && y.p.id === p.id), v = (e.cs || {})[p.id] || [], t = evTag(e.s[p.id]);
+        return `<tr data-crow="${x}" class="${ok(P[x]) ? '' : 'todo'}"><td>${esc(p.n)}</td>${e.crit.map((k, j) => `<td>${t ? '' : typeof v[j] === 'number' ? fr(v[j], 2) : '·'}</td>`).join('')}<td><b>${noteTxt(P[x]) || '—'}</b></td></tr>`; }).join('')}</tbody>
+      <tfoot><tr><td>Moyenne</td>${e.crit.map((k, j) => { const a = ps.filter(p => !evTag(e.s[p.id])).map(p => ((e.cs || {})[p.id] || [])[j]).filter(y => typeof y === 'number');
+        return `<td>${a.length ? fr(a.reduce((s, y) => s + y, 0) / a.length, 1) : ''}</td>`; }).join('')}<td><b>${fr(avg, 1)}</b></td></tr></tfoot></table></div>`; }).join('')
+    + `<ol class="cr-leg">${e0.crit.map(k => `<li><b>${esc(k.n)}</b> (${fr(+k.p, 2)} pts)${k.i ? ` : ${esc(k.i)}` : ''}</li>`).join('')}</ol><span class="small muted">Touche un élève pour le noter.</span>`;
+  const body = () => `<div class="row2" style="align-items:center"><div class="seg cr-seg" role="group" aria-label="Affichage"><button type="button" data-cvue="el" aria-pressed="${vue === 'el'}">Élève par élève</button><button type="button" data-cvue="tb" aria-pressed="${vue === 'tb'}">Tableau</button></div>
+      <button class="btn" type="button" id="cr-prt">🖨 Grille</button></div>
+    <span class="small muted">${multi ? '<b>' + esc(items.map(x => x.c.name).join(' + ')) + '</b> · ' : ''}${e0.date ? esc(fmtDL(e0.date)) + ' · ' : ''}${e0.crit.length} critères, ${fr(crTot(e0), 2)} points → note sur ${fr(+e0.max, 2)}${e0.kind === 'form' ? ' · formative' : ''}</span>
+    <div id="cr-v">${vue === 'el' ? elHTML() : tbHTML()}</div>`;
+  openSheet('🎯 ' + e0.name, body());
+  const sb = document.querySelector('.sheet .sb');
+  const go = j => { clearTimeout(tmo); if (j < 0 || j >= P.length) return; i = j; vue = 'el'; draw(); const v = $('cr-v'); if (v) v.scrollIntoView({block: 'start'}); };
+  const draw = () => { sb.innerHTML = body(); bind(); };
+  const bind = () => {
+    sb.querySelectorAll('[data-cvue]').forEach(b => b.onclick = () => { clearTimeout(tmo); vue = b.dataset.cvue; draw(); });
+    $('cr-prt').onclick = () => critPrint(items);
+    if (vue === 'tb'){ sb.querySelectorAll('[data-crow]').forEach(r => r.onclick = () => go(+r.dataset.crow)); return; }
+    const x = P[i], {c, e, p} = x;
+    sb.querySelectorAll('[data-cgo]').forEach(b => b.onclick = () => go(i + +b.dataset.cgo));
+    $('cr-jump').onchange = ev => go(+ev.target.value);
+    $('cr-nx').onclick = () => { const j = nextTodo(); if (j >= 0) go(j); else { vue = 'tb'; draw(); } };
+    sb.querySelectorAll('[data-cj]').forEach(b => b.onclick = () => {
+      const j = +b.dataset.cj, s = +b.dataset.cv, was = crDone(e, p.id); e.cs = e.cs || {};
+      const v = e.cs[p.id] = e.crit.map((k, q) => (e.cs[p.id] || [])[q] ?? null);
+      v[j] = v[j] === s ? null : s;
+      if (crDone(e, p.id)) e.s[p.id] = crNote(e, v); else if (typeof e.s[p.id] === 'number') delete e.s[p.id];
+      e.cmax = +e.max; save(c.id); draw();
+      if (!was && crDone(e, p.id)){ toast(`✓ ${p.n} : ${fr(e.s[p.id], 2)}/${fr(+e.max, 2)}`); const nx = nextTodo(); if (nx >= 0) tmo = setTimeout(() => go(nx), 900); }
+    });
+    sb.querySelectorAll('[data-ctag]').forEach(b => b.onclick = () => { const k = b.dataset.ctag;
+      if (e.s[p.id] === k){ delete e.s[p.id]; if (k === 'CM') (e.cmOff = e.cmOff || {})[p.id] = 1; if (crDone(e, p.id)) e.s[p.id] = crNote(e, e.cs[p.id]); }
+      else { e.s[p.id] = k; if (e.cmOff) delete e.cmOff[p.id]; }
+      save(c.id); draw(); if (evTag(e.s[p.id])){ const nx = nextTodo(); if (nx >= 0) tmo = setTimeout(() => go(nx), 700); } });
+  };
+  bind();
+  sheetOnClose = () => { clearTimeout(tmo); render(); };
+}
+
+/* grille papier (paysage) : une page par classe, avec les points déjà donnés, ou vide pour noter au bord du terrain */
+function critPrint(items){
+  const en = prepaEn(); let h = '';
+  items.forEach(({c, e}) => {
+    h += `<article class="pr-page cr-pr"><header class="pr-hd">${en.logo ? `<img src="${esc(en.logo)}" alt="" onerror="this.remove()">` : ''}<div><b>${esc(en.ecole || '')}</b><span>Éducation physique · Grille d'évaluation</span>${en.prof ? `<span>Professeur : ${esc(en.prof)}</span>` : ''}</div>
+      <div class="pr-hn"><b>${esc(c.name)}</b><span>${e.date ? esc(fmtDL(e.date)) : '…………………'}</span></div></header>
+      <h2 class="cr-prt">${esc(e.name)} <small>· ${fr(crTot(e), 2)} points → note sur ${fr(+e.max, 2)}</small></h2>
+      <table class="cr-prk">${e.crit.map((k, j) => `<tr><th>C${j + 1}</th><td><b>${esc(k.n)}</b> · ${fr(+k.p, 2)} pts${k.i ? ` : ${esc(k.i)}` : ''}</td></tr>`).join('')}</table>
+      <table class="cr-prg"><thead><tr><th>Élève</th>${e.crit.map((k, j) => `<th>C${j + 1}<br><small>/${fr(+k.p, 2)}</small></th>`).join('')}<th>Total<br><small>/${fr(crTot(e), 2)}</small></th><th>Note<br><small>/${fr(+e.max, 2)}</small></th><th>Remarque</th></tr></thead>
+      <tbody>${pupilsOf(c).map(p => { const v = (e.cs || {})[p.id] || [], t = evTag(e.s[p.id]), s = e.s[p.id];
+        return `<tr><td>${esc(p.n)}</td>${e.crit.map((k, j) => `<td>${!t && typeof v[j] === 'number' ? fr(v[j], 2) : ''}</td>`).join('')}<td>${!t && crDone(e, p.id) ? fr(crSum(v), 2) : ''}</td><td>${t ? EV_TAGS[t] : typeof s === 'number' ? fr(s, 2) : ''}</td><td></td></tr>`; }).join('')}</tbody></table></article>`;
+  });
+  printHTML(h, `Grille · ${items[0].e.name}`, true);
 }
 
 /* --- En-tête imprimé : école, professeur, logo --- */
@@ -2572,14 +2822,15 @@ function prepaPage(x, en){
   const ph = (n, i, k) => `<section class="pr-ph"><h3><span>${n}</span>${pp.d && pp.d[i] ? `<em>${pp.d[i]} min</em>` : ''}</h3><div class="pr-tx">${esc(pp[k] || '—')}</div>${sch(k) ? `<div class="pr-sch">${sch(k)}</div>` : ''}</section>`;
   return `<article class="pr-page">
     <header class="pr-hd">${en.logo ? `<img src="${esc(en.logo)}" alt="" onerror="this.remove()">` : ''}<div><b>${esc(en.ecole || '')}</b><span>Éducation physique · Préparation de leçon</span>${en.prof ? `<span>Professeur : ${esc(en.prof)}</span>` : ''}</div>
-      <div class="pr-hn">${pp.n ? `<b>Leçon ${pp.n}${/^hiver/.test(pp.ref || '') ? '' : '/6'}</b>` : ''}<span>${esc(AN_TXT(pp.an))} secondaire</span></div></header>
+      <div class="pr-hn">${pp.n ? `<b>Leçon ${pp.n}${/^hiver/.test(pp.ref || '') ? '' : '/' + (pp.nt || 6)}</b>` : ''}<span>${esc(AN_TXT(pp.an))} secondaire</span></div></header>
     <table class="pr-tb"><tr><th>Date</th><td>${x.date ? esc(fmtDL(x.date)) : '…………………'}${x.h ? ' · ' + esc(x.h) : ''}</td><th>Classe(s)</th><td>${esc(x.cls.map(c => c.name).join(', ') || '…………')}</td></tr>
-      <tr><th>Activité</th><td>${esc(pp.sp || '')}${r && r.A.th && r.id !== 'hiver' ? `<br><small>Séquence : ${esc(r.A.th)}</small>` : ''}</td><th>Durée</th><td>${tot ? tot + ' min de pratique' : '50 min'}</td></tr>
+      <tr><th>Activité</th><td>${esc(pp.sp || '')}${r && r.A.th && r.id !== 'hiver' ? `<br><small>Séquence : ${esc(r.A.l.length > 6 ? `cycle ${Math.ceil(r.n / 6)} · ${ppCycles(r.A)[Math.ceil(r.n / 6) - 1].th}` : r.A.th)}</small>` : ''}</td><th>Durée</th><td>${tot ? tot + ' min de pratique' : '50 min'}</td></tr>
       <tr><th>Thème</th><td colspan="3"><b>${esc(pp.t || '')}</b></td></tr>
       <tr><th>Objectif(s)</th><td colspan="3">${esc(pp.o || '')}</td></tr>
       <tr><th>Compétences</th><td colspan="3">${comp.length ? comp.map(k => `<span class="pr-k"><b>${k}</b> ${esc(lab(k))}</span>`).join('') : '—'}</td></tr>
       <tr><th>Matériel</th><td colspan="3">${esc(pp.mat || '')}</td></tr></table>
     ${ph('Échauffement', 0, 'e')}${ph('Corps de leçon', 1, 'c')}${ph('Retour au calme', 2, 'r')}
+    ${r && r.l.crit && pp.t === r.l.t ? `<section class="pr-ph pr-crit"><h3><span>Grille d'évaluation</span><em>${fr(r.l.crit.reduce((a, k) => a + k[1], 0), 2)} points</em></h3><table>${r.l.crit.map(([n, p, i]) => `<tr><th>${esc(n)}</th><td>${fr(p, 2)}</td><td>${esc(i || '')}</td></tr>`).join('')}</table></section>` : ''}
     ${pp.bil ? `<section class="pr-ph"><h3><span>Bilan</span></h3><div class="pr-tx">${esc(pp.bil)}</div></section>` : ''}
     ${r ? window.PSCH_LEGENDE || '' : ''}</article>`;
 }
@@ -2601,11 +2852,11 @@ function prepaPrint(list, titre, avecResume){
   });
 }
 /* impression : la page est remplacée par #prt le temps de l'impression (Enregistrer en PDF sur téléphone) */
-function printHTML(h, titre, paysage){
+function printHTML(h, titre, paysage, page){
   let root = $('prt'); if (!root){ root = document.createElement('div'); root.id = 'prt'; document.body.appendChild(root); }
   root.innerHTML = h; root.classList.toggle('pr-land', !!paysage); document.documentElement.classList.add('prt');
   let st = $('prt-page'); if (!st){ st = document.createElement('style'); st.id = 'prt-page'; document.head.appendChild(st); }
-  st.textContent = `@page{size:A4 ${paysage ? 'landscape' : 'portrait'};margin:12mm}`;
+  st.textContent = page || `@page{size:A4 ${paysage ? 'landscape' : 'portrait'};margin:12mm}`;
   const old = document.title; document.title = titre;
   const fin = () => { document.documentElement.classList.remove('prt'); root.innerHTML = ''; document.title = old; window.removeEventListener('afterprint', fin); };
   window.addEventListener('afterprint', fin);
@@ -2631,7 +2882,9 @@ function openPrepaPrint(){
     <div class="card sec"><h3>📚 Bibliothèque</h3><p class="small muted" style="margin:0">Imprimer une séquence vierge (sans date ni classe) pour la préparer ou l'emporter.</p>
       <div class="row2"><select class="inp" id="pr-bs" style="flex:2 1 150px">${prepaCat().map(([id, n]) => `<option value="${id}">${esc(n)}</option>`).join('')}</select>
       <select class="inp" id="pr-ba" style="flex:1 1 100px">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}">${AN_TXT(a)}</option>`).join('')}</select></div>
-      <button class="btn block" type="button" id="pr-bgo">🖨 Imprimer la séquence</button></div>`);
+      <button class="btn block" type="button" id="pr-bgo">🖨 Imprimer la séquence</button>
+      <p class="small muted" style="margin:6px 0 0">Ou tout le recueil pour une farde : toutes les séquences, classées par année puis par sport, avec pages de garde et onglets au bord droit.</p>
+      <button class="btn block" type="button" id="pr-rec">📚 Imprimer le recueil complet</button></div>`);
   const on = new Set(S.classes.map(c => c.id));
   const pick = () => { const a = $('pr-d0').value, b = $('pr-d1').value; return all.filter(x => (!a || x.date >= a) && (!b || x.date <= b) && x.cls.some(c => on.has(c.id))); };
   const count = () => { const l = pick(), par = {}; l.forEach(x => par[x.pp.an || 0] = (par[x.pp.an || 0] || 0) + 1);
@@ -2647,9 +2900,65 @@ function openPrepaPrint(){
     rd.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, 240 / Math.max(im.width, im.height)), cv = document.createElement('canvas'); cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k);
       cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); putEn({logo: cv.toDataURL('image/png')}); openPrepaPrint(); toast('Logo changé'); }; im.src = rd.result; }; rd.readAsDataURL(f); };
   $('pr-go').onclick = () => prepaPrint(pick(), `Préparations EPS ${sy}${prepaEn().prof ? ' · ' + prepaEn().prof : ''}`, true);
+  $('pr-rec').onclick = () => prepaRecueil();
   $('pr-bgo').onclick = () => { const id = $('pr-bs').value, a = id === 'hiver' ? 0 : +$('pr-ba').value;
     prepaLoad([id]).then(() => { const L = PREPA_LIB[id]; if (!L || !L.an[a]){ toast('Bibliothèque pas disponible (internet ?)'); return; }
       prepaPrint(L.an[a].l.map((l, i) => ({date: '', h: '', cls: [], pp: prepaFromLib(id, a, i + 1), prog: null})), `${L.sport} · ${a ? AN_TXT(a) + ' secondaire' : 'jeux d\'hiver'}`); }); };
+}
+
+/* --- Recueil papier : toutes les prépas de la bibliothèque pour une farde (classées par année puis par sport, pages de garde, onglets au bord droit) --- */
+const RC_PAGE = '@page{size:A4 portrait;margin:12mm 0 12mm 12mm}';  // marge droite à 0 : les onglets vont jusqu'au bord de la feuille
+const RC_ONGLETS = [1, 2, 3, 4, 5, 6, 'natdeb', 'hiver'];  // position verticale de l'onglet de chaque section
+function rcTab(pos, haut, bas){
+  const i = RC_ONGLETS.indexOf(pos);
+  return `<div class="rc-tab" style="top:${8 + i * 33}mm"><b>${esc(haut)}</b>${bas ? `<span>${esc(bas)}</span>` : ''}</div>`;
+}
+function rcEnTete(en, sous){
+  return `<header class="pr-hd">${en.logo ? `<img src="${esc(en.logo)}" alt="" onerror="this.remove()">` : ''}<div><b>${esc(en.ecole || '')}</b><span>Éducation physique · ${esc(sous)}</span>${en.prof ? `<span>Professeur : ${esc(en.prof)}</span>` : ''}</div></header>`;
+}
+function rcLecons(A, libId){
+  const long = A.l.length > 6 && libId !== 'hiver';  // plusieurs cycles : sans les objectifs, pour tenir sur la page de garde
+  return ppCycles(A).map(cy => `${long ? `<h3 class="rc-cy">Cycle ${cy.k} · ${esc(cy.th)}</h3>` : ''}<table class="rc-ls${long ? '' : ' rc-l3'}"><tr><th>Leçon</th><th>Thème</th>${long ? '' : '<th>Objectif</th>'}</tr>
+    ${A.l.slice(cy.de - 1, cy.a).map((l, j) => `<tr${l.crit ? ' class="rc-ev"' : ''}><td>${libId === 'hiver' ? '' : 'L' + (cy.de + j)}</td><td><b>${esc(l.t)}</b>${l.crit ? ' <small>(grille d\'évaluation)</small>' : ''}</td>${long ? '' : `<td>${esc(l.o || l.tags || '')}</td>`}</tr>`).join('')}</table>`).join('');
+}
+async function prepaRecueilHTML(){
+  const ids = PREPA_PRETS.filter(id => id !== 'hiver' && id !== 'natdeb'), nom = id => (PREPA_CAT.find(c => c[0] === id) || [0, id])[1];
+  await prepaLoad([...PREPA_PRETS]);
+  const en = prepaEn(), sy = schoolYear(today())[2], sp = ids.filter(id => PREPA_LIB[id]).sort((a, b) => nom(a).localeCompare(nom(b), 'fr'));
+  const page = (x, tab) => prepaPage(x, en).replace('<article class="pr-page">', `<article class="pr-page rc-p">${tab}`).replace(window.PSCH_LEGENDE || '§', '');  // légende des schémas : une seule fois, en page 1
+  const lecon = (id, an, n, tab) => page({date: '', h: '', cls: [], pp: prepaFromLib(id, an, n), prog: null}, tab);
+  let h = `<article class="pr-page rc-p rc-cover">${rcEnTete(en, 'Recueil des préparations de leçons')}
+    <h1>Recueil des préparations de leçons</h1><p class="rc-sub">Éducation physique · ${esc(sy)}${en.prof ? ' · ' + esc(en.prof) : ''}</p>
+    <p>Chaque séquence compte 6 leçons : 5 leçons d'apprentissage et une leçon d'évaluation (la 6e), avec sa grille de critères. En natation (1re à 3e), deux cycles de plus sont prévus pour les classes qui ont 12 ou 18 semaines de piscine, et un parcours séparé existe pour le groupe débutants.</p>
+    <h2>Comment trouver une prépa</h2><p>Les onglets noirs au bord droit des pages indiquent l'année (1re en haut, 6e plus bas), puis les sections « Natation débutants » et « Jeux d'hiver ». Dans chaque année, les sports sont classés par ordre alphabétique, chacun précédé d'une page de garde avec la liste de ses leçons.</p>
+    <table class="rc-ls rc-som"><tr><th>Section</th><th>Contenu</th></tr>
+      ${[1, 2, 3, 4, 5, 6].map(a => `<tr><td><b>${AN_TXT(a)} secondaire</b></td><td>${sp.filter(id => PREPA_LIB[id].an[a]).map(id => `${esc(nom(id).replace(/ \(.*\)$/, ''))} (${PREPA_LIB[id].an[a].l.length})`).join(' · ')}</td></tr>`).join('')}
+      ${PREPA_LIB.natdeb ? `<tr><td><b>Natation débutants</b></td><td>3 cycles de 6 leçons (petite profondeur), toutes années</td></tr>` : ''}
+      ${PREPA_LIB.hiver ? `<tr><td><b>Jeux d'hiver</b></td><td>${PREPA_LIB.hiver.an[0].l.length} jeux d'une leçon (petite salle, peu de matériel)</td></tr>` : ''}</table>
+    <h2>Légende des schémas</h2>${window.PSCH_LEGENDE || ''}</article>`;
+  [1, 2, 3, 4, 5, 6].forEach(a => {
+    const lst = sp.filter(id => PREPA_LIB[id].an[a]), A_ = AN_TXT(a);
+    h += `<article class="pr-page rc-p rc-div">${rcTab(a, A_)}<div class="rc-big"><span>${A_}</span><small>secondaire</small></div>
+      <table class="rc-ls rc-som"><tr><th>Sport</th><th>Séquence</th><th>Leçons</th></tr>${lst.map(id => { const A = PREPA_LIB[id].an[a];
+        return `<tr><td><b>${esc(nom(id))}</b></td><td>${esc(A.l.length > 6 ? ppCycles(A).map(c => c.th).join(' / ') : A.th)}</td><td>${A.l.length}</td></tr>`; }).join('')}</table></article>`;
+    lst.forEach(id => { const L = PREPA_LIB[id], A = L.an[a], ab = planAbbr(L.sport), tab = rcTab(a, A_, ab);
+      h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, A_ + ' secondaire')}<div class="rc-sph"><small>${A_} secondaire</small><h1>${esc(nom(id))}</h1><p>${esc(A.th)}</p></div>
+        <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || L.mat || '')}</p>${id === 'natation' && a <= 3 && PREPA_LIB.natdeb ? '<p class="rc-mat"><b>Groupe débutants :</b> voir la section « Natation débutants » en fin de farde.</p>' : ''}${rcLecons(A, id)}</article>`;
+      A.l.forEach((l, i) => h += lecon(id, a, i + 1, tab)); });
+  });
+  if (PREPA_LIB.natdeb){ const A = PREPA_LIB.natdeb.an[1], tab = rcTab('natdeb', 'Nat.', 'débutants');
+    h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Natation débutants')}<div class="rc-sph"><small>Toutes années · petite profondeur</small><h1>Natation débutants</h1><p>${esc(A.th)}</p></div>
+      <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || '')}</p><p class="rc-mat">Pour le groupe qui n'est pas encore à l'aise dans l'eau, en même temps que le groupe nageurs. L'évaluation du cycle 3 sert de test de passage vers le groupe nageurs.</p>${rcLecons(A, 'natdeb')}</article>`;
+    A.l.forEach((l, i) => h += lecon('natdeb', 1, i + 1, tab).replace(/<span>1re secondaire<\/span>/, '<span>toutes années</span>')); }
+  if (PREPA_LIB.hiver){ const A = PREPA_LIB.hiver.an[0], tab = rcTab('hiver', 'Hiver', 'jeux');
+    h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, "Jeux d'hiver")}<div class="rc-sph"><small>Toutes années · une leçon par jeu</small><h1>Jeux d'hiver</h1><p>Jeux pour la petite salle ou les jours sans installation, classés par mots-clés.</p></div>${rcLecons(A, 'hiver')}</article>`;
+    A.l.forEach((l, i) => h += lecon('hiver', 0, i + 1, tab).replace(/<span>(toutes années|\d+r?e) secondaire<\/span>/, '<span>toutes années</span>')); }
+  return h;
+}
+window.prepaRecueilHTML = prepaRecueilHTML;
+function prepaRecueil(){
+  toast('Préparation du recueil (plusieurs centaines de pages)…');
+  prepaRecueilHTML().then(h => printHTML(h, `Recueil des prépas EPS ${schoolYear(today())[2]}`, false, RC_PAGE));
 }
 
 /* --- Onglet « Prépas » du tableau Google (une ligne par leçon) --- */
@@ -2797,7 +3106,7 @@ function bindClassSexe(c){
 }
 
 /* --- Liste et formulaire des évaluations --- */
-const evTags = e => (e.endu ? ' <span class="tag ev-endu">🏃 Endurance</span>' : '') + (e.kind === 'form' ? ' <span class="tag ev-form">FORMATIVE</span>' : '');
+const evTags = e => (e.endu ? ' <span class="tag ev-endu">🏃 Endurance</span>' : '') + (e.crit ? ' <span class="tag ev-crit">🎯 Grille</span>' : '') + (e.kind === 'form' ? ' <span class="tag ev-form">FORMATIVE</span>' : '');
 function evTypeField(c, e){
   if (e) return e.endu ? '<div class="ev-type1"><b>🏃 Endurance</b> <span class="small muted">· compteur de tours</span></div>' : '';
   return `<span class="small muted" style="font-weight:600">Type d'évaluation</span>
@@ -2902,6 +3211,8 @@ function evBindSin(sb, get, redraw){
 function evScoresHead(c, e){
   let h = '';
   if (e.kind === 'form') h += '<div class="ev-formnote"><span class="tag ev-form">FORMATIVE</span><span class="small">Pour info : ne compte pas dans le bulletin.</span></div>';
+  if (e.crit) h += `<div class="card cr-card"><div><b>🎯 Grille de critères</b><br><span class="small muted">${e.crit.length} critères · ${fr(crTot(e), 2)} points → note sur ${fr(+e.max, 2)}</span></div>
+    <div class="row2"><button class="btn pri" type="button" id="es-crit">▶ Noter avec la grille</button><button class="btn" type="button" id="es-crprt">🖨 Grille papier</button></div></div>`;
   if (e.endu){
     const run = enRunGet(), mine = run && enKey(run) === c.id + ':' + e.id, nl = Object.keys(e.endu.laps || {}).length;
     h += `<div class="card ev-endu-c"><div><b>🏃 Endurance · ${fr(e.endu.min, 2)} min</b><br><span class="small muted">${e.endu.tours} tours = ${fr(+e.max, 2)}/${fr(+e.max, 2)}${nl ? ` · ${nl} élève${nl > 1 ? 's' : ''} déjà compté${nl > 1 ? 's' : ''}` : ''}</span></div>
@@ -2909,7 +3220,9 @@ function evScoresHead(c, e){
   }
   return h;
 }
-function bindEvScoresHead(c, e){ if ($('es-endu')) $('es-endu').onclick = () => { closeSheet(); enOpen(c.id, e.id); }; }
+function bindEvScoresHead(c, e){ if ($('es-endu')) $('es-endu').onclick = () => { closeSheet(); enOpen(c.id, e.id); };
+  if ($('es-crit')) $('es-crit').onclick = () => { sheetOnClose = null; closeSheet(); critOpen([{c, e}]); };
+  if ($('es-crprt')) $('es-crprt').onclick = () => critPrint([{c, e}]); }
 const evLapsTxt = (e, p) => { const n = e.endu && (e.endu.laps || {})[p.id]; return n != null ? `<span class="pts">${n} tour${n > 1 ? 's' : ''}</span>` : ''; };
 function evFormList(c, vp, p){
   return c.evals.filter(e => e.periodId === vp.id && e.kind === 'form').map(e => { const s = e.s[p.id];
@@ -3372,7 +3685,7 @@ function renderEvalTab(m){
     ${chips}
     <div class="chips" id="egp">${periodsOf(c0).map(p => `<button class="chip" type="button" data-egp="${p.id}" aria-pressed="${p.id === vp0.id}">${esc(p.name)}${p.type === 'piscine' ? ' <span class="tag piscine" style="padding:1px 6px">P</span>' : ''}</button>`).join('')}</div>
     <p class="small muted" style="margin:0">${multi ? `Une évaluation créée ici est faite pour <b>${esc(g.name)}</b> en même temps (même nom, date et barème). Les notes vont dans le bulletin de chaque classe.` : `Les notes vont dans le bulletin de ${esc(g.name)}.`} Les évaluations certificatives de la période s'additionnent (${totTxt}) et comptent pour ${100 - S.settings.se} % du bulletin. Les formatives (pour info) ne comptent pas.</p>
-    <button class="btn pri block" type="button" id="eg-new">+ Nouvelle évaluation${multi ? ' · ' + esc(g.name) : ''}</button>
+    <div class="row2 eg-btns"><button class="btn pri" type="button" id="eg-new">+ Nouvelle évaluation${multi ? ' · ' + esc(g.name) : ''}</button><button class="btn pri" type="button" id="eg-crit">🎯 Fin de cycle (grille)</button></div>
     ${bs.length ? bs.map((b, i) => { const e = b.items[0].e, n = b.items.reduce((a, it) => a + it.c.pupils.length, 0);
       const vals = b.items.flatMap(({c, e}) => c.pupils.map(p => e.s[p.id]).filter(v => typeof v === 'number')), avg = vals.length ? vals.reduce((a, x) => a + x, 0) / vals.length : null;
       const part = multi && b.items.length < g.cls.length;
@@ -3381,6 +3694,7 @@ function renderEvalTab(m){
   </section>`;
   bindEvTab(m, g, vp0);
   $('eg-new').onclick = () => openGroupEvalForm(g.cls, vp0, null);
+  $('eg-crit').onclick = () => critNew(g.cls, vp0);
   m.querySelectorAll('[data-eb]').forEach(x => x.onclick = () => openGroupScores(bs[+x.dataset.eb].items));
 }
 function bindEvTab(m, g, vp0){
@@ -3423,6 +3737,8 @@ function openGroupEvalForm(cls, vp0, items){
 function grHead(items){
   const e0 = items[0].e; let h = '';
   if (e0.kind === 'form') h += '<div class="ev-formnote"><span class="tag ev-form">FORMATIVE</span><span class="small">Pour info : ne compte pas dans le bulletin.</span></div>';
+  if (e0.crit) h += `<div class="card cr-card"><div><b>🎯 Grille de critères</b><br><span class="small muted">${e0.crit.length} critères · ${fr(crTot(e0), 2)} points → note sur ${fr(+e0.max, 2)}</span></div>
+    <div class="row2"><button class="btn pri" type="button" id="es-crit">▶ Noter avec la grille</button><button class="btn" type="button" id="es-crprt">🖨 Grille papier</button></div></div>`;
   if (e0.endu){
     const run = enRunGet(), mine = run && enKey(run) === enKey({items: items.map(({c, e}) => ({cid: c.id, eid: e.id}))});
     const nl = items.reduce((a, {e}) => a + Object.keys(e.endu?.laps || {}).length, 0), np = items.reduce((a, {c}) => a + c.pupils.length, 0);
@@ -3445,6 +3761,8 @@ function openGroupScores(items){
   const bind = () => {
     $('es-edit').onclick = () => { closeSheet(); openGroupEvalForm(null, null, items); };
     if ($('es-endu')) $('es-endu').onclick = () => { closeSheet(); enOpen(items.map(({c, e}) => ({cid: c.id, eid: e.id}))); };
+    if ($('es-crit')) $('es-crit').onclick = () => { sheetOnClose = null; closeSheet(); critOpen(items); };
+    if ($('es-crprt')) $('es-crprt').onclick = () => critPrint(items);
     evBindSin(sb, el => it(el.dataset.cid), () => { sb.innerHTML = body(); bind(); });
   };
   bind();

@@ -149,7 +149,7 @@ function renderEvalTab(m){
     ${chips}
     <div class="chips" id="egp">${periodsOf(c0).map(p => `<button class="chip" type="button" data-egp="${p.id}" aria-pressed="${p.id === vp0.id}">${esc(p.name)}${p.type === 'piscine' ? ' <span class="tag piscine" style="padding:1px 6px">P</span>' : ''}</button>`).join('')}</div>
     <p class="small muted" style="margin:0">${multi ? `Une évaluation créée ici est faite pour <b>${esc(g.name)}</b> en même temps (même nom, date et barème). Les notes vont dans le bulletin de chaque classe.` : `Les notes vont dans le bulletin de ${esc(g.name)}.`} Les évaluations certificatives de la période s'additionnent (${totTxt}) et comptent pour ${100 - S.settings.se} % du bulletin. Les formatives (pour info) ne comptent pas.</p>
-    <button class="btn pri block" type="button" id="eg-new">+ Nouvelle évaluation${multi ? ' · ' + esc(g.name) : ''}</button>
+    <div class="row2 eg-btns"><button class="btn pri" type="button" id="eg-new">+ Nouvelle évaluation${multi ? ' · ' + esc(g.name) : ''}</button><button class="btn pri" type="button" id="eg-crit">🎯 Fin de cycle (grille)</button></div>
     ${bs.length ? bs.map((b, i) => { const e = b.items[0].e, n = b.items.reduce((a, it) => a + it.c.pupils.length, 0);
       const vals = b.items.flatMap(({c, e}) => c.pupils.map(p => e.s[p.id]).filter(v => typeof v === 'number')), avg = vals.length ? vals.reduce((a, x) => a + x, 0) / vals.length : null;
       const part = multi && b.items.length < g.cls.length;
@@ -158,6 +158,7 @@ function renderEvalTab(m){
   </section>`;
   bindEvTab(m, g, vp0);
   $('eg-new').onclick = () => openGroupEvalForm(g.cls, vp0, null);
+  $('eg-crit').onclick = () => critNew(g.cls, vp0);
   m.querySelectorAll('[data-eb]').forEach(x => x.onclick = () => openGroupScores(bs[+x.dataset.eb].items));
 }
 function bindEvTab(m, g, vp0){
@@ -200,6 +201,8 @@ function openGroupEvalForm(cls, vp0, items){
 function grHead(items){
   const e0 = items[0].e; let h = '';
   if (e0.kind === 'form') h += '<div class="ev-formnote"><span class="tag ev-form">FORMATIVE</span><span class="small">Pour info : ne compte pas dans le bulletin.</span></div>';
+  if (e0.crit) h += `<div class="card cr-card"><div><b>🎯 Grille de critères</b><br><span class="small muted">${e0.crit.length} critères · ${fr(crTot(e0), 2)} points → note sur ${fr(+e0.max, 2)}</span></div>
+    <div class="row2"><button class="btn pri" type="button" id="es-crit">▶ Noter avec la grille</button><button class="btn" type="button" id="es-crprt">🖨 Grille papier</button></div></div>`;
   if (e0.endu){
     const run = enRunGet(), mine = run && enKey(run) === enKey({items: items.map(({c, e}) => ({cid: c.id, eid: e.id}))});
     const nl = items.reduce((a, {e}) => a + Object.keys(e.endu?.laps || {}).length, 0), np = items.reduce((a, {c}) => a + c.pupils.length, 0);
@@ -222,6 +225,8 @@ function openGroupScores(items){
   const bind = () => {
     $('es-edit').onclick = () => { closeSheet(); openGroupEvalForm(null, null, items); };
     if ($('es-endu')) $('es-endu').onclick = () => { closeSheet(); enOpen(items.map(({c, e}) => ({cid: c.id, eid: e.id}))); };
+    if ($('es-crit')) $('es-crit').onclick = () => { sheetOnClose = null; closeSheet(); critOpen(items); };
+    if ($('es-crprt')) $('es-crprt').onclick = () => critPrint(items);
     evBindSin(sb, el => it(el.dataset.cid), () => { sb.innerHTML = body(); bind(); });
   };
   bind();

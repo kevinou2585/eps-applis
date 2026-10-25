@@ -226,3 +226,70 @@ header.top .sync{min-width:0; overflow:hidden}
   .psch{-webkit-print-color-adjust:exact; print-color-adjust:exact}
 }
 .pl-h{flex:1 1 auto !important; min-width:0} .pl-h small{font-size:.6em; color:var(--muted)}
+
+/* Évaluation de fin de cycle : grille par critères */
+.pp-lb.ev{border-color:var(--warn)} .pp-lb.ev.on{border-color:var(--accent)}
+.pp-lb span small{display:block; font-size:12px; color:var(--muted)}
+.pp-cy{display:flex; flex-direction:column; gap:1px; margin:10px 0 4px; padding:6px 10px; border-left:4px solid var(--accent); background:var(--accent-soft); border-radius:6px}
+.pp-cy b{font:700 15px/1.1 var(--display); text-transform:uppercase; letter-spacing:.03em; color:var(--accent)} .pp-cy span{font-size:13px}
+.eg-btns .btn{flex:1 1 160px}
+.tag.ev-crit{background:var(--warn-soft); color:var(--warn)}
+.cr-card{display:grid; gap:8px; border-color:var(--warn)}
+.cr-k{display:grid; gap:6px; padding:8px 0; border-bottom:1px dashed var(--line)}
+.cr-kh{display:flex; align-items:center; gap:6px} .cr-kh b{font:700 15px/1 var(--display); min-width:24px}
+.cr-kh [data-kn]{flex:1; min-width:0} .cr-kh [data-kp]{width:58px; text-align:center}
+.cr-kx{min-width:40px; padding:0}
+.cr-seg{display:flex; flex:1 1 auto} .cr-seg button{flex:1; white-space:nowrap; padding-inline:8px}
+.cr-tot{font-size:14px; text-align:right}
+.cr-top{display:flex; align-items:center; gap:8px; margin-top:8px}
+.cr-nav{min-width:48px; min-height:48px; font-size:24px; padding:0}
+.cr-who{flex:1; min-width:0; display:flex; align-items:center; gap:10px; position:relative; border:1px solid var(--line); border-radius:12px; padding:6px 10px; background:var(--surface)}
+.cr-who > span{display:flex; flex-direction:column; min-width:0} .cr-who b{font-size:17px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.cr-who select{position:absolute; inset:0; opacity:0; width:100%; cursor:pointer}
+.cr-tags{display:flex; gap:6px; margin:8px 0} .cr-tags .btn{flex:1; min-height:40px; font-size:14px}
+.cr-tags .abs[aria-pressed="true"]{background:var(--bad-soft); color:var(--bad); border-color:var(--bad)}
+.cr-off{display:grid; gap:4px; background:var(--bad-soft)}
+.cr-c{border:1px solid var(--line); border-radius:12px; padding:9px 10px; margin-bottom:8px; background:var(--surface)}
+.cr-c.ok{border-color:var(--ok)}
+.cr-ch{display:flex; gap:8px; align-items:baseline} .cr-ch b{flex:1; font-size:15px} .cr-ch b span{color:var(--muted); font-size:13px; margin-right:2px}
+.cr-ch em{font-style:normal; font-weight:700; font-size:16px; white-space:nowrap}
+.cr-ci{display:block; font-size:13px; color:var(--muted); margin:2px 0 6px; line-height:1.3}
+.cr-pts{display:flex; flex-wrap:wrap; gap:6px}
+.cr-pts button{flex:1 0 46px; min-height:46px; border:1.5px solid var(--line); border-radius:10px; background:var(--bg); color:var(--fg); font:700 17px/1 var(--body)}
+.cr-pts button[aria-pressed="true"]{background:var(--accent); border-color:var(--accent); color:var(--accent-ink)}
+.cr-sum{display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:10px 12px; border-radius:12px; background:var(--accent-soft); margin:4px 0 10px}
+.cr-sum.ok{background:var(--ok-soft)} .cr-sum > span:first-child{font-weight:700}
+.cr-sum b{font:700 28px/1 var(--display)} .cr-sum b small{font-size:16px; color:var(--muted)}
+.cr-tbw{overflow-x:auto; border:1px solid var(--line); border-radius:10px; margin:8px 0}
+.cr-tb{border-collapse:collapse; width:100%; font-size:14px}
+.cr-tb th, .cr-tb td{border-bottom:1px solid var(--line); padding:7px 6px; text-align:center; white-space:nowrap}
+.cr-tb th:first-child, .cr-tb td:first-child{text-align:left; position:sticky; left:0; background:var(--surface); max-width:150px; overflow:hidden; text-overflow:ellipsis}
+.cr-tb th small{display:block; font-weight:400; color:var(--muted)}
+.cr-tb tbody tr{cursor:pointer} .cr-tb tr.todo td{color:var(--muted)} .cr-tb tr.todo td:first-child::before{content:'○ '}
+.cr-tb tfoot td{font-weight:700; background:var(--accent-soft)}
+.cr-leg{margin:6px 0; padding-left:22px; font-size:13px; display:grid; gap:3px}
+@media print{
+  .cr-prt{font-size:14pt; margin:2px 0 6px} .cr-prt small{font-weight:400; font-size:10pt}
+  .cr-prk{width:100%; border-collapse:collapse; font-size:8.5pt; margin-bottom:6px} .cr-prk th, .cr-prk td{border:1px solid #999; padding:2px 5px; text-align:left; vertical-align:top} .cr-prk th{background:#eee; width:28px}
+  .cr-prg{width:100%; border-collapse:collapse; font-size:10pt} .cr-prg th, .cr-prg td{border:1px solid #777; padding:0 5px; height:21px; text-align:center}
+  .cr-prg th{background:#eee; font-size:9pt; line-height:1.1; padding:3px} .cr-prg td:first-child{text-align:left; white-space:nowrap} .cr-prg td:last-child, .cr-prg th:last-child{width:22%}
+  .cr-prg tr{break-inside:avoid}
+}
+
+/* recueil papier : onglets au bord droit, pages de garde */
+@media print{
+  .pr-crit table{width:100%; border-collapse:collapse; font-size:8.5pt} .pr-crit th, .pr-crit td{border-top:1px solid #bbb; padding:2px 6px; text-align:left; vertical-align:top}
+  .pr-crit th{width:30%} .pr-crit td:nth-child(2){width:24px; text-align:center; font-weight:700}
+  .rc-p{position:relative; min-height:262mm; display:flow-root; margin-right:13mm}
+  html.prt{background:#fff !important}
+  .rc-tab{position:absolute; right:-13mm; width:11mm; height:31mm; background:#111; color:#fff; border-radius:3mm 0 0 3mm; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1mm; -webkit-print-color-adjust:exact; print-color-adjust:exact; padding-right:1mm; box-sizing:border-box}
+  .rc-tab b{font-size:11pt; line-height:1} .rc-tab span{font-size:7pt; writing-mode:vertical-rl; transform:rotate(180deg); max-height:20mm; overflow:hidden; letter-spacing:.03em}
+  .rc-cover h1{font-size:26pt; margin:40mm 0 4mm} .rc-sub{font-size:13pt; color:#444; margin:0 0 12mm} .rc-cover h2{font-size:13pt; margin:8mm 0 2mm}
+  .rc-big{display:flex; flex-direction:column; align-items:center; margin:30mm 0 12mm} .rc-big span{font-size:72pt; font-weight:800; line-height:1} .rc-big small{font-size:20pt; letter-spacing:.2em; text-transform:uppercase}
+  .rc-sph{border:2.5px solid #111; border-radius:4mm; padding:6mm 8mm; margin:6mm 0} .rc-sph small{font-size:10pt; text-transform:uppercase; letter-spacing:.1em} .rc-sph h1{font-size:24pt; margin:1mm 0} .rc-sph p{margin:0; font-size:11pt}
+  .rc-mat{font-size:9.5pt; margin:2mm 0}
+  .rc-cy{font-size:11pt; margin:5mm 0 1.5mm; border-bottom:1.5px solid #111}
+  .rc-ls{width:100%; border-collapse:collapse; font-size:9pt; margin-top:2mm} .rc-ls th, .rc-ls td{border:1px solid #999; padding:2px 5px; text-align:left; vertical-align:top} .rc-ls th{background:#eee}
+  .rc-ls td:first-child{white-space:nowrap} .rc-l3 th:first-child{width:12mm} .rc-l3 th:nth-child(2){width:38%} .rc-ls tr.rc-ev td{background:#f3f3f3; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .rc-som td{font-size:10pt; padding:3px 6px}
+}

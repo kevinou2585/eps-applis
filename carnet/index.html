@@ -1931,7 +1931,7 @@ function renderGlobal(m){
     <div class="card sec reg" style="padding-block:14px" id="reg-com">
       <h3>Commentaires de bulletin</h3>
       <label class="toggle"><input type="checkbox" id="s-com" ${st.comAuto !== false ? 'checked' : ''}>📝 Commentaire de bulletin automatique</label>
-      <p class="small muted" style="margin:0">Activé : chaque élève reçoit un récapitulatif neutre tout prêt (note, savoir-être, évaluations, absences, oublis) que tu peux modifier. Désactivé : les cases restent vides et tu écris toi-même, le bouton ✨ Proposer un texte reste là au besoin.</p>
+      <p class="small muted" style="margin:0">Activé : chaque élève reçoit un récapitulatif neutre tout prêt (savoir-être en % avec tenue et attitude, savoir-faire en % avec les évaluations, oublis de tenue, perturbations, exclusions) que tu peux modifier. Désactivé : les cases restent vides et tu écris toi-même, le bouton ✨ Proposer un texte reste là au besoin.</p>
     </div>
     ${regPerCard()}
     <div class="card sec reg" style="padding-block:14px" id="reg-save">
@@ -4418,28 +4418,19 @@ function comCounts(c, X, p, vp){
   return o;
 }
 function comText(c, vp, X, p){
-  // Recap neutre : seulement les chiffres qui expliquent la note (aucun jugement, aucun conseil).
-  const r = X.res[p.id], st = S.settings, seP = +st.se, n0 = v => fr(v, 0), year = vp === 'year', out = [];
-  if (year){
-    const per = (X.periods || []).map(pp => { const t = compute(c, pp).res[p.id].total; return t != null ? `${pp.name} : ${n0(t)} %` : null; }).filter(Boolean);
-    if (per.length) out.push(per.join(', ') + '.');
-    if (r.total != null) out.push(`Moyenne de l'année : ${n0(r.total)} %.`);
-    if (r.se != null) out.push(`Savoir-être moyen ${n0(r.se)}/${seP}` + (r.sf != null ? `, savoir-faire moyen ${n0(r.sf)}/${100 - seP}.` : '.'));
-  } else {
-    const se = `avoir-être ${n0(r.se)}/${seP} (tenue ${r.t}/${+st.T || 0}, attitude ${r.c}/${+st.C || 0})`;
-    if (r.total != null){ out.push(`${vp.name} : ${n0(r.total)} %.`, `S${se}.`); if (r.sf != null) out.push(`Savoir-faire ${n0(r.sf)}/${100 - seP}.`); }
-    else out.push(`${vp.name} : s${se}.`);
-    const ev = r.evals.filter(o => typeof o.s === 'number');
-    if (ev.length) out.push('Évaluations : ' + ev.map(o => `${o.e.name.trim() || 'évaluation'} ${fr(o.s, 2)}/${fr(+o.e.max, 2)}`).join(', ') + '.');
-    const fo = c.evals.filter(e => e.periodId === vp.id && e.kind === 'form' && typeof e.s[p.id] === 'number');
-    if (fo.length) out.push('Formatif : ' + fo.map(e => `${e.name.trim() || 'évaluation'} ${fr(e.s[p.id], 2)}/${fr(+e.max, 2)}`).join(', ') + '.');
-  }
-  const k = comCounts(c, X, p, vp), salle = k.gym + k.adjT;
-  if (k.abs) out.push(`Absences : ${k.abs}.`);
-  if (k.pool) out.push(`Oublis de tenue : ${[salle ? salle + ' en salle' : '', k.pool + ' à la piscine'].filter(Boolean).join(', ')}.`);
-  else if (salle) out.push(`Oublis de tenue : ${salle}.`);
-  if (k.np) out.push(`Pas nagé : ${k.np}.`);
-  if (k.d) out.push(`Perturbations : ${k.d}.`);
+  // Recap neutre (Kevin) : savoir-être en % (tenue, attitude), savoir-faire en % (les évaluations), oublis de tenue,
+  // perturbations, exclusions s'il y en a. Pas de nom de période, aucun jugement, aucun conseil.
+  const r = X.res[p.id], st = S.settings, seP = +st.se, sfP = 100 - seP, n0 = v => fr(v, 0), year = vp === 'year', out = [];
+  const pc = (v, sur) => sur > 0 && v != null ? n0(v / sur * 100) + ' %' : null;
+  const se = pc(r.se, seP);
+  if (se != null) out.push(`Savoir-être : ${se}` + (year ? '' : ` (tenue ${r.t}/${+st.T || 0}, attitude ${r.c}/${+st.C || 0})`) + '.');
+  const evs = year ? c.evals.filter(e => e.kind !== 'form' && (X.periods || []).some(pp => pp.id === e.periodId)).sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(e => ({e, s: e.s[p.id]})) : r.evals;
+  const ev = evs.filter(o => typeof o.s === 'number' || evTag(o.s)).map(o => `${o.e.name.trim() || 'évaluation'} ${typeof o.s === 'number' ? fr(o.s, 2) + '/' + fr(+o.e.max, 2) : evTagLong(o.s)}`);
+  const sf = pc(r.sf, sfP);
+  if (sf != null) out.push(`Savoir-faire : ${sf}${ev.length ? ' (' + ev.join(', ') + ')' : ''}.`);
+  else if (ev.length) out.push(`Savoir-faire : pas de note (${ev.join(', ')}).`);
+  const k = comCounts(c, X, p, vp);
+  out.push(`Oublis de tenue : ${k.gym + k.adjT + k.pool}.`, `Perturbations : ${k.d}.`);
   if (k.x) out.push(`Exclusions : ${k.x}.`);
   return out.join(' ');
 }
@@ -4757,6 +4748,7 @@ function openComments(c, vp){
 </script>
 
 <script src="aide.js"></script>
+<script src="skore.js"></script>
 <script>
 // Mise a jour automatique : on verifie a chaque ouverture et a chaque retour dans l'appli,
 // et on recharge une fois quand la nouvelle version est prete (les donnees restent sur le telephone).

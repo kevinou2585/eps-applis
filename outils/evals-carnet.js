@@ -53,7 +53,7 @@ function bindClassSexe(c){
 }
 
 /* --- Liste et formulaire des évaluations --- */
-const evTags = e => (e.endu ? ' <span class="tag ev-endu">🏃 Endurance</span>' : '') + (e.kind === 'form' ? ' <span class="tag ev-form">FORMATIVE</span>' : '');
+const evTags = e => (e.endu ? ' <span class="tag ev-endu">🏃 Endurance</span>' : '') + (e.crit ? ' <span class="tag ev-crit">🎯 Grille</span>' : '') + (e.kind === 'form' ? ' <span class="tag ev-form">FORMATIVE</span>' : '');
 function evTypeField(c, e){
   if (e) return e.endu ? '<div class="ev-type1"><b>🏃 Endurance</b> <span class="small muted">· compteur de tours</span></div>' : '';
   return `<span class="small muted" style="font-weight:600">Type d'évaluation</span>
@@ -158,6 +158,8 @@ function evBindSin(sb, get, redraw){
 function evScoresHead(c, e){
   let h = '';
   if (e.kind === 'form') h += '<div class="ev-formnote"><span class="tag ev-form">FORMATIVE</span><span class="small">Pour info : ne compte pas dans le bulletin.</span></div>';
+  if (e.crit) h += `<div class="card cr-card"><div><b>🎯 Grille de critères</b><br><span class="small muted">${e.crit.length} critères · ${fr(crTot(e), 2)} points → note sur ${fr(+e.max, 2)}</span></div>
+    <div class="row2"><button class="btn pri" type="button" id="es-crit">▶ Noter avec la grille</button><button class="btn" type="button" id="es-crprt">🖨 Grille papier</button></div></div>`;
   if (e.endu){
     const run = enRunGet(), mine = run && enKey(run) === c.id + ':' + e.id, nl = Object.keys(e.endu.laps || {}).length;
     h += `<div class="card ev-endu-c"><div><b>🏃 Endurance · ${fr(e.endu.min, 2)} min</b><br><span class="small muted">${e.endu.tours} tours = ${fr(+e.max, 2)}/${fr(+e.max, 2)}${nl ? ` · ${nl} élève${nl > 1 ? 's' : ''} déjà compté${nl > 1 ? 's' : ''}` : ''}</span></div>
@@ -165,7 +167,9 @@ function evScoresHead(c, e){
   }
   return h;
 }
-function bindEvScoresHead(c, e){ if ($('es-endu')) $('es-endu').onclick = () => { closeSheet(); enOpen(c.id, e.id); }; }
+function bindEvScoresHead(c, e){ if ($('es-endu')) $('es-endu').onclick = () => { closeSheet(); enOpen(c.id, e.id); };
+  if ($('es-crit')) $('es-crit').onclick = () => { sheetOnClose = null; closeSheet(); critOpen([{c, e}]); };
+  if ($('es-crprt')) $('es-crprt').onclick = () => critPrint([{c, e}]); }
 const evLapsTxt = (e, p) => { const n = e.endu && (e.endu.laps || {})[p.id]; return n != null ? `<span class="pts">${n} tour${n > 1 ? 's' : ''}</span>` : ''; };
 function evFormList(c, vp, p){
   return c.evals.filter(e => e.periodId === vp.id && e.kind === 'form').map(e => { const s = e.s[p.id];

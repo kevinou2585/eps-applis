@@ -31,7 +31,7 @@ PREPA_ADD({id: 'endurance', sport: "Course d'endurance", mat: 'Plots ou cônes t
    c: [['Course à deux', 15, '12 minutes : un « coach » court à côté et encourage, on change à 6 minutes.', 'J\'encourage mon partenaire.', '', 'piste:sp:groupes'],
     ['Discussion', 7, 'Qu\'est-ce qui est difficile ? Qu\'est-ce qui aide ?', '', '', 'explication']],
    r: [['Relaxation', 6, 'Allongé, respiration ventrale.', 'etirements']]},
-  {t: 'Évaluation : courir longtemps', o: 'Courir 12 minutes (ou le plus longtemps possible) à allure régulière.', comp: ['HME1', 'GSS1', 'GSS4'], e: [
+  {t: 'Évaluation : courir longtemps', o: 'Courir 12 minutes (ou le plus longtemps possible) à allure régulière.', comp: ['HME1', 'GSS1', 'GSS4'], crit: [['Courir 12 minutes sans s\'arrêter', 6, '6 : sans marcher · 4 : 1 arrêt court · 2 : plusieurs arrêts · 1 : abandonne mais repart'], ['Régularité de l\'allure', 5, '5 : les 4 tranches de 3 minutes ont presque le même nombre de tours · 3 : ralentit à la fin · 1 : part trop vite et s\'effondre'], ['Distance par rapport au test de départ', 5, '5 : progrès net · 3 : léger progrès · 2 : même distance · 1 : moins'], ['Bilan chiffré', 4, '4 : calcule ses mètres et compare au test de la 1re leçon · 2 : calcule sans comparer · 0 : rien']], e: [
     ['Échauffement', 6, 'Trottinement et mobilisation.', 'piste:sp'],
     ['Consignes', 4, 'Explication de l\'épreuve : durée, parcours balisé, rôle du partenaire qui compte les tours.', 'explication']],
    c: [['Épreuve : 12 minutes', 15, 'Course de 12 minutes ; un camarade compte les tours et note la régularité (temps à chaque 3 minutes).', 'Je cours sans m\'arrêter, à allure régulière.', '', 'piste:sp'],
@@ -68,7 +68,7 @@ PREPA_ADD({id: 'endurance', sport: "Course d'endurance", mat: 'Plots ou cônes t
     ['Lecture du plan', 5, 'Repérer les balises.', 'explication']],
    c: [['Parcours', 20, 'Par deux, trouver le plus de balises en 15 minutes.', 'Nous courons tout le temps.', '', 'libre']],
    r: [['Étirements', 8, 'Correction et étirements.', 'etirements']]},
-  {t: 'Évaluation', o: 'Courir à allure régulière et améliorer sa distance.', comp: ['HME1', 'GSS1', 'GSS4'], e: [
+  {t: 'Évaluation', o: 'Courir à allure régulière et améliorer sa distance.', comp: ['HME1', 'GSS1', 'GSS4'], crit: [['12 minutes sans marcher', 6, '6 : sans marcher · 4 : 1 arrêt · 2 : plusieurs arrêts'], ['Régularité (temps au tour)', 5, '5 : temps au tour presque identiques · 3 : écart moyen · 1 : très irrégulier'], ['Distance et objectif', 5, '5 : atteint ou dépasse son objectif · 3 : s\'en approche · 1 : loin de l\'objectif'], ['Bilan : progrès et explication', 4, '4 : compare au test de 6 min et explique ce qui l\'a aidé · 2 : compare sans expliquer · 0 : rien']], e: [
     ['Échauffement', 6, '8 minutes : 4 minutes de trot très lent, mobilisation des chevilles, genoux et hanches, puis 2 accélérations progressives de 50 m.', 'piste:sp'],
     ['Consignes', 4, 'Explication de l\'épreuve de 12 minutes : partir à son allure, le partenaire compte les tours et note le temps à chaque tour.', 'explication']],
    c: [['Épreuve 12 minutes', 15, 'Test de 12 minutes : courir la plus grande distance possible ; le partenaire compte les tours et note le temps à chaque tour pour la régularité.', 'Je cours 12 minutes sans marcher avec une allure régulière.', '', 'piste:sp'],
@@ -105,7 +105,7 @@ PREPA_ADD({id: 'endurance', sport: "Course d'endurance", mat: 'Plots ou cônes t
    c: [['Séance au choix', 18, 'Chaque élève choisit une séance (continue ou fractionnée) et la note.', 'Mon carnet est rempli.', '', 'piste:sp:plots'],
     ['Partage', 4, 'Discussion par groupes : qu\'est-ce qui aide à courir longtemps (allure, respiration, musique, groupe) ? Chaque groupe note 3 conseils au tableau.', 'Je donne un conseil concret pour courir longtemps.', '', 'explication']],
    r: [['Étirements', 8, 'Marche 2 minutes, puis étirements doux des mollets, des cuisses (avant et arrière) et des fessiers, 20 s chacun.', 'etirements']]},
-  {t: 'Évaluation', o: 'Courir à une allure prévue et la tenir.', comp: ['HME1', 'GSS1', 'GSS4', 'GSS5'], e: [
+  {t: 'Évaluation', o: 'Courir à une allure prévue et la tenir.', comp: ['HME1', 'GSS1', 'GSS4', 'GSS5'], crit: [['Allure annoncée tenue (écart prévu / réalisé)', 8, '8 : écart inférieur à 5 % · 6 : 5 à 10 % · 4 : 10 à 15 % · 2 : plus de 15 %'], ['Course sans arrêt', 4, '4 : 12 minutes sans marcher · 2 : 1 arrêt · 0 : plusieurs'], ['Régularité', 4, '4 : temps au tour réguliers · 2 : variable · 0 : très irrégulier'], ['Bilan et objectif pour la suite', 4, '4 : analyse sa course et écrit un objectif réaliste · 2 : bilan sans objectif · 0 : rien']], e: [
     ['Échauffement', 6, '8 minutes : 4 minutes de trot très lent, mobilisation des chevilles, genoux et hanches, puis 2 accélérations progressives de 50 m.', 'piste:sp'],
     ['Contrat', 4, 'Chacun annonce son allure.', 'explication']],
    c: [['Épreuve', 18, '12 minutes à l\'allure annoncée ; écart prévu / réalisé.', 'Mon écart est inférieur à 5 %.', '', 'piste:sp:plots'],
@@ -140,7 +140,7 @@ PREPA_ADD({id: 'endurance', sport: "Course d'endurance", mat: 'Plots ou cônes t
     ['Quiz vrai ou faux', 4, '« Boire seulement quand on a soif », « courir à jeun fait maigrir », « s\'étirer évite les courbatures »… Réponses expliquées.', 'explication']],
    c: [['Course de 20 minutes', 20, 'À 75 % de VMA, en groupes d\'allure, avec une pause hydratation à la 10e minute.', 'Je tiens 20 minutes à mon allure.', '', 'piste:sp:groupes']],
    r: [['Récupération active et passive', 8, 'Comparaison : 3 minutes de trot lent puis pouls, ou 3 minutes assis puis pouls. Lequel redescend le plus vite ?', 'explication']]},
-  {t: 'Évaluation : séance prévue et réalisée', o: 'Réaliser une séance annoncée et analyser l\'écart entre prévu et réalisé.', comp: ['HME1', 'GSS1', 'GSS4', 'GSS5'], e: [
+  {t: 'Évaluation : séance prévue et réalisée', o: 'Réaliser une séance annoncée et analyser l\'écart entre prévu et réalisé.', comp: ['HME1', 'GSS1', 'GSS4', 'GSS5'], crit: [['Séance écrite et adaptée', 5, '5 : séance complète (durées, allures, récupérations) adaptée à son niveau · 3 : incomplète · 1 : très vague'], ['Réalisation : écart prévu / réalisé', 8, '8 : écart inférieur à 5 % · 6 : 5 à 10 % · 4 : 10 à 15 % · 2 : plus de 15 %'], ['Analyse de l\'écart', 4, '4 : explique l\'écart et ce qu\'il changerait · 2 : constate sans expliquer · 0 : rien'], ['Rôle d\'observateur', 3, '3 : note les temps réels du camarade avec précision · 1 : notes incomplètes · 0 : ne note rien']], e: [
     ['Échauffement personnel', 6, 'Chacun réalise l\'échauffement qu\'il a appris.', 'piste:sp'],
     ['Contrat', 4, 'Chacun écrit sa séance (ex. 3 × 3 min à 90 %) et ses temps de passage prévus.', 'explication']],
    c: [['Épreuve', 20, 'Réalisation de la séance ; un camarade note les temps réels.', 'Mon écart prévu / réalisé est inférieur à 5 %.', '', 'piste:sp:plots']],
@@ -173,7 +173,7 @@ PREPA_ADD({id: 'endurance', sport: "Course d'endurance", mat: 'Plots ou cônes t
     ['Objectif du jour', 3, 'Confirmer son allure cible.', 'explication']],
    c: [['Séance', 22, 'Par groupes de projet (santé, performance, perte de poids, préparation à une course), chacun réalise la séance qu\'il a écrite ; le prof passe dans chaque groupe.', 'Je réalise ma séance comme prévue et je note ce que j\'ai fait.', '', 'piste:sp:plots']],
    r: [['Carnet', 6, 'Chacun note dans le carnet la séance réalisée, ses temps, son pouls et ses sensations (de 1 à 10).', 'explication']]},
-  {t: 'Évaluation : projet', o: 'Réaliser et analyser sa séance de projet (conception, réalisation, analyse).', comp: ['HME1', 'GSS1', 'GSS4', 'GSS5'], e: [
+  {t: 'Évaluation : projet', o: 'Réaliser et analyser sa séance de projet (conception, réalisation, analyse).', comp: ['HME1', 'GSS1', 'GSS4', 'GSS5'], crit: [['Conception de la séance', 7, 'Barème annoncé : objectif clair, échauffement, corps de séance (durées, allures, récupérations), retour au calme'], ['Réalisation', 10, '10 : séance réalisée comme prévue (écart < 5 %) · 7 : écart 5-10 % · 4 : écart > 10 % · 2 : séance non terminée'], ['Analyse', 3, '3 : analyse ses données et propose un ajustement · 1 : constat seul · 0 : rien']], e: [
     ['Échauffement personnel', 7, 'Chacun réalise l\'échauffement écrit dans son projet (trot progressif, gammes, 2 accélérations).', 'piste:sp'],
     ['Contrat', 3, 'Annonce de la séance et des temps prévus.', 'explication']],
    c: [['Épreuve', 22, 'Séance évaluée : conception (/7), réalisation (/10), analyse (/3).', 'Ma séance est conforme à mon projet.', '', 'piste:sp:plots']],
@@ -206,7 +206,7 @@ PREPA_ADD({id: 'endurance', sport: "Course d'endurance", mat: 'Plots ou cônes t
     ['Objectif', 3, 'Chacun confirme son allure cible (temps au tour) à partir des notes de la séance précédente.', 'explication']],
    c: [['Séance', 22, 'Dernière séance du projet, en autonomie : chacun suit son plan, note les temps et son ressenti (échelle de 1 à 10).', 'Je suis mon plan et je note mon ressenti.', '', 'piste:sp:plots']],
    r: [['Carnet', 6, 'Chacun note dans le carnet la séance réalisée, ses temps, son pouls et ses sensations (de 1 à 10).', 'explication']]},
-  {t: 'Évaluation : projet personnel', o: 'Réaliser et analyser son projet.', comp: ['HME1', 'GSS1', 'GSS4', 'GSS5'], e: [
+  {t: 'Évaluation : projet personnel', o: 'Réaliser et analyser son projet.', comp: ['HME1', 'GSS1', 'GSS4', 'GSS5'], crit: [['Conception du projet', 6, '6 : objectif chiffré, plan de séances cohérent · 4 : plan incomplet · 2 : objectif vague'], ['Réalisation de la séance finale', 8, '8 : séance réalisée comme prévue · 5 : quelques écarts · 2 : non terminée'], ['Objectif atteint ou expliqué', 3, '3 : atteint, ou écart expliqué avec ses données · 1 : non atteint sans explication'], ['Analyse critique des données', 3, '3 : utilise ses données (FC, temps, ressenti) pour conclure · 1 : peu de données · 0 : rien']], e: [
     ['Échauffement autonome', 7, 'Chacun réalise l\'échauffement écrit dans son plan (trot progressif, gammes, accélérations), sans attendre le prof.', 'piste:sp'],
     ['Contrat', 3, 'Chacun annonce à son partenaire la séance prévue et les temps visés, que le partenaire vérifiera.', 'explication']],
    c: [['Épreuve', 22, 'Conception, réalisation, analyse critique de ses données.', 'J\'atteins (ou j\'explique) mon objectif.', '', 'piste:sp:plots']],

@@ -33,7 +33,7 @@ PREPA_ADD({id: 'prisonnier', sport: 'Balle aux prisonniers', mat: 'Ballons en mo
    c: [['Balle aux prisonniers aux échecs', 15, 'Chaque équipe désigne en secret (au prof) un roi, une reine et un cavalier. Roi touché = fin de la manche ; reine touchée = l\'équipe libère tous ses prisonniers adverses ; cavalier touché = il révèle le roi et la reine.', 'Mon équipe protège son roi sans le montrer.', '', 'prisonnier'],
     ['Balle brûlée des quatre coins', 15, '4 équipes en chasubles, une prison dans chaque coin, un ballon par équipe ; on ne marche pas avec la balle (passes). Manches de 3 minutes : l\'équipe qui a le moins de prisonniers marque.', 'Je fais une passe avant de lancer quand je suis loin.', '', 'prisonnier']],
    r: [['Retour au calme', 5, 'Étirements ; quelle stratégie a marché ?', 'etirements']]},
-  {t: 'Évaluation : tournoi', o: 'Évaluer la précision du lancer, la réception et l\'esquive, le jeu d\'équipe et le fair-play.', comp: ['HME1', 'HME2', 'HSC1', 'HSC3'], e: [
+  {t: 'Évaluation : tournoi', o: 'Évaluer la précision du lancer, la réception et l\'esquive, le jeu d\'équipe et le fair-play.', comp: ['HME1', 'HME2', 'HSC1', 'HSC3'], crit: [['Précision du lancer (10 lancers)', 6, '6 : 8-10 réussites · 5 : 6-7 · 4 : 5 · 3 : 4 · 2 : 2-3 · 1 : 1'], ['Réception', 4, '4 : attrape souvent les ballons à deux mains · 2 : parfois · 0 : évite le ballon'], ['Esquive', 4, '4 : esquive en se déplaçant, regarde le ballon · 2 : parfois · 0 : reste immobile'], ['Jeu d\'équipe', 3, '3 : passe à un partenaire mieux placé, aide son équipe · 1 : joue seul · 0 : passif'], ['Fair-play', 3, '3 : sort quand il est touché, respecte les règles · 1 : contestations · 0 : triche']], e: [
     ['La bouteille chanceuse', 5, 'Échauffement connu.', 'cercle'],
     ['Consignes', 5, 'Explication des épreuves et de la grille.', 'explication']],
    c: [['Épreuve 1 : précision', 8, '5 lancers sur 3 cônes à 6 m puis 5 lancers sur un camarade qui traverse un couloir : nombre de réussites.', '6 réussites sur 10.', '', 'tir'],
@@ -70,7 +70,7 @@ PREPA_ADD({id: 'prisonnier', sport: 'Balle aux prisonniers', mat: 'Ballons en mo
    c: [['Création', 10, 'Par groupes de 4-5 : écrire la variante (but, règle nouvelle, sécurité) et dessiner le terrain.', 'Notre variante est claire, sûre et équilibrée.', '', 'explication'],
     ['Essais', 20, 'Chaque groupe fait jouer sa variante 5 minutes à la classe ; la classe vote pour la meilleure.', 'J\'explique ma règle clairement.', '', 'prisonnier']],
    r: [['Retour au calme', 5, 'Étirements ; quelle variante garder ?', 'etirements']]},
-  {t: 'Évaluation : tournoi des stratèges', o: 'Montrer lancer, esquive et stratégie d\'équipe.', comp: ['HME1', 'HME2', 'HSC1', 'HSC2'], e: [
+  {t: 'Évaluation : tournoi des stratèges', o: 'Montrer lancer, esquive et stratégie d\'équipe.', comp: ['HME1', 'HME2', 'HSC1', 'HSC2'], crit: [['Lancer sur cibles (5 lancers)', 5, '1 point par cible touchée'], ['Lancers en match', 3, '3 : lancers précis et forts sur un adversaire · 1 : imprécis · 0 : ne lance pas'], ['Esquives et réceptions', 4, '4 : esquive et attrape souvent · 2 : parfois · 0 : rarement'], ['Stratégie d\'équipe', 5, '5 : applique la stratégie choisie (passes, cibles, rôles) · 3 : parfois · 1 : jamais'], ['Fair-play', 3, '3 : respect des règles et des autres · 1 : un écart · 0 : plusieurs']], e: [
     ['Échauffement connu', 5, 'Bouteille chanceuse et brûler dans le cercle.', 'cercle'],
     ['Consignes', 5, 'Explication des épreuves, de l\'ordre de passage et de la grille d\'évaluation.', 'explication']],
    c: [['Épreuve 1 : lancer', 8, '5 lancers sur des cibles (bouteilles ou cerceaux) à 8 m ; le partenaire compte les réussites.', '3 réussites sur 5.', '', 'tir'],
@@ -104,7 +104,7 @@ PREPA_ADD({id: 'prisonnier', sport: 'Balle aux prisonniers', mat: 'Ballons en mo
     ['Organisation', 5, 'Rotation sur 3 terrains (prisonniers, tchoukball, kin-ball).', 'explication']],
    c: [['Tournoi', 30, 'Rotation toutes les 8 minutes sur les 3 terrains ; une équipe arbitre.', 'J\'adapte mon jeu à chaque règle.', '', 'tournoi:prisonnier']],
    r: [['Retour au calme', 5, 'Résultats, étirements.', 'etirements']]},
-  {t: 'Évaluation : jeux de balle', o: 'Montrer passes, démarquage, tirs et fair-play dans plusieurs jeux.', comp: ['HME2', 'HME4', 'HSC1', 'HSC2'], e: [
+  {t: 'Évaluation : jeux de balle', o: 'Montrer passes, démarquage, tirs et fair-play dans plusieurs jeux.', comp: ['HME2', 'HME4', 'HSC1', 'HSC2'], crit: [['Passes', 4, '4 : passes précises au partenaire libre · 2 : souvent interceptées · 0 : garde le ballon'], ['Démarquage', 4, '4 : se démarque et appelle · 2 : parfois · 0 : statique'], ['Tirs / lancers', 4, '4 : tirs précis et bien choisis · 2 : moyens · 0 : rares'], ['Règles des différents jeux', 4, '4 : connaît et respecte les règles de chaque jeu · 2 : erreurs · 0 : ne les respecte pas'], ['Fair-play', 4, '4 : respect total · 2 : un écart · 0 : plusieurs']], e: [
     ['Échauffement en autonomie', 5, 'Chaque équipe s\'échauffe seule avec sa fiche (mobilisation, exercices techniques, essais).', 'trois'],
     ['Consignes', 5, 'Explication de la grille d\'observation et des critères.', 'explication']],
    c: [['Matchs observés', 30, 'Matchs de balle aux prisonniers et du jeu préféré de la classe ; grille : passes, démarquage, tirs, règles, fair-play.', 'Je participe au jeu collectif en respectant les règles.', '', 'prisonnier']],
@@ -138,7 +138,7 @@ PREPA_ADD({id: 'prisonnier', sport: 'Balle aux prisonniers', mat: 'Ballons en mo
     ['Échauffement par équipe', 5, 'Chaque équipe s\'échauffe seule (passes, lancers sur cibles).', 'cercle']],
    c: [['Tournoi', 30, 'Tournoi sur 2 terrains avec les deux meilleurs jeux inventés et la balle aux prisonniers ; matchs de 6 minutes ; arbitrage par les équipes au repos.', 'Le tournoi se déroule sans l\'aide du prof.', '', 'tournoi:prisonnier']],
    r: [['Retour au calme', 5, 'Résultats et prix du fair-play ; étirements.', 'etirements']]},
-  {t: 'Évaluation : arbitrer et animer', o: 'Évaluer l\'arbitrage, l\'animation d\'un jeu et le jeu lui-même.', comp: ['HSC1', 'HSC2', 'HSC3'], e: [
+  {t: 'Évaluation : arbitrer et animer', o: 'Évaluer l\'arbitrage, l\'animation d\'un jeu et le jeu lui-même.', comp: ['HSC1', 'HSC2', 'HSC3'], crit: [['Arbitrage : décisions justes', 5, '5 : annonce les touches et les fautes sans erreur · 3 : quelques erreurs · 1 : nombreuses erreurs'], ['Arbitrage : gestes et voix', 3, '3 : sifflet net, gestes clairs, décisions sans hésiter · 1 : hésitant · 0 : inaudible'], ['Animation : consignes claires', 4, '4 : explique le jeu en moins d\'une minute, tout le monde comprend · 2 : le jeu doit être réexpliqué · 0 : confus'], ['Animation : sécurité et organisation', 4, '4 : terrain, matériel et équipes prêts, jeu sûr · 2 : organisation lente · 0 : jeu dangereux'], ['Jeu', 4, '4 : joue avec engagement quand d\'autres animent · 2 : moyen · 0 : passif']], e: [
     ['Échauffement mené par un groupe', 5, 'Un groupe mène l\'échauffement de la classe (jeu de course, de passes ou de réaction) avec sa fiche.', 'cercle'],
     ['Consignes', 5, 'Explication de la grille : arbitrage, animation, jeu.', 'explication']],
    c: [['Arbitrage observé', 15, 'Matchs de balle aux prisonniers : chaque élève arbitre 5 minutes, observé par le prof.', 'J\'arbitre avec les bons gestes et sans hésiter.', '', 'prisonnier'],
@@ -172,7 +172,7 @@ PREPA_ADD({id: 'prisonnier', sport: 'Balle aux prisonniers', mat: 'Ballons en mo
     ['Organisation', 4, 'Tableau du tournoi et arbitres.', 'explication']],
    c: [['Tournoi', 30, 'Tournoi avec plusieurs variantes, matchs de 6 minutes.', 'Je joue et j\'arbitre en respectant les règles.', '', 'tournoi:prisonnier']],
    r: [['Retour au calme', 5, 'Annonce des résultats et du prix du fair-play, puis étirements en cercle.', 'etirements']]},
-  {t: 'Évaluation', o: 'Évaluer le jeu, la stratégie et la gestion de l\'effort.', comp: ['HME1', 'HSC2', 'GSS1'], e: [
+  {t: 'Évaluation', o: 'Évaluer le jeu, la stratégie et la gestion de l\'effort.', comp: ['HME1', 'HSC2', 'GSS1'], crit: [['Lancers', 4, '4 : précis et puissants · 2 : moyens · 0 : rares'], ['Esquives et réceptions', 4, '4 : esquive et attrape souvent · 2 : parfois · 0 : rarement'], ['Stratégie', 4, '4 : applique et propose une stratégie à son équipe · 2 : suit · 0 : joue sans plan'], ['Intensité et gestion de l\'effort', 4, '4 : joue intensément, pouls élevé, sait récupérer · 2 : intensité moyenne · 0 : passif'], ['Fair-play', 4, '4 : respect total · 2 : un écart · 0 : plusieurs']], e: [
     ['Échauffement en autonomie', 6, 'Chaque équipe s\'échauffe.', 'cercle'],
     ['Consignes', 4, 'Explication de la grille d\'observation et des critères.', 'explication']],
    c: [['Matchs observés', 30, 'Grille : lancers, esquives, réceptions, stratégie, fair-play ; chacun note son pouls à la fin.', 'Je joue intensément et intelligemment.', '', 'prisonnier']],
@@ -200,7 +200,7 @@ PREPA_ADD({id: 'prisonnier', sport: 'Balle aux prisonniers', mat: 'Ballons en mo
     ['Organisation', 10, 'Rôles et planning.', 'explication']],
    c: [['Tournoi', 30, 'Tournoi des 3 meilleurs jeux inventés par la classe, sur 3 terrains en rotation, arbitré par les élèves.', 'Le tournoi se déroule sans le prof.', '', 'tournoi:prisonnier']],
    r: [['Retour au calme', 5, 'Annonce des résultats et du prix du fair-play, puis étirements en cercle.', 'etirements']]},
-  {t: 'Évaluation : animation', o: 'Évaluer l\'animation d\'un jeu et la participation.', comp: ['HSC1', 'HSC2', 'HSC3', 'GSS1'], e: [
+  {t: 'Évaluation : animation', o: 'Évaluer l\'animation d\'un jeu et la participation.', comp: ['HSC1', 'HSC2', 'HSC3', 'GSS1'], crit: [['Clarté des consignes', 5, '5 : but, règles et limites expliqués en moins d\'une minute, démonstration · 3 : réexplication nécessaire · 1 : confus'], ['Sécurité', 5, '5 : terrain, ballons et règles sûrs, rappels si besoin · 3 : un oubli · 1 : jeu dangereux'], ['Gestion du groupe', 5, '5 : équipes rapides, tout le monde joue, il gère les conflits · 3 : lenteurs · 1 : débordé'], ['Adaptation du jeu', 5, '5 : modifie une règle pendant le jeu pour l\'améliorer (équilibre, intensité) · 3 : adaptation tardive · 1 : aucune']], e: [
     ['Échauffement mené par un groupe', 10, 'Un groupe mène l\'échauffement de la classe avec sa fiche.', 'cercle']],
    c: [['Animation observée', 30, 'Grille : clarté des consignes, sécurité, gestion du groupe, adaptation du jeu.', 'J\'anime avec clarté et sécurité.', '', 'prisonnier']],
    r: [['Bilan écrit', 5, 'Bilan individuel écrit : mon rôle, mes progrès, ce que je referais autrement.', 'explication']]}

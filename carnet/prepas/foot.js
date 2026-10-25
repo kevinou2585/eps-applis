@@ -35,7 +35,7 @@ PREPA_ADD({id: 'foot', sport: 'Football', mat: '1 ballon de futsal (ou mousse) p
    c: [['Les règles du futsal', 6, 'Présentation courte : touche au pied, 4 secondes pour remettre en jeu, zone du gardien, fautes (coup franc), pas de tacle glissé. Les élèves rejouent chaque situation.', 'Je connais les règles principales.', '', 'explication'],
     ['Match de futsal arbitré', 24, 'Matchs de 6 minutes avec gardien (changé à chaque but) ; l\'équipe au repos arbitre et compte les fautes.', 'Je respecte les règles et j\'arbitre avec le bon geste.', '', 'match:foot:4c4']],
    r: [['Retour au calme', 5, 'Étirements ; retour des arbitres.', 'etirements']]},
-  {t: 'Évaluation', o: 'Évaluer conduite, passe, frappe et jeu.', comp: ['HME2', 'HME4', 'HSC1', 'HSC3'], e: [
+  {t: 'Évaluation', o: 'Évaluer conduite, passe, frappe et jeu.', comp: ['HME2', 'HME4', 'HSC1', 'HSC3'], crit: [['Parcours : conduite en slalom', 4, '4 : sans toucher de cône, ballon près du pied · 2 : 1 faute · 0 : plusieurs fautes'], ['Parcours : arrêt semelle et passe dans le mini-but', 3, '3 : arrêt net et passe réussie · 1 : passe ratée · 0 : ni l\'un ni l\'autre'], ['Frappe du cou-de-pied (5 frappes)', 5, '5 : 5 cibles touchées · 4 : 4 · 3 : 3 · 2 : 2 · 1 : 1'], ['Match : passes et placement', 5, '5 : passe au partenaire libre, se place dans un espace libre · 3 : parfois · 1 : tout le monde au ballon'], ['Match : règles et fair-play', 3, '3 : sans faute, respecte l\'arbitre · 1 : quelques fautes · 0 : fautes répétées']], e: [
     ['Voleurs de ballons', 5, 'Conduite en fuyant les voleurs.', 'voleurs'],
     ['Toquinho', 5, 'Cercles de passes au pied.', 'cercle']],
    c: [['Épreuve 1 : parcours', 10, 'Slalom chronométré entre 6 cônes, arrêt semelle, passe dans un mini-but (2 cônes à 1 m) à 6 m. 2 essais.', 'Je fais le parcours sans faute avec une passe réussie.', '', 'slalom:foot'],
@@ -76,7 +76,7 @@ PREPA_ADD({id: 'foot', sport: 'Football', mat: '1 ballon de futsal (ou mousse) p
     ['Organisation', 4, 'Tableau du tournoi et arbitres.', 'explication']],
    c: [['Tournoi', 30, 'Matchs de 6 minutes, 4 contre 4 avec gardien ; les équipes au repos arbitrent.', 'Mon équipe joue en passes.', '', 'tournoi:foot']],
    r: [['Retour au calme', 5, 'Résultats et prix du fair-play.', 'etirements']]},
-  {t: 'Évaluation', o: 'Évaluer contrôle orienté, une-deux, démarquage et défense.', comp: ['HME2', 'HME4', 'HSC1', 'HSC2'], e: [
+  {t: 'Évaluation', o: 'Évaluer contrôle orienté, une-deux, démarquage et défense.', comp: ['HME2', 'HME4', 'HSC1', 'HSC2'], crit: [['Contrôle orienté et passe (5 essais)', 6, '6 : 5 réussites · 5 : 4 · 4 : 3 · 2 : 2 · 1 : 1'], ['Démarquage', 4, '4 : se démarque sans cesse, appelle le ballon · 2 : parfois · 0 : statique'], ['Une-deux', 3, '3 : utilise le une-deux à bon escient · 1 : tente · 0 : jamais'], ['Défense', 4, '4 : défend avec son équipe, se place entre adversaire et but · 2 : parfois · 0 : ne défend pas'], ['Règles et fair-play', 3, '3 : sans faute · 1 : quelques fautes · 0 : fautes répétées']], e: [
     ['Échauffement en autonomie', 6, 'Par équipe : passes, contrôles, tirs.', 'trois'],
     ['Consignes', 4, 'Explication des épreuves, de l\'ordre de passage et de la grille d\'évaluation.', 'explication']],
    c: [['Épreuve 1 : contrôle-passe', 8, 'Recevoir, contrôler vers la porte annoncée, passer dans un mini-but : 5 essais.', '3 réussites sur 5.', '', 'trois'],
@@ -113,7 +113,7 @@ PREPA_ADD({id: 'foot', sport: 'Football', mat: '1 ballon de futsal (ou mousse) p
     ['Gestes de l\'arbitre', 4, 'Révision des gestes.', 'explication']],
    c: [['Tournoi', 30, 'Matchs de 6 minutes, arbitre élève.', 'Je joue à mon poste.', '', 'tournoi:foot']],
    r: [['Retour au calme', 5, 'Annonce des résultats et du prix du fair-play.', 'etirements']]},
-  {t: 'Évaluation', o: 'Évaluer jeu à postes, transitions, finition.', comp: ['HME2', 'HME4', 'HSC1', 'HSC2'], e: [
+  {t: 'Évaluation', o: 'Évaluer jeu à postes, transitions, finition.', comp: ['HME2', 'HME4', 'HSC1', 'HSC2'], crit: [['Tirs (5 situations)', 5, '5 : 5 tirs cadrés · 4 : 4 · 3 : 3 · 2 : 2 · 1 : 1'], ['Tenue du poste', 5, '5 : tient son poste et le rôle qui va avec · 3 : le quitte parfois · 1 : joue partout'], ['Transitions (attaque / défense)', 4, '4 : réagit tout de suite à la perte et à la récupération · 2 : en retard · 0 : ne réagit pas'], ['Finition en match', 3, '3 : tente et cadre ses tirs · 1 : tire peu · 0 : jamais'], ['Règles et fair-play', 3, '3 : sans faute · 1 : quelques fautes · 0 : fautes répétées']], e: [
     ['Échauffement en autonomie', 6, 'Chaque équipe s\'échauffe seule avec sa fiche (mobilisation, exercices techniques, essais).', 'trois'],
     ['Consignes', 4, 'Grille.', 'explication']],
    c: [['Épreuve 1 : tirs', 8, '5 tirs dans des situations différentes.', '3 cadrés.', '', 'tir:foot'],
@@ -150,7 +150,7 @@ PREPA_ADD({id: 'foot', sport: 'Football', mat: '1 ballon de futsal (ou mousse) p
     ['Organisation', 4, 'Tableau du tournoi, arbitres, chaque équipe annonce son système.', 'explication']],
    c: [['Tournoi', 30, 'Matchs de 7 minutes, 4 contre 4 + gardien ; les équipes au repos arbitrent et notent si le système annoncé est respecté.', 'Notre système est appliqué pendant tout le match.', '', 'tournoi:foot']],
    r: [['Retour au calme', 5, 'Résultats, prix du fair-play, étirements.', 'etirements']]},
-  {t: 'Évaluation : tactique collective', o: 'Montrer sa compréhension et son application de la tactique collective.', comp: ['HME4', 'HSC1', 'HSC2'], e: [
+  {t: 'Évaluation : tactique collective', o: 'Montrer sa compréhension et son application de la tactique collective.', comp: ['HME4', 'HSC1', 'HSC2'], crit: [['Place dans le système', 5, '5 : tient sa place dans le système de l\'équipe · 3 : parfois · 1 : joue partout'], ['Pressing', 4, '4 : presse au bon moment avec ses partenaires · 2 : seul ou en retard · 0 : jamais'], ['Utilisation du surnombre', 4, '4 : crée et utilise le surnombre · 2 : parfois · 0 : jamais'], ['Question tactique au tableau', 4, '4 : place correctement tous les joueurs et explique · 2 : en partie · 0 : non'], ['Règles et fair-play', 3, '3 : sans faute · 1 : quelques fautes · 0 : fautes répétées']], e: [
     ['Échauffement en autonomie', 6, 'Chaque équipe s\'échauffe seule.', 'trois'],
     ['Consignes', 4, 'Explication de la grille.', 'explication']],
    c: [['Matchs observés', 25, 'Matchs 4 contre 4 + gardien ; grille : place dans le système, pressing, utilisation du surnombre, règles, fair-play.', 'Je comprends et j\'applique la tactique de mon équipe.', '', 'match:foot:4c4'],
@@ -185,7 +185,7 @@ PREPA_ADD({id: 'foot', sport: 'Football', mat: '1 ballon de futsal (ou mousse) p
     ['Organisation', 4, 'Rôles : joueurs, coach, arbitres, chronométreur.', 'explication']],
    c: [['Tournoi', 30, 'Matchs de 7 minutes avec coach et arbitres officiels.', 'Je tiens mon rôle (joueur, coach ou arbitre).', '', 'tournoi:foot']],
    r: [['Retour au calme', 5, 'Annonce des résultats et du prix du fair-play, puis étirements en cercle.', 'etirements']]},
-  {t: 'Évaluation : jouer, coacher, arbitrer', o: 'Évaluer le jeu, une consigne de coach et un arbitrage.', comp: ['HSC1', 'HSC2', 'HSC3', 'GSS1'], e: [
+  {t: 'Évaluation : jouer, coacher, arbitrer', o: 'Évaluer le jeu, une consigne de coach et un arbitrage.', comp: ['HSC1', 'HSC2', 'HSC3', 'GSS1'], crit: [['Jeu en match', 8, '8 : technique et choix de jeu efficaces, tient son rôle · 6 : bon · 4 : moyen · 2 : faible'], ['Coach : consigne pertinente', 6, '6 : consigne claire, adaptée à ce qu\'il a observé, appliquée par l\'équipe · 4 : consigne générale · 2 : vague'], ['Arbitre : règles et gestes', 6, '6 : décisions justes, gestes clairs, autorité · 4 : quelques erreurs · 2 : hésitant']], e: [
     ['Échauffement par équipe', 6, 'Chaque équipe s\'échauffe seule avec sa fiche (mobilisation, exercices techniques, essais).', 'trois'],
     ['Consignes', 4, 'Explication des 3 évaluations.', 'explication']],
    c: [['Évaluation', 30, 'Chaque élève est évalué en match (grille de jeu), une fois comme coach (consigne pertinente) et une fois comme arbitre (règles, gestes).', 'Je réussis mes trois rôles.', '', 'match:foot:4c4']],
@@ -220,7 +220,7 @@ PREPA_ADD({id: 'foot', sport: 'Football', mat: '1 ballon de futsal (ou mousse) p
     ['Tableau final', 4, 'Présentation des demi-finales.', 'explication']],
    c: [['Phase finale', 30, 'Demi-finales et finale (2 × 6 minutes), match de classement ; arbitrage officiel par les meilleurs arbitres.', 'Je joue ou j\'arbitre avec respect.', '', 'tournoi:foot']],
    r: [['Prix', 5, 'Remise des prix : vainqueur, fair-play, meilleur arbitre.', 'explication']]},
-  {t: 'Évaluation : performance et rôles', o: 'Évaluer son niveau de jeu et son rôle dans l\'équipe et l\'organisation.', comp: ['HSC1', 'HSC2', 'GSS1'], e: [
+  {t: 'Évaluation : performance et rôles', o: 'Évaluer son niveau de jeu et son rôle dans l\'équipe et l\'organisation.', comp: ['HSC1', 'HSC2', 'GSS1'], crit: [['Technique en match', 5, '5 : contrôle, passe et frappe maîtrisés · 3 : moyens · 1 : faibles'], ['Tactique', 5, '5 : bons choix, applique le projet de l\'équipe · 3 : parfois · 1 : rarement'], ['Rôle dans l\'équipe et l\'organisation', 4, '4 : tient son rôle (capitaine, coach, arbitre, organisation) · 2 : partiel · 0 : absent'], ['Bilan d\'équipe : objectif atteint ou expliqué', 3, '3 : participe au bilan et explique · 1 : peu · 0 : rien'], ['Fair-play', 3, '3 : respect total · 1 : un écart · 0 : plusieurs']], e: [
     ['Échauffement d\'équipe', 6, 'Chaque équipe s\'échauffe seule avec sa fiche (mobilisation, exercices techniques, essais).', 'trois'],
     ['Consignes', 4, 'Grille finale.', 'explication']],
    c: [['Matchs observés', 25, 'Grille : technique, tactique, rôle dans l\'équipe, fair-play.', 'Je joue efficacement et je tiens mon rôle.', '', 'match:foot:4c4'],

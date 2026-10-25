@@ -35,7 +35,7 @@ PREPA_ADD({id: 'hand', sport: 'Handball', mat: 'Ballons de hand taille 1-2 (1 po
    c: [['Montée de balle', 8, '3 contre 2 sur tout le terrain : marquer en moins de 6 passes.', 'Nous avançons vers le but.', '', 'match:hand:3c2'],
     ['Tournoi 4 contre 4', 18, 'Matchs de 5 minutes, équipes au repos arbitrent.', 'Je participe en attaque et en défense.', '', 'match:hand:4c4']],
    r: [['Fair-play', 5, 'Poignée de mains et bilan.', 'etirements']]},
-  {t: 'Évaluation : tir et match', o: 'Montrer la passe, le tir et le respect des règles en match.', e: [
+  {t: 'Évaluation : tir et match', o: 'Montrer la passe, le tir et le respect des règles en match.', crit: [['Tir après 3 pas (5 tirs)', 6, '1 point par but marqué (max 5) + 1 point si les 3 pas et l\'appui sont corrects à chaque tir'], ['Passe en match', 4, '4 : passes précises au partenaire libre · 2 : passes souvent interceptées · 0 : garde le ballon'], ['Démarquage', 4, '4 : se démarque et appelle le ballon · 2 : parfois · 0 : reste derrière son défenseur'], ['Règles (zone, marcher, contact)', 3, '3 : sans faute · 1 : quelques fautes · 0 : fautes répétées'], ['Fair-play', 3, '3 : respecte arbitre, partenaires et adversaires · 1 : un écart · 0 : plusieurs']], e: [
     ['Échauffement connu', 5, 'Échauffement connu des élèves : trot, mobilisation, passes à deux, tirs à 7 m.', 'deux'],
     ['Tirs', 5, 'Chaque joueur tire 3 fois de son poste habituel sur le gardien de son équipe, en variant les coins.', 'tir:hand']],
    c: [['Épreuve 1 : tir', 8, '5 tirs après 3 pas sur gardien, viser les coins.', '2 buts sur 5.', '', 'tir:hand'],
@@ -74,7 +74,7 @@ PREPA_ADD({id: 'hand', sport: 'Handball', mat: 'Ballons de hand taille 1-2 (1 po
     ['Jets de 7 m', 5, 'Chaque élève tire 2 jets de 7 m sur gardien.', 'tir:hand']],
    c: [['Tournoi arbitré', 22, 'Matchs de 5 minutes : chaque élève arbitre une fois avec un sifflet ; l\'équipe au repos tient la feuille de match.', 'J\'arbitre en annonçant la faute avec le bon geste.', 'Deux arbitres (un par demi-terrain).', 'match:hand:5c5']],
    r: [['Retour', 6, 'Les arbitres racontent une décision difficile ; élection de l\'équipe la plus fair-play.', 'explication']]},
-  {t: 'Évaluation : suspension, démarquage, match', o: 'Montrer le tir en suspension, le démarquage et la montée de balle.', e: [
+  {t: 'Évaluation : suspension, démarquage, match', o: 'Montrer le tir en suspension, le démarquage et la montée de balle.', crit: [['Tir en suspension : geste', 4, '4 : appel un pied, bras armé haut, tir en l\'air · 2 : geste incomplet · 0 : tire au sol'], ['Tir en suspension : buts (5 tirs)', 4, '4 : 4-5 buts · 3 : 3 buts · 2 : 2 buts · 1 : 1 but · 0 : aucun'], ['Démarquage', 4, '4 : se démarque sans cesse · 2 : parfois · 0 : statique'], ['Montée de balle', 3, '3 : court vers l\'avant dès la récupération · 1 : parfois · 0 : marche'], ['Défense et règles', 5, '5 : défend sur son joueur, sans faute, respecte l\'arbitre · 3 : défense passive ou fautes · 1 : ne défend pas']], e: [
     ['Échauffement en autonomie', 5, 'Par groupes, avec la fiche : passes, 3 pas, tirs.', 'deux'],
     ['Tirs libres', 5, 'Tirs en appui et en suspension.', 'tir:hand']],
    c: [['Épreuve 1 : tir en suspension', 8, '5 tirs en suspension après passe, sur gardien.', '2 buts et un geste correct.', '', 'tir:hand'],
@@ -113,7 +113,7 @@ PREPA_ADD({id: 'hand', sport: 'Handball', mat: 'Ballons de hand taille 1-2 (1 po
     ['Tirs', 4, 'Tirs de chaque poste (ailiers, arrières, pivot) sur le gardien, 2 tirs par joueur et par poste.', 'tir:hand']],
    c: [['Tournoi', 24, 'Matchs de 6 minutes ; l\'équipe au repos arbitre et tient les statistiques (buts, tirs ratés, ballons perdus).', 'Mon équipe applique la défense de zone.', '', 'match:hand:6c6']],
    r: [['Classement', 5, 'Statistiques et fair-play.', 'explication']]},
-  {t: 'Évaluation : attaque placée et défense', o: 'Montrer son rôle en attaque placée et en défense de zone.', e: [
+  {t: 'Évaluation : attaque placée et défense', o: 'Montrer son rôle en attaque placée et en défense de zone.', crit: [['Tenue du poste en attaque placée', 5, '5 : occupe son poste, respecte la largeur · 3 : se replace parfois · 1 : tout le monde au ballon'], ['Fixation-passe', 5, '5 : attaque l\'intervalle et passe au bon moment · 3 : parfois · 1 : passe sans fixer'], ['Défense de zone', 5, '5 : monte sur le porteur, revient, aide · 3 : reste en place sans aider · 1 : passif'], ['Règles et fair-play', 5, '5 : sans faute ni contestation · 3 : quelques fautes · 1 : fautes répétées']], e: [
     ['Échauffement en autonomie', 6, 'Chaque équipe s\'échauffe seule : trot, mobilisation, passes en mouvement, tirs de chaque poste.', 'cercle'],
     ['Tirs', 4, 'Tirs de chaque poste (ailiers, arrières, pivot) sur le gardien, 2 tirs par joueur et par poste.', 'tir:hand']],
    c: [['Matchs observés', 28, 'Grille : tenue du poste, fixation-passe, défense de zone, respect des règles.', 'Je tiens mon poste et je participe à la défense.', '', 'match:hand:6c6']],
@@ -151,7 +151,7 @@ PREPA_ADD({id: 'hand', sport: 'Handball', mat: 'Ballons de hand taille 1-2 (1 po
     ['Tirs', 4, 'Tirs de chaque poste (ailiers, arrières, pivot) sur le gardien, 2 tirs par joueur et par poste.', 'tir:hand']],
    c: [['Tournoi', 24, 'Matchs de 7 minutes ; arbitres et table de marque élèves.', 'Notre équipe utilise ses combinaisons.', '', 'match:hand:6c6']],
    r: [['Classement', 5, 'Mise à jour du classement et prix du fair-play voté par les arbitres.', 'explication']]},
-  {t: 'Évaluation : jeu collectif', o: 'Montrer croisés, défense organisée et contre-attaque.', e: [
+  {t: 'Évaluation : jeu collectif', o: 'Montrer croisés, défense organisée et contre-attaque.', crit: [['Action collective (croisé, passe et va)', 6, '6 : utilise une action collective plusieurs fois et à bon escient · 4 : au moins une par match · 2 : tente sans réussir'], ['Défense organisée', 5, '5 : tient sa place, sort sur le porteur, communique · 3 : place tenue sans aider · 1 : passif'], ['Contre-attaque', 4, '4 : part vite ou lance la contre-attaque · 2 : parfois · 0 : jamais'], ['Règles et fair-play', 5, '5 : sans faute · 3 : quelques fautes · 1 : fautes répétées']], e: [
     ['Échauffement en autonomie', 6, 'Chaque équipe s\'échauffe seule : trot, mobilisation, passes en mouvement, tirs de chaque poste.', 'cercle'],
     ['Tirs', 4, 'Chaque joueur tire 3 fois de son poste habituel sur le gardien de son équipe, en variant les coins.', 'tir:hand']],
    c: [['Matchs observés', 28, 'Grille : action collective, défense, contre-attaque, règles.', 'J\'utilise une action collective par match.', '', 'match:hand:6c6']],
@@ -186,7 +186,7 @@ PREPA_ADD({id: 'hand', sport: 'Handball', mat: 'Ballons de hand taille 1-2 (1 po
     ['Échauffement', 5, 'Le coach élève mène l\'échauffement de son équipe et annonce la consigne du premier match.', 'cercle']],
    c: [['Tournoi avec coachs', 24, 'Chaque équipe a un coach ; temps mort d\'une minute ; deux arbitres.', 'Mes consignes de coach sont courtes et claires.', '', 'match:hand:6c6']],
    r: [['Retour', 6, 'Les arbitres expliquent une décision.', 'explication']]},
-  {t: 'Évaluation : projet tactique', o: 'Appliquer en match le projet tactique de son équipe.', e: [
+  {t: 'Évaluation : projet tactique', o: 'Appliquer en match le projet tactique de son équipe.', crit: [['Projet tactique visible', 6, '6 : applique le projet de l\'équipe presque toujours · 4 : souvent · 2 : rarement'], ['Efficacité', 4, '4 : buts ou passes décisives, peu de pertes · 2 : contribue · 0 : pertes nombreuses'], ['Défense', 3, '3 : respecte le système défensif choisi · 1 : partiellement · 0 : non'], ['Rôles (coach, arbitre)', 4, '2 pts coach (consigne utile) + 2 pts arbitre (bons gestes, décisions justes)'], ['Fair-play', 3, '3 : respect total · 1 : un écart · 0 : plusieurs']], e: [
     ['Échauffement en autonomie', 6, 'Échauffement préparé et mené par l\'équipe sans le prof : trot, mobilisation, passes, tirs.', 'cercle'],
     ['Projet écrit', 4, 'Une combinaison d\'attaque, une défense.', 'explication']],
    c: [['Matchs observés', 28, 'Grille : projet visible, efficacité, rôles (joueur, coach, arbitre), fair-play.', 'Notre projet est visible en match.', '', 'match:hand:6c6']],
@@ -221,7 +221,7 @@ PREPA_ADD({id: 'hand', sport: 'Handball', mat: 'Ballons de hand taille 1-2 (1 po
     ['Échauffement', 5, 'Chaque équipe s\'échauffe seule : trot, mobilisation, passes en mouvement, tirs de chaque poste.', 'cercle']],
    c: [['Finales', 28, 'Demi-finales et finales ; coachs et arbitres élèves.', 'Notre équipe applique son objectif.', '', 'match:hand:6c6']],
    r: [['Remise des prix', 5, 'Équipe championne, équipe fair-play, meilleur arbitre.', 'explication']]},
-  {t: 'Évaluation : performance et rôles', o: 'Montrer son niveau de jeu et sa capacité à arbitrer ou coacher.', e: [
+  {t: 'Évaluation : performance et rôles', o: 'Montrer son niveau de jeu et sa capacité à arbitrer ou coacher.', crit: [['Efficacité en match', 5, '5 : marque ou fait marquer régulièrement · 3 : contribue · 1 : rarement décisif'], ['Choix de jeu', 4, '4 : bons choix passe/tir/fixation · 2 : moyens · 0 : au hasard'], ['Défense', 3, '3 : active et organisée · 1 : passive · 0 : absente'], ['Implication dans le projet', 3, '3 : joue le projet, encourage · 1 : suit · 0 : joue seul'], ['Arbitrage', 5, '5 : période sans erreur (marcher, zone, 7 m, exclusion), gestes officiels, temps géré · 3 : quelques erreurs · 1 : hésitant']], e: [
     ['Échauffement en autonomie', 6, 'Échauffement préparé et mené par l\'équipe sans le prof : trot, mobilisation, passes, tirs.', 'cercle'],
     ['Tirs', 4, 'Chaque joueur tire 3 fois de son poste habituel sur le gardien de son équipe, en variant les coins.', 'tir:hand']],
    c: [['Matchs observés', 22, 'Grille : efficacité, choix, défense, implication dans le projet.', 'Je contribue au projet de mon équipe.', '', 'match:hand:6c6'],

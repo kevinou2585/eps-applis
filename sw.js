@@ -1,7 +1,7 @@
 // Fait marcher les applis sans internet. Version a changer a chaque mise en ligne pour rafraichir le cache.
-const VERSION = 'eps-v107';
+const VERSION = 'eps-v108';
 const FICHIERS = [
-  './', './index.html', './manifest.webmanifest', './eleves.chiffre.json', './perso.js',
+  './', './index.html', './sauvegarde.js', './manifest.webmanifest', './eleves.chiffre.json', './perso.js',
   './carnet/', './carnet/prepas/schemas.js', './carnet/prepas/basket.js', './carnet/prepas/volley.js', './carnet/prepas/hand.js', './carnet/prepas/natation.js', './carnet/prepas/natdeb.js', './carnet/prepas/endurance.js', './carnet/prepas/bad.js', './carnet/prepas/danse.js', './carnet/prepas/acro.js', './carnet/prepas/prisonnier.js', './carnet/prepas/athle.js', './carnet/prepas/foot.js', './carnet/prepas/hiver.js', './tournoi/', './koh-lanta/', './tableau/', './le-fist/', './classeur/', './battle/', './battle/acces.js', './battle/acces.chiffre.json', './battle/manifest.webmanifest', './installer/',
   './icones/carnet-180.png', './icones/carnet-192.png', './icones/carnet-512.png',
   './icones/eps-180.png', './icones/eps-192.png', './icones/eps-512.png',

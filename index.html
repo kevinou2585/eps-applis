@@ -91,11 +91,32 @@ try { if (localStorage.getItem('eps-perso-ok') !== '5994471abb01112afcc18159f6cc
 </script>
 <div class="pied"><button type="button" id="b-param" aria-expanded="false">⚙️ Paramètres</button></div>
 <section id="param" hidden>
+  <div id="installe-bloc">
+    <div id="ib-ok" class="relie" hidden><b>✅ L'appli EPS ultime est installée sur cet appareil.</b><br>Ouvre-la toujours par son icône : c'est là que sont tes données.</div>
+    <div id="ib-non"><b>📲 Mettre l'appli sur ton téléphone</b>
+      <ol class="note">
+        <li><b>iPhone, Safari</b> : touche <b>Partager</b> (carré avec une flèche, en bas), fais défiler et choisis <b>« Sur l'écran d'accueil »</b>, puis <b>Ajouter</b>.<br><b>Chrome ou Brave sur iPhone</b> : touche ⬆️ dans la barre d'adresse (ou ⋯ › Partager), puis « Sur l'écran d'accueil ».</li>
+        <li><b>Android, Chrome</b> : menu <b>⋮</b> › <b>Installer l'application</b> (ou « Ajouter à l'écran d'accueil »).</li>
+        <li><b>Ordinateur, Chrome ou Edge</b> : icône d'installation à droite de la barre d'adresse (ou mets simplement cette page en favori).</li>
+      </ol>
+      <button id="installer2" class="go" type="button" hidden>Installer maintenant</button></div>
+  </div>
   <h2>📱 Cet appareil</h2>
   <div class="relie" id="relie-code" hidden><b>✅ Le code EPS ultime est entré sur cet appareil.</b><br>Les listes d'élèves et les classements arrivent tout seuls, il n'y a rien d'autre à faire.</div>
+  <div class="relie non" id="relie-sans" hidden><b>⚠️ Le code EPS ultime n'est pas encore entré sur cet appareil.</b><br>Sans lui, pas de listes d'élèves ni de classements. Il est demandé à l'ouverture de l'appli installée.</div>
   <h2>👀 Applis visibles à l'accueil</h2>
   <p class="note" style="padding:0;margin:0 0 6px">Décoche celles dont tu ne te sers pas : elles disparaissent de l'accueil (rien n'est effacé).</p>
   <div id="choix-applis"></div>
+  <h2>☁️ Carnet sur le Drive <span id="pill" class="pill">non relié</span></h2>
+  <div id="drv-ok" class="relie" hidden><b id="drv-t">✅ Le Carnet EPS est relié à ton tableau Google.</b><br><span id="drv-d"></span><br><a href="carnet/#drive" class="lien">Voir ou modifier le lien dans le Carnet ›</a></div>
+  <div id="drv-non" hidden><p class="note" style="padding:0;margin:0 0 8px">Le Carnet EPS de cet appareil n'envoie rien sur ton Drive. Relié, il copie chaque changement dans ton tableau Google (lisible comme un Excel) et tes notes suivent sur tes autres appareils.</p>
+    <a href="carnet/#drive" class="btn-lien">Relier le Carnet à mon Drive ›</a></div>
+  <h2>💾 Sauvegarde complète</h2>
+  <p class="note" style="padding:0;margin:0 0 8px">Un seul fichier .zip avec l'appli et toutes les données de cet appareil (carnet, prépas, évaluations, tournoi, Koh-Lanta, Fist, classeur, battle), à garder sur ton ordinateur. Il sert aussi à passer sur un nouveau téléphone : il suffit de le restaurer ici.</p>
+  <label class="f-code" for="s-code">Code de sauvegarde</label>
+  <input id="s-code" class="f-inp" type="password" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Code">
+  <div class="btns"><button class="go" id="s-sauv" type="button">Télécharger la sauvegarde</button><button id="s-rest" type="button">Restaurer une sauvegarde</button><input type="file" id="s-fich" accept=".zip,application/zip" hidden></div>
+  <p id="s-etat" class="note" style="padding:0"></p>
   <div id="param-bas"></div>
 </section>
 </div>
@@ -126,9 +147,9 @@ try { if (localStorage.getItem('eps-perso-ok') !== '5994471abb01112afcc18159f6cc
 </div>
 <h2>Bon à savoir</h2>
 <ul class="note">
-  <li>Tes données restent uniquement sur ton téléphone. Personne d'autre ne les voit.</li>
+  <li>Tes données restent sur ton téléphone (et dans ton tableau Google si tu y relies le Carnet). Personne d'autre ne les voit.</li>
   <li>Chaque navigateur garde ses propres données, et l'appli installée aussi : utilise toujours l'icône EPS ultime.</li>
-  <li>Pense au bouton 💾 Sauvegarde de temps en temps (fichier à garder dans Fichiers, Drive ou OneDrive). Il sert aussi à passer sur un nouveau téléphone.</li>
+  <li>Pense à la 💾 Sauvegarde complète de temps en temps (⚙️ Paramètres, en bas de l'accueil) : un fichier à garder dans Fichiers, Drive ou OneDrive. Il sert aussi à passer sur un nouveau téléphone.</li>
   <li>Les nouvelles versions arrivent toutes seules à l'ouverture, sans effacer tes données.</li>
 </ul>
 <div id="porte" hidden>
@@ -151,6 +172,24 @@ try { if (localStorage.getItem('eps-perso-ok') !== '5994471abb01112afcc18159f6cc
 .choix img{width:30px;height:30px;border-radius:8px}
 .relie{background:#d8efdc;color:#1d5a2c;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.5;margin:6px 0 10px}
 @media (prefers-color-scheme:dark){.relie{background:#1f3a26;color:#bfe6c8}}
+.relie.non{background:#fff1d6;color:#6b4300}
+@media (prefers-color-scheme:dark){.relie.non{background:#3a2c12;color:#f2d49b}}
+.relie .lien{color:inherit;font-weight:600;font-size:13px}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--line);color:var(--muted);vertical-align:middle}
+.pill.ok{background:#d8efdc;color:#1d5a2c}
+.pill.att{background:#fff1d6;color:#6b4300}
+#installe-bloc{background:var(--surface);border:2px solid var(--accent);border-radius:16px;padding:14px 16px;margin:8px 0 0}
+#installe-bloc b{font-size:16px}
+#installe-bloc ol{margin:8px 0 0;padding-left:20px}
+.installe-vrai #installe-bloc{border:0;padding:0;background:none}
+#param button,.btn-lien{border:1px solid var(--line);border-radius:10px;padding:10px 14px;font:inherit;font-weight:600;background:var(--surface);color:var(--fg);text-decoration:none;display:inline-block}
+#param button.go,.btn-lien{background:var(--accent);border-color:var(--accent);color:#fff}
+#param button:disabled{opacity:.5}
+#installer2{width:100%;margin-top:10px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.f-code{display:block;font-size:14px;font-weight:600;margin:4px 0 4px}
+.f-inp{width:100%;max-width:260px;border:1px solid var(--line);border-radius:10px;padding:11px;font:inherit;background:var(--surface);color:var(--fg)}
+#s-etat.err{color:#c92a2a;font-weight:600}
 #porte{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:16px}
 #porte[hidden]{display:none}
 #porte form{display:grid;gap:12px;max-width:340px;width:100%;text-align:center;justify-items:center}
@@ -215,6 +254,7 @@ document.getElementById('porte-f').onsubmit = async e => {
   catch(err){ m.textContent = navigator.onLine ? 'Code incorrect, réessaie.' : 'Connecte-toi à internet pour la première ouverture.'; }
 };
 </script>
+<script src="sauvegarde.js"></script>
 <script>
 // Paramètres en bas de l'accueil (comme Happiness) : applis visibles (localStorage 'eps-cachees' = liste des href cachés)
 (() => {
@@ -226,7 +266,54 @@ document.getElementById('porte-f').onsubmit = async e => {
     try { localStorage.setItem('eps-cachees', JSON.stringify(cachees)); } catch(err){} appliquer(); };
   appliquer();
   $('b-param').onclick = () => { const o = $('param').hidden; $('param').hidden = !o; $('b-param').setAttribute('aria-expanded', String(o)); if (o) $('param').scrollIntoView({behavior: 'smooth', block: 'start'}); };
-  try { $('relie-code').hidden = !(localStorage.getItem('eps-cle') || localStorage.getItem('eps-code')); } catch(e){}
+  let code = false; try { code = !!(localStorage.getItem('eps-cle') || localStorage.getItem('eps-code')); } catch(e){}
+  $('relie-code').hidden = !code; $('relie-sans').hidden = code;
+  // Installée (icône de l'écran d'accueil) : on le dit ; sinon (ordinateur, ?ordi) : comment l'installer
+  const vraie = matchMedia('(display-mode: standalone)').matches || !!navigator.standalone;
+  $('ib-ok').hidden = !vraie; $('ib-non').hidden = vraie; document.body.classList.toggle('installe-vrai', vraie);
+  window.addEventListener('beforeinstallprompt', () => { $('installer2').hidden = false; });
+  $('installer2').onclick = () => document.getElementById('installer').click();
+  // Carnet relié au Drive ? (réglage du Carnet, localStorage 'carnet-drive')
+  const heure = ts => new Date(ts).toLocaleString('fr-BE', {day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'});
+  const drive = () => {
+    let o = {}; try { o = JSON.parse(localStorage.getItem('carnet-drive') || '{}') || {}; } catch(e){}
+    const ok = !!(o.url && o.cle);
+    $('drv-ok').hidden = !ok; $('drv-non').hidden = ok;
+    $('pill').textContent = !ok ? 'non relié' : o.err ? 'à vérifier' : o.attente ? 'envoi en attente' : 'relié';
+    $('pill').className = 'pill' + (!ok ? '' : o.err || o.attente ? ' att' : ' ok');
+    $('drv-ok').classList.toggle('non', ok && !!o.err);
+    $('drv-t').textContent = ok && o.err ? '⚠️ Le Carnet est relié au Drive, mais le dernier envoi n\'a pas marché.' : '✅ Le Carnet EPS est relié à ton tableau Google.';
+    $('drv-d').textContent = !ok ? '' : (o.err ? o.err + ' ' : '') + (o.attente ? 'Des changements attendent d\'être envoyés : ouvre le Carnet avec internet. ' : 'Chaque changement du carnet part tout seul sur le Drive. ')
+      + (o.dernier ? 'Dernier envoi : ' + heure(o.dernier) + '.' : '') + (o.cle ? ' Code du carnet : ' + o.cle + '.' : '');
+  };
+  drive(); window.addEventListener('storage', drive); document.addEventListener('visibilitychange', () => { if (!document.hidden) drive(); });
+  // Sauvegarde complète (sauvegarde.js), protégée par le code de sauvegarde
+  const dire = (t, err) => { $('s-etat').textContent = t; $('s-etat').className = 'note' + (err ? ' err' : ''); };
+  const occupe = o => { $('s-sauv').disabled = $('s-rest').disabled = o; };
+  const mo = n => n > 1048576 ? (n / 1048576).toFixed(1) + ' Mo' : Math.ceil(n / 1024) + ' Ko';
+  const verifier = async () => {
+    if (!$('s-code').value.trim()){ dire('Tape d\'abord le code de sauvegarde.', true); $('s-code').focus(); return false; }
+    if (!(await Sauvegarde.codeOk($('s-code').value))){ dire('Code de sauvegarde incorrect.', true); $('s-code').select(); return false; }
+    return true;
+  };
+  $('s-sauv').onclick = async () => {
+    occupe(true);
+    try { if (await verifier()){ const r = await Sauvegarde.sauvegarder(t => dire(t)); dire(`✓ Sauvegarde téléchargée (${r.n} classe${r.n > 1 ? 's' : ''} dans le carnet, ${mo(r.taille)})${r.drive ? ', avec aussi la copie du carnet qui est sur ton Drive' : ''}. Range-la dans un dossier de ton ordinateur : elle contient les notes de tes élèves.`); } }
+    catch(e){ dire('⚠️ ' + e.message, true); }
+    occupe(false);
+  };
+  $('s-rest').onclick = async () => { occupe(true); const ok = await verifier(); occupe(false); if (ok) $('s-fich').click(); };
+  $('s-fich').onchange = async () => {
+    const f = $('s-fich').files[0]; $('s-fich').value = ''; if (!f) return;
+    occupe(true);
+    try {
+      const L = await Sauvegarde.lire(f), quand = new Date(L.date).toLocaleDateString('fr-BE', {day: 'numeric', month: 'long', year: 'numeric'});
+      if (confirm(`Remettre la sauvegarde du ${quand} (${L.classes} classe${L.classes > 1 ? 's' : ''} dans le carnet) ?\n\nLes données EPS ultime de cet appareil seront remplacées par celles de la sauvegarde.${/"url"/.test(localStorage.getItem('carnet-drive') || '') ? ' Ensuite, le carnet reprend tout seul ce qui est plus récent sur ton Drive.' : ''}`)){
+        Sauvegarde.remettre(L); dire(`✓ Sauvegarde du ${quand} remise. L'appli se recharge…`); setTimeout(() => location.reload(), 1500);
+      } else dire('');
+    } catch(e){ dire('⚠️ ' + e.message, true); }
+    occupe(false);
+  };
   // Appli installée : « Bon à savoir » passe dans les Paramètres
   if (document.body.classList.contains('installe')) { const h = [...document.querySelectorAll('body > h2')].find(x => /Bon à savoir/.test(x.textContent)); if (h) $('param-bas').append(h, h.nextElementSibling); }
 })();

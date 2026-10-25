@@ -4736,6 +4736,10 @@ function openComments(c, vp){
   }
   new MutationObserver(carte).observe(document.body, {childList: true, subtree: true});
   carte();
+  // carnet/#drive (lien des Paramètres de l'accueil) : ouvre les réglages sur la carte Google Drive
+  const versDrive = () => { if (location.hash !== '#drive') return; history.replaceState(null, '', location.pathname + location.search);
+    UI.regBack = UI.tab !== 'settings' ? UI.tab : 'today'; UI.tab = 'settings'; saveUI(); render(); regJump('drv'); };
+  window.addEventListener('hashchange', versDrive); versDrive();
 })();
 </script>
 

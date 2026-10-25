@@ -104,6 +104,7 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 #accueil .eps-retour{float:none;padding:2px 0;font-size:13px;color:#ffd9c2}
 #accueil #partage{border:0;border-radius:999px;padding:7px 12px;background:rgba(255,255,255,.14);color:#fff;font:800 13px system-ui,-apple-system,sans-serif}
 #accueil .haut{position:relative}
+#accueil #recomp{border:0;border-radius:999px;padding:7px 12px;background:rgba(255,210,63,.2);color:#ffd23f;font:800 13px system-ui,-apple-system,sans-serif;cursor:pointer}
 #partage-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:7;display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:16px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,.45);min-width:190px}
 #partage-menu[hidden]{display:none}
 #partage-menu button,#partage-menu a{display:block;border:0;border-radius:10px;padding:11px 14px;text-align:left;font:800 15px system-ui,-apple-system,sans-serif;text-decoration:none;color:#2a0f3d;background:#f4eef8}
@@ -233,7 +234,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 
 <section id="accueil" class="ecran on">
   <div class="boite">
-    <div class="haut" id="haut"><a class="eps-retour" href="../">‹ Mes applis</a></div>
+    <div class="haut" id="haut"><a class="eps-retour" href="../">‹ Mes applis</a><button type="button" id="recomp">🎁 Récompenses</button></div>
     <h1 class="titre">Battle des profs</h1>
     <div class="defi">Novembre · grimpe jusqu'au trône</div>
     <div class="etat" id="etat"></div>
@@ -4014,8 +4015,8 @@ window.__battle = {
 
 redim(); afficherAccueil(); chargerClassement(); viderAttente();
 // Kevin : à la toute première ouverture, un mot d'accueil avant le chemin des boss (une seule fois par appareil)
-function montrerBienvenue() {
-  if ((lsGet('battle-bienvenue', null) && lsGetTxt('battle-nom').trim()) || $('bienvenue')) return; // déjà vu ET prénom connu (sinon on le redemande une fois)
+function montrerBienvenue(revoir) {
+  if ((!revoir && lsGet('battle-bienvenue', null) && lsGetTxt('battle-nom').trim()) || $('bienvenue')) return; // déjà vu ET prénom connu (sinon on le redemande une fois)
   const d = document.createElement('div'); d.id = 'bienvenue'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', 'Bienvenue');
   const L = [
     'Trois boss gardent le chemin du château : <b>la Garde</b>, <b>le Bourreau</b>… et tout en haut, sur son trône, <b>le Roi</b>.',
@@ -4038,6 +4039,7 @@ function montrerBienvenue() {
     lsSetTxt('battle-nom', nom); lsSet('battle-bienvenue', Date.now()); d.style.transition = 'opacity .35s'; d.style.opacity = '0'; setTimeout(() => d.remove(), 360); };
 }
 montrerBienvenue();
+$('recomp').onclick = () => montrerBienvenue(true); // Kevin : relire le mot d'accueil (récompense du mois)
 requestAnimationFrame(boucle);
 </script>
 <script>

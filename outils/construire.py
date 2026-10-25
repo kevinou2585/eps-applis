@@ -752,6 +752,8 @@ DRIVE_JS = r"""
         out.push({nom: c.name, lignes, fusions, largeurs, figer: 0});
       } catch(e){}
     });
+    // onglet « Prépas » : une ligne par leçon préparée (agenda-carnet.js)
+    try { const pf = window.prepaFeuille && window.prepaFeuille(); if (pf) out.push(pf); } catch(e){}
     return out;
   }
   async function appel(o, corps){

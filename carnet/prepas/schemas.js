@@ -148,9 +148,24 @@ const T = {
     return h; },
   explication(){ let h = floor() + `<rect class="board" x="110" y="16" width="100" height="32" rx="3"/>` + txt(160, 36, 'CONSIGNES', 'lb c bw') + pl(160, 66, 'p');
     for (let i = 0; i < 9; i++){ const a = Math.PI * (.15 + i * .0875); h += pl(160 + 82 * Math.cos(a), 66 + 82 * Math.sin(a) * .95); } return h; },
+  // corde à sauter : '' = chacun sa corde, 'grande' = grande corde tournée par deux élèves, 'deux' = à deux dans une corde
+  corde(sp, k){ let h = floor(); const rope = (x1, y1, x2, y2, b) => `<path class="bar" style="fill:none" d="M${f(x1)} ${f(y1)}Q${f((x1 + x2) / 2)} ${f(Math.max(y1, y2) + b)} ${f(x2)} ${f(y2)}"/>`;
+    if (k === 'grande'){ h += pl(50, 95, 'b', 'T') + pl(270, 95, 'b', 'T') + rope(58, 95, 262, 95, 55) + rope(58, 95, 262, 95, -55);
+      [[120, 165], [95, 165], [70, 165]].forEach(([x, y]) => h += pl(x, y)); h += pl(160, 95) + arr(120, 157, 156, 104, 'run', -6) + arr(168, 92, 230, 30, 'run', -6);
+      return h + txt(160, 14, 'T = tourneurs ; on entre, on saute, on sort', 'lb c'); }
+    if (k === 'deux'){ [[90, 60], [230, 60], [90, 140], [230, 140]].forEach(([x, y]) => h += pl(x - 9, y + 4) + pl(x + 9, y + 4) + rope(x - 24, y + 14, x + 24, y + 14, -62)); return h + txt(160, 184, 'à deux dans la même corde', 'lb c'); }
+    [[60, 55], [160, 55], [260, 55], [60, 140], [160, 140], [260, 140]].forEach(([x, y]) => h += pl(x, y) + rope(x - 14, y + 12, x + 14, y + 12, -58));
+    return h + txt(160, 184, 'chacun sa corde, 2 m d\'écart au moins', 'lb c'); },
+  // lutte : '' = duels sur 4 tapis, 'cercle' = sortir l'adversaire du cercle, 'sol' = au sol (immobiliser)
+  tapis(sp, k){ let h = floor();
+    if (k === 'cercle'){ h += `<rect class="mat" x="60" y="15" width="200" height="160" rx="6"/><circle class="ln3" style="fill:none" cx="160" cy="95" r="62"/>` + pl(148, 95) + pl(172, 95, 'b') + arr(140, 95, 104, 95, 'run') + arr(180, 95, 216, 95, 'run'); return h + txt(160, 186, 'pousser l\'autre hors du cercle', 'lb c'); }
+    [[20, 12], [170, 12], [20, 100], [170, 100]].forEach(([x, y], i) => { h += `<rect class="mat" x="${x}" y="${y}" width="130" height="78" rx="5"/>`;
+      if (k === 'sol') h += pl(x + 56, y + 46) + pl(x + 70, y + 36, 'b');
+      else h += pl(x + 50, y + 39) + pl(x + 80, y + 39, 'b') + arr(x + 58, y + 30, x + 72, y + 30, 'run', -4); });
+    return h; },
   etirements(){ let h = floor(); for (let i = 0; i < 10; i++){ const a = i / 10 * 2 * Math.PI; h += pl(160 + 100 * Math.cos(a), 95 + 60 * Math.sin(a)); } return h + pl(160, 95, 'p') + txt(160, 182, 'en cercle, le prof ou un élève guide', 'lb c'); }
 };
-const NOMS = {libre: 'Chacun son ballon', voleurs: 'Dribble et voleurs', chat: 'Jeu de poursuite', cercle: 'Passes en cercle', deux: 'Par deux', trois: 'Par trois', carre: 'Carré de passes', files: 'En colonnes', slalom: 'Parcours', tir: 'Tirs', demi: 'Demi-terrain', match: 'Match', tournoi: 'Tournoi sur 4 terrains', filet: 'Jeu au filet', bad: 'Terrain de badminton', mur: 'Contre le mur', ateliers: 'Ateliers tournants', prisonnier: 'Balle aux prisonniers', piscine: 'Bassin', piste: 'Boucle de course', course: 'Couloirs', saut: 'Saut', lancer: 'Lancer', acro: 'Figure acrobatique', danse: 'Espace scénique', explication: 'Regroupement', etirements: 'Retour au calme'};
+const NOMS = {libre: 'Chacun son ballon', voleurs: 'Dribble et voleurs', chat: 'Jeu de poursuite', cercle: 'Passes en cercle', deux: 'Par deux', trois: 'Par trois', carre: 'Carré de passes', files: 'En colonnes', slalom: 'Parcours', tir: 'Tirs', demi: 'Demi-terrain', match: 'Match', tournoi: 'Tournoi sur 4 terrains', filet: 'Jeu au filet', bad: 'Terrain de badminton', mur: 'Contre le mur', ateliers: 'Ateliers tournants', prisonnier: 'Balle aux prisonniers', piscine: 'Bassin', piste: 'Boucle de course', course: 'Couloirs', saut: 'Saut', lancer: 'Lancer', acro: 'Figure acrobatique', danse: 'Espace scénique', explication: 'Regroupement', etirements: 'Retour au calme', corde: 'Corde à sauter', tapis: 'Tapis de lutte'};
 window.PSCH = (spec, cap) => {
   if (!spec) return '';
   const [n, sp, k] = String(spec).split(':'); if (!T[n]) return '';

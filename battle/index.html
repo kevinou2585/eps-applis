@@ -199,6 +199,27 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .btn-mus,.btn-sec{padding:9px 14px}.btn-mus:disabled{opacity:.45}
 .btn-son.coupe,.btn-mus.coupe,.btn-sec.coupe{border-color:#ffd23f;color:#ffd23f}
 .btn-sec.refuse{border-style:dashed}
+/* Bienvenue (1re ouverture) : parchemin du château, les trois boss autour */
+#bienvenue{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 12px);background:radial-gradient(circle at 50% 30%,rgba(90,40,160,.96),rgba(8,10,30,.98) 70%);overflow-y:auto;animation:bvIn .5s ease-out both}
+#bienvenue .bv{position:relative;width:min(440px,100%);text-align:center;color:var(--clair)}
+#bienvenue .bv-boss{display:flex;justify-content:center;align-items:flex-end;gap:4px;margin:0 0 -6px}
+#bienvenue .bv-boss canvas{width:96px;height:96px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6));animation:bvBoss .7s cubic-bezier(.2,1.5,.4,1) both}
+#bienvenue .bv-boss canvas:nth-child(2){width:132px;height:132px;animation-delay:.35s}
+#bienvenue .bv-boss canvas:nth-child(1){animation-delay:.15s}#bienvenue .bv-boss canvas:nth-child(3){animation-delay:.55s}
+#bienvenue .bv-carte{position:relative;background:linear-gradient(180deg,#1b2552,#101a36);border:3px solid var(--jaune);border-radius:22px;padding:20px 18px 18px;box-shadow:0 0 0 6px rgba(255,210,63,.15),0 18px 50px rgba(0,0,0,.6)}
+#bienvenue .bv-k{display:inline-block;background:var(--rouge);color:#fff;font-weight:900;font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:4px 12px;border-radius:999px;transform:rotate(-2deg)}
+#bienvenue h2{margin:10px 0 2px;font-size:clamp(30px,9vw,42px);line-height:.95;font-weight:900;text-transform:uppercase;letter-spacing:.02em;color:var(--jaune);text-shadow:0 3px 0 #b8860b,0 0 24px rgba(255,210,63,.45)}
+#bienvenue .bv-ec{font-weight:800;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:#e9d8ff}
+#bienvenue .bv-l{margin:12px 0 0;font-size:16px;line-height:1.4;opacity:0;transform:translateY(8px);animation:bvL .5s ease-out forwards}
+#bienvenue .bv-l b{color:var(--jaune)} #bienvenue .bv-l em{font-style:normal;color:#ff8a95;font-weight:800}
+#bienvenue .bv-mois{margin-top:14px;padding:10px 12px;border:2px dashed rgba(255,210,63,.6);border-radius:14px;background:rgba(255,210,63,.08)}
+#bienvenue .bv-rec{display:block;margin-top:4px;font-size:21px;font-weight:900;letter-spacing:.02em;background:linear-gradient(90deg,#ffd23f,#ff8a95,#b26bff,#3a86ff,#ffd23f);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:bvArc 4s linear infinite}
+#bienvenue .bv-chut{font-size:13px;color:var(--gris);font-style:italic}
+#bienvenue .gros{margin-top:16px;font-size:21px;opacity:0;animation:bvL .5s ease-out forwards}
+#bienvenue .bv-cof{position:absolute;right:-6px;top:-18px;font-size:34px;animation:bvCof 1.8s ease-in-out infinite;transform-origin:50% 80%}
+@keyframes bvIn{from{opacity:0}}@keyframes bvBoss{from{opacity:0;transform:translateY(40px) scale(.6)}}@keyframes bvL{to{opacity:1;transform:none}}
+@keyframes bvArc{to{background-position:300% 0}}@keyframes bvCof{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg) scale(1.1)}}
+@media (prefers-reduced-motion:reduce){#bienvenue *,#bienvenue{animation:none!important;opacity:1!important;transform:none!important}}
 canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 </style>
 </head>
@@ -3964,6 +3985,26 @@ window.__battle = {
 };
 
 redim(); afficherAccueil(); chargerClassement(); viderAttente();
+// Kevin : à la toute première ouverture, un mot d'accueil avant le chemin des boss (une seule fois par appareil)
+function montrerBienvenue() {
+  if (lsGet('battle-bienvenue', null) || $('bienvenue')) return;
+  const d = document.createElement('div'); d.id = 'bienvenue'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', 'Bienvenue');
+  const L = [
+    'Trois boss gardent le chemin du château : <b>la Garde</b>, <b>le Bourreau</b>… et tout en haut, sur son trône, <b>le Roi</b>.',
+    'Bats-les <em>dans l’ordre</em>, flipper après flipper, et c’est <b>toi</b> qui deviendras le Roi.',
+  ];
+  d.innerHTML = `<div class="bv"><div class="bv-boss"><canvas data-r="3"></canvas><canvas data-r="1"></canvas><canvas data-r="2"></canvas></div>
+    <div class="bv-carte"><span class="bv-cof" aria-hidden="true">🎁</span><span class="bv-k">Avis à tous les profs</span>
+      <h2>Bienvenue au Battle des profs</h2><div class="bv-ec">de l’Institut Saint-Louis</div>
+      ${L.map((t, i) => `<p class="bv-l" style="animation-delay:${0.9 + i * 0.7}s">${t}</p>`).join('')}
+      <div class="bv-l bv-mois" style="animation-delay:2.4s">📅 <b>Chaque mois, un nouveau jeu.</b> Le classement repart à zéro.<br>Le meilleur score du mois recevra une récompense…<span class="bv-rec">INCOMMENSURABLE</span></div>
+      <p class="bv-l bv-chut" style="animation-delay:3.2s">On n’en dira pas plus. Certains secrets se méritent.</p>
+      <button class="gros" type="button" id="bv-ok" style="animation-delay:3.7s">⚔ J’accepte le défi</button></div></div>`;
+  document.body.appendChild(d);
+  d.querySelectorAll('canvas').forEach(c => { try { dessinerPortrait(c, +c.dataset.r, '', '', true); } catch (e) {} });
+  $('bv-ok').onclick = () => { lsSet('battle-bienvenue', Date.now()); d.style.transition = 'opacity .35s'; d.style.opacity = '0'; setTimeout(() => d.remove(), 360); };
+}
+montrerBienvenue();
 requestAnimationFrame(boucle);
 </script>
 <script>

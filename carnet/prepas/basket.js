@@ -139,7 +139,7 @@ PREPA_ADD({id: 'basket', sport: 'Basket-ball', mat: '1 ballon par élève (taill
     ['Le placement de l\'écran', 5, 'Sans ballon : poser un écran (pieds écartés, bras croisés) à côté du défenseur ; le partenaire frôle l\'écran.', 'demi:basket:2c1'],
     ['Dribble + tir', 5, 'Tirs après 2 dribbles depuis l\'aile.', 'tir:basket']],
    c: [['Écran sur porteur 2 contre 2', 12, 'Un joueur pose un écran sur le défenseur du porteur ; le porteur dribble en frôlant l\'écran et tire ou passe.', 'Mon écran est immobile (sinon c\'est une faute).', 'L\'écran roule ensuite vers le panier.', 'demi:basket:2c2'],
-    ['3 contre 3 avec écran', 10, 'Chaque attaque doit utiliser un écran.', 'Notre écran libère un tireur.', '', 'demi:basket:3c3'],
+    ['3 contre 3 avec écran', 10, '3 contre 3 sur demi-terrain : chaque attaque doit utiliser au moins un écran (porteur ou non-porteur) avant de tirer. Panier après écran = 2 points.', 'Mon équipe réussit au moins un panier après écran par match.', '', 'demi:basket:3c3'],
     ['Défendre l\'écran', 6, 'Les défenseurs annoncent « écran ! » et choisissent de passer devant ou d\'échanger.', 'Je parle à mon partenaire.', '', 'demi:basket:2c2']],
    r: [['Analyse', 5, 'Quand l\'écran est-il utile ? Étirements.', 'explication']]},
   {t: 'La défense homme à homme et l\'aide', o: 'Défendre son joueur et aider un partenaire débordé.', e: [
@@ -147,14 +147,14 @@ PREPA_ADD({id: 'basket', sport: 'Basket-ball', mat: '1 ballon par élève (taill
     ['1 contre 1 au poste', 5, 'Dos au panier : prendre position et recevoir.', 'demi:basket:1c1']],
    c: [['2 contre 2 aide et reprise', 10, 'Quand l\'attaquant passe son défenseur, l\'autre défenseur aide puis revient sur son joueur.', 'J\'aide et je reviens.', '3 contre 3.', 'demi:basket:2c2'],
     ['Défense 4 contre 4', 10, 'Matchs où la défense marque 1 point par ballon récupéré.', 'Mon équipe récupère au moins 3 ballons.', '', 'demi:basket:4c4'],
-    ['Match libre', 8, '4 contre 4 sur tout le terrain.', '', '', 'match:basket:4c4']],
+    ['Match libre', 8, '4 contre 4 sur tout le terrain, matchs de 5 minutes ; chaque équipe choisit une consigne à appliquer (repli défensif rapide, écran, contre-attaque).', 'Mon équipe applique sa consigne pendant tout le match.', '', 'match:basket:4c4']],
    r: [['Retour', 5, 'Pouls et étirements.', 'etirements']]},
   {t: 'Le jeu rapide à 3 contre 2', o: 'Remonter le terrain en 3 couloirs et finir avant le retour de la défense.', comp: ['HME2', 'HME4', 'HSC2', 'GSS1'], e: [
     ['Les 3 couloirs', 5, 'Traversées à 3 dans les 3 couloirs du terrain, passes au milieu.', 'trois'],
     ['Lay-up en vitesse', 5, 'Départs de la ligne médiane.', 'tir:basket']],
    c: [['3 contre 2 + 1', 12, '3 attaquants contre 2 défenseurs ; un 3e défenseur part de la ligne de fond 2 s plus tard.', 'Nous marquons avant le retour du 3e défenseur.', '', 'match:basket:3c2'],
     ['Vague 3 contre 2 continue', 10, 'Les 2 défenseurs + le tireur repartent vers l\'autre panier.', 'Je décide vite.', '', 'match:basket:3c2'],
-    ['Match 5 contre 5', 6, 'Si possible sur tout le terrain.', '', '', 'match:basket:5c5']],
+    ['Match 5 contre 5', 6, '5 contre 5 sur tout le terrain si possible (sinon 4 contre 4), arbitrage par les élèves, 2 × 6 minutes.', 'Je trouve ma place : je défends mon joueur et je me démarque en attaque.', '', 'match:basket:5c5']],
    r: [['Retour', 5, 'Marche et étirements.', 'etirements']]},
   {t: 'Match 5 contre 5 et rôles', o: 'Jouer à 5 en tenant son poste (meneur, ailiers, intérieurs) et arbitrer officiellement.', comp: ['HME2', 'HSC1', 'HSC2', 'HSC3'], e: [
     ['Échauffement d\'équipe', 5, 'Chaque équipe mène son échauffement (passes, lay-up, tirs).', 'libre'],
@@ -162,7 +162,7 @@ PREPA_ADD({id: 'basket', sport: 'Basket-ball', mat: '1 ballon par élève (taill
    c: [['Tournoi 5 contre 5', 22, 'Matchs de 7 minutes ; 2 arbitres et une table de marque tenus par l\'équipe au repos.', 'Je tiens mon poste et je respecte les règles.', 'Temps morts et changements.', 'match:basket:5c5']],
    r: [['Bilan d\'équipe', 6, 'Chaque équipe dit ce qui a fonctionné.', 'explication']]},
   {t: 'Évaluation : jeu collectif', o: 'Montrer l\'utilisation du passe et va, de l\'écran et du jeu rapide en match.', e: [
-    ['Échauffement en autonomie', 5, 'Par équipe.', 'libre'],
+    ['Échauffement en autonomie', 5, 'Chaque équipe s\'échauffe seule : trot, mobilisation, passes en mouvement, lay-up des deux côtés.', 'libre'],
     ['Tirs', 5, 'Tirs après réception.', 'tir:basket']],
    c: [['Épreuve : matchs observés', 28, 'Matchs 4 contre 4 ou 5 contre 5. Grille : démarquage, passe et va / écran, défense, respect des règles et de l\'arbitre.', 'J\'utilise au moins une action collective par match.', '', 'match:basket:5c5']],
    r: [['Bilan', 5, 'Auto-évaluation et étirements.', 'explication']]}
@@ -173,7 +173,7 @@ PREPA_ADD({id: 'basket', sport: 'Basket-ball', mat: '1 ballon par élève (taill
     ['Tirs après dribble', 4, 'Tir en suspension après 1-2 dribbles.', 'tir:basket']],
    c: [['Pick and roll 2 contre 2', 12, 'Écran, le porteur attaque, l\'écran roule vers le panier ; lecture : tir, passe au rouleur ou passe dehors.', 'Je lis la défense avant de décider.', 'Défense qui change (switch).', 'demi:basket:2c2'],
     ['3 contre 3 avec pick and roll', 10, 'Le 3e attaquant se place à l\'opposé pour recevoir.', 'Nous marquons sur un pick and roll.', '', 'demi:basket:3c3'],
-    ['Match à thème', 6, 'Panier sur pick and roll = 3 points.', '', '', 'demi:basket:4c4']],
+    ['Match à thème', 6, '5 contre 5 : un panier marqué après un pick and roll (écran sur le porteur puis course vers le panier) vaut 3 points.', 'Mon équipe tente un pick and roll à chaque attaque placée.', '', 'demi:basket:4c4']],
    r: [['Retour', 5, 'Étirements et analyse rapide.', 'etirements']]},
   {t: 'Attaquer une défense de zone', o: 'Faire circuler vite le ballon, attaquer les intervalles et tirer de loin.', e: [
     ['Passes rapides', 5, 'Circulation à 5 autour de la raquette, passes sans dribble.', 'cercle'],
@@ -190,7 +190,7 @@ PREPA_ADD({id: 'basket', sport: 'Basket-ball', mat: '1 ballon par élève (taill
     ['Concours en équipes', 10, 'Le tour du monde par équipes ; puis 3 contre 3 où un panier à 3 points vaut 4.', '', '', 'demi:basket:3c3']],
    r: [['Retour', 5, 'Étirements des épaules, poignets, mollets.', 'etirements']]},
   {t: 'Situations de fin de match', o: 'Gérer le score et le temps : possession, faute volontaire, dernier tir.', comp: ['HME4', 'HSC1', 'HSC2', 'GSS3'], e: [
-    ['Échauffement en équipe', 5, 'Chaque équipe.', 'libre'],
+    ['Échauffement en équipe', 5, 'Chaque équipe s\'échauffe seule : trot, mobilisation, passes en mouvement, lay-up des deux côtés.', 'libre'],
     ['Lancers francs sous pression', 5, 'Chaque élève tire 2 lancers francs pendant que les autres comptent à voix haute.', 'tir:basket']],
    c: [['Dernière minute', 12, 'Situations : +2 avec 1 minute à jouer, -1 avec 20 secondes, égalité, possession. Chaque équipe choisit sa stratégie au temps mort.', 'Notre décision est réfléchie.', '', 'match:basket:5c5'],
     ['Matchs de 5 minutes', 12, 'Avec chrono de 24 secondes approximatif (le prof annonce 10 s).', 'Je reste calme sous pression.', '', 'match:basket:5c5']],
@@ -214,7 +214,7 @@ PREPA_ADD({id: 'basket', sport: 'Basket-ball', mat: '1 ballon par élève (taill
     ['Constitution des équipes', 10, 'Les élèves forment des équipes équilibrées (avec le prof) et nomment un capitaine.', 'Les équipes sont équilibrées.', '', 'explication']],
    r: [['Projet', 5, 'Chaque équipe choisit un nom et un objectif.', 'explication']]},
   {t: 'Préparer son équipe : systèmes simples', o: 'Mettre en place un système d\'attaque (pick and roll, écran hors ballon) et une défense.', e: [
-    ['Échauffement d\'équipe', 6, 'Mené par le capitaine.', 'libre'],
+    ['Échauffement d\'équipe', 6, 'Le capitaine mène l\'échauffement : trot, mobilisation, passes en mouvement, lay-up et tirs.', 'libre'],
     ['Tirs', 4, 'Tirs aux positions du système.', 'tir:basket']],
    c: [['Mise en place à vide', 10, 'Chaque équipe répète son système sans défense puis avec défense passive.', 'Chacun connaît son déplacement.', '', 'demi:basket:5c5'],
     ['Opposition', 18, 'Matchs : l\'équipe en attaque annonce son système.', 'Le système crée un tir ouvert.', '', 'match:basket:5c5']],
@@ -227,19 +227,19 @@ PREPA_ADD({id: 'basket', sport: 'Basket-ball', mat: '1 ballon par élève (taill
    r: [['Récupération', 5, 'Pouls après effort et étirements longs.', 'etirements']]},
   {t: 'Tournoi organisé par les élèves (1)', o: 'Organiser et vivre un tournoi : planning, arbitrage, table de marque, statistiques.', comp: ['HSC1', 'HSC2', 'HSC3', 'GSS3'], e: [
     ['Organisation', 6, 'Les élèves répartissent les rôles : arbitres, chronométreurs, statisticiens, responsables du matériel.', 'explication'],
-    ['Échauffement d\'équipe', 4, 'Chaque équipe.', 'libre']],
+    ['Échauffement d\'équipe', 4, 'Chaque équipe s\'échauffe seule : trot, mobilisation, passes en mouvement, lay-up des deux côtés.', 'libre']],
    c: [['Tournoi', 28, 'Matchs de 6 minutes selon le planning des élèves. Statistiques tenues par l\'équipe au repos.', 'Le tournoi se déroule sans l\'aide du prof.', '', 'tournoi:basket']],
    r: [['Classement', 5, 'Mise à jour du classement et du fair-play.', 'explication']]},
   {t: 'Tournoi organisé par les élèves (2)', o: 'Analyser les statistiques et adapter sa stratégie.', comp: ['HSC1', 'HSC2', 'HSC3', 'GSS5'], e: [
     ['Lecture des stats', 5, 'Chaque équipe lit ses statistiques et fixe un objectif.', 'explication'],
-    ['Échauffement d\'équipe', 5, 'Mené par le capitaine.', 'libre']],
+    ['Échauffement d\'équipe', 5, 'Le capitaine mène l\'échauffement : trot, mobilisation, passes en mouvement, lay-up et tirs.', 'libre']],
    c: [['Phase finale', 28, 'Demi-finales et finales ; arbitres et coachs élèves.', 'Notre équipe applique son objectif.', '', 'match:basket:5c5']],
    r: [['Remise des prix', 5, 'Meilleure équipe, équipe la plus fair-play, meilleur arbitre.', 'explication']]},
   {t: 'Évaluation : performance et rôles', o: 'Montrer son niveau de jeu et sa capacité à tenir un rôle d\'arbitre ou de coach.', e: [
     ['Échauffement en autonomie', 6, 'Préparé par chaque équipe.', 'libre'],
-    ['Tirs', 4, 'Libre.', 'tir:basket']],
+    ['Tirs', 4, 'Chaque joueur tire 5 fois de ses positions préférées (lay-up, mi-distance, lancer franc) ; le partenaire rebondit et renvoie.', 'tir:basket']],
    c: [['Matchs observés', 22, 'Grille : efficacité, choix, défense, implication dans le projet.', 'Je contribue au projet de mon équipe.', '', 'match:basket:5c5'],
-    ['Arbitrage évalué', 6, 'Chaque élève arbitre une période.', 'Je suis juste et bien placé.', '', 'match:basket:5c5']],
+    ['Arbitrage évalué', 6, 'Chaque élève arbitre une période : coups de sifflet, gestes officiels (marcher, reprise de dribble, faute personnelle, 3 secondes), annonce à la table.', 'J\'arbitre une période sans erreur sur les fautes principales.', '', 'match:basket:5c5']],
    r: [['Bilan de fin de cursus', 5, 'Comment continuer le basket ou une activité physique après l\'école ?', 'explication']]}
 ]}
 }});

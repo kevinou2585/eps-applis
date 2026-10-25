@@ -3844,7 +3844,7 @@ function finPartie() {
 }
 function blocNom(label, top) { // Kevin : le prénom (demandé à la 1re ouverture) reste celui de ce téléphone pour toutes les parties
   const fixe = lsGetTxt('battle-nom').trim();
-  if (fixe) return `<input type="hidden" id="nom" value="${esc(fixe)}"><div class="aide" style="margin:4px 0 8px">Joueur de ce téléphone : <b>${esc(fixe)}</b></div>
+  if (fixe) return `<input type="hidden" id="nom" value="${esc(fixe)}"><div class="aide${top ? ' cache' : ''}" style="margin:4px 0 8px">Joueur de ce téléphone : <b>${esc(fixe)}</b></div>
     <button class="btn${top ? ' cache' : ' jaune'}" id="envoyer">${esc(top ? 'Envoyer sans photo' : label)}</button><div id="retour"></div>`;
   return `<input class="champ" id="nom" maxlength="24" placeholder="Ton prénom (collègue)" autocomplete="off">
     <button class="btn jaune" id="envoyer">${esc(label)}</button><div id="retour"></div>`;
@@ -3860,6 +3860,9 @@ function montrerFin() {
   const nomFixe = !!lsGetTxt('battle-nom').trim(); // prénom connu : en fin de partie, on choisit roi / reine → photo → envoi → animation
   let html = '', mode = 'simple', genre = lsGetTxt('battle-genre'), moqueur = null;
   if (genre !== 'H' && genre !== 'F') genre = '';
+  // Kevin : boss battu (top 3 ou boss caché) et prénom connu → un écran simple : roi / reine (rien de coché) → photo → score enregistré → animation
+  const simple = CLASSEMENT_OK && (ult || dansTop) && nomFixe;
+  if (simple) genre = '';
   if (!CLASSEMENT_OK) {
     html = `<div class="bandeau">Fin du cours !</div><div class="score-fin">${esc(fmt(score))}</div>
       <div class="manque">Record sur cet appareil : ${esc(fmt(Math.max(score, lsGet('battle-record-' + JEU, 0))))}</div>
@@ -3876,7 +3879,7 @@ function montrerFin() {
         <label${genre === 'F' ? ' class="on"' : ''}><input type="radio" name="genre" value="F"${genre === 'F' ? ' checked' : ''}>👸 Une impératrice</label>
       </div>
       <label class="btn photo-btn${nomFixe ? ' cache' : ''}" id="photo-lbl">📸 Prends une photo terrifiante<input type="file" accept="image/*" capture="user" id="photo"></label>
-      <div class="aide" style="margin:0 0 10px">Ta tête attendra dans le château. Seuls ceux qui battent le roi ET atteignent ton score te verront. Le roi garde sa place au classement.</div>
+      <div class="aide${simple ? ' cache' : ''}" style="margin:0 0 10px">Ta tête attendra dans le château. Seuls ceux qui battent le roi ET atteignent ton score te verront. Le roi garde sa place au classement.</div>
       ${blocNom('Devenir le boss caché 💀', true)}`;
   } else if (dansTop) {
     mode = 'top';
@@ -3891,7 +3894,7 @@ function montrerFin() {
         <label${genre === 'F' ? ' class="on"' : ''}><input type="radio" name="genre" value="F"${genre === 'F' ? ' checked' : ''}>👸 Je suis une reine</label>
       </div>
       <label class="btn photo-btn${nomFixe ? ' cache' : ''}" id="photo-lbl">📸 Prends une photo rigolote<input type="file" accept="image/*" capture="user" id="photo"></label>
-      <div class="aide" style="margin:0 0 10px">Ta tête deviendra le boss n°${rang} que les collègues devront abattre sur le flipper.</div>
+      <div class="aide${simple ? ' cache' : ''}" style="margin:0 0 10px">Ta tête deviendra le boss n°${rang} que les collègues devront abattre sur le flipper.</div>
       ${blocNom('Envoyer mon score 🏆', true)}`;
   } else {
     mode = 'moque';
@@ -3904,7 +3907,8 @@ function montrerFin() {
       <div id="zone-nom" class="cache">${blocNom('Enregistrer')}</div>`;
     html = html.replace('<div class="scene">', moqueur ? '<div class="scene">' : '<div class="scene cache">');
   }
-  html += `<button class="gros" id="rejouer">Rejouer</button><button class="btn" id="vers-accueil">Classement</button>`;
+  const cacheFin = simple ? ' cache' : ''; // écran simple : Rejouer / Classement reviennent seulement après l'envoi (ou si l'envoi échoue)
+  html += `<button class="gros${cacheFin}" id="rejouer">Rejouer</button><button class="btn${cacheFin}" id="vers-accueil">Classement</button>`;
   $('fin-boite').innerHTML = html; montrer('fin'); $('fin').scrollTop = 0;
   const majPortrait = () => {
     if (!$('portrait-fin')) return;
@@ -3918,7 +3922,8 @@ function montrerFin() {
   // Kevin : prénom connu → toucher « roi » ou « reine » ouvre tout de suite l'appareil photo (même si la case était déjà cochée)
   if (nomFixe) document.querySelectorAll('#genre input').forEach(i => i.addEventListener('click', () => {
     genre = i.value; lsSetTxt('battle-genre', genre); $('genre').classList.remove('manque-choix'); majPortrait();
-    $('photo-lbl').classList.remove('cache'); if ($('envoyer') && !$('envoyer').disabled) $('envoyer').classList.remove('cache');
+    // photo pas prise (annulée) : « Envoyer sans photo » reste possible ; toucher roi / reine rouvre l'appareil photo
+    if ($('envoyer') && !$('envoyer').disabled) $('envoyer').classList.remove('cache');
     if (!photoData) $('photo').click();
   }));
   $('rejouer').onclick = () => { pleinEcran(); deverrouiller(); montrer(null); nouvellePartie(); };
@@ -3947,6 +3952,7 @@ function montrerFin() {
       await envoyer({ code: CODE, action: 'jeu', jeu: JEU, nom: ultAvant.nom, score: Math.round(ultAvant.score), photo: photoOk(ultAvant.photo) && ultAvant.photo.length < 48000 ? ultAvant.photo : '', genre: ultAvant.genre });
     if (mode === 'top' && r !== false) { if (ult) garderIntroUltime(r, liste, nom, genre, ultAvant); else garderIntro(r, liste, rang, nom, genre); }
     const ret = $('retour') || document.createElement('div');
+    if ($('rejouer')) { $('rejouer').classList.remove('cache'); $('vers-accueil').classList.remove('cache'); }
     if (r === null) ret.innerHTML = `<div class="msg">📡 Hors ligne : ton score est gardé et sera envoyé dès que possible.</div>`;
     else if (!r.ok) { ret.innerHTML = `<div class="msg ko">Envoi refusé${r.erreur || r.error ? ' : ' + esc(r.erreur || r.error) : ''}.</div>`; btn.disabled = false; btn.textContent = 'Réessayer'; return; }
     else if (ult) ret.innerHTML = `<div class="msg ok">💀 C’est fait : tu es ${genre === 'F' ? 'l’impératrice cachée' : 'l’empereur caché'} du château. Chut…${ultAvant && !ultAvant.inconnu ? `<br><small>${esc(ultAvant.nom)} redescend sur le trône du roi.</small>` : ''}</div>`;

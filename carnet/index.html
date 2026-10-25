@@ -517,7 +517,7 @@ header.top .sync{min-width:0; overflow:hidden}
   .pr-crit th{width:30%} .pr-crit td:nth-child(2){width:24px; text-align:center; font-weight:700}
   .rc-p{position:relative; min-height:262mm; display:flow-root; margin-right:13mm}
   html.prt{background:#fff !important}
-  .rc-tab{position:absolute; right:-13mm; width:11mm; height:31mm; background:#111; color:#fff; border-radius:3mm 0 0 3mm; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1mm; -webkit-print-color-adjust:exact; print-color-adjust:exact; padding-right:1mm; box-sizing:border-box}
+  .rc-tab{position:absolute; right:-13mm; width:11mm; height:27mm; background:#111; color:#fff; border-radius:3mm 0 0 3mm; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1mm; -webkit-print-color-adjust:exact; print-color-adjust:exact; padding-right:1mm; box-sizing:border-box}
   .rc-tab b{font-size:11pt; line-height:1} .rc-tab span{font-size:7pt; writing-mode:vertical-rl; transform:rotate(180deg); max-height:20mm; overflow:hidden; letter-spacing:.03em}
   .rc-cover h1{font-size:26pt; margin:40mm 0 4mm} .rc-sub{font-size:13pt; color:#444; margin:0 0 12mm} .rc-cover h2{font-size:13pt; margin:8mm 0 2mm}
   .rc-big{display:flex; flex-direction:column; align-items:center; margin:30mm 0 12mm} .rc-big span{font-size:72pt; font-weight:800; line-height:1} .rc-big small{font-size:20pt; letter-spacing:.2em; text-transform:uppercase}
@@ -2022,7 +2022,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('sheetro
    Tout passe par save() / save(c.id) : appareil + Drive (réglages par S.ts, classes par c.ts). */
 IC.cal = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7 13.5h2M11 13.5h2M15 13.5h2M7 17h2M11 17h2"/></svg>';
 /* en tête : les sports qui ont des prépas toutes faites (demande de Kevin), puis les autres */
-const SPORTS0 = ['Basket-ball','Volley-ball','Handball','Natation',"Course d'endurance",'Badminton','Danse','Acrosport','Balle aux prisonniers','Athlétisme','Football',"Jeux d'hiver",'Unihoc (floorball)','Gymnastique','Tennis de table','Jeux de raquettes','Rugby (flag/tag)','Ultimate','Kin-ball','Tchoukball','Baseball/Softball','Jeux collectifs',"Jeux d'opposition / Lutte",'Escalade','Musculation / Renforcement','Condition physique','Orientation','Cirque / Jonglerie','Koh-Lanta','Évaluation'];
+const SPORTS0 = ['Basket-ball','Volley-ball','Handball','Natation',"Course d'endurance",'Badminton','Danse','Acrosport','Balle aux prisonniers','Athlétisme','Football',"Jeux d'hiver",'Unihoc (floorball)','Gymnastique','Tennis de table','Jeux de raquettes','Rugby (flag/tag)','Ultimate','Kin-ball','Tchoukball','Baseball/Softball','Jeux collectifs',"Jeux d'opposition / Lutte",'Corde à sauter','Escalade','Musculation / Renforcement','Condition physique','Orientation','Cirque / Jonglerie','Koh-Lanta','Évaluation'];
 const lastH = d => d === 3 ? 'H5' : 'H8';          // le mercredi s'arrête à H5
 const DAYS2 = ['', 'Lu', 'Ma', 'Me', 'Je', 'Ve'];
 const dayName = d => (DAYS.find(x => x[0] === d) || [0, ''])[1];
@@ -2421,6 +2421,7 @@ const PROG_SPORT0 = [
   [/endurance|condition physique|musculation|renforcement/i, ['HME4', 'GSS1', 'GSS3', 'GSS5']],
   [/danse|expression|cirque|jonglerie/i, ['HME4', 'HME5', 'HSC2', 'GSS4']],
   [/opposition|lutte|judo/i, ['HME1', 'HME3', 'HSC1', 'HSC3', 'GSS2', 'GSS3']],
+  [/corde/i, ['HME1', 'HME3', 'HME4', 'GSS1']],
   [/koh/i, ['HME1', 'HME2', 'HSC1', 'HSC2', 'HSC3', 'GSS3']],
   [/orientation/i, ['HME4', 'HSC2', 'GSS2']],
   [/escalade/i, ['HME1', 'HME3', 'GSS2', 'GSS3']]
@@ -2489,9 +2490,14 @@ function agCouverture(c, ls){
    Leçon d'évaluation : crit = [[critère, points, indicateur]] → grille de notation (module « Évaluation de fin de cycle » plus bas). */
 const PREPA_CAT = [['hiver', "Jeux d'hiver", /hiver/i], ['basket', 'Basket-ball', /basket/i], ['volley', 'Volley-ball', /volley/i], ['hand', 'Handball', /hand/i], ['natation', 'Natation · nageurs (grande profondeur)', /natation|piscine|nage/i], ['natdeb', 'Natation · débutants (petite profondeur)', /natation|piscine|nage/i],
   ['endurance', "Course d'endurance", /endurance|course en dur/i], ['bad', 'Badminton', /badminton/i], ['danse', 'Danse', /danse/i], ['acro', 'Acrosport', /acro/i],
-  ['prisonnier', 'Balle aux prisonniers', /prisonnier/i], ['athle', 'Athlétisme', /athl/i], ['foot', 'Football', /foot/i]];
-const PREPA_PRETS = ['hiver', 'basket', 'volley', 'hand', 'natation', 'natdeb', 'endurance', 'bad', 'danse', 'acro', 'prisonnier', 'athle', 'foot'];  // bibliothèques écrites (carnet/prepas/<id>.js)
+  ['prisonnier', 'Balle aux prisonniers', /prisonnier/i], ['athle', 'Athlétisme', /athl/i], ['foot', 'Football', /foot/i],
+  ['corde', 'Corde à sauter', /corde/i], ['lutte', "Lutte (sport d'opposition)", /lutte|opposition/i]];
+const PREPA_PRETS = ['hiver', 'basket', 'volley', 'hand', 'natation', 'natdeb', 'endurance', 'bad', 'danse', 'acro', 'prisonnier', 'athle', 'foot', 'corde', 'lutte'];  // bibliothèques écrites (carnet/prepas/<id>.js)
 const prepaCat = () => PREPA_CAT.filter(([id]) => PREPA_PRETS.includes(id));
+/* « Jeux divers » (Kevin) : sports hors des grands sports, un seul cycle de 6 leçons valable pour toutes les années (corde, lutte) + les jeux d'hiver */
+const PREPA_DIVERS = ['corde', 'lutte', 'hiver'];
+const prepaOpts = sel => { const o = ([id, n]) => `<option value="${id}" ${id === sel ? 'selected' : ''}>${esc(n)}</option>`, c = prepaCat();
+  return c.filter(x => !PREPA_DIVERS.includes(x[0])).map(o).join('') + `<optgroup label="Jeux divers">${PREPA_DIVERS.map(id => c.find(x => x[0] === id)).filter(Boolean).map(o).join('')}</optgroup>`; };
 const PREPA_LIB = window.PREPA_LIB = window.PREPA_LIB || {};
 window.PREPA_ADD = o => { PREPA_LIB[o.id] = o; };
 const prepaCatOf = sp => sp ? PREPA_CAT.find(([, , re]) => re.test(sp)) : null;
@@ -2548,7 +2554,7 @@ function openPrepa(date, slotId, ids){
   openSheet(title, `
     <div class="card ag-sum"><b class="ag-who">${esc(clsName(ids))}</b><span class="small muted">${esc(fmtDL(date))} · ${esc(slotLabel(it))} · ${esc(slotTime(it))}${g.s ? ' · ' + esc(g.s) : ''}</span></div>
     <div class="card sec pp-lib"><h3>📚 Prépa toute faite</h3>
-      <div class="row2"><label class="f" style="flex:1 1 150px">Sport<select class="inp" id="pp-lsp"><option value="">— Choisir —</option>${prepaCat().map(([id, n]) => `<option value="${id}" ${id === libId ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
+      <div class="row2"><label class="f" style="flex:1 1 150px">Sport<select class="inp" id="pp-lsp"><option value="">— Choisir —</option>${prepaOpts(libId)}</select></label>
       <label class="f" id="pp-lanw" style="flex:1 1 110px">Année<select class="inp" id="pp-lan">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}" ${a === libAn ? 'selected' : ''}>${AN_TXT(a)} secondaire</option>`).join('')}</select></label></div>
       <div id="pp-llist"><span class="small muted">Choisis un sport : ses leçons apparaissent ici.</span></div></div>
     <div class="card sec"><h3>En-tête</h3>
@@ -2880,7 +2886,7 @@ function openPrepaPrint(){
       <div class="pr-logo">${en.logo ? `<img src="${esc(en.logo)}" alt="Logo" id="pr-lg" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'small muted',textContent:'Logo pas visible sans internet'}))">` : '<span class="small muted">Pas de logo</span>'}
         <label class="btn">Changer le logo<input type="file" accept="image/*" id="pr-lf" hidden></label>${en.logo ? '<button class="btn" type="button" id="pr-lx">Sans logo</button>' : '<button class="btn" type="button" id="pr-l0">Logo de Saint-Louis</button>'}</div></div>
     <div class="card sec"><h3>📚 Bibliothèque</h3><p class="small muted" style="margin:0">Imprimer une séquence vierge (sans date ni classe) pour la préparer ou l'emporter.</p>
-      <div class="row2"><select class="inp" id="pr-bs" style="flex:2 1 150px">${prepaCat().map(([id, n]) => `<option value="${id}">${esc(n)}</option>`).join('')}</select>
+      <div class="row2"><select class="inp" id="pr-bs" style="flex:2 1 150px">${prepaOpts('')}</select>
       <select class="inp" id="pr-ba" style="flex:1 1 100px">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}">${AN_TXT(a)}</option>`).join('')}</select></div>
       <button class="btn block" type="button" id="pr-bgo">🖨 Imprimer la séquence</button>
       <p class="small muted" style="margin:6px 0 0">Ou tout le recueil pour une farde : toutes les séquences, classées par année puis par sport, avec pages de garde et onglets au bord droit.</p>
@@ -2908,10 +2914,10 @@ function openPrepaPrint(){
 
 /* --- Recueil papier : toutes les prépas de la bibliothèque pour une farde (classées par année puis par sport, pages de garde, onglets au bord droit) --- */
 const RC_PAGE = '@page{size:A4 portrait;margin:12mm 0 12mm 12mm}';  // marge droite à 0 : les onglets vont jusqu'au bord de la feuille
-const RC_ONGLETS = [1, 2, 3, 4, 5, 6, 'natdeb', 'hiver'];  // position verticale de l'onglet de chaque section
+const RC_ONGLETS = [1, 2, 3, 4, 5, 6, 'natdeb', 'divers', 'hiver'];  // position verticale de l'onglet de chaque section
 function rcTab(pos, haut, bas){
   const i = RC_ONGLETS.indexOf(pos);
-  return `<div class="rc-tab" style="top:${8 + i * 33}mm"><b>${esc(haut)}</b>${bas ? `<span>${esc(bas)}</span>` : ''}</div>`;
+  return `<div class="rc-tab" style="top:${8 + i * 29}mm"><b>${esc(haut)}</b>${bas ? `<span>${esc(bas)}</span>` : ''}</div>`;
 }
 function rcEnTete(en, sous){
   return `<header class="pr-hd">${en.logo ? `<img src="${esc(en.logo)}" alt="" onerror="this.remove()">` : ''}<div><b>${esc(en.ecole || '')}</b><span>Éducation physique · ${esc(sous)}</span>${en.prof ? `<span>Professeur : ${esc(en.prof)}</span>` : ''}</div></header>`;
@@ -2922,7 +2928,7 @@ function rcLecons(A, libId){
     ${A.l.slice(cy.de - 1, cy.a).map((l, j) => `<tr${l.crit ? ' class="rc-ev"' : ''}><td>${libId === 'hiver' ? '' : 'L' + (cy.de + j)}</td><td><b>${esc(l.t)}</b>${l.crit ? ' <small>(grille d\'évaluation)</small>' : ''}</td>${long ? '' : `<td>${esc(l.o || l.tags || '')}</td>`}</tr>`).join('')}</table>`).join('');
 }
 async function prepaRecueilHTML(){
-  const ids = PREPA_PRETS.filter(id => id !== 'hiver' && id !== 'natdeb'), nom = id => (PREPA_CAT.find(c => c[0] === id) || [0, id])[1];
+  const ids = PREPA_PRETS.filter(id => id !== 'natdeb' && !PREPA_DIVERS.includes(id)), nom = id => (PREPA_CAT.find(c => c[0] === id) || [0, id])[1];
   await prepaLoad([...PREPA_PRETS]);
   const en = prepaEn(), sy = schoolYear(today())[2], sp = ids.filter(id => PREPA_LIB[id]).sort((a, b) => nom(a).localeCompare(nom(b), 'fr'));
   const page = (x, tab) => prepaPage(x, en).replace('<article class="pr-page">', `<article class="pr-page rc-p">${tab}`).replace(window.PSCH_LEGENDE || '§', '');  // légende des schémas : une seule fois, en page 1
@@ -2930,10 +2936,11 @@ async function prepaRecueilHTML(){
   let h = `<article class="pr-page rc-p rc-cover">${rcEnTete(en, 'Recueil des préparations de leçons')}
     <h1>Recueil des préparations de leçons</h1><p class="rc-sub">Éducation physique · ${esc(sy)}${en.prof ? ' · ' + esc(en.prof) : ''}</p>
     <p>Chaque séquence compte 6 leçons : 5 leçons d'apprentissage et une leçon d'évaluation (la 6e), avec sa grille de critères. En natation (1re à 3e), deux cycles de plus sont prévus pour les classes qui ont 12 ou 18 semaines de piscine, et un parcours séparé existe pour le groupe débutants.</p>
-    <h2>Comment trouver une prépa</h2><p>Les onglets noirs au bord droit des pages indiquent l'année (1re en haut, 6e plus bas), puis les sections « Natation débutants » et « Jeux d'hiver ». Dans chaque année, les sports sont classés par ordre alphabétique, chacun précédé d'une page de garde avec la liste de ses leçons.</p>
+    <h2>Comment trouver une prépa</h2><p>Les onglets noirs au bord droit des pages indiquent l'année (1re en haut, 6e plus bas), puis les sections « Natation débutants », « Jeux divers » (corde à sauter, lutte) et « Jeux d'hiver ». Dans chaque année, les sports sont classés par ordre alphabétique, chacun précédé d'une page de garde avec la liste de ses leçons.</p>
     <table class="rc-ls rc-som"><tr><th>Section</th><th>Contenu</th></tr>
       ${[1, 2, 3, 4, 5, 6].map(a => `<tr><td><b>${AN_TXT(a)} secondaire</b></td><td>${sp.filter(id => PREPA_LIB[id].an[a]).map(id => `${esc(nom(id).replace(/ \(.*\)$/, ''))} (${PREPA_LIB[id].an[a].l.length})`).join(' · ')}</td></tr>`).join('')}
       ${PREPA_LIB.natdeb ? `<tr><td><b>Natation débutants</b></td><td>3 cycles de 6 leçons (petite profondeur), toutes années</td></tr>` : ''}
+      ${PREPA_DIVERS.some(id => id !== 'hiver' && PREPA_LIB[id]) ? `<tr><td><b>Jeux divers</b></td><td>${PREPA_DIVERS.filter(id => id !== 'hiver' && PREPA_LIB[id]).map(id => esc(nom(id))).join(' · ')} : un cycle de 6 leçons, toutes années</td></tr>` : ''}
       ${PREPA_LIB.hiver ? `<tr><td><b>Jeux d'hiver</b></td><td>${PREPA_LIB.hiver.an[0].l.length} jeux d'une leçon (petite salle, peu de matériel)</td></tr>` : ''}</table>
     <h2>Légende des schémas</h2>${window.PSCH_LEGENDE || ''}</article>`;
   [1, 2, 3, 4, 5, 6].forEach(a => {
@@ -2950,6 +2957,10 @@ async function prepaRecueilHTML(){
     h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Natation débutants')}<div class="rc-sph"><small>Toutes années · petite profondeur</small><h1>Natation débutants</h1><p>${esc(A.th)}</p></div>
       <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || '')}</p><p class="rc-mat">Pour le groupe qui n'est pas encore à l'aise dans l'eau, en même temps que le groupe nageurs. L'évaluation du cycle 3 sert de test de passage vers le groupe nageurs.</p>${rcLecons(A, 'natdeb')}</article>`;
     A.l.forEach((l, i) => h += lecon('natdeb', 1, i + 1, tab).replace(/<span>1re secondaire<\/span>/, '<span>toutes années</span>')); }
+  PREPA_DIVERS.filter(id => id !== 'hiver' && PREPA_LIB[id]).forEach(id => { const A = PREPA_LIB[id].an[1], tab = rcTab('divers', 'Divers', planAbbr(PREPA_LIB[id].sport));
+    h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Jeux divers')}<div class="rc-sph"><small>Jeux divers · toutes années</small><h1>${esc(nom(id))}</h1><p>${esc(A.th)}</p></div>
+      <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || '')}</p><p class="rc-mat">Un seul cycle de 6 leçons, le même pour toutes les années : adapte les exigences à l'âge des élèves.</p>${rcLecons(A, id)}</article>`;
+    A.l.forEach((l, i) => h += lecon(id, 1, i + 1, tab).replace(/<span>1re secondaire<\/span>/, '<span>toutes années</span>')); });
   if (PREPA_LIB.hiver){ const A = PREPA_LIB.hiver.an[0], tab = rcTab('hiver', 'Hiver', 'jeux');
     h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, "Jeux d'hiver")}<div class="rc-sph"><small>Toutes années · une leçon par jeu</small><h1>Jeux d'hiver</h1><p>Jeux pour la petite salle ou les jours sans installation, classés par mots-clés.</p></div>${rcLecons(A, 'hiver')}</article>`;
     A.l.forEach((l, i) => h += lecon('hiver', 0, i + 1, tab).replace(/<span>(toutes années|\d+r?e) secondaire<\/span>/, '<span>toutes années</span>')); }
@@ -4749,6 +4760,7 @@ function openComments(c, vp){
 
 <script src="aide.js"></script>
 <script src="skore.js"></script>
+<script src="prepa-guide.js"></script>
 <script>
 // Mise a jour automatique : on verifie a chaque ouverture et a chaque retour dans l'appli,
 // et on recharge une fois quand la nouvelle version est prete (les donnees restent sur le telephone).

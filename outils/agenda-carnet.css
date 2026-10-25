@@ -282,7 +282,7 @@ header.top .sync{min-width:0; overflow:hidden}
   .pr-crit th{width:30%} .pr-crit td:nth-child(2){width:24px; text-align:center; font-weight:700}
   .rc-p{position:relative; min-height:262mm; display:flow-root; margin-right:13mm}
   html.prt{background:#fff !important}
-  .rc-tab{position:absolute; right:-13mm; width:11mm; height:31mm; background:#111; color:#fff; border-radius:3mm 0 0 3mm; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1mm; -webkit-print-color-adjust:exact; print-color-adjust:exact; padding-right:1mm; box-sizing:border-box}
+  .rc-tab{position:absolute; right:-13mm; width:11mm; height:27mm; background:#111; color:#fff; border-radius:3mm 0 0 3mm; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1mm; -webkit-print-color-adjust:exact; print-color-adjust:exact; padding-right:1mm; box-sizing:border-box}
   .rc-tab b{font-size:11pt; line-height:1} .rc-tab span{font-size:7pt; writing-mode:vertical-rl; transform:rotate(180deg); max-height:20mm; overflow:hidden; letter-spacing:.03em}
   .rc-cover h1{font-size:26pt; margin:40mm 0 4mm} .rc-sub{font-size:13pt; color:#444; margin:0 0 12mm} .rc-cover h2{font-size:13pt; margin:8mm 0 2mm}
   .rc-big{display:flex; flex-direction:column; align-items:center; margin:30mm 0 12mm} .rc-big span{font-size:72pt; font-weight:800; line-height:1} .rc-big small{font-size:20pt; letter-spacing:.2em; text-transform:uppercase}

@@ -9,7 +9,7 @@
      à ce temps (prépa choisie pour un cours, bibliothèque, guide) : échauffement et retour au calme bougent peu, le corps de
      leçon prend le reste. */
 (() => {
-  const LS = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch(e){ return null; } };
+  const LS = (k, v) => { const ls = window.DEMO_LS || localStorage; try { if (v === undefined) return ls.getItem(k); ls.setItem(k, v); } catch(e){ return null; } };
   const SANS = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
   const VEST = 7;
   const plPool = (id, sp, type) => type === 'piscine' || /^(natation|natdeb)$/.test(id || '') || /natation|piscine|nage/i.test(sp || '');
@@ -285,5 +285,5 @@
 .plg-schs{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
 .plb-ph h3 small{font-weight:600;color:var(--muted);text-transform:none;font-family:var(--body)}.plb-it{padding:8px 0;border-top:1px solid var(--line)}.plb-it p{margin:4px 0 0}`;
   document.head.appendChild(st);
-  window.prepaGuide = {plMin, plScale, plGuide, plBiblio};
+  window.prepaGuide = {plMin, plScale, plGuide, plBiblio, plFromLib};
 })();

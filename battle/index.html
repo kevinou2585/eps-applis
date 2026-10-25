@@ -3941,11 +3941,14 @@ function montrerFin() {
     const btn = $('envoyer'); btn.disabled = true; btn.textContent = 'Envoi…';
     const p = { code: CODE, action: 'jeu', jeu: ult ? JEU_CACHE : JEU, nom, score: Math.round(score), photo: mode === 'top' && photoData.length < 48000 ? photoData : '', genre: mode === 'top' ? genre : '' };
     const r = await envoyer(p);
+    // Kevin (25/10) : l'empereur battu redescend roi : son score entre dans le classement normal, le roi devient bourreau, le bourreau garde, la garde sort
+    if (ult && r !== false && (r === null || r.ok) && ultAvant && !ultAvant.inconnu)
+      await envoyer({ code: CODE, action: 'jeu', jeu: JEU, nom: ultAvant.nom, score: Math.round(ultAvant.score), photo: photoOk(ultAvant.photo) && ultAvant.photo.length < 48000 ? ultAvant.photo : '', genre: ultAvant.genre });
     if (mode === 'top' && r !== false) { if (ult) garderIntroUltime(r, liste, nom, genre, ultAvant); else garderIntro(r, liste, rang, nom, genre); }
     const ret = $('retour') || document.createElement('div');
     if (r === null) ret.innerHTML = `<div class="msg">📡 Hors ligne : ton score est gardé et sera envoyé dès que possible.</div>`;
     else if (!r.ok) { ret.innerHTML = `<div class="msg ko">Envoi refusé${r.erreur || r.error ? ' : ' + esc(r.erreur || r.error) : ''}.</div>`; btn.disabled = false; btn.textContent = 'Réessayer'; return; }
-    else if (ult) ret.innerHTML = `<div class="msg ok">💀 C’est fait : tu es ${genre === 'F' ? 'l’impératrice cachée' : 'l’empereur caché'} du château. Chut…</div>`;
+    else if (ult) ret.innerHTML = `<div class="msg ok">💀 C’est fait : tu es ${genre === 'F' ? 'l’impératrice cachée' : 'l’empereur caché'} du château. Chut…${ultAvant && !ultAvant.inconnu ? `<br><small>${esc(ultAvant.nom)} redescend sur le trône du roi.</small>` : ''}</div>`;
     else {
       const i = rangDe(nom, Math.round(score)) - 1;
       if (i === 0) ret.innerHTML = `<div class="msg ok">👑 C’est officiel : ${genre === 'F' ? 'tu es la nouvelle reine' : genre === 'H' ? 'tu es le nouveau roi' : 'tu es n°1'} !</div>`;

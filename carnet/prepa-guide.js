@@ -4,19 +4,21 @@
      sport et par année, à lire, imprimer ou lancer).
    - « ▶ Lancer la prépa » à gauche de 🎤 Dicter (feuille d'un cours de l'agenda, et « Ce cours » à l'appel) : plein écran,
      mise en place et matériel, puis chaque exercice avec son minuteur, son schéma, la réussite et la variante.
-   - Temps de cours (Kevin) : 1 h = 50 min dont 7 min de vestiaires avant et après → 36 min ; 2 h → 86 min ;
+   - Temps de cours (Kevin, 26/10) : 1 h = 50 min dont 7 min de vestiaires au début → 43 min ; 2 h → 86 min (7 min avant et après) ;
      piscine : bus + vestiaires, 40 min dans l'eau sur 2 h (20 min sur 1 h). Les minutes de la bibliothèque sont adaptées
      à ce temps (prépa choisie pour un cours, bibliothèque, guide) : échauffement et retour au calme bougent peu, le corps de
      leçon prend le reste. */
 (() => {
   const LS = (k, v) => { const ls = window.DEMO_LS || localStorage; try { if (v === undefined) return ls.getItem(k); ls.setItem(k, v); } catch(e){ return null; } };
   const SANS = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-  const VEST = 7;
+  const PM = window.prepaMoteur, VEST = PM.VEST;
   const plPool = (id, sp, type) => type === 'piscine' || /^(natation|natdeb)$/.test(id || '') || /natation|piscine|nage/i.test(sp || '');
   // minutes de cours réelles (sans vestiaires ni bus) pour n heures
-  const plMin = (n, pool) => pool ? (n >= 2 ? 40 : 20) : 50 * Math.max(1, n) - 2 * VEST;
-  const plAutour = (n, pool) => pool ? Math.round((50 * Math.max(1, n) - plMin(n, pool)) / 2) : VEST;
-  const plDureeTxt = (n, pool) => pool ? `${n >= 2 ? '2 h' : '1 h'} de piscine : ${plMin(n, pool)} min dans l'eau (bus et vestiaires compris dans le reste)` : `${n >= 2 ? '2 h (2 × 50 min)' : '1 h (50 min)'} : ${plMin(n, pool)} min de cours, ${VEST} min de vestiaires avant et après`;
+  const plMin = PM.plMin;
+  // vestiaires (ou bus) au début et à la fin : en 1 h, seulement au début
+  const plAutour = (n, pool) => pool ? Math.round((100 - plMin(2, pool)) / 2) : VEST;   // natation : toujours 2 h
+  const plApres = (n, pool) => pool || n >= 2 ? plAutour(n, pool) : 0;
+  const plDureeTxt = (n, pool) => pool ? `2 h de piscine : ${plMin(2, pool)} min dans l'eau (bus et vestiaires compris dans le reste)` : n >= 2 ? `2 h (2 × 50 min) : ${plMin(n)} min de cours, ${VEST} min de vestiaires avant et après` : `1 h (50 min) : ${plMin(n)} min de cours, ${VEST} min de vestiaires au début`;
 
   /* --- adapter les minutes d'une leçon (items [nom, min, …]) au temps du cours --- */
   function plScale(ph, T){
@@ -39,17 +41,8 @@
     const s = plScale(r.l, T);
     return {...o, e: ppLines(s.e), c: ppLines(s.c, true), r: ppLines(s.r), d: [ppMin(s.e), ppMin(s.c), ppMin(s.r)], dur: T};
   }
-  // dans la feuille « Prépa » d'un cours, la leçon choisie est mise au temps de ce cours
-  let PL_CTX = null;
-  prepaFromLib = function(id, an, n){ const T = PL_CTX && $('sheetroot').dataset.title === PL_CTX.title ? PL_CTX.T : 0; return plFromLib(id, an, n, T); };
-  const openPrepa0 = openPrepa;
-  openPrepa = function(date, slotId, ids){
-    const it = agItems(wdOf(date)).find(x => x.id === slotId);
-    if (it){ const n = it.b - it.a + 1, st = agState(date, it), pool = plPool('', st.g.s, st.type);
-      PL_CTX = {title: `Prépa · ${fmtD(date)} · ${slotLabel(it)}`, T: plMin(n, pool), n, pool}; }
-    openPrepa0.apply(this, arguments);
-    if (it && PL_CTX && $('pp-llist')) $('pp-llist').insertAdjacentHTML('beforebegin', `<p class="small muted" style="margin:0">⏱ ${esc(plDureeTxt(PL_CTX.n, PL_CTX.pool))} : les minutes de la leçon choisie sont adaptées.</p>`);
-  };
+  // la leçon choisie est mise à la durée choisie (barre Durée · Salle · Élèves) ; la prépa garde ce choix (pp.ctx)
+  prepaFromLib = function(id, an, n){ const c = PM.ctx(), o = plFromLib(id, an, n, plMin(c.h, plPool(id))); if (o) o.ctx = c; return o; };
 
   /* --- étapes du guide à partir d'une prépa (le texte gardé, modifié ou non) --- */
   function plParse(txt, minPh, lib, ph, kSch){
@@ -88,12 +81,12 @@
 
   function plGuide(pp, ctx){
     prepaLoad([String(pp.ref || '').split('|')[0]].filter(Boolean)).then(() => {
-      const n = ctx.n || 1, pool = plPool(String(pp.ref || '').split('|')[0], pp.sp || ctx.sp, ctx.type), T = plMin(n, pool), av = plAutour(n, pool);
+      const n = (pp.ctx && pp.ctx.h) || ctx.n || 1, pool = plPool(String(pp.ref || '').split('|')[0], pp.sp || ctx.sp, ctx.type), T = plMin(n, pool), av = plAutour(n, pool), ap = plApres(n, pool);
       const ex = plEtapes(pp, T);
       const steps = [{ph: 'Avant le cours', n: 'Mise en place', m: 0, prep: true},
         {ph: 'Début', n: pool ? 'Bus et vestiaires' : 'Vestiaires', m: av, t: pool ? 'Trajet, passage aux vestiaires, douche. Appel au bord du bassin.' : 'Les élèves se changent. Profites-en pour finir la mise en place et faire l\'appel.'},
         ...ex,
-        {ph: 'Fin', n: pool ? 'Vestiaires et bus' : 'Vestiaires', m: av, t: 'Retour aux vestiaires. Rangement du matériel avec quelques élèves.'},
+        ...(ap ? [{ph: 'Fin', n: pool ? 'Vestiaires et bus' : 'Vestiaires', m: ap, t: 'Retour aux vestiaires. Rangement du matériel avec quelques élèves.'}] : []),
         {ph: 'Après le cours', n: 'Leçon terminée', m: 0, fin: true}];
       G = {pp, ctx, steps, k: 0, run: false, left: 0, end: 0, T, n, pool};
       plDraw();
@@ -126,7 +119,7 @@
       const ex = steps.filter(x => x.m && !/^(Début|Fin)$/.test(x.ph));
       body = `<h2>Mise en place</h2><p class="plg-sub">${esc(plDureeTxt(G.n, G.pool))}.</p>
         ${pp.o ? `<div class="plg-box"><b>Objectif</b><p>${esc(pp.o)}</p></div>` : ''}
-        <div class="plg-box"><b>🧺 Matériel à sortir</b><p>${esc(pp.mat || 'Pas noté dans la prépa.')}</p></div>
+        <div class="plg-box"><b>🧺 Matériel et mise en place</b><p>${esc(pp.mat || 'Pas noté dans la prépa.').replace(/\n/g, '<br>')}</p></div>
         <div class="plg-box"><b>⏱ Déroulé</b><ol class="plg-plan">${steps.filter(x => x.m).map(x => `<li><span>${esc(x.n)}</span><em>${x.m} min</em></li>`).join('')}</ol></div>
         <div class="plg-schs">${ex.map(x => sch(x.sch, x.n)).join('')}</div>
         <div class="plg-btns"><button class="btn pri" type="button" id="plg-start">▶ Démarrer le cours</button>${G.ctx.change ? '<button class="btn" type="button" id="plg-chg">Changer de leçon</button>' : ''}</div>`;
@@ -161,23 +154,26 @@
   function plChoisir(ctx){
     const cat0 = prepaCatOf(ctx.sp || '');
     let [id, hn] = prepaVal(cat0 && PREPA_PRETS.includes(cat0[0]) && cat0[0] !== 'hiver' ? cat0[0] : (LS('carnet-pl-sp') || '')), an = ctx.an || 1;
-    const T = () => plMin(ctx.n, plPool(id, ctx.sp, ctx.type));
+    const T = () => plMin(PM.ctx().h, plPool(id, ctx.sp, ctx.type));
+    PM.setCtx({h: ctx.n >= 2 ? 2 : 1, n: ctx.nEl || PM.ctx().n, sl: ctx.slot ? PM.salleDe(ctx.slot) : PM.ctx().sl});
     openSheet('Lancer la prépa', `<p class="small muted" style="margin:0">Pas encore de prépa pour ce cours. Choisis une leçon de la bibliothèque : elle est enregistrée pour ce cours et le guide démarre.</p>
       <div class="row2"><label class="f" style="flex:2 1 150px">Sport<select class="inp" id="plc-sp"><option value="">— Choisir —</option>${prepaOpts(hn ? 'hiver:' + hn : id)}</select></label>
       <label class="f" id="plc-anw" style="flex:1 1 110px">Année<select class="inp" id="plc-an">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}" ${a === an ? 'selected' : ''}>${AN_TXT(a)}</option>`).join('')}</select></label></div>
+      ${PM.bar('plc-x')}
       <div id="plc-l"></div>`);
     const draw = () => { const box = $('plc-l'); $('plc-anw').style.display = PREPA_DIVERS.includes(id) ? 'none' : '';
       if (!id){ box.innerHTML = '<span class="small muted">Choisis un sport.</span>'; return; }
       if (!PREPA_LIB[id]){ box.innerHTML = '<span class="small muted">Chargement…</span>'; prepaLoad([id]).then(() => PREPA_LIB[id] ? draw() : box.innerHTML = '<span class="small">Pas de connexion : la bibliothèque n\'a pas pu se charger.</span>'); return; }
       const a = id === 'hiver' ? 0 : PREPA_DIVERS.includes(id) ? 1 : an, A = PREPA_LIB[id].an[a]; if (!A){ box.innerHTML = '<span class="small muted">Pas de séquence pour cette année.</span>'; return; }
       const su = id === 'hiver' ? null : prepaSuite(ctx.ids || [], id, a, ctx.date || today()), nx = su ? Math.min(A.l.length, su.n + 1) : 1;
-      box.innerHTML = `<p class="small" style="margin:0">⏱ ${esc(plDureeTxt(ctx.n, plPool(id, ctx.sp, ctx.type)))}.</p>
-        ${id === 'hiver' ? '' : `<button class="btn pri block" type="button" data-plc="${nx}">▶ ${su ? 'Leçon suivante' : 'Leçon 1'} : L${nx} · ${esc(A.l[nx - 1].t)}</button>`}
+      PM.majBar('plc-x', {pool: plPool(id), jeux: PM.estJeux(id), lieu: PM.lieuDe(id)});
+      box.innerHTML = `${id === 'hiver' ? '' : `<button class="btn pri block" type="button" data-plc="${nx}">▶ ${su ? 'Leçon suivante' : 'Leçon 1'} : L${nx} · ${esc(A.l[nx - 1].t)}</button>`}
         <div class="pp-ll">${A.l.map((l, i) => hn && i + 1 !== hn ? '' : `<button type="button" class="pp-lb${l.crit ? ' ev' : ''}" data-plc="${i + 1}"><b>${id === 'hiver' ? '' : 'L' + (i + 1)}</b><span>${l.crit ? '🎯 ' : ''}${esc(l.t)}</span>${su && su.faites.has(i + 1) ? '<i>✓ faite</i>' : ''}</button>`).join('')}</div>`;
       box.querySelectorAll('[data-plc]').forEach(b => b.onclick = () => { const pp = plFromLib(id, a, +b.dataset.plc, T()); if (!pp) return; if (id === 'hiver') pp.an = an;
         if (ctx.save){ ctx.save(pp); toast('Prépa enregistrée pour ce cours'); } closeSheet(); plGuide(pp, ctx); }); };
     $('plc-sp').onchange = e => { [id, hn] = prepaVal(e.target.value); LS('carnet-pl-sp', e.target.value); draw(); };
     $('plc-an').onchange = e => { an = +e.target.value; draw(); };
+    PM.bind('plc-x', () => { if (ctx.slot) PM.salleDe(ctx.slot, PM.ctx().sl); });
     draw();
   }
   function plLancer(ctx){ const pp = ctx.get(); ctx.change = () => plChoisir(ctx); if (pp && (pp.e || pp.c || pp.r)) plGuide(pp, ctx); else plChoisir(ctx); }
@@ -191,7 +187,7 @@
     const b = document.querySelector('[data-plgo="ags-note"]'), it = agItems(wdOf(date)).find(x => x.id === sid); if (!b || !it) return;
     b.onclick = () => { closeSheet();
       const st = agState(date, it), g = agGet(date, it), ids = it.cls;
-      plLancer({date, ids, n: it.b - it.a + 1, type: st.type, sp: g.s, an: ids.map(clsById).map(progYear).find(Boolean) || 1,
+      plLancer({date, ids, slot: it.id, nEl: ids.map(clsById).filter(Boolean).reduce((a, c) => a + c.pupils.length, 0), n: it.b - it.a + 1, type: st.type, sp: g.s, an: ids.map(clsById).map(progYear).find(Boolean) || 1,
         get: () => agGet(date, it).pp, save: pp => { const g2 = agGet(date, it); agSet(date, it, ids, g2.s, ppNote(g2.n, g2.pp, pp), g2.p, pp); }}); };
   };
   const bindAgRoll0 = bindAgRoll;
@@ -201,7 +197,7 @@
     b.onclick = () => {
       const l0 = Ls.find(Boolean) || {}, date = l0.date || today(), it = l0.h ? agItems(wdOf(date)).find(x => x.h === l0.h && cls.some(c => x.cls.includes(c.id))) : null;
       const sp = ($('rc-sp') && $('rc-sp').value) || l0.sport || '';
-      plLancer({date, ids: cls.map(c => c.id), n: it ? it.b - it.a + 1 : (l0.h2 && l0.h2 !== l0.h ? hI(l0.h2) - hI(l0.h) + 1 : 1), type: l0.type, sp, an: cls.map(progYear).find(Boolean) || 1,
+      plLancer({date, ids: cls.map(c => c.id), slot: it ? it.id : '', nEl: cls.reduce((a, c) => a + c.pupils.length, 0), n: it ? it.b - it.a + 1 : (l0.h2 && l0.h2 !== l0.h ? hI(l0.h2) - hI(l0.h) + 1 : 1), type: l0.type, sp, an: cls.map(progYear).find(Boolean) || 1,
         get: () => (Ls.find(l => l && l.prepa) || {}).prepa || (it ? agGet(date, it).pp : null),
         save: pp => { cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; const n = ppNote(l.note, l.prepa, pp); if (n) l.note = n; else delete l.note; l.prepa = JSON.parse(JSON.stringify(pp)); save(c.id); }); }}); };
   };
@@ -216,15 +212,14 @@
     if (h) h.textContent = 'Préparations'; $('sheetroot').dataset.title = 'Préparations';
     sb.insertAdjacentHTML('afterbegin', seg('mine')); bindSeg();
   };
-  const B = {id: LS('carnet-plb-sp') || 'basket', an: +(LS('carnet-plb-an') || 1), h: +(LS('carnet-plb-h') || 1), n: 0};
+  const B = {id: LS('carnet-plb-sp') || 'basket', an: +(LS('carnet-plb-an') || 1), n: 0};
   function plBiblio(){
-    const [id, hn] = prepaVal(B.id); if (hn) B.n = hn; const dv = PREPA_DIVERS.includes(id), a = id === 'hiver' ? 0 : dv ? 1 : B.an, pool = plPool(id), T = plMin(B.h, pool), L = PREPA_LIB[id], A = L && L.an[a];
+    const [id, hn] = prepaVal(B.id); if (hn) B.n = hn; const dv = PREPA_DIVERS.includes(id), a = id === 'hiver' ? 0 : dv ? 1 : B.an, pool = plPool(id), T = plMin(PM.ctx().h, pool), L = PREPA_LIB[id], A = L && L.an[a];
     const top = `${seg('lib')}
       <p class="small muted" style="margin:0">Toutes les leçons de la bibliothèque, par sport et par année : lis-les, imprime-les ou lance-les en mode guidé. Pour les mettre dans un cours, passe par l'agenda (📋 dans le cours).</p>
       <div class="row2"><label class="f" style="flex:2 1 150px">Sport<select class="inp" id="plb-sp">${prepaOpts(hn ? B.id : id)}</select></label>
       <label class="f" style="flex:1 1 110px${dv ? ';display:none' : ''}">Année<select class="inp" id="plb-an">${[1, 2, 3, 4, 5, 6].map(x => `<option value="${x}" ${x === B.an ? 'selected' : ''}>${AN_TXT(x)} secondaire</option>`).join('')}</select></label></div>
-      <div class="seg" role="group" aria-label="Durée du cours">${[1, 2].map(h => `<button type="button" data-plbh="${h}" aria-pressed="${B.h === h}">${h === 1 ? '1 heure' : '2 heures'}</button>`).join('')}</div>
-      <p class="small" style="margin:0">⏱ ${esc(plDureeTxt(B.h, pool))}.</p>`;
+      ${PM.bar('plb-x', {pool, jeux: !L || PM.estJeux(id), lieu: PM.lieuDe(id)})}`;
     let body = '';
     if (!L) body = '<span class="small muted" id="plb-load">Chargement…</span>';
     else if (!A) body = '<span class="small muted">Pas encore de séquence pour cette année.</span>';
@@ -237,7 +232,7 @@
     bindSeg();
     $('plb-sp').onchange = e => { B.id = e.target.value; B.n = 0; LS('carnet-plb-sp', B.id); plBiblio(); };
     if ($('plb-an')) $('plb-an').onchange = e => { B.an = +e.target.value; B.n = 0; LS('carnet-plb-an', String(B.an)); plBiblio(); };
-    document.querySelectorAll('[data-plbh]').forEach(b => b.onclick = () => { B.h = +b.dataset.plbh; LS('carnet-plb-h', String(B.h)); plBiblio(); });
+    PM.bind('plb-x', () => { const sb = document.querySelector('.sheet .sb'), y = sb ? sb.scrollTop : 0; plBiblio(); const sb2 = document.querySelector('.sheet .sb'); if (sb2) sb2.scrollTop = y; }, {pool, jeux: !L || PM.estJeux(id), lieu: PM.lieuDe(id)});
     if (!L){ prepaLoad([id]).then(() => { if (PREPA_LIB[id]) plBiblio(); else if ($('plb-load')) $('plb-load').textContent = 'Pas de connexion : la bibliothèque n\'a pas pu se charger.'; }); return; }
     if (!A) return;
     document.querySelectorAll('[data-plbl]').forEach(b => b.onclick = () => { B.n = +b.dataset.plbl; plBiblio(); document.querySelector('.sheet .sb').scrollTop = 0; });
@@ -245,16 +240,16 @@
     if ($('plb-seq')) $('plb-seq').onclick = () => prepaPrint(A.l.map((l, i) => ({date: '', h: '', cls: [], pp: plFromLib(id, a, i + 1, T), prog: null})), titre);
     if ($('plb-back')) $('plb-back').onclick = () => { B.n = 0; plBiblio(); };
     if ($('plb-prt')) $('plb-prt').onclick = () => prepaPrint([{date: '', h: '', cls: [], pp: plFromLib(id, a, B.n, T), prog: null}], `${titre} · leçon ${B.n}`);
-    if ($('plb-go')) $('plb-go').onclick = () => { const pp = plFromLib(id, a, B.n, T); plGuide(pp, {n: B.h, sp: L.sport, get: () => pp}); };
+    if ($('plb-go')) $('plb-go').onclick = () => { const pp = plFromLib(id, a, B.n, T); plGuide(pp, {n: PM.ctx().h, sp: L.sport, get: () => pp}); };
     if ($('plb-prev')) $('plb-prev').onclick = () => { B.n--; plBiblio(); document.querySelector('.sheet .sb').scrollTop = 0; };
     if ($('plb-next')) $('plb-next').onclick = () => { B.n++; plBiblio(); document.querySelector('.sheet .sb').scrollTop = 0; };
   }
   function plLecon(id, a, n, T, seul){
     const r = prepaRef(`${id}|${a}|${n}`), l = r.l, s = plScale(l, T), A = r.A;
     const ph = (nom, items, k) => items.length ? `<div class="card plb-ph"><h3>${nom} <small>${ppMin(items)} min</small></h3>${items.map(x => { const z = x[k === 'c' ? 5 : 3];
-      return `<div class="plb-it"><b>${esc(x[0])}</b> <span class="tag">${x[1]} min</span><p>${esc(x[2] || '')}</p>${k === 'c' && x[3] ? `<p class="small"><b>✓ Réussite :</b> ${esc(x[3])}</p>` : ''}${k === 'c' && x[4] ? `<p class="small"><b>↻ Variante :</b> ${esc(x[4])}</p>` : ''}${z && window.PSCH ? `<div class="pp-schs">${PSCH(z, esc(x[0]))}</div>` : ''}</div>`; }).join('')}</div>` : '';
+      return `<div class="plb-it"><b>${esc(x[0])}</b> <span class="tag">${x[1]} min</span><p>${esc(x[2] || '').replace(/\n\s*/g, '<br>')}</p>${k === 'c' && x[3] ? `<p class="small"><b>✓ Réussite :</b> ${esc(x[3])}</p>` : ''}${k === 'c' && x[4] ? `<p class="small"><b>↻ Variante :</b> ${esc(x[4])}</p>` : ''}${z && window.PSCH ? `<div class="pp-schs">${PSCH(z, esc(x[0]))}</div>` : ''}</div>`; }).join('')}</div>` : '';
     return `${seul ? '' : `<div class="row2"><button class="btn" type="button" id="plb-back">‹ Toutes les leçons</button>${n > 1 ? '<button class="btn" type="button" id="plb-prev">‹ L' + (n - 1) + '</button>' : ''}${n < A.l.length ? '<button class="btn" type="button" id="plb-next">L' + (n + 1) + ' ›</button>' : ''}</div>`}
-      <div class="card"><span class="small muted">${id === 'hiver' ? 'Sport divers · une leçon' : `Leçon ${n}/${A.l.length}`}</span><h3 style="margin:2px 0">${l.crit ? '🎯 ' : ''}${esc(l.t)}</h3>${l.o ? `<p style="margin:4px 0"><b>Objectif :</b> ${esc(l.o)}</p>` : ''}<p class="small" style="margin:4px 0 0"><b>Matériel :</b> ${esc(l.mat || A.mat || r.L.mat || '')}</p></div>
+      <div class="card"><span class="small muted">${id === 'hiver' ? 'Sport divers · une leçon' : `Leçon ${n}/${A.l.length}`}</span><h3 style="margin:2px 0">${l.crit ? '🎯 ' : ''}${esc(l.t)}</h3>${l.o ? `<p style="margin:4px 0"><b>Objectif :</b> ${esc(l.o)}</p>` : ''}<p class="small" style="margin:4px 0 0"><b>Matériel${l.jeux ? ' et mise en place' : ''} :</b> ${esc(l.mat || A.mat || r.L.mat || '').replace(/\n/g, '<br>')}</p></div>
       <div class="row2"><button class="btn pri" type="button" id="plb-go">▶ Lancer en mode guidé</button><button class="btn" type="button" id="plb-prt">🖨 Imprimer cette leçon</button></div>
       ${ph('Échauffement', s.e, 'e')}${ph(l.crit ? 'Évaluation' : 'Corps de leçon', s.c, 'c')}${ph('Retour au calme', s.r, 'r')}
       ${l.crit ? `<div class="card"><h3>Grille d'évaluation</h3>${l.crit.map(([c, p, i]) => `<p class="small" style="margin:4px 0"><b>${esc(c)}</b> · ${fr(p, 2)} pt${p > 1 ? 's' : ''}${i ? ' · ' + esc(i) : ''}</p>`).join('')}</div>` : ''}`;

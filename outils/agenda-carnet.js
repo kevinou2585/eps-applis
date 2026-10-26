@@ -587,11 +587,16 @@ function openPrepa(date, slotId, ids, dansAppel){
   const cat0 = prepaCatOf(pp.sp || g.s || agPlanned(date, it)) || (lastPp && !g.s ? prepaCatOf(lastPp.pp.sp) : null);
   let libId = cat0 && PREPA_PRETS.includes(cat0[0]) ? cat0[0] : '', libAn = pp.an || an0;
   const title = `Prépa · ${fmtD(date)} · ${slotLabel(it)}`;
+  /* durée, salle et nombre d'élèves (prepa-moteur.js) : ceux de la prépa enregistrée, sinon le cours, la salle de ce créneau et l'effectif */
+  const PM = window.prepaMoteur, nEl = cls.reduce((a, c) => a + c.pupils.length, 0);
+  if (PM) PM.setCtx(g.pp && g.pp.ctx || {h: it.b - it.a + 1 >= 2 ? 2 : 1, n: nEl || PM.ctx().n, sl: PM.salleDe(slotId)});
+  let lastFill = g.pp && g.pp.ref ? {e: g.pp.e, c: g.pp.c, r: g.pp.r, mat: g.pp.mat} : null;
   openSheet(title, `
     <div class="card ag-sum"><b class="ag-who">${esc(clsName(ids))}</b><span class="small muted">${esc(fmtDL(date))} · ${esc(slotLabel(it))} · ${esc(slotTime(it))}${g.s ? ' · ' + esc(g.s) : ''}</span></div>
     <div class="card sec pp-lib"><h3>📚 Prépa toute faite</h3>
       <div class="row2"><label class="f" style="flex:1 1 150px">Sport<select class="inp" id="pp-lsp"><option value="">— Choisir —</option>${prepaOpts(libId === 'hiver' && /^hiver\|0\|\d+$/.test(pp.ref || '') ? 'hiver:' + pp.ref.split('|')[2] : libId)}</select></label>
       <label class="f" id="pp-lanw" style="flex:1 1 110px">Année<select class="inp" id="pp-lan">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}" ${a === libAn ? 'selected' : ''}>${AN_TXT(a)} secondaire</option>`).join('')}</select></label></div>
+      ${PM ? PM.bar('pp-x') : ''}
       <div id="pp-llist"><span class="small muted">Choisis un sport : ses leçons apparaissent ici.</span></div></div>
     <div class="card sec"><h3>En-tête</h3>
       <div class="row2"><label class="f" style="flex:2 1 180px">Sport / activité<input class="inp" id="pp-sp" value="${esc(pp.sp)}"></label>
@@ -620,12 +625,13 @@ function openPrepa(date, slotId, ids, dansAppel){
   const pcs = $('pp-pcs');
   pcs.onclick = e => { const b = e.target.closest('[data-pc]'); if (!b) return; const k = b.dataset.pc;
     comp = comp.includes(k) ? comp.filter(x => x !== k) : PROG_CODES.filter(x => x === k || comp.includes(x)); pcs.innerHTML = progChips(comp); };
-  const fill = (id, an, n) => {
+  const fill = (id, an, n, adapte) => {
     const o = prepaFromLib(id, an, n); if (!o) return;
-    const go = () => { const keepBil = F('bil').value; pp = {...o, bil: keepBil};
+    const go = () => { const keepBil = F('bil').value; pp = {...o, bil: keepBil}; lastFill = {e: pp.e, c: pp.c, r: pp.r, mat: pp.mat};
       ['sp', 't', 'o', 'mat', 'e', 'c', 'r'].forEach(k => F(k).value = pp[k]); F('an').value = id === 'hiver' ? (+F('an').value || an0) : an; F('n').value = pp.n || '';
       if (id === 'hiver') pp.an = +F('an').value;
       [0, 1, 2].forEach(i => $('pp-d' + i).value = pp.d[i] || ''); comp = [...pp.comp]; pcs.innerHTML = progChips(comp); drawSch(); drawList(); grow(); snap();
+      if (adapte){ toast('Prépa adaptée à la durée, à la salle et aux élèves'); return; }
       toast(`${prepaCourt(pp)} : prépa remplie, tu peux la modifier`); F('t').scrollIntoView({behavior: 'smooth', block: 'center'}); };
     const cur = read(); if (empty(cur) || cur.ref === o.ref){ go(); return; }
     $('pp-llist').insertAdjacentHTML('afterbegin', `<div class="confirm" id="pp-repl"><b>Remplacer ce qui est déjà écrit par « ${esc(o.t)} » ?</b><div class="row2"><button class="btn" type="button" id="pp-rno">Garder</button><button class="btn pri" type="button" id="pp-ryes">Remplacer</button></div></div>`);
@@ -634,6 +640,7 @@ function openPrepa(date, slotId, ids, dansAppel){
     const box = $('pp-llist'), L = PREPA_LIB[libId]; $('pp-lanw').hidden = PREPA_DIVERS.includes(libId);
     if (!libId){ box.innerHTML = '<span class="small muted">Choisis un sport : ses leçons apparaissent ici.</span>'; return; }
     if (!L){ box.innerHTML = '<span class="small muted">Chargement…</span>'; prepaLoad([libId]).then(() => { if (PREPA_LIB[libId]) drawList(); else box.innerHTML = '<span class="small">Pas de connexion : la bibliothèque n\'a pas pu se charger.</span>'; }); return; }
+    if (PM) PM.majBar('pp-x', {pool: /^nat/.test(libId), jeux: PM.estJeux(libId), lieu: PM.lieuDe(libId)});
     if (libId === 'hiver'){
       const J = L.an[0].l, hn = prepaVal($('pp-lsp').value)[1] || +(/^hiver\|0\|(\d+)$/.exec(pp.ref || '') || [])[1] || 0;
       if (hn && J[hn - 1]){ box.innerHTML = `<div class="pp-hl"><button type="button" class="pp-lb${pp.ref === `hiver|0|${hn}` ? ' on' : ''}" data-pl="${hn}"><b>${esc(J[hn - 1].t)}</b><span>${esc(J[hn - 1].tags || '')} · une leçon</span></button></div>`; box.querySelector('[data-pl]').onclick = () => fill('hiver', 0, hn); return; }
@@ -657,6 +664,9 @@ function openPrepa(date, slotId, ids, dansAppel){
   setTimeout(() => { snap(); grow(); });
   $('pp-lsp').onchange = e => { const [k, hn] = prepaVal(e.target.value); libId = k; drawList(); if (hn && PREPA_LIB.hiver) fill('hiver', 0, hn); };
   $('pp-lan').onchange = e => { libAn = +e.target.value; drawList(); };
+  // autre durée, salle ou effectif : la leçon de la bibliothèque est réécrite, sauf si le texte a été retouché
+  if (PM) PM.bind('pp-x', () => { PM.salleDe(slotId, PM.ctx().sl); const r = prepaRef(pp.ref), cur = read(); if (libId) drawList();
+    if (r && lastFill && ['e', 'c', 'r', 'mat'].every(k => cur[k] === lastFill[k])) fill(r.id, r.an, r.n, true); });
   prepaLoad(libId ? [libId] : []).then(() => { drawList(); drawSch(); });
   if (pp.ref) prepaLoad([pp.ref.split('|')[0]]).then(drawSch);
   const saveIt = given => {

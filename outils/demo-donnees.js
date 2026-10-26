@@ -7,7 +7,7 @@
 const fs = require('fs'), path = require('path'), {chromium} = require('playwright');
 const RACINE = path.resolve(__dirname, '..'), SORTIE = path.join(RACINE, 'demo-carnet/donnees.js');
 const URL = process.env.DEMO_URL || 'http://localhost:8765/demo-carnet/';
-const VERSION = 'demo-2027-06-15-a';
+const VERSION = 'demo-2027-06-15-b';
 
 function remplir(){
   /* ---------- tirages au sort reproductibles ---------- */
@@ -151,6 +151,19 @@ function remplir(){
   ['1E', '1F'].forEach((n, j) => { const c = byName[n], L = c.lessons.find(l => l.date === TODAY), prev = c.lessons.filter(l => l.type === 'piscine' && l.date < TODAY).sort((a, b) => a.date < b.date ? 1 : -1)[0];
     if (!L || !prev) return; const ps = c.pupils.filter(p => !certOn(p, TODAY, 'piscine'));
     const a = ps[2 + j], b = ps[7 + j]; L.m[a.id] = {rg: 1}; prev.m[a.id] = {rg: 1}; L.m[b.id] = {rg: 1}; delete prev.m[b.id]; });
+
+  /* ---------- travaux à rendre (carnet/travail.js) ---------- */
+  // donnés au cours précédent : rappel aujourd'hui (1E + 1F) ; dans les autres classes, un travail remis et un zéro (−1 tenue)
+  ['1E', '1F'].forEach((n, j) => { const c = byName[n], prev = c.lessons.filter(l => l.date <= addDays(TODAY, -7)).sort((a, b) => rgKey(a) < rgKey(b) ? 1 : -1)[0]; if (!prev) return;
+    c.pupils.filter(p => !certOn(p, prev.date)).slice(4 + j, 6 + j).forEach(p => { const m = prev.m[p.id] || (prev.m[p.id] = {}); m.k = 1; m.tr = 1; (c.trav = c.trav || {})[p.id] = {l: prev.id, d: prev.date, due: addDays(prev.date, 7)}; }); });
+  S.classes.filter(c => !['1E', '1F'].includes(c.name)).forEach(c => {
+    const ls = c.lessons.filter(l => l.date < TODAY).sort((a, b) => rgKey(a) < rgKey(b) ? -1 : 1), k = ls.length - 3; if (k < 2) return;
+    const [g1, r1] = [ls[k - 2], ls[k - 1]], [g2, r2] = [ls[k], ls[k + 1]], ps = melange(c.pupils.filter(p => !(p.certs || []).length));
+    const donne = (L, p) => { const m = L.m[p.id] || (L.m[p.id] = {}); if (!m.a && !m.k) m.k = 1; m.tr = 1; };
+    donne(g1, ps[0]); (r1.m[ps[0].id] = r1.m[ps[0].id] || {}).trOk = {d: g1.date, l: g1.id};
+    donne(g2, ps[1]); (r2.m[ps[1].id] = r2.m[ps[1].id] || {}).tz = {d: g2.date, l: g2.id};
+    const L = ls[ls.length - 1]; donne(L, ps[2]); (c.trav = c.trav || {})[ps[2].id] = {l: L.id, d: L.date, due: addDays(L.date, 7)};
+  });
 
   /* ---------- évaluations ---------- */
   const presentA = (c, p, date) => { const L = c.lessons.find(l => l.date === date); return L ? effA(p, L) : 'P'; };

@@ -875,13 +875,15 @@ function compute(c, p){
   ls.forEach(l => c.pupils.forEach(pu => {
     const r = res[pu.id], m = l.m[pu.id] || {};
     const a = effA(pu, l);
-    if (a === 'A'){ r.abs++; return; }
-    r.n++; if (a === 'R') r.late++; if (a === 'D') r.disp++;
     const f = [];
-    if (m.k){ r.kit++; for (let i = 0; i < stN('kitPts'); i++) f.push(['t', l.type === 'piscine' ? 'Pas ses affaires de piscine' : 'Pas sa tenue', 'k']); }
-    if (m.np){ r.np++; if (st.npCounts) for (let i = 0; i < stN('npPts'); i++) f.push(['t', 'Ne participe pas à la piscine', 'np']); }
-    if (m.x){ r.x++; for (let i = 0; i < (+st.X || 0); i++) f.push(['c', 'Exclu du cours', 'x']); }
-    else if (m.d){ r.d++; for (let i = 0; i < stN('dPts'); i++) f.push(['c', 'Perturbe le cours', 'd']); }
+    // travail non remis (carnet/travail.js) : −1 tenue, même si l'élève est absent ce jour-là
+    if (m.tz){ r.tz = (r.tz || 0) + 1; f.push(['t', 'Travail non remis', 'tz']); }
+    if (a === 'A') r.abs++;
+    else { r.n++; if (a === 'R') r.late++; if (a === 'D') r.disp++; }
+    if (a !== 'A' && m.k){ r.kit++; for (let i = 0; i < stN('kitPts'); i++) f.push(['t', l.type === 'piscine' ? 'Pas ses affaires de piscine' : 'Pas sa tenue', 'k']); }
+    if (a !== 'A' && m.np){ r.np++; if (st.npCounts) for (let i = 0; i < stN('npPts'); i++) f.push(['t', 'Ne participe pas à la piscine', 'np']); }
+    if (a !== 'A' && m.x){ r.x++; for (let i = 0; i < (+st.X || 0); i++) f.push(['c', 'Exclu du cours', 'x']); }
+    else if (a !== 'A' && m.d){ r.d++; for (let i = 0; i < stN('dPts'); i++) f.push(['c', 'Perturbe le cours', 'd']); }
     f.forEach(([col, label, key]) => {
       let hit = col;
       const sp = stB('spill');
@@ -1238,7 +1240,7 @@ function renderToday(m){
         return (cls.length > 1 ? `<div class="lsub">${esc(c.name)} <span>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}</span></div>` : '') + pupilsOf(c).map(p => lessonRow(c, Ls[i], p, X[p.id], pool)).join(''); }).join('')}
     </div>
     <p class="legend">Présence : un toucher = absent, puis retard, puis dispensé, puis présent. Tenue (${pool ? 'maillot' : 't-shirt'}) : toucher = oubli (${regKitTxt()}). Pouce : 1er toucher = perturbe (−${fr(stN('dPts'), 2)} attitude), 2e = exclu du cours (−${S.settings.X} attitude), 3e = annuler. Toucher le nom pour le dossier de l'élève.</p>
-    ${agRollBox(Ls)}
+    ${agRollBox(Ls, cls)}
     ${pool ? poolRecap(cls.map((c, i) => [c, Ls[i]]), date) : ''}
     <button class="btn danger" type="button" id="l-del">Supprimer cet appel</button>
     <div id="l-delc"></div>
@@ -1251,6 +1253,7 @@ function renderToday(m){
     const b = e.target.closest('[data-act="rg"]') || e.target.closest('button'); if (!b) return;
     const row = b.closest('.prow'), pid = row.dataset.pid, i = cls.findIndex(c => c.id === row.dataset.cid), c = cls[i], L = Ls[i], p = c.pupils.find(x => x.id === pid);
     if (b.classList.contains('who')){ openPupil(c, pid); return; }
+    if (/^tr/.test(b.dataset.act || '') && typeof travAct === 'function'){ travAct(b.dataset.act, c, L, p); clean(L, pid); save(c.id); render(); return; }
     const mm = L.m[pid] || (L.m[pid] = {});
     const act = b.dataset.act;
     if (act === 'pres'){ const nx = {P: 'A', A: 'R', R: 'D', D: 'P'}[effA(p, L)], def = certOn(p, L.date, L.type) ? 'D' : 'P'; if (nx === def) delete mm.a; else mm.a = nx; if (mm.a === 'A' || mm.a === 'D'){ delete mm.k; delete mm.np; delete mm.rg; } }
@@ -1327,18 +1330,26 @@ function poolStay(pairs){
     }); });
   return out;
 }
+// absents de la leçon piscine (Kevin : ils sont aussi dans le message des éducateurs)
+function poolAbs(pairs){
+  const out = [];
+  pairs.forEach(([c, L]) => { if (!L || L.type !== 'piscine') return; pupilsOf(c).forEach(p => { if (effA(p, L) === 'A') out.push({c, p}); }); });
+  return out;
+}
 function poolMessage(pairs, date){
-  const st = poolStay(pairs), d = dOf(date), classes = pairs.map(([c]) => c.name).join(', ');
+  const st = poolStay(pairs), ab = poolAbs(pairs), d = dOf(date), classes = pairs.map(([c]) => c.name).join(', ');
   const work = S.settings.work ?? 'J\'ai laissé un travail à faire.';
   const when = `piscine du ${JOURSL[d.getDay()]} ${d.getDate()} ${MOISL[d.getMonth()]} (${classes})`;
-  if (!st.length) return `Bonjour, ${when} : tout le monde nage aujourd'hui, personne ne reste à l'école. Merci !`;
-  return `Bonjour, ${when}.\nCes élèves restent à l'école :\n` + st.map(x => `- ${x.p.n} (${x.c.name}) : ${x.why}`).join('\n') + (work.trim() ? '\n' + work.trim() : '') + '\nMerci !';
+  const abs = ab.length ? `\nAbsent${ab.length > 1 ? 's' : ''} :\n` + ab.map(x => `- ${x.p.n} (${x.c.name}) : absent`).join('\n') : '';
+  if (!st.length) return `Bonjour, ${when} : personne ne reste à l'école, tous les présents nagent.` + abs + '\nMerci !';
+  return `Bonjour, ${when}.\nCes élèves restent à l'école :\n` + st.map(x => `- ${x.p.n} (${x.c.name}) : ${x.why}`).join('\n') + (work.trim() ? '\n' + work.trim() : '') + abs + '\nMerci !';
 }
 function poolRecap(pairs, date){
-  const st = poolStay(pairs);
+  const st = poolStay(pairs), ab = poolAbs(pairs);
   return `<div class="card sec" style="padding-block:14px" id="pr">
     <h3>Restent à l'école (${st.length})</h3>
     ${st.length ? st.map(x => `<div class="evt"><span class="l"><b>${esc(x.p.n)}</b> <span class="small muted">${esc(x.c.name)}</span><br><span class="small">${esc(x.why)}</span></span></div>`).join('') : '<span class="small muted">Tout le monde nage.</span>'}
+    ${ab.length ? `<h3>Absents (${ab.length})</h3>` + ab.map(x => `<div class="evt"><span class="l"><b>${esc(x.p.n)}</b> <span class="small muted">${esc(x.c.name)}</span></span></div>`).join('') : ''}
     <label class="f">Travail laissé<input class="inp" id="pr-work" value="${esc(S.settings.work ?? 'J\'ai laissé un travail à faire.')}" placeholder="ex. J'ai laissé un questionnaire sur la natation à remplir."></label>
     <label class="f">Message pour le groupe des éducateurs<textarea class="inp" id="pr-msg" style="min-height:170px">${esc(poolMessage(pairs, date))}</textarea></label>
     <div class="row2"><button class="btn pri" type="button" id="pr-copy">Copier le message</button><a class="btn" id="pr-wa" href="https://wa.me/?text=${encodeURIComponent(poolMessage(pairs, date))}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">Ouvrir WhatsApp</a></div>
@@ -2331,21 +2342,53 @@ function openAgEdit(date, h, it){
 }
 
 /* --- Dans l'appel : sport + ce que j'ai fait --- */
-function agRollBox(Ls){
-  const f = Ls.find(l => l && (l.sport || l.note)) || {};
-  return `<div class="card sec" style="padding-block:14px" id="ag-rc"><h3>📝 Ce cours</h3>${sportField('rc', f.sport || '')}
+/* Sous l'appel : la même fenêtre « Ce cours » que dans l'agenda (Kevin, 26/10) : sport, prévu au planning, programme,
+   ce que j'ai fait (dictée), prépa et « Lancer la prépa ». Mêmes données (agGet / agSet) : l'agenda suit à la bonne date.
+   Appel hors horaire (sans heure ou pas dans la semaine type) : l'ancienne petite fiche (sport + ce que j'ai fait). */
+function agRollIt(Ls, cls){
+  const l0 = Ls.find(Boolean); if (!l0 || !l0.h || !cls) return null;
+  return agItems(wdOf(l0.date)).find(x => x.h === l0.h && cls.every(c => x.cls.includes(c.id))) || null;
+}
+function agRollBox(Ls, cls){
+  const it = agRollIt(Ls, cls);
+  if (!it){
+    const f = Ls.find(l => l && (l.sport || l.note)) || {};
+    return `<div class="card sec" style="padding-block:14px" id="ag-rc"><h3>📝 Ce cours</h3>${sportField('rc', f.sport || '')}
     <label class="f">Ce que j'ai fait<textarea class="inp" id="rc-note" rows="3" style="min-height:80px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(f.note || '')}</textarea></label>${micBtn('rc-note')}
     <span class="small muted" style="margin:0">Visible aussi dans l'onglet Agenda et le journal des leçons de la classe.</span></div>`;
+  }
+  const date = Ls.find(Boolean).date, g = agGet(date, it), pl = !g.s && agPlanned(date, it);
+  return `<div class="card sec" style="padding-block:14px" id="ag-rc"><h3>📝 Ce cours · ${esc(fmtD(date))}</h3>
+      ${sportField('rc', g.s)}
+      ${pl && pl !== 'Congé' ? `<button class="btn ag-plb" type="button" id="rc-plan">🗓 Prévu au planning : <b>${esc(pl)}</b> · choisir</button>` : ''}
+      ${progField('rc', g.p, it.cls)}
+      <label class="f">Ce que j'ai fait<textarea class="inp" id="rc-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>${micBtn('rc-note')}
+      <button class="btn block ag-ppb" type="button" id="rc-prepa">📋 ${g.pp ? `Prépa : ${esc(prepaCourt(g.pp))}` : 'Préparer cette leçon (échauffement, corps, retour au calme)'}</button>
+      <span class="small muted" style="margin:0">La même fiche que dans l'Agenda : ce que tu changes ici change aussi là-bas.</span></div>`;
 }
 function bindAgRoll(cls, Ls){
   if (!$('ag-rc')) return;
-  const put = (k, v) => cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; if (v) l[k] = v; else delete l[k]; save(c.id); });
-  bindSportField('rc', v => { put('sport', v); toast(v ? 'Sport : ' + v : 'Sport retiré'); });
-  const ta = $('rc-note'); let tm = null;
-  const keep = () => { clearTimeout(tm); tm = null; put('note', ta.value.trim()); };
+  const it = agRollIt(Ls, cls), ta = $('rc-note'); let tm = null;
+  if (!it){
+    const put = (k, v) => cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; if (v) l[k] = v; else delete l[k]; save(c.id); });
+    bindSportField('rc', v => { put('sport', v); toast(v ? 'Sport : ' + v : 'Sport retiré'); });
+    const keep = () => { clearTimeout(tm); tm = null; put('note', ta.value.trim()); };
+    ta.oninput = () => { clearTimeout(tm); tm = setTimeout(keep, 500); };
+    ta.onblur = () => { if (tm) keep(); };
+    bindMic('rc-note');
+    return;
+  }
+  const date = Ls.find(Boolean).date, ids = cls.map(c => c.id), g = agGet(date, it);
+  let cur = g.s, s0 = g.s, n0 = g.n, p0 = JSON.stringify(g.p || null);
+  const PF = bindProgField('rc', g.p, () => cur, () => keep());
+  const keep = () => { clearTimeout(tm); tm = null; const nv = ta.value.trim(), pv = JSON.stringify(PF.get());
+    if (cur === s0 && nv === n0 && pv === p0) return; agSet(date, it, ids, cur, nv, PF.get(), agGet(date, it).pp); s0 = cur; n0 = nv; p0 = pv; };
+  bindSportField('rc', v => { cur = v; PF.sport(v); keep(); if ($('rc-plan')) $('rc-plan').remove(); toast(v ? 'Sport : ' + v : 'Sport retiré'); });
+  if ($('rc-plan')) $('rc-plan').onclick = () => { const sp = agPlanned(date, it), sel = $('rc-sp'); if (![...sel.options].some(o => o.value === sp)) sel.innerHTML = sportOptions(sp); sel.value = sp; sel.onchange(); };
   ta.oninput = () => { clearTimeout(tm); tm = setTimeout(keep, 500); };
   ta.onblur = () => { if (tm) keep(); };
   bindMic('rc-note');
+  $('rc-prepa').onclick = () => { keep(); micStop(); openPrepa(date, it.id, ids); };
 }
 
 /* --- Dictée 🎤 : parler, le texte s'ajoute dans la case --- */
@@ -4595,6 +4638,7 @@ function openComments(c, vp){
 <script src="aide.js"></script>
 <script src="skore.js"></script>
 <script src="prepa-guide.js"></script>
+<script src="travail.js"></script>
 <script>
 // Mise a jour automatique : on verifie a chaque ouverture et a chaque retour dans l'appli,
 // et on recharge une fois quand la nouvelle version est prete (les donnees restent sur le telephone).

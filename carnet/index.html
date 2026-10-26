@@ -863,7 +863,7 @@ function effA(p, L){ const mm = L.m[p.id] || {}; if (mm.a) return mm.a; return c
 
 /* ====== Calcul des points ====== */
 /* Colonne Travaux (Kevin, 26/10) : débloquée pour un élève à partir de la période où il reçoit son 1er travail (jamais sinon),
-   sur S.settings.W points (4 par défaut), remise au maximum à chaque période. Un travail non remis (m.tz) retire en travaux,
+   sur S.settings.W points (3 par défaut, Kevin 26/10), remise au maximum à chaque période. Un travail non remis (m.tz) retire en travaux,
    puis en tenue, puis en attitude quand la colonne est vide. r.w = null : colonne pas débloquée.
    Elle compte pour moitié dans le savoir-être (W_POIDS, Kevin 26/10) : moins d'impact, sauf quand elle est vide et retire ailleurs. */
 const W_POIDS = 0.5;
@@ -4048,7 +4048,7 @@ async function suXlsx(c, vp, D, f){
      « Ne semaine de suite » des règles · evMax (10) « sur combien » proposé · enGuard (5) secondes entre deux tours
      comptés · enStep (0,5) arrondi des notes d'endurance · enLast (true) alerte « plus qu'une minute ».
    Tout passe par save() : appareil + Drive. La roue dentée ouvre la rubrique qui va avec l'onglet en cours. */
-const REG_DEF = {W: 4, kitPts: 1, dPts: 1, npPts: 1, spill: true, rgWarn: true, evMax: 10, enGuard: 5, enStep: 0.5, enLast: true};
+const REG_DEF = {W: 3, kitPts: 1, dPts: 1, npPts: 1, spill: true, rgWarn: true, evMax: 10, enGuard: 5, enStep: 0.5, enLast: true};
 const stN = k => { const v = +S.settings[k]; return S.settings[k] == null || S.settings[k] === '' || isNaN(v) ? REG_DEF[k] : v; };
 const stB = k => S.settings[k] == null ? REG_DEF[k] : S.settings[k] !== false;
 const regPl = (n, w) => `${fr(n, 2)} ${w}${n > 1 ? 's' : ''}`;

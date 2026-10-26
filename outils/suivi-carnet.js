@@ -42,7 +42,7 @@ function suData(c, vp){
     const adj = {t: 0, c: 0};
     pers.forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (a){ adj.t += +a.t || 0; adj.c += +a.c || 0; } });
     let pts;
-    if (!year){ const r = X.res[p.id]; pts = {t: r.t, c: r.c}; }
+    if (!year){ const r = X.res[p.id]; pts = {t: r.t, c: r.c, w: r.w}; }
     else pts = {lt: PX.reduce((a, x) => a + (T - x.res[p.id].t), 0), lc: PX.reduce((a, x) => a + (Cc - x.res[p.id].c), 0)};
     return {p, ev, n, adj, pts, rgMax};
   });
@@ -60,7 +60,7 @@ function suVisible(D, f, sort){
 function suPtsCells(D, r){
   if (D.year) return `<td class="su-pt"><span>T ${r.pts.lt ? '−' + r.pts.lt : '0'}</span><span>C ${r.pts.lc ? '−' + r.pts.lc : '0'}</span></td>`;
   const one = (k, v, max) => `<span class="${v === 0 && max ? 'zero' : ''}">${k} ${v}<small>/${max}</small></span>`;
-  return `<td class="su-pt">${one('T', r.pts.t, D.T)}${one('C', r.pts.c, D.Cc)}</td>`;
+  return `<td class="su-pt">${one('T', r.pts.t, D.T)}${one('C', r.pts.c, D.Cc)}${r.pts.w != null ? one('W', r.pts.w, stN('W')) : ''}</td>`;
 }
 function renderSuivi(c, m){
   const vp = viewPeriod(c);
@@ -111,7 +111,7 @@ function openSuivi(c, vp, pid, f, order){
     <p class="small muted" style="margin:0">${esc(c.name)} · ${vp === 'year' ? 'Année' : esc(vp.name)} · ${esc(suRange(c, vp))}${f !== 'all' ? ' · filtre : ' + esc(SU_CATS.find(x => x[0] === f)[1]) : ''}</p>
     <div class="su-cnts">${cols.map(o => `<span class="su-cnt${r.n[o.k] ? ' on' : ''}"><span class="su-ic">${o.ic(c)}</span>${o.l} <b>${r.n[o.k]}</b></span>`).join('')}</div>
     ${D.year ? `<div class="card small">Points perdus sur l'année : tenue ${r.pts.lt}, attitude ${r.pts.lc}</div>`
-      : `<div class="card small">Points restants : <b>tenue ${r.pts.t}/${D.T}</b> · <b>attitude ${r.pts.c}/${D.Cc}</b></div>`}
+      : `<div class="card small">Points restants : <b>tenue ${r.pts.t}/${D.T}</b> · <b>attitude ${r.pts.c}/${D.Cc}</b>${r.pts.w != null ? ` · <b>travaux ${r.pts.w}/${stN('W')}</b>` : ''}</div>`}
     <div class="card su-list">${ev.length ? ev.map(e => { const o = SU_COLS.find(x => x.k === e.k);
       return `<div class="su-ev"><span class="su-d">${suD(e.l.date)}${suH(e.l) ? `<small>${suH(e.l)}</small>` : ''}</span><span class="su-ic">${o.ic(c)}</span><span class="su-l">${e.k === 'rg' ? (e.l.type === 'piscine' ? 'Règles (ne nage pas)' : 'Règles (ne participe pas)') : o.long}${e.k === 'rg' && e.s > 1 ? ` <span class="su-stt">⚠ ${e.s}e ${rgSuite(e.l)} de suite</span>` : ''}</span></div>`; }).join('')
       : '<span class="muted small">Aucun événement daté.</span>'}

@@ -196,7 +196,7 @@ function fiBulletin(c, pid, per){
     <div class="card fi-bt">
       ${year ? (X.periods || []).map(pp => { const t = compute(c, pp).res[p.id]; return row(esc(pp.name), t.total != null ? fr(t.total) + ' %' : 'S-être ' + fr(t.se) + '/' + seP); }).join('') : ''}
       ${row('Savoir-être', `${fr(r.se)}<small>/${seP}</small>`, 'big')}
-      ${year ? '' : row('&nbsp;&nbsp;Tenue', `${r.t}<small>/${T}</small>`) + row('&nbsp;&nbsp;Attitude', `${r.c}<small>/${Cc}</small>`)}
+      ${year ? '' : row('&nbsp;&nbsp;Tenue', `${r.t}<small>/${T}</small>`) + row('&nbsp;&nbsp;Attitude', `${r.c}<small>/${Cc}</small>`) + (r.w != null ? row('&nbsp;&nbsp;Travaux', `${r.w}<small>/${stN('W')}</small>`) : '')}
       ${row('Savoir-faire', `${fr(r.sf)}<small>/${100 - seP}</small>`, 'big')}
       ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), evTag(s) ? evTagTxt(s) : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
       ${row(year ? 'Moyenne de l\'année' : 'Total', `${fr(r.total)}<small> %</small>`, 'big tot')}

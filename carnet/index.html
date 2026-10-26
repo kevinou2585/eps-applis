@@ -162,7 +162,7 @@ textarea.inp{min-height:130px; resize:vertical}
 .pips{display:inline-flex; gap:3px}
 .pips i{width:11px; height:11px; border-radius:50%; border:1.5px solid currentColor; display:block}
 .pips i.f{background:currentColor}
-.pips.t{color:var(--accent)} .pips.c{color:var(--ok)}
+.pips.t{color:var(--accent)} .pips.c{color:var(--ok)} .pips.w{color:var(--warn)}
 .prow .grid2{display:grid; grid-template-columns:auto auto; gap:2px 6px; align-items:center; font-size:11px; color:var(--muted)}
 .score{font:700 22px/1 var(--display); min-width:52px; text-align:right}
 .score small{font-size:13px; color:var(--muted)}
@@ -862,9 +862,19 @@ const zoneTxt = x => x.zone === 'piscine' ? 'piscine seulement' : x.zone === 'sa
 function effA(p, L){ const mm = L.m[p.id] || {}; if (mm.a) return mm.a; return certOn(p, L.date, L.type) ? 'D' : 'P'; }
 
 /* ====== Calcul des points ====== */
+/* Colonne Travaux (Kevin, 26/10) : débloquée pour un élève à partir de la période où il reçoit son 1er travail (jamais sinon),
+   sur S.settings.W points (4 par défaut), remise au maximum à chaque période. Un travail non remis (m.tz) retire en travaux,
+   puis en tenue, puis en attitude quand la colonne est vide. r.w = null : colonne pas débloquée. */
+function travPremier(c){
+  const o = {}, put = (pid, d) => { if (d && (!o[pid] || d < o[pid])) o[pid] = d; };
+  c.lessons.forEach(l => Object.entries(l.m || {}).forEach(([pid, m]) => { if (m.tr || m.tz || m.trOk) put(pid, l.date); }));
+  Object.entries(c.trav || {}).forEach(([pid, t]) => put(pid, t && t.d));
+  return o;
+}
 function compute(c, p){
-  const st = S.settings, T = +st.T || 0, Cc = +st.C || 0, res = {};
-  c.pupils.forEach(pu => res[pu.id] = {t: T, c: Cc, x: 0, abs: 0, late: 0, disp: 0, kit: 0, np: 0, d: 0, n: 0, ev: [], sfS: 0, sfM: 0, evals: []});
+  const st = S.settings, T = +st.T || 0, Cc = +st.C || 0, W = stN('W'), w1 = travPremier(c), res = {};
+  const wOn = pid => W > 0 && !!w1[pid] && (periodOf(c, w1[pid])?.start || '') <= p.start;
+  c.pupils.forEach(pu => res[pu.id] = {t: T, c: Cc, w: wOn(pu.id) ? W : null, x: 0, abs: 0, late: 0, disp: 0, kit: 0, np: 0, d: 0, n: 0, ev: [], sfS: 0, sfM: 0, evals: []});
   // points déjà retirés avant l'appli (repris de l'ancien relevé), sans report d'une colonne à l'autre
   const adj = (c.adj || {})[p.id] || {};
   c.pupils.forEach(pu => { const a = adj[pu.id], r = res[pu.id]; if (!a) return;
@@ -874,8 +884,8 @@ function compute(c, p){
     const r = res[pu.id], m = l.m[pu.id] || {};
     const a = effA(pu, l);
     const f = [];
-    // travail non remis (carnet/travail.js) : −1 tenue, même si l'élève est absent ce jour-là
-    if (m.tz){ r.tz = (r.tz || 0) + 1; f.push(['t', 'Travail non remis', 'tz']); }
+    // travail non remis (carnet/travail.js) : −1 travaux (puis tenue, puis attitude), même si l'élève est absent ce jour-là
+    if (m.tz){ r.tz = (r.tz || 0) + 1; f.push(['w', 'Travail non remis', 'tz']); }
     if (a === 'A') r.abs++;
     else { r.n++; if (a === 'R') r.late++; if (a === 'D') r.disp++; }
     if (a !== 'A' && m.k){ r.kit++; for (let i = 0; i < stN('kitPts'); i++) f.push(['t', l.type === 'piscine' ? 'Pas ses affaires de piscine' : 'Pas sa tenue', 'k']); }
@@ -885,7 +895,8 @@ function compute(c, p){
     f.forEach(([col, label, key]) => {
       let hit = col;
       const sp = stB('spill');
-      if (col === 't'){ if (r.t > 0) r.t--; else if (sp && r.c > 0){ r.c--; hit = 'c'; } else hit = '-'; }
+      if (col === 'w'){ if (r.w > 0) r.w--; else if (r.t > 0){ r.t--; hit = 't'; } else if (r.c > 0){ r.c--; hit = 'c'; } else hit = '-'; }
+      else if (col === 't'){ if (r.t > 0) r.t--; else if (sp && r.c > 0){ r.c--; hit = 'c'; } else hit = '-'; }
       else { if (r.c > 0) r.c--; else if (sp && r.t > 0){ r.t--; hit = 't'; } else hit = '-'; }
       r.ev.push({date: l.date, label, col, hit, lid: l.id, key});
     });
@@ -894,8 +905,8 @@ function compute(c, p){
   c.pupils.forEach(pu => {
     const r = res[pu.id];
     evs.forEach(e => { const s = e.s[pu.id]; r.evals.push({e, s}); if (typeof s === 'number'){ r.sfS += s; r.sfM += +e.max; } });
-    r.seMax = T + Cc;
-    r.se = r.seMax ? (r.t + r.c) / r.seMax * st.se : 0;
+    r.seMax = T + Cc + (r.w != null ? W : 0);
+    r.se = r.seMax ? (r.t + r.c + (r.w || 0)) / r.seMax * st.se : 0;
     r.sf = r.sfM ? r.sfS / r.sfM * (100 - st.se) : null;
     r.total = r.sf == null ? null : r.se + r.sf;
   });
@@ -908,7 +919,7 @@ function computeYear(c){
     const rs = per.map(o => o.x.res[pu.id]);
     const avg = arr => { const v = arr.filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
     const sum = k => rs.reduce((a, r) => a + r[k], 0);
-    res[pu.id] = { se: avg(rs.map(r => r.se)), sf: avg(rs.map(r => r.sf)), total: avg(rs.map(r => r.total)), abs: sum('abs'), late: sum('late'), kit: sum('kit'), np: sum('np'), d: sum('d'), x: sum('x'), n: sum('n'), t: null, c: null, ev: [], evals: [] };
+    res[pu.id] = { se: avg(rs.map(r => r.se)), sf: avg(rs.map(r => r.sf)), total: avg(rs.map(r => r.total)), abs: sum('abs'), late: sum('late'), kit: sum('kit'), np: sum('np'), d: sum('d'), x: sum('x'), n: sum('n'), t: null, c: null, w: null, ev: [], evals: [] };
   });
   return {res, periods: per.map(o => o.p), lessons: per.flatMap(o => o.x.lessons), evals: per.flatMap(o => o.x.evals)};
 }
@@ -1301,7 +1312,7 @@ function maillot(c, p){ return ((c && c.sexe) || (p && p.g)) === 'F' ? MAILLOT_F
 function lessonRow(c, L, p, r, pool){
   const mm = L.m[p.id] || {}, a = effA(p, L), cert = certOn(p, L.date, L.type), off = a === 'A', exempt = a === 'D';
   const T = +S.settings.T, Cc = +S.settings.C;
-  const pts = r ? `<span class="pts num"><span class="${r.t <= 1 ? 'low' : ''}">Tenue ${r.t}/${T}</span><span class="${r.c <= 1 ? 'low' : ''}">Att. ${r.c}/${Cc}</span></span>` : '';
+  const pts = r ? `<span class="pts num"><span class="${r.t <= 1 ? 'low' : ''}">Tenue ${r.t}/${T}</span><span class="${r.c <= 1 ? 'low' : ''}">Att. ${r.c}/${Cc}</span>${r.w != null ? `<span class="${r.w <= 1 ? 'low' : ''}">Trav. ${r.w}/${stN('W')}</span>` : ''}</span>` : '';
   return `<div class="prow ${off ? 'isA' : ''}" data-pid="${p.id}" data-cid="${c.id}">
     <button class="who" type="button">${avatar(p)}<span class="nm"><b>${esc(nomCourt(p))}</b>${cert ? `<span class="pts" style="color:var(--warn);font-weight:600">🩺 Certificat · dispensé jusqu'au ${cert.to.slice(8)}/${cert.to.slice(5, 7)}</span>` : pts}</span></button>
     <button class="tb ${a}" type="button" data-act="pres" aria-label="Présence : ${({P:'présent',A:'absent',R:'en retard',D:'dispensé'})[a]}">${a}</button>
@@ -1407,17 +1418,17 @@ function renderPoints(c, m){
   if (!vp){ m.innerHTML = `<section class="sec"><div class="card empty"><p>Ajoute une période dans Réglages.</p></div></section>`; return; }
   const {res, lessons} = compute(c, vp), T = +S.settings.T, Cc = +S.settings.C;
   const ps = pupilsOf(c);
-  const full = ps.filter(p => res[p.id].t + res[p.id].c === T + Cc).length, low = ps.filter(p => res[p.id].t + res[p.id].c <= (T + Cc) / 2).length;
+  const seTot = r => r.t + r.c + (r.w || 0), full = ps.filter(p => seTot(res[p.id]) === res[p.id].seMax).length, low = ps.filter(p => seTot(res[p.id]) <= res[p.id].seMax / 2).length;
   m.innerHTML = `<section class="sec">
     <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><h2>Savoir-être</h2><span class="tag ${vp.type}">${vp.type === 'piscine' ? 'Piscine' : 'Salle'}</span></div>
     ${periodChips(c, false)}
     <p class="small muted" style="margin:0">${lessons.length} leçon${lessons.length > 1 ? 's' : ''} notée${lessons.length > 1 ? 's' : ''} · ${full} élève${full > 1 ? 's' : ''} avec tous les points · ${low} à la moitié ou moins. ${stB('spill') ? 'Quand une colonne est vide, la faute suivante est retirée dans l\'autre.' : 'Une colonne vide reste à 0 (rien n\'est retiré dans l\'autre).'}</p>
     <div class="list">
-      <div class="lhead"><span class="grow">Élève</span><span>Tenue · Attitude</span><span style="width:60px;text-align:right">/${T + Cc}</span></div>
-      ${ps.map(p => { const r = res[p.id], tot = r.t + r.c;
+      <div class="lhead"><span class="grow">Élève</span><span>Tenue · Attitude${ps.some(p => res[p.id].w != null) ? ' · Travaux' : ''}</span><span style="width:60px;text-align:right">/${T + Cc}</span></div>
+      ${ps.map(p => { const r = res[p.id], tot = seTot(r);
         return `<div class="prow" data-pid="${p.id}"><button class="who" type="button">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b><span class="pts">${r.abs ? r.abs + ' abs. · ' : ''}${r.kit} oubli${r.kit > 1 ? 's' : ''} · ${r.d} pert.${r.x ? ` · ${r.x} excl.` : ''}</span></span></button>
-          <span class="grid2">${pipsH(r.t, T, 't')}<span>T</span>${pipsH(r.c, Cc, 'c')}<span>C</span></span>
-          <span class="score num ${tot <= (T + Cc) / 2 ? 'bad' : ''}">${tot}<small>/${T + Cc}</small></span></div>`; }).join('')}
+          <span class="grid2">${pipsH(r.t, T, 't')}<span>T</span>${pipsH(r.c, Cc, 'c')}<span>C</span>${r.w != null ? `${pipsH(r.w, stN('W'), 'w')}<span>W</span>` : ''}</span>
+          <span class="score num ${tot <= r.seMax / 2 ? 'bad' : ''}">${tot}<small>/${r.seMax}</small></span></div>`; }).join('')}
     </div>${agJournal(lessons)}</section>`;
   bindChips(c);
   m.querySelector('.list').onclick = e => { const r = e.target.closest('.prow'); if (r) openPupil(c, r.dataset.pid); };
@@ -1645,9 +1656,9 @@ function periodEnd(c, p){ const ps = periodsOf(c), i = ps.findIndex(x => x.id ==
 function periodSheet(c, p){
   const st = S.settings, T = +st.T, Cc = +st.C, seP = +st.se, sfP = 100 - seP;
   const {res, lessons, evals} = compute(c, p), pool = lessons.some(l => l.type === 'piscine');
-  const ps = pupilsOf(c);
+  const ps = pupilsOf(c), wCol = ps.some(pu => res[pu.id].w != null);
   const cols = [{h: 'N°', w: 5}, {h: 'Élève', w: 28},
-    {h: `Tenue\n/${T}`, w: 8, g: 'se'}, {h: `Attitude\n/${Cc}`, w: 9, g: 'se'}, {h: `Savoir-être\n/${seP}`, w: 11, g: 'se'},
+    {h: `Tenue\n/${T}`, w: 8, g: 'se'}, {h: `Attitude\n/${Cc}`, w: 9, g: 'se'}, ...(wCol ? [{h: `Travaux\n/${stN('W')}`, w: 9, g: 'se'}] : []), {h: `Savoir-être\n/${seP}`, w: 11, g: 'se'},
     ...evals.map(e => ({h: `${e.name}\n/${fr(+e.max, 2)}`, w: Math.min(16, Math.max(10, Math.ceil(e.name.length * 0.75))), g: 'sf', e})),
     {h: `Savoir-faire\n/${sfP}`, w: 11, g: 'sf'}, {h: 'TOTAL\n%', w: 10, g: 'tot'},
     {h: 'Abs.', w: 7, g: 'pr'}, {h: 'Retards', w: 8, g: 'pr'}, {h: 'Oublis', w: 8, g: 'pr'}, ...(pool ? [{h: 'Pas nagé', w: 8, g: 'pr'}] : []), {h: 'Pertur-\nbations', w: 9, g: 'pr'}, {h: 'Exclu-\nsions', w: 8, g: 'pr'}];
@@ -1666,19 +1677,19 @@ function periodSheet(c, p){
   ps.forEach((pu, i) => {
     const r = res[pu.id], b = i % 2 === 1;
     const cells = [{v: i + 1, s: b ? XS.INTB : XS.INT}, {v: pu.n, s: b ? XS.TXTB : XS.TXT},
-      {v: r.t, s: b ? XS.INTB : XS.INT}, {v: r.c, s: b ? XS.INTB : XS.INT}, {v: r.se, s: b ? XS.NUMB : XS.NUM},
+      {v: r.t, s: b ? XS.INTB : XS.INT}, {v: r.c, s: b ? XS.INTB : XS.INT}, ...(wCol ? [{v: r.w == null ? '' : r.w, s: b ? XS.INTB : XS.INT}] : []), {v: r.se, s: b ? XS.NUMB : XS.NUM},
       ...evals.map(e => { const s = e.s[pu.id]; return {v: evTag(s) ? evTagTxt(s) : (typeof s === 'number' ? s : ''), s: typeof s === 'number' && s < e.max / 2 ? (b ? XS.NUMLOWB : XS.NUMLOW) : (b ? XS.NUMB : XS.NUM)}; }),
       {v: r.sf, s: b ? XS.NUMB : XS.NUM}, {v: r.total, s: r.total != null && r.total < 50 ? XS.TOTLOW : XS.TOT},
       {v: r.abs, s: b ? XS.INTB : XS.INT}, {v: r.late, s: b ? XS.INTB : XS.INT}, {v: r.kit, s: b ? XS.INTB : XS.INT}, ...(pool ? [{v: r.np, s: b ? XS.INTB : XS.INT}] : []), {v: r.d, s: b ? XS.INTB : XS.INT}, {v: r.x, s: b ? XS.INTB : XS.INT}];
     rows.push({h: 20, cells});
   });
   const avg = f => { const v = ps.map(pu => f(res[pu.id])).filter(x => typeof x === 'number'); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : ''; };
-  const ar = [{v: '', s: XS.AVGL}, {v: 'Moyenne de la classe', s: XS.AVGL}, {v: avg(r => r.t), s: XS.AVGN}, {v: avg(r => r.c), s: XS.AVGN}, {v: avg(r => r.se), s: XS.AVGN},
+  const ar = [{v: '', s: XS.AVGL}, {v: 'Moyenne de la classe', s: XS.AVGL}, {v: avg(r => r.t), s: XS.AVGN}, {v: avg(r => r.c), s: XS.AVGN}, ...(wCol ? [{v: avg(r => r.w), s: XS.AVGN}] : []), {v: avg(r => r.se), s: XS.AVGN},
     ...evals.map(e => { const v = ps.map(pu => e.s[pu.id]).filter(x => typeof x === 'number'); return {v: v.length ? v.reduce((a, b) => a + b, 0) / v.length : '', s: XS.AVGN}; }),
-    {v: avg(r => r.sf), s: XS.AVGN}, {v: avg(r => r.total), s: XS.AVGN}, ...cols.slice(5 + evals.length + 2).map(() => ({v: '', s: XS.AVGL}))];
+    {v: avg(r => r.sf), s: XS.AVGN}, {v: avg(r => r.total), s: XS.AVGN}, ...cols.slice((wCol ? 6 : 5) + evals.length + 2).map(() => ({v: '', s: XS.AVGL}))];
   rows.push({h: 22, cells: ar});
   rows.push({h: 8, cells: blank()});
-  const nt = blank(); nt[0] = {v: `En rouge : total sous 50 % et évaluations sous la moitié. Tenue et attitude : ${T} et ${Cc} points par période, une colonne à 0 fait retirer dans l'autre. Exporté le ${dFR(today())} depuis le Carnet EPS.`, s: XS.NOTE}; rows.push({h: 30, cells: nt}); merges.push(`A${rows.length}:${last}${rows.length}`);
+  const nt = blank(); nt[0] = {v: `En rouge : total sous 50 % et évaluations sous la moitié. Tenue et attitude : ${T} et ${Cc} points par période, une colonne à 0 fait retirer dans l'autre.${wCol ? ` Travaux : ${stN('W')} points, seulement pour les élèves qui ont reçu un travail ; un travail non remis retire en travaux, puis en tenue, puis en attitude.` : ''} Exporté le ${dFR(today())} depuis le Carnet EPS.`, s: XS.NOTE}; rows.push({h: 30, cells: nt}); merges.push(`A${rows.length}:${last}${rows.length}`);
   return {name: `${c.name} ${p.name}`, rows, merges, cols: cols.map(c => c.w), freeze: 5, titleRows: 4, footer: `Carnet EPS · ${c.name} · ${p.name}`};
 }
 /* Feuille récapitulative de l'année */
@@ -1739,11 +1750,12 @@ function openPupil(c, pid){
     </div>
     ${year ? '' : `<div class="card" style="display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center">
       <b>Tenue</b>${pipsH(r.t, T, 't')}<span class="num">${r.t}/${T}</span>
-      <b>Attitude</b>${pipsH(r.c, Cc, 'c')}<span class="num">${r.c}/${Cc}</span></div>`}
+      <b>Attitude</b>${pipsH(r.c, Cc, 'c')}<span class="num">${r.c}/${Cc}</span>${r.w != null ? `
+      <b>Travaux</b>${pipsH(r.w, stN('W'), 'w')}<span class="num">${r.w}/${stN('W')}</span>` : ''}</div>`}
     <div class="card small">${r.abs} absence${r.abs > 1 ? 's' : ''} · ${r.late} retard${r.late > 1 ? 's' : ''} · ${r.kit} oubli${r.kit > 1 ? 's' : ''} de tenue/affaires${r.np ? ` · ${r.np} fois sans nager` : ''} · ${r.d} perturbation${r.d > 1 ? 's' : ''}${r.x ? ` · ${r.x} exclusion${r.x > 1 ? 's' : ''}` : ''}</div>
     ${fiHistHTML(c, p, vp)}
     ${year ? '' : `<h3>Évaluations</h3><div class="card">${r.evals.length ? r.evals.map(({e, s}) => `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)}</span><b class="num">${evTag(s) ? evTagTxt(s) : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`).join('') : '<span class="muted small">Aucune évaluation dans cette période.</span>'}${evFormList(c, vp, p)}</div>
-    <h3>Points retirés</h3><div class="card">${r.ev.length ? r.ev.map((v, k) => `<div class="evt"><span class="d">${esc(fmtD(v.date))}</span><span class="l">${esc(v.label)}</span><span class="col ${v.hit}">${v.hit === 't' ? '−1 tenue' : v.hit === 'c' ? '−1 attitude' : 'déjà à 0'}</span><button class="ib" type="button" data-undo="${k}" aria-label="Retirer">${IC.x}</button></div>`).join('') : '<span class="muted small">Aucun point retiré. Bravo.</span>'}</div>`}
+    <h3>Points retirés</h3><div class="card">${r.ev.length ? r.ev.map((v, k) => `<div class="evt"><span class="d">${esc(fmtD(v.date))}</span><span class="l">${esc(v.label)}</span><span class="col ${v.hit}">${v.hit === 't' ? '−1 tenue' : v.hit === 'c' ? '−1 attitude' : v.hit === 'w' ? '−1 travaux' : 'déjà à 0'}</span><button class="ib" type="button" data-undo="${k}" aria-label="Retirer">${IC.x}</button></div>`).join('') : '<span class="muted small">Aucun point retiré. Bravo.</span>'}</div>`}
     <h3>Certificats médicaux</h3><div class="card">${(p.certs || []).length ? [...p.certs].sort((a, b) => a.from < b.from ? 1 : -1).map(x => { const on = x.from <= today() && today() <= x.to;
       return `<div class="evt">${PH['cert_' + x.id] ? `<button type="button" data-cview="${x.id}" style="border:0;padding:0;background:none;flex:none"><img src="${PH['cert_' + x.id]}" alt="Certificat" style="width:52px;height:52px;object-fit:cover;border-radius:8px;display:block"></button>` : `<span class="av" style="border-radius:8px;width:52px;height:52px">${IC.evals}</span>`}
         <span class="l"><b>🩺 Dispensé du ${esc(fmtD(x.from))} au ${esc(fmtD(x.to))}</b>${zoneTxt(x) ? ` <span class="tag">${zoneTxt(x)}</span>` : ''}${on ? ' <span class="tag" style="background:var(--warn-soft);color:var(--warn)">en cours</span>' : ''}${x.note ? `<br><span class="small muted">${esc(x.note)}</span>` : ''}</span>
@@ -3898,7 +3910,7 @@ function suData(c, vp){
     const adj = {t: 0, c: 0};
     pers.forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (a){ adj.t += +a.t || 0; adj.c += +a.c || 0; } });
     let pts;
-    if (!year){ const r = X.res[p.id]; pts = {t: r.t, c: r.c}; }
+    if (!year){ const r = X.res[p.id]; pts = {t: r.t, c: r.c, w: r.w}; }
     else pts = {lt: PX.reduce((a, x) => a + (T - x.res[p.id].t), 0), lc: PX.reduce((a, x) => a + (Cc - x.res[p.id].c), 0)};
     return {p, ev, n, adj, pts, rgMax};
   });
@@ -3916,7 +3928,7 @@ function suVisible(D, f, sort){
 function suPtsCells(D, r){
   if (D.year) return `<td class="su-pt"><span>T ${r.pts.lt ? '−' + r.pts.lt : '0'}</span><span>C ${r.pts.lc ? '−' + r.pts.lc : '0'}</span></td>`;
   const one = (k, v, max) => `<span class="${v === 0 && max ? 'zero' : ''}">${k} ${v}<small>/${max}</small></span>`;
-  return `<td class="su-pt">${one('T', r.pts.t, D.T)}${one('C', r.pts.c, D.Cc)}</td>`;
+  return `<td class="su-pt">${one('T', r.pts.t, D.T)}${one('C', r.pts.c, D.Cc)}${r.pts.w != null ? one('W', r.pts.w, stN('W')) : ''}</td>`;
 }
 function renderSuivi(c, m){
   const vp = viewPeriod(c);
@@ -3967,7 +3979,7 @@ function openSuivi(c, vp, pid, f, order){
     <p class="small muted" style="margin:0">${esc(c.name)} · ${vp === 'year' ? 'Année' : esc(vp.name)} · ${esc(suRange(c, vp))}${f !== 'all' ? ' · filtre : ' + esc(SU_CATS.find(x => x[0] === f)[1]) : ''}</p>
     <div class="su-cnts">${cols.map(o => `<span class="su-cnt${r.n[o.k] ? ' on' : ''}"><span class="su-ic">${o.ic(c)}</span>${o.l} <b>${r.n[o.k]}</b></span>`).join('')}</div>
     ${D.year ? `<div class="card small">Points perdus sur l'année : tenue ${r.pts.lt}, attitude ${r.pts.lc}</div>`
-      : `<div class="card small">Points restants : <b>tenue ${r.pts.t}/${D.T}</b> · <b>attitude ${r.pts.c}/${D.Cc}</b></div>`}
+      : `<div class="card small">Points restants : <b>tenue ${r.pts.t}/${D.T}</b> · <b>attitude ${r.pts.c}/${D.Cc}</b>${r.pts.w != null ? ` · <b>travaux ${r.pts.w}/${stN('W')}</b>` : ''}</div>`}
     <div class="card su-list">${ev.length ? ev.map(e => { const o = SU_COLS.find(x => x.k === e.k);
       return `<div class="su-ev"><span class="su-d">${suD(e.l.date)}${suH(e.l) ? `<small>${suH(e.l)}</small>` : ''}</span><span class="su-ic">${o.ic(c)}</span><span class="su-l">${e.k === 'rg' ? (e.l.type === 'piscine' ? 'Règles (ne nage pas)' : 'Règles (ne participe pas)') : o.long}${e.k === 'rg' && e.s > 1 ? ` <span class="su-stt">⚠ ${e.s}e ${rgSuite(e.l)} de suite</span>` : ''}</span></div>`; }).join('')
       : '<span class="muted small">Aucun événement daté.</span>'}
@@ -4033,7 +4045,7 @@ async function suXlsx(c, vp, D, f){
      « Ne semaine de suite » des règles · evMax (10) « sur combien » proposé · enGuard (5) secondes entre deux tours
      comptés · enStep (0,5) arrondi des notes d'endurance · enLast (true) alerte « plus qu'une minute ».
    Tout passe par save() : appareil + Drive. La roue dentée ouvre la rubrique qui va avec l'onglet en cours. */
-const REG_DEF = {kitPts: 1, dPts: 1, npPts: 1, spill: true, rgWarn: true, evMax: 10, enGuard: 5, enStep: 0.5, enLast: true};
+const REG_DEF = {W: 4, kitPts: 1, dPts: 1, npPts: 1, spill: true, rgWarn: true, evMax: 10, enGuard: 5, enStep: 0.5, enLast: true};
 const stN = k => { const v = +S.settings[k]; return S.settings[k] == null || S.settings[k] === '' || isNaN(v) ? REG_DEF[k] : v; };
 const stB = k => S.settings[k] == null ? REG_DEF[k] : S.settings[k] !== false;
 const regPl = (n, w) => `${fr(n, 2)} ${w}${n > 1 ? 's' : ''}`;
@@ -4062,6 +4074,7 @@ function regCards(){
       <p class="small muted" style="margin:0">Chaque élève commence chaque période avec tous ses points, puis on retire.</p>
       <div class="row2"><label class="f" style="flex:1">Points de tenue par période<input class="inp num" id="s-T" inputmode="numeric" value="${st.T}"></label>
       <label class="f" style="flex:1">Points d'attitude par période<input class="inp num" id="s-C" inputmode="numeric" value="${st.C}"></label></div>
+      ${n('s-W', 'W', 'Points de travaux par période', 'Colonne seulement pour les élèves qui ont reçu un travail (📝 à l\'appel). Travail non remis : −1 en travaux, puis en tenue, puis en attitude.')}
       <label class="f">Savoir-être en % du bulletin<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
       <p class="small" id="s-separt" style="margin:-4px 0 0">${regPart(st.se)}</p>
       <b class="small reg-sub">Points retirés</b>
@@ -4101,7 +4114,7 @@ function bindReg(){
   const num = (id, k, lo, hi, int = true) => { const el = $(id); if (!el) return; el.onchange = e => { let v = parseNum(e.target.value); if (v != null && int) v = Math.round(v);
     if (v == null || isNaN(v) || v < lo || v > hi){ e.target.value = k in REG_DEF ? fr(stN(k), 2) : st[k]; toast(`Entre ${lo} et ${hi}`); return; }
     st[k] = v; save(); toast('Enregistré'); }; };
-  num('s-T', 'T', 0, 20); num('s-X', 'X', 0, 20); num('s-C', 'C', 0, 20); num('s-se', 'se', 0, 100);
+  num('s-T', 'T', 0, 20); num('s-W', 'W', 0, 20); num('s-X', 'X', 0, 20); num('s-C', 'C', 0, 20); num('s-se', 'se', 0, 100);
   if ($('s-se')) $('s-se').oninput = e => { const v = parseNum(e.target.value); if (v != null && v >= 0 && v <= 100) $('s-separt').innerHTML = regPart(v); };
   num('s-kit', 'kitPts', 0, 10); num('s-d', 'dPts', 0, 10); num('s-npp', 'npPts', 0, 10);
   num('s-evmax', 'evMax', 1, 1000, false); num('s-eng', 'enGuard', 0, 60, false);
@@ -4310,7 +4323,7 @@ function fiBulletin(c, pid, per){
     <div class="card fi-bt">
       ${year ? (X.periods || []).map(pp => { const t = compute(c, pp).res[p.id]; return row(esc(pp.name), t.total != null ? fr(t.total) + ' %' : 'S-être ' + fr(t.se) + '/' + seP); }).join('') : ''}
       ${row('Savoir-être', `${fr(r.se)}<small>/${seP}</small>`, 'big')}
-      ${year ? '' : row('&nbsp;&nbsp;Tenue', `${r.t}<small>/${T}</small>`) + row('&nbsp;&nbsp;Attitude', `${r.c}<small>/${Cc}</small>`)}
+      ${year ? '' : row('&nbsp;&nbsp;Tenue', `${r.t}<small>/${T}</small>`) + row('&nbsp;&nbsp;Attitude', `${r.c}<small>/${Cc}</small>`) + (r.w != null ? row('&nbsp;&nbsp;Travaux', `${r.w}<small>/${stN('W')}</small>`) : '')}
       ${row('Savoir-faire', `${fr(r.sf)}<small>/${100 - seP}</small>`, 'big')}
       ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), evTag(s) ? evTagTxt(s) : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
       ${row(year ? 'Moyenne de l\'année' : 'Total', `${fr(r.total)}<small> %</small>`, 'big tot')}
@@ -4495,7 +4508,7 @@ function comText(c, vp, X, p){
   const r = X.res[p.id], st = S.settings, seP = +st.se, sfP = 100 - seP, n0 = v => fr(v, 0), year = vp === 'year', out = [];
   const pc = (v, sur) => sur > 0 && v != null ? n0(v / sur * 100) + ' %' : null;
   const se = pc(r.se, seP);
-  if (se != null) out.push(`Savoir-être : ${se}` + (year ? '' : ` (tenue ${r.t}/${+st.T || 0}, attitude ${r.c}/${+st.C || 0})`) + '.');
+  if (se != null) out.push(`Savoir-être : ${se}` + (year ? '' : ` (tenue ${r.t}/${+st.T || 0}, attitude ${r.c}/${+st.C || 0}${r.w != null ? `, travaux ${r.w}/${stN('W')}` : ''})`) + '.');
   const evs = year ? c.evals.filter(e => e.kind !== 'form' && (X.periods || []).some(pp => pp.id === e.periodId)).sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(e => ({e, s: e.s[p.id]})) : r.evals;
   const ev = evs.filter(o => typeof o.s === 'number' || evTag(o.s)).map(o => `${o.e.name.trim() || 'évaluation'} ${typeof o.s === 'number' ? fr(o.s, 2) + '/' + fr(+o.e.max, 2) : evTagLong(o.s)}`);
   const sf = pc(r.sf, sfP);

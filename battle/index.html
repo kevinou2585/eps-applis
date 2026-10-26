@@ -818,8 +818,8 @@ function sling(m) {
   return seg(X(64), 478, X(100), 582, { type: 'sling', kick: KICK_SLING, e: 0.2, rail: false });
 }
 const SL = [sling(false), sling(true)];
-// cibles E P S : touchables seulement par-dessous (pas de corniche où la balle se pose)
-const EPS = ['E', 'P', 'S'].map((l, i) => { const cx = 152 + i * 47; return seg(cx - 21, 446, cx + 21, 446, { type: 'eps', lettre: l, cx, oneWay: true, nx: 0, ny: 1, epais: 6, e: 0.3, rail: false, bas: false }); });
+// cibles I S L : touchables seulement par-dessous (pas de corniche où la balle se pose)
+const EPS = ['I', 'S', 'L'].map((l, i) => { const cx = 152 + i * 47; return seg(cx - 21, 446, cx + 21, 446, { type: 'eps', lettre: l, cx, oneWay: true, nx: 0, ny: 1, epais: 6, e: 0.3, rail: false, bas: false }); });
 const BUMP = [ // petits bumpers regroupés en haut à droite
   { x: 245, y: 112, r: 20, type: 'basket', teinte: 28, c: ['#ffc98a', '#f07a12', '#8a3d00'] },
   { x: 310, y: 124, r: 20, type: 'foot', teinte: 200, c: ['#ffffff', '#e4e9f1', '#6f7a8c'] },
@@ -869,7 +869,7 @@ function surRail(RL, d) {
 const PANIER = { x: 36, y: 414 };       // cercle du panier de basket, au bout de la rampe (au-dessus du couloir gauche)
 const CHANCE_PANIER = 0.5, VIT_RAMPE = 400;
 // trou de colle (en bas à gauche) : la balle y reste collée jusqu'à la fin de la balle en cours
-const COLLE = { x: 104, y: 452, r: 12, prise: 8, vmax: 500, balle: null }; // seule une balle assez lente (vmax) près du centre (prise) tombe dedans
+const COLLE = { x: 104, y: 452, r: 12, prise: 12, vmax: 1000, balle: null }; // Kevin (26/10) : la bille qui passe sur le trou s'y colle (sauf tir très rapide)
 const A_REPOS = 0.55, A_HAUT = -0.42;
 function flipper(px, py, cote) { return { px, py, cote, L: 64, a: A_REPOS, w: 0, appui: false }; }
 const FL = [flipper(106, 638, 1), flipper(264, 638, -1)];
@@ -899,6 +899,8 @@ function trouVise(p) { return p < 0.3 ? 1 : p < 0.55 ? 2 : p < 0.8 ? 3 : 0; }
 // casier (en haut à gauche, contre la paroi) : la bille qui remonte le côté gauche y entre au lieu de faire le tour
 const CASIER = { a: Math.PI + 0.33, amin: Math.PI + 0.13, amax: Math.PI + 0.56, rmin: 146, balle: null, visites: 0, ouvert: 0, secoue: 0 };
 CASIER.x = 200 + Math.cos(CASIER.a) * 167; CASIER.y = 200 + Math.sin(CASIER.a) * 167;
+// casiers pour ouvrir : 2 quand une bille est en colle (Kevin, 26/10 : 2 casiers la libèrent → 2 billes), sinon 3
+const casierBut = () => COLLE.balle ? 2 : 3;
 const T_CASIER = 1.1, EJECT_CASIER = [235, 175], EPS_ATTENTE = 10;
 
 // ---------------------------------------------------------------- 2e table : LA CRYPTE (gothique), après 3 buts
@@ -1148,7 +1150,7 @@ function touche(s, b, imp) {
 function abattreEps(s) {
   s.bas = true; s.on = false; points(1000, s.cx, s.ay - 22); SON.cible(); vib(15); etincelles(s.cx, s.ay, 12, '#ffd23f'); chaseT = Math.max(chaseT, 0.4);
   if (EPS.every(c => c.bas)) {
-    if (!multiball) { points(10000); annonce('E-P-S complet !', 'Bonus +' + fmt(10000 * mult) + ' · retour dans 10 s', '#ffd23f', 32); SON.fanfare(); vib([40, 40, 60]); flash = 0.2; }
+    if (!multiball) { points(10000); annonce('I-S-L complet !', 'Bonus +' + fmt(10000 * mult) + ' · retour dans 10 s', '#ffd23f', 32); SON.fanfare(); vib([40, 40, 60]); flash = 0.2; }
     else { points(25000); annonce('SUPER JACKPOT !', 'Heures sup\u2019 payées !', '#7cf', 34); SON.jackpot(); vib([60, 40, 60]); flash = 0.25; }
     tir('eps', 185, 400); epsReset = EPS_ATTENTE; // les cibles restent couchées 10 s (compte à rebours affiché)
   } else blague(EPS.filter(c => c.bas).map(c => c.lettre).join('-') + ' …', 185, 400, '#fff');
@@ -1233,7 +1235,7 @@ function entrerCasier(b) {
   CASIER.balle = b; CASIER.secoue = T_CASIER; b.tient = T_CASIER; b.lieu = 'casier'; b.x = CASIER.x; b.y = CASIER.y; b.vx = b.vy = 0;
   SON.casier(); vib([25, 30, 25]); etincelles(CASIER.x, CASIER.y, 10, '#00e5ff'); tir('casier', 120, 150);
   CASIER.visites++;
-  if (CASIER.visites < 3) { points(2500, CASIER.x + 40, CASIER.y); blague('Casier ' + CASIER.visites + '/3 🔒', 125, 196, '#00e5ff'); }
+  if (CASIER.visites < casierBut()) { points(2500, CASIER.x + 40, CASIER.y); blague('Casier ' + CASIER.visites + '/' + casierBut() + ' 🔒', 125, 196, '#00e5ff'); }
   else {
     CASIER.visites = 0;
     if (COLLE.balle) { // le casier ouvert libère aussi la bille en colle : deux billes en jeu
@@ -2228,9 +2230,10 @@ function dessinerCasier() { // casier en haut à gauche : ouvert au repos, se re
     for (let i = 0; i < 4; i++) { ctx.moveTo(-17 + i * 5, -15); ctx.lineTo(-17 + i * 5, -3); } ctx.stroke();
     ctx.fillStyle = n ? NEON.jaune : '#ffd23f'; rrect(ctx, 8, -9, 10, 9, 2); ctx.fill(); ctx.strokeStyle = n ? NEON.jaune : '#ffd23f'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(13, -9, 3.2, Math.PI, 0); ctx.stroke();
   }
-  for (let i = 0; i < 3; i++) { // 3 visites = casier ouvert (dispense)
-    const on = CASIER.visites > i || (CASIER.visites === 2 && Math.floor(temps * 4) % 2 === 0) || chaseT > 0 && (i + Math.floor(temps * 24)) % 3 === 0;
-    dessinerLampe({ x: -13 + i * 13, y: 10, r: 3.6 }, on, 190);
+  const nb = casierBut();
+  for (let i = 0; i < nb; i++) { // 3 visites = casier ouvert (dispense) ; 2 si une bille est en colle
+    const on = CASIER.visites > i || (CASIER.visites === nb - 1 && Math.floor(temps * 4) % 2 === 0) || chaseT > 0 && (i + Math.floor(temps * 24)) % 3 === 0;
+    dessinerLampe({ x: -13 + i * 13 + (3 - nb) * 6.5, y: 10, r: 3.6 }, on, 190);
   }
   ctx.restore();
 }
@@ -2841,7 +2844,7 @@ function rendu() {
     ctx.strokeStyle = f ? '#ffd23f' : '#b9bec8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.ax + 1, s.ay + 1.5); ctx.lineTo(s.bx + 1, s.by + 1.5); ctx.stroke();
     if (f) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = hsla(50, 0.5); ctx.lineWidth = 16; ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
   });
-  // cibles E-P-S en relief
+  // cibles I-S-L en relief (Institut Saint-Louis)
   const attenteEps = epsReset > 0 && EPS.every(c => c.bas), clignEps = attenteEps && (epsReset > 3 ? Math.floor(temps * 2) % 2 === 0 : Math.floor(temps * 5) % 2 === 0);
   for (const c of EPS) {
     const x0 = c.cx - 21;
@@ -2861,11 +2864,11 @@ function rendu() {
     ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x0 + 4, 431.5); ctx.lineTo(x0 + 38, 431.5); ctx.stroke();
     texte(c.lettre, c.cx, 441, 17, '#fff');
   }
-  if (attenteEps) { // compte à rebours avant le retour des cibles E-P-S
+  if (attenteEps) { // compte à rebours avant le retour des cibles I-S-L
     const n = Math.max(1, Math.ceil(epsReset)), jaune = nuit ? NEON.jaune : '#ffd23f';
     rrect(ctx, 136, 432, 126, 20, 10); ctx.fillStyle = 'rgba(10,12,30,.88)'; ctx.fill(); ctx.strokeStyle = clignEps ? '#fff' : jaune; ctx.lineWidth = 2; ctx.stroke();
     rrect(ctx, 141, 447, 116 * Math.min(1, epsReset / EPS_ATTENTE), 3, 1.5); ctx.fillStyle = jaune; ctx.fill();
-    texte('E-P-S DANS ' + n + ' s', 199, 441, 12, n <= 3 && clignEps ? '#fff' : jaune);
+    texte('I-S-L DANS ' + n + ' s', 199, 441, 12, n <= 3 && clignEps ? '#fff' : jaune);
   }
   // bumpers : sprite en relief + halo de couleur quand on les touche
   for (const b of BUMP) {

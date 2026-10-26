@@ -115,7 +115,7 @@
   }
   window.openTravaux = openTravaux;
   const top = document.querySelector('header.top .wrap'), brand = top && top.querySelector('.brand');
-  if (brand && !document.getElementById('trv-btn')){   // entre « Carnet EPS » et « Aide »
+  if (brand && !window.DEMO_LS && !document.getElementById('trv-btn')){   // entre « Carnet EPS » et « Aide » (pas dans la démo des collègues : kevin n'y touche plus)
     const b = document.createElement('button'); b.type = 'button'; b.className = 'trv-btn'; b.id = 'trv-btn';
     b.onclick = () => { faits = []; openTravaux(); }; brand.after(b);
   }

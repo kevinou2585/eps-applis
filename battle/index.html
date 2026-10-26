@@ -959,6 +959,7 @@ const NIV_BOSS = {
   // Kevin : le boss caché du château (rang 0) : on ne le tape pas avec sa bille, on lui RENVOIE ses boules de feu avec les flippers ; billes = cœurs du joueur
   0: { pv: 5, billes: 3, vit: 0, amp: 100, freq: 0.7, esquive: 0, bouclier: false, bonus: 50000, titre: { H: 'L’Empereur', F: 'L’Impératrice' }, lieu: 'LE DONJON CACHÉ', bord: '#b26bff', ultime: true }
 };
+const REPOUSSE_MAX = 3; // Kevin (26/10) : un boss arrivé aux flippers se repousse 3 fois, ensuite il passe (on le bat en haut, pas en bas)
 const PTS_COUP = 1000, Y_BOSS0 = 152, Y_BOSS_PASSE = 690, R_BOSS = 26;
 function titreBoss(rang, genre) { return NIV_BOSS[rang].titre[genre === 'F' ? 'F' : 'H']; }
 
@@ -1567,7 +1568,7 @@ function entrerArene() { // la table de jeu est mise de côté (billes figées),
   flash = 0.6; secousse = 0.25; popups = []; particules = []; BUMPB.forEach(b => { b.flash = 0; b.cd = 0; }); SON.porte();
 }
 function debutCombat() {
-  const C = combat; C.phase = 'combat'; C.t = 0; C.echelle = 1; C.y = Y_BOSS0;
+  const C = combat; C.phase = 'combat'; C.t = 0; C.echelle = 1; C.y = Y_BOSS0; C.rep = 0;
   if (C.ultime) { C.tir = 1.2; annonce('RENVOIE LE FEU !', 'Ses boules de feu, avec tes flippers · ' + C.billes + ' ♥', '#d9b3ff', 34, 2.6); return; }
   balles.push(balleNeuve(375, 697, 0, 0, true)); // 1re bille du combat (sauvée 8 s après le lancement, comme une balle neuve)
   annonce('À L’ATTAQUE !', C.billes + ' billes pour ' + C.pv + ' ♥ · sinon ÉLIMINÉ', '#ffffff', 36, 2);
@@ -1602,7 +1603,10 @@ function majBoss(dt) { // déplacement du boss pendant le combat
   if (C.pare <= 0) for (const f of FL) { // coup de flipper sur le boss : il est repoussé (sans dégât)
     if (!f.appui || Math.abs(f.w) < 3) continue;
     const p = distFlip({ x: C.x, y: C.y + 10 }, f);
-    if (Math.hypot(C.x - p.cx, C.y + 10 - p.cy) < R_BOSS + 12) { C.recul = 90; C.stun = 0.5; C.pare = 0.4; SON.pare(); vib(20); blague('Repoussé !', C.x, C.y - 60, '#7cf'); break; }
+    if (Math.hypot(C.x - p.cx, C.y + 10 - p.cy) < R_BOSS + 12) {
+      if (C.rep >= REPOUSSE_MAX) { C.pare = 0.4; if (limite('bossPasse', 1)) blague('Il passe !', C.x, C.y - 60, '#ff6b6b'); break; } // plus de repousse : il continue jusqu'en bas
+      C.rep++; C.recul = 90; C.stun = 0.5; C.pare = 0.4; SON.pare(); vib(20);
+      blague(C.rep < REPOUSSE_MAX ? `Repoussé ! ${C.rep}/${REPOUSSE_MAX}` : 'Dernier repoussé !', C.x, C.y - 60, '#7cf'); break; }
   }
   C.tambour -= dt;
   if (C.tambour <= 0) { const k = Math.max(0, Math.min(1, (C.y - Y_BOSS0) / (Y_BOSS_PASSE - Y_BOSS0))); C.tambour = 0.85 - 0.5 * k; SON.tambour(k); }
@@ -1648,7 +1652,7 @@ function collBoss(b) {
   if (-vn > 200 && C.inv <= 0) toucherBoss(); else if (limite('bossTape', 0.15)) SON.mur(-vn);
 }
 function toucherBoss() {
-  const C = combat, F = C.boss.genre === 'F'; C.pv--; C.boss.pv = C.pv; C.inv = 0.45; C.coup = 0.35; C.recul = 60;
+  const C = combat, F = C.boss.genre === 'F'; C.pv--; C.boss.pv = C.pv; C.inv = 0.45; C.coup = 0.35; C.recul = C.ultime || !(C.rep >= REPOUSSE_MAX) ? 60 : 0; // repousses épuisées : touché, mais il ne recule plus
   points(PTS_COUP, C.x, C.y - 48); SON.aie(C.rang); vib([30, 20, 30]); etincelles(C.x, C.y, 18, '#ff4d4d'); secousse = Math.max(secousse, 0.08); chaseT = Math.max(chaseT, 0.4);
   if (C.pv <= 0) { bossVaincu(); return; }
   if ((C.N.bouclier || C.ultime) && !C.rage && C.pv <= C.pvMax / 2) { C.rage = true; annonce(C.ultime ? (F ? 'ELLE SE DÉCHAÎNE !' : 'IL SE DÉCHAÎNE !') : F ? 'ELLE ENRAGE !' : 'IL ENRAGE !', C.ultime ? 'Deux boules de feu à la fois · plus que ' + C.pv + ' ♥' : 'Plus vite… mais plus que ' + C.pv + ' ♥', C.ultime ? '#b26bff' : '#ff4d4d', 30, 1.6); SON.grogne(C.rang); }

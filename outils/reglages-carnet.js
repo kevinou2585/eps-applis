@@ -36,6 +36,7 @@ function regCards(){
       <p class="small muted" style="margin:0">Chaque élève commence chaque période avec tous ses points, puis on retire.</p>
       <div class="row2"><label class="f" style="flex:1">Points de tenue par période<input class="inp num" id="s-T" inputmode="numeric" value="${st.T}"></label>
       <label class="f" style="flex:1">Points d'attitude par période<input class="inp num" id="s-C" inputmode="numeric" value="${st.C}"></label></div>
+      ${n('s-W', 'W', 'Points de travaux par période', 'Colonne seulement pour les élèves qui ont reçu un travail (📝 à l\'appel). Travail non remis : −1 en travaux, puis en tenue, puis en attitude.')}
       <label class="f">Savoir-être en % du bulletin<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
       <p class="small" id="s-separt" style="margin:-4px 0 0">${regPart(st.se)}</p>
       <b class="small reg-sub">Points retirés</b>
@@ -75,7 +76,7 @@ function bindReg(){
   const num = (id, k, lo, hi, int = true) => { const el = $(id); if (!el) return; el.onchange = e => { let v = parseNum(e.target.value); if (v != null && int) v = Math.round(v);
     if (v == null || isNaN(v) || v < lo || v > hi){ e.target.value = k in REG_DEF ? fr(stN(k), 2) : st[k]; toast(`Entre ${lo} et ${hi}`); return; }
     st[k] = v; save(); toast('Enregistré'); }; };
-  num('s-T', 'T', 0, 20); num('s-X', 'X', 0, 20); num('s-C', 'C', 0, 20); num('s-se', 'se', 0, 100);
+  num('s-T', 'T', 0, 20); num('s-W', 'W', 0, 20); num('s-X', 'X', 0, 20); num('s-C', 'C', 0, 20); num('s-se', 'se', 0, 100);
   if ($('s-se')) $('s-se').oninput = e => { const v = parseNum(e.target.value); if (v != null && v >= 0 && v <= 100) $('s-separt').innerHTML = regPart(v); };
   num('s-kit', 'kitPts', 0, 10); num('s-d', 'dPts', 0, 10); num('s-npp', 'npPts', 0, 10);
   num('s-evmax', 'evMax', 1, 1000, false); num('s-eng', 'enGuard', 0, 60, false);

@@ -4,7 +4,7 @@
    - Leçon suivante (date ≥ due) : rappel « Travail du … à rendre » avec trois choix :
        Remis ✓      → c.trav[pid] effacé, L.m[pid].trOk = {d, l} (rien n'est retiré, il repart de zéro) ;
        +1 semaine   → due = date du jour + 7 ;
-       Zéro (−1)    → L.m[pid].tz = {d, l} : compute() retire 1 point de tenue (en attitude s'il n'en reste plus).
+       Zéro (−1)    → L.m[pid].tz = {d, l} : compute() retire 1 point en travaux (colonne débloquée au 1er travail), puis en tenue, puis en attitude.
      Chaque choix s'annule (« Annuler » remet le rappel).
    Branché sur lessonRow (ligne sous l'élève) et sur le clic de la liste d'appel (data-act tr…). */
 (() => {
@@ -31,8 +31,8 @@
   window.travLine = function(c, L, p, sansChip){
     const mm = L.m[p.id] || {}, t = aRendre(c, L, p), out = [], ch = sansChip ? '' : travChip(c, L, p);
     if (ch) out.push(ch);
-    if (t) out.push(`<div class="tr-rap"><span>📝 Travail donné le ${jj(t.d)}${t.due > addDays(t.d, 7) ? ' (déjà prolongé)' : ''} : remis ?</span><button type="button" data-act="tr-ok">✓ Remis</button><button type="button" data-act="tr-plus">+1 semaine</button><button type="button" class="z" data-act="tr-zero">Zéro (−1 tenue)</button></div>`);
-    if (mm.tz) out.push(`<div class="tr-rap no"><span>📝 Travail du ${jj(mm.tz.d)} pas remis : −1 point de tenue.</span><button type="button" data-act="tr-undo">Annuler</button></div>`);
+    if (t) out.push(`<div class="tr-rap"><span>📝 Travail donné le ${jj(t.d)}${t.due > addDays(t.d, 7) ? ' (déjà prolongé)' : ''} : remis ?</span><button type="button" data-act="tr-ok">✓ Remis</button><button type="button" data-act="tr-plus">+1 semaine</button><button type="button" class="z" data-act="tr-zero">Zéro (−1 point)</button></div>`);
+    if (mm.tz) out.push(`<div class="tr-rap no"><span>📝 Travail du ${jj(mm.tz.d)} pas remis : −1 point (travaux, sinon tenue, sinon attitude).</span><button type="button" data-act="tr-undo">Annuler</button></div>`);
     if (mm.trOk) out.push(`<div class="tr-rap ok"><span>📝 Travail du ${jj(mm.trOk.d)} remis ✓</span><button type="button" data-act="tr-undo">Annuler</button></div>`);
     return out.length ? `<div class="tr-line">${out.join('')}</div>` : '';
   };
@@ -44,7 +44,7 @@
       else { mm.tr = 1; T[p.id] = {l: L.id, d: L.date, due: addDays(L.date, 7)}; toast(`${nom} : travail donné, rappel au cours de la semaine prochaine`); }
     } else if (act === 'tr-ok' && t){ mm.trOk = {d: t.d, l: t.l}; delete T[p.id]; toast(`${nom} : travail remis ✓`); }
     else if (act === 'tr-plus' && t){ t.due = addDays(L.date, 7); toast(`${nom} : une semaine de plus, rappel au prochain cours`); }
-    else if (act === 'tr-zero' && t){ mm.tz = {d: t.d, l: t.l}; delete T[p.id]; toast(`${nom} : zéro au travail, −1 point de tenue`); }
+    else if (act === 'tr-zero' && t){ mm.tz = {d: t.d, l: t.l}; delete T[p.id]; toast(`${nom} : zéro au travail, −1 point`); }
     else if (act === 'tr-undo'){ const x = mm.tz || mm.trOk; if (x){ T[p.id] = {l: x.l, d: x.d, due: L.date}; delete mm.tz; delete mm.trOk; } }
   };
 
@@ -90,7 +90,7 @@
     const L0 = travTous(), d = today(), cls = [...new Set(L0.map(x => x.c))].sort(classeTri);
     const ligne = ({c, p, t}) => { const late = t.due <= d;
       return `<div class="trv-it" data-c="${c.id}" data-p="${p.id}"><div class="nm"><b>${esc(p.n || nomCourt(p))}</b><span>donné le ${jj(t.d)}${t.due > addDays(t.d, 7) ? ' (prolongé)' : ''}</span><span class="${late ? 'late' : ''}">${late ? 'à rendre depuis le ' : 'à rendre le '}${jj(t.due)}</span></div>
-        <div class="bt"><button type="button" class="ok" data-trv="ok">✓ Remis</button><button type="button" data-trv="plus">+1 semaine</button><button type="button" class="z" data-trv="zero">Zéro (−1 tenue)</button></div></div>`; };
+        <div class="bt"><button type="button" class="ok" data-trv="ok">✓ Remis</button><button type="button" data-trv="plus">+1 semaine</button><button type="button" class="z" data-trv="zero">Zéro (−1 point)</button></div></div>`; };
     const fait = f => `<div class="trv-it fait" data-f="${faits.indexOf(f)}"><div class="nm"><b>${esc(nomCourt(f.p))}</b><span>${esc(f.c.name)} · ${f.txt}</span></div><div class="bt"><button type="button" data-trv="undo">Annuler</button></div></div>`;
     openSheet('Travaux', `<div class="trv">
       <p class="small muted" style="margin:0">Les élèves qui ont un 📝 travail pas encore rendu, toutes classes. Il apparaît ici dès que tu le donnes à l'appel ; ce que tu choisis ici se retrouve à l'appel et dans les points.</p>
@@ -107,7 +107,7 @@
         const c = S.classes.find(x => x.id === it.dataset.c), p = c && c.pupils.find(x => x.id === it.dataset.p), t = c && (c.trav || {})[p && p.id]; if (!t) return;
         const L = coursPour(c, t); if (!L){ toast('Pas de cours pour cette classe'); return; }
         if (act === 'plus'){ const due0 = t.due; t.due = addDays(d, 7); faits.unshift({act, c, p, L, t, due0, txt: `prolongé jusqu'au ${jj(t.due)}`}); toast(`${nomCourt(p)} : une semaine de plus`); }
-        else { travAct(act === 'ok' ? 'tr-ok' : 'tr-zero', c, L, p); faits.unshift({act, c, p, L, txt: act === 'ok' ? 'remis ✓' : 'zéro, −1 point de tenue'}); }
+        else { travAct(act === 'ok' ? 'tr-ok' : 'tr-zero', c, L, p); faits.unshift({act, c, p, L, txt: act === 'ok' ? 'remis ✓' : 'zéro, −1 point'}); }
         save(c.id);
       }
       render(); openTravaux(); };

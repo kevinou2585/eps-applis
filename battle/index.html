@@ -399,11 +399,22 @@ function arrBoss(niv) { // 8 mesures : ostinato (A) puis thème + chœur (B) ; p
     return { k: niv <= 2, tim: 1, sn: niv <= 2 || B, h: niv <= 2 || B, b: 1, s: 1, l: B ? 0 : null, p: niv === 1 || B, crash: niv <= 2 && m % 4 === 0, roll: m === 7 ? (niv === 1 ? 2 : 1) : 0, toms: m === 3 || m === 7, f0: B ? 3600 : 2400, f1: B ? 3600 : 2800 };
   };
 }
+function arrEmpereur(m) { // l'empereur : marche lente et lourde ; 2 mesures de timbales et caisse militaire, puis cuivres, chœur et orgue
+  const T = m >= 2, P = m >= 4;
+  return { tim: 1, sn: 1, b: 1, k: P, s: P, l: T ? 0 : null, p: 1, crash: m === 4, roll: m === 7 ? 2 : 0, toms: m === 3, cloche: m % 4 === 0, f0: T ? 3000 : 1600, f1: T ? 4200 : 2400 };
+}
 function arrValse(m) { // la crypte : valse de vampire 3/4 (clavecin + orgue), 16 mesures
   if (m < 8) return { b: 1, s: 1, l: 0, cloche: m % 4 === 0, f0: 5000, f1: 5000 };
   return { b: 1, p: 1, l: 1, tim: 1, cloche: m % 4 === 0, f0: 3000, f1: 4500 };
 }
 const PISTES = {
+  boss0: { // l'empereur caché (Kevin : « une vraie musique, l'Empire qui arrive ») : marche impériale composée pour le jeu, sol mineur harmonique
+    bpm: 96, pb: 16, racine: 43, gamme: 'harm', cycle: 8, section: arrEmpereur,
+    accords: [[0, 3, 7], [-4, 0, 3], [5, 8, 12], [-5, -1, 2], [0, 3, 7], [1, 5, 8], [-5, -1, 2], [-5, -1, 2, 5]],
+    kick: 'x.......x.......', kickSon: 'boum', timbale: 'x..x..x.x.......', caisse: 'x..xx..xx..xx.xx',
+    basse: 'r.....r.r.....5.', basseSon: 'boss', basseLong: 5, stab: 'x.......x.......', stabSon: 'orgue', padSon: 'choeur', padOct: 12,
+    leads: ['................................0-----.0..2-4---5-------4---3---4-----.4..5-6---7-------6-5-4---7---7---8---5---6-------4-------'], leadSon: 'cuivre', double: 'cloche'
+  },
   base: { // table de base : house légère et entraînante (la mineur : Am F C G)
     bpm: 122, pb: 16, racine: 57, gamme: 'min', cycle: 16, section: arrHouse(true), pompe: 1,
     accords: [[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5]],
@@ -532,7 +543,7 @@ function note(d, son, m, t, dur, vol) { // les instruments de la musique (oscill
 }
 function pisteVoulue() { // quelle musique pour l'écran actuel ?
   if (etat !== 'jeu') return null;
-  if (combat) return combat.phase === 'alerte' || combat.phase === 'elimine' ? null : 'boss' + (combat.rang || 1);
+  if (combat) return combat.phase === 'alerte' || combat.phase === 'elimine' ? null : 'boss' + (combat.ultime ? 0 : combat.rang || 1);
   if (bascule && bascule.vers) return bascule.vers === 'goth' ? 'crypte' : 'base';
   if (table === 'goth') return 'crypte';
   if (multiball || spectacleT > 0) return 'multi';
@@ -944,7 +955,7 @@ const NIV_BOSS = {
   2: { pv: 5, billes: 3, vit: 15, amp: 75, freq: 1.15, esquive: 0.35, bouclier: false, bonus: 10000, titre: { H: 'Le Bourreau', F: 'La Sorcière' }, lieu: 'LE CACHOT', bord: '#ff8c1a' },
   1: { pv: 7, billes: 3, vit: 17, amp: 90, freq: 1.35, esquive: 0.3, bouclier: true, bonus: 25000, titre: { H: 'Le Roi', F: 'La Reine' }, lieu: 'LA SALLE DU TRÔNE', bord: '#ffd23f' },
   // Kevin : le boss caché du château (rang 0) : on ne le tape pas avec sa bille, on lui RENVOIE ses boules de feu avec les flippers ; billes = cœurs du joueur
-  0: { pv: 6, billes: 3, vit: 0, amp: 105, freq: 0.75, esquive: 0, bouclier: false, bonus: 50000, titre: { H: 'L’Empereur', F: 'L’Impératrice' }, lieu: 'LE DONJON CACHÉ', bord: '#b26bff', ultime: true }
+  0: { pv: 5, billes: 3, vit: 0, amp: 100, freq: 0.7, esquive: 0, bouclier: false, bonus: 50000, titre: { H: 'L’Empereur', F: 'L’Impératrice' }, lieu: 'LE DONJON CACHÉ', bord: '#b26bff', ultime: true }
 };
 const PTS_COUP = 1000, Y_BOSS0 = 152, Y_BOSS_PASSE = 690, R_BOSS = 26;
 function titreBoss(rang, genre) { return NIV_BOSS[rang].titre[genre === 'F' ? 'F' : 'H']; }
@@ -982,7 +993,10 @@ function nouvellePartie() {
 function points(n, x, y) {
   if (tiltOn) return; // TILT : plus aucun point jusqu'à la bille suivante
   if (table === 'boss') return; // Kevin : les combats de boss ne rapportent aucun point (le battre sert juste à continuer)
-  const p = n * mult * (multiball ? 2 : 1); score += p;
+  // Kevin (26/10) : en multibille les points montent trop vite → ×0,7 (au lieu de ×2) ; boss atteint → score figé jusqu'au combat
+  let p = Math.round(n * mult * (multiball ? 0.7 : 1));
+  const plaf = plafondBoss(); if (plaf != null) { if (score >= plaf) return; p = Math.min(p, plaf - score); }
+  score += p;
   if (x != null) popups.push({ t: '+' + fmt(p), x, y, age: 0, vie: 0.8, petit: true });
   if (!recordFait && score > cibleRecord && etat === 'jeu') { recordFait = true; popups.push({ t: '🏆 RECORD BATTU !', x: 185, y: 250, age: 0, vie: 2.2, coul: '#ffe600' }); SON.record(); vib([30, 30, 30, 30, 80]); }
 }
@@ -1491,6 +1505,12 @@ function preparerBoss() { // file des boss de la partie : du n°3 au n°1 (on pe
   bossUlt = u && Object.assign(u, { pv: NIV_BOSS[0].pv, vaincu: false, img: imageDe(u.photo || (u.inconnu ? '' : AVATAR)) }); // pas encore de boss caché : une ombre « ? »
 }
 function prochainBoss() { return bossFile.find(b => !b.vaincu) || null; }
+function plafondBoss() { // Kevin : dès qu'on dépasse le score du boss suivant, le score ne bouge plus : on part au combat avec ce score-là
+  if (table === 'boss' || combat) return null;
+  const b = prochainBoss(); if (b) return b.score + 1;
+  if (bossUlt && !ultimeTente && bossFile.some(x => x.rang === 1 && x.vaincu)) return bossUlt.score + 1;
+  return null;
+}
 function calmePourBoss() { // jamais pendant un retournement, le spectacle de la récré, un tunnel, une rampe, un trou…
   if ((table !== 'base' && table !== 'goth') || bascule || spectacleT > 0 || gelT > 0 || gothDans > 0 || attenteBalle > 0 || temps - finCombatT < 6) return false;
   // Kevin : le boss arrive aussi pendant la multibille et dans la crypte ; on y revient ensuite exactement où on en était
@@ -1594,8 +1614,8 @@ function majUltime(dt) { // le boss caché reste en haut, va et vient, et lance 
   C.x = 185 + N.amp * Math.sin(C.ph);
   C.tir -= dt;
   if (C.tir <= 0 && balles.length < (C.rage ? 2 : 1)) {
-    const b = balleNeuve(C.x, C.y + 42, rnd(-80, 80), C.rage ? 230 : 170, false); b.feu = true; balles.push(b);
-    C.tir = C.rage ? 1.5 : 2.2; SON.lance(); blague(pick(['Boule de feu !', 'Attrape ça !', 'Brûle !', 'HA HA !']), C.x, C.y - 62, '#ffb347');
+    const b = balleNeuve(C.x, C.y + 42, rnd(-70, 70), C.rage ? 205 : 155, false); b.feu = true; balles.push(b); // Kevin (26/10) : un peu plus facile
+    C.tir = C.rage ? 1.8 : 2.4; SON.lance(); blague(pick(['Boule de feu !', 'Attrape ça !', 'Brûle !', 'HA HA !']), C.x, C.y - 62, '#ffb347');
   }
 }
 function pasBoss(h) { // physique de l'arène : même bas de table, 2 bumpers, le boss est un obstacle rond
@@ -1615,7 +1635,7 @@ function collBoss(b) {
   const C = combat, cy = C.y + 8, rr = R + R_BOSS;
   let nx = b.x - C.x, ny = b.y - cy; const d2 = nx * nx + ny * ny; if (d2 >= rr * rr) return;
   if (C.ultime) { // seule une boule de feu qui REMONTE le touche (celles qu'il lance le traversent) ; elle explose sur lui
-    if (b.vy < -120 && !b.mort) { b.mort = true; etincelles(b.x, b.y, 24, '#ffb347'); if (C.inv <= 0) toucherBoss(); }
+    if (b.vy < -90 && !b.mort) { b.mort = true; etincelles(b.x, b.y, 24, '#ffb347'); if (C.inv <= 0) toucherBoss(); }
     return;
   }
   const d = Math.sqrt(d2) || 1; nx /= d; ny /= d; b.x = C.x + nx * rr; b.y = cy + ny * rr;

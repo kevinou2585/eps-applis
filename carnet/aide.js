@@ -16,9 +16,10 @@ window.CARNET_AIDE = [
     ['Présence', 'Un toucher sur la case = <b>absent</b>, puis <b>retard</b>, puis <b>dispensé</b> (là mais ne fait pas cours), puis de nouveau présent.'],
     ['Tenue', 'Le t-shirt : un toucher = <b>oubli de tenue</b>. À la piscine : maillot oublié ou « ne nage pas ».'],
     ['Attitude', 'Le pouce : 1er toucher = <b>perturbe</b>, 2e = <b>exclu du cours</b>, 3e = annuler. Les points retirés suivent ton barème (Réglages › Barème).'],
+    ['Règles', 'Chez les filles, en salle comme à la piscine : <b>R · règles</b> = elle ne participe pas (ne nage pas) à cause de ses règles. C\'est une trace datée, sans point retiré ; un avertissement apparaît à partir de la 2e fois de suite.'],
     ['Alertes', 'Au 3e oubli ou à la 3e perturbation de la période, un bandeau prévient à l\'appel et dans la fiche de l\'élève.'],
     ['Travail', 'Sous un élève qui ne fait pas le cours (absent, dispensé, oubli, ne nage pas, règles, perturbe) : <b>📝 Travail</b> = tu lui as donné un travail. Au cours de la semaine suivante, un rappel propose <b>✓ Remis</b> (rien n\'est retiré), <b>+1 semaine</b> ou <b>Zéro</b> : −1 point de tenue (en attitude s\'il n\'en reste plus). Chaque choix s\'annule.'],
-    ['Ce cours', 'En bas : la même fiche que dans l\'Agenda (sport, prévu au planning, programme, <b>ce que tu as fait</b> avec 🎤 Dicter, prépa, ▶ Lancer la prépa). Ce que tu changes ici change aussi dans l\'Agenda, à la bonne date.'],
+    ['Ce cours', 'En bas : la même fiche que dans l\'Agenda (sport, prévu au planning, programme, 📋 sélectionner une préparation, ▶ Lancer la prépa et 🎤 Dicter, puis <b>ce que tu as fait</b> : la prépa choisie s\'y écrit en 1re ligne et change si tu en choisis une autre). Ce que tu changes ici change aussi dans l\'Agenda, à la bonne date.'],
     ['Piscine : éducateurs', 'Le message à copier ou à envoyer sur WhatsApp liste ceux qui restent à l\'école (affaires oubliées, ne nage pas, règles, dispensés) et les <b>absents</b>.'],
     ['Autre cours', '« + Autre » : faire l\'appel d\'un cours qui n\'est pas dans l\'horaire (remplacement, cours déplacé).'],
     ['Fiche d\'un élève', 'Touche son nom : son bulletin, tout son historique daté, ses certificats médicaux.']
@@ -62,7 +63,7 @@ window.CARNET_AIDE = [
   {ic: '⚙️', t: 'Réglages', intro: 'La roue dentée en haut à droite. Elle s\'ouvre sur la rubrique qui va avec l\'onglet où tu es.', pts: [
     ['Horaire et sports', 'Ta semaine type, et tes sports en plus de la liste de base (avec leur ordre).'],
     ['Barème', 'Points de tenue et d\'attitude par période, points retirés par oubli, perturbation et exclusion, part du savoir-être dans le bulletin (60 % par défaut). Chaque élève commence la période avec tous ses points.'],
-    ['Piscine', '« Ne nage pas » retire ou non des points ; les règles ne coûtent jamais de point. Texte du message aux éducateurs quand tu laisses un travail.'],
+    ['Piscine', '« Ne nage pas » retire ou non des points ; les règles ne coûtent jamais de point (salle et piscine).'],
     ['Évaluations', '« Sur combien » proposé, arrondi des notes d\'endurance, réglages du compteur de tours.'],
     ['Commentaires', 'Commentaire de bulletin automatique, ou cases vides que tu remplis toi-même.'],
     ['Skore', 'Le favori ⭐ Remplir Skore à installer sur l\'ordinateur (voir « Copier dans Skore »).'],

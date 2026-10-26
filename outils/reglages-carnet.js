@@ -47,8 +47,7 @@ function regCards(){
       <h3>Piscine &amp; règles</h3>
       <label class="toggle"><input type="checkbox" id="s-np" ${st.npCounts ? 'checked' : ''}>« Ne nage pas » retire des points de tenue</label>
       <div id="s-npw" ${st.npCounts ? '' : 'hidden'}>${n('s-npp', 'npPts', 'Points de tenue par « ne nage pas »', '')}</div>
-      ${tg('s-rgw', 'rgWarn', 'Règles : avertir à l\'appel « ⚠ 2e semaine de suite »', 'Les règles ne coûtent jamais de point et ne sont jamais écrites dans les commentaires ni dans le message aux éducateurs (« ne nage pas »).')}
-      <label class="f">Travail laissé (message aux éducateurs)<input class="inp" id="s-work" value="${esc(st.work ?? 'J\'ai laissé un travail à faire.')}"></label>
+      ${tg('s-rgw', 'rgWarn', 'Règles : avertir à l\'appel « ⚠ 2e semaine (ou 2e cours) de suite »', 'Les règles (salle et piscine) ne coûtent jamais de point et ne sont jamais écrites dans les commentaires ni dans le message aux éducateurs (« ne nage pas »).')}
     </div>
     <div class="card sec reg" style="padding-block:14px" id="reg-evals">
       <h3>Évaluations &amp; endurance</h3>
@@ -81,7 +80,6 @@ function bindReg(){
   $('s-np').onchange = e => { st.npCounts = e.target.checked; $('s-npw').hidden = !st.npCounts; save(); };
   document.querySelectorAll('[data-regb]').forEach(x => x.onchange = () => { st[x.dataset.regb] = x.checked; save(); toast('Enregistré'); });
   $('s-enstep').onchange = e => { st.enStep = +e.target.value; save(); toast('Enregistré'); };
-  $('s-work').onchange = e => { st.work = e.target.value; save(); toast('Enregistré'); };
   document.querySelectorAll('[data-regj]').forEach(b => b.onclick = () => regJump(b.dataset.regj));
   document.querySelectorAll('[data-regper]').forEach(b => b.onclick = () => { S.cur = b.dataset.regper; UI.tab = 'classes'; UI.cview = true; UI.ctab = 'pupils'; save(); render(); setTimeout(() => $('s-addper')?.scrollIntoView({block: 'center'}), 60); });
 }

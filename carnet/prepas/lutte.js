@@ -1,54 +1,81 @@
-/* Sport d'opposition · lutte (jeux divers) : un seul cycle de 6 leçons (5 + l'évaluation), le même pour toutes les années.
-   Tapis de sol (4 à 6 zones de 2 m × 2 m), chasubles ou foulards, plots, chrono, fiches d'arbitrage.
-   Règles de sécurité de tout le cycle : pas de coup, pas de clé, pas de prise au cou ni à la tête, on lâche dès que l'autre tape 2 fois ou dit « stop », pas de bijoux, ongles courts.
-   e = échauffement, c = corps de leçon, r = retour au calme. [nom, minutes, consigne, (réussite, variante,) schéma] */
+/* Sport d'opposition · lutte en jeux (jeux divers) : un seul cycle de 6 leçons (5 + l'évaluation), le même pour toutes les années.
+   Format « jeux » (voir carnet/prepa-moteur.js). Règles d'or de tout le cycle : pas de coup, pas de clé, pas de prise au cou ni à la tête,
+   on lâche dès que l'autre tape 2 fois ou dit « stop », pas de bijoux, ongles courts, adversaires de gabarit proche.
+   Idées mêlées et réécrites : classeur EPS, jeux d'opposition (la tortue, le crocodile, les chiffonniers, le coffre-fort, le roi du tapis,
+   le combat des coqs, le gardien du trésor), règles simplifiées de la lutte scolaire. On gagne des points, jamais en faisant mal. */
 (() => {
-const A = {th: 'Lutte : s\'opposer en sécurité, déséquilibrer, renverser et immobiliser, arbitrer', comp: ['HME1', 'HME3', 'HSC1', 'HSC3', 'GSS2', 'GSS3'], mat: 'Tapis de sol (4 à 6 zones de 2 m × 2 m), foulards ou chasubles, plots, chrono, fiches d\'arbitrage, fiches d\'évaluation.', l: [
-  {t: 'Les règles de sécurité et le contact', o: 'Connaître et respecter les règles de sécurité de la lutte ; accepter le contact et le salut.', comp: ['HSC1', 'HSC3', 'GSS2'], e: [
-    ['Les règles d\'or', 5, 'Assis au bord des tapis : on salue avant et après ; interdit : coups, clés, prises au cou ou à la tête, cheveux, vêtements tirés fort ; on lâche tout de suite si l\'autre tape 2 fois ou dit « stop ». Bijoux enlevés, ongles courts, pieds nus.', 'explication'],
-    ['Déplacements à quatre pattes', 5, 'Sur les tapis : déplacements en quadrupédie avant, arrière, de côté ; puis « chat » à 4 pattes : le chat touche le dos des autres.', 'tapis::sol']],
-   c: [['Le bernard-l\'ermite', 10, 'Par deux sur un tapis : A à 4 pattes (la « tortue »), B essaie de le retourner sur le dos en 20 s, sans le soulever et sans prise à la tête. On inverse ; on change de partenaire toutes les 2 reprises (gabarit proche).', 'Je résiste 20 s sans me faire retourner, ou je retourne mon partenaire en sécurité.', 'Partir à genoux face à face pour les plus craintifs.', 'tapis::sol'],
-    ['Le crocodile', 10, 'Par deux à genoux, dos contre dos : au signal, se retourner et essayer de toucher les deux épaules de l\'autre au sol. 30 s par reprise.', 'Je respecte toutes les règles de sécurité pendant les reprises.', 'Toucher une seule épaule pour gagner.', 'tapis'],
-    ['Le ramasse-foulards', 8, 'Chacun un foulard dans la ceinture, dans la zone des tapis : à genoux, attraper le foulard des autres sans protéger le sien avec les mains. Celui qui n\'a plus de foulard sort 20 s.', 'Je garde mon foulard plus de 30 s.', '', 'tapis::sol']],
-   r: [['Retour au calme', 5, 'Salut du partenaire. Étirements du dos et des épaules ; rappel des règles d\'or par un élève.', 'etirements']]},
-  {t: 'Pousser, tirer : sortir l\'autre de la zone', o: 'Garder son équilibre et faire sortir l\'adversaire d\'une zone en poussant ou en tirant avec tout le corps.', comp: ['HME1', 'HME3', 'HSC1'], e: [
-    ['Rappel des règles', 3, 'Les règles d\'or redites par les élèves, montrer le salut et le « stop ».', 'explication'],
-    ['Les sumos', 7, 'Par deux debout, mains sur les épaules de l\'autre : pousser doucement, puis plus fort, en gardant les jambes fléchies et le dos droit. Puis dos contre dos.', 'tapis::cercle']],
-   c: [['Sortir du cercle', 12, 'Par deux dans un cercle (cerceau géant ou cercle de plots sur le tapis) : debout, saisie aux épaules ou aux bras, faire sortir l\'autre en poussant ou en tirant. 30 s, on change de partenaire.', 'Je fais sortir mon adversaire au moins une fois sur trois reprises.', 'À genoux pour les plus petits gabarits.', 'tapis::cercle'],
-    ['La planche', 8, 'A est allongé sur le ventre, gainé ; B essaie de le retourner sur le dos en 15 s. Puis A à 4 pattes. On inverse.', 'Je reste gainé comme une planche et je résiste.', '', 'tapis::sol'],
-    ['Le roi du tapis', 10, 'Groupes de 4 sur un tapis : à genoux, chacun essaie de faire sortir les autres. Le dernier sur le tapis gagne 1 point. Reprises de 45 s.', 'Je reste sur le tapis jusqu\'à la fin d\'une reprise.', '', 'tapis']],
-   r: [['Retour au calme', 5, 'Salut. Étirements des jambes et des épaules ; qu\'est-ce qui aide à garder l\'équilibre ? (jambes fléchies, pieds écartés, centre bas).', 'etirements']]},
-  {t: 'Déséquilibrer et renverser au sol', o: 'Renverser un adversaire à 4 pattes sur le dos en le faisant basculer, sans le soulever.', comp: ['HME1', 'HME3', 'GSS2'], e: [
-    ['Roulades et chutes', 6, 'Sur les tapis : roulades avant, arrière, chute sur le côté en tapant le tapis avec le bras (pour amortir). Le prof montre la chute arrière, menton rentré.', 'tapis::sol'],
-    ['Équilibres à deux', 4, 'Par deux à 4 pattes face à face : pousser épaule contre épaule sans tomber.', 'tapis::sol']],
-   c: [['Les renversements', 12, 'Le prof montre 2 renversements : 1) saisir le bras et la jambe du même côté et tirer vers soi ; 2) passer le bras sous le ventre et faire rouler l\'autre sur l\'épaule. Par deux : 5 essais chacun, le partenaire se laisse faire puis résiste un peu.', 'Je réussis un renversement sans soulever mon partenaire.', 'Le partenaire reste à genoux, mains au sol, sans résister.', 'tapis::sol'],
-    ['Combat au sol', 10, 'Départ : A à 4 pattes, B à genoux à côté. 30 s pour renverser A sur le dos. Arbitre : un 3e élève dit « allez », « stop » et compte les renversements.', 'Je marque un renversement en 30 s.', '', 'tapis::sol'],
-    ['Petit tournoi', 8, 'Groupes de 3 par tapis (2 luttent, 1 arbitre) : 3 reprises de 30 s, on tourne les rôles.', 'J\'arbitre en disant clairement « allez » et « stop ».', '', 'tapis']],
-   r: [['Retour au calme', 5, 'Salut. Étirements du dos (position de l\'enfant, chat-vache) ; rappel : on ne soulève jamais l\'autre.', 'etirements']]},
-  {t: 'Immobiliser et se dégager', o: 'Maintenir un adversaire sur le dos 5 secondes (immobilisation) et savoir se dégager.', comp: ['HME1', 'HME3', 'HSC1', 'GSS2'], e: [
-    ['Chutes et roulades', 5, 'Chutes sur le côté et en arrière en tapant le tapis ; roulades sur l\'épaule.', 'tapis::sol'],
-    ['Le bernard-l\'ermite', 5, 'Rappel : par deux, 3 reprises de 20 s pour retourner la tortue.', 'tapis::sol']],
-   c: [['L\'immobilisation', 12, 'Le prof montre : se mettre en travers du partenaire couché sur le dos, poitrine contre poitrine, un bras qui entoure son bras, l\'autre passé sous son épaule (jamais autour du cou ni de la tête). L\'arbitre compte 5 secondes. Par deux, 5 essais chacun.', 'Je tiens mon partenaire sur le dos 5 s sans prise au cou.', 'Tenir 3 s pour les débutants.', 'tapis::sol'],
-    ['Se dégager', 10, 'A immobilise B ; B a 15 s pour se dégager en pont (pousser sur les pieds, rouler sur l\'épaule) ou en se retournant sur le ventre. On inverse.', 'Je me dégage au moins une fois sur trois.', 'A ne serre qu\'à moitié au début.', 'tapis::sol'],
-    ['Renverser puis immobiliser', 8, 'Départ à 4 pattes / à genoux : renverser, puis immobiliser 5 s = 2 points ; renverser seulement = 1 point. Reprises de 45 s.', 'J\'enchaîne renversement et immobilisation.', '', 'tapis']],
-   r: [['Retour au calme', 5, 'Salut. Étirements de la nuque (doucement), des épaules et du dos ; rappel des points.', 'etirements']]},
-  {t: 'Combats arbitrés', o: 'Lutter en respectant les règles et arbitrer un combat (départ, points, arrêt, vainqueur).', comp: ['HSC1', 'HSC3', 'GSS3'], e: [
-    ['Échauffement en duo', 6, 'Par deux : sumos debout, bernard-l\'ermite, chutes ; 1 minute chaque.', 'tapis::cercle'],
-    ['Les règles du combat', 4, 'Au tableau : combat au sol, départ à genoux, 1 min 30 ; sortie de la zone = 1 point à l\'autre, renversement = 1 point, immobilisation 5 s = 2 points. L\'arbitre dit « allez », « stop » et le score.', 'explication']],
-   c: [['Combats par poules', 18, 'Poules de 4 de gabarit proche par tapis : chacun lutte contre les 3 autres ; ceux qui ne luttent pas arbitrent et tiennent la fiche des points.', 'Je gagne au moins un combat ou je marque des points dans chaque combat.', 'Combat à genoux contre un partenaire coopérant pour les plus craintifs.', 'tapis'],
-    ['Débriefing arbitrage', 7, 'Chaque poule montre une situation difficile à arbitrer ; la classe décide de la bonne décision.', 'J\'explique une décision d\'arbitrage avec la règle.', '', 'explication']],
-   r: [['Retour au calme', 5, 'Salut collectif. Étirements ; chacun dit une règle de sécurité qu\'il a appliquée.', 'etirements']]},
-  {t: 'Évaluation : combattre et arbitrer', o: 'Montrer renversement, immobilisation, dégagement en combat et un arbitrage juste, en respectant la sécurité.', comp: ['HME1', 'HME3', 'HSC1', 'HSC3', 'GSS2'], crit: [
-    ['Renversement (3 essais, partenaire qui résiste un peu)', 5, '5 : 3 réussis, sans soulever · 4 : 2 · 2 : 1 · 0 : aucun'],
-    ['Immobilisation 5 s', 4, '4 : tenue 5 s, sans prise au cou · 2 : moins de 5 s · 0 : non réussie'],
-    ['Dégagement (2 essais)', 3, '3 : se dégage 2 fois · 2 : 1 fois · 1 : tente en pont ou en se retournant'],
-    ['Combat : engagement et stratégie', 4, '4 : attaque, enchaîne renversement et immobilisation · 2 : surtout en défense · 1 : peu actif'],
-    ['Sécurité, salut et arbitrage', 4, '4 : règles toujours respectées, arbitre juste et clair · 2 : un rappel · 0 : règle de sécurité non respectée']], e: [
-    ['Échauffement', 6, 'Chutes, roulades, sumos et bernard-l\'ermite, 1 minute chaque, par deux de gabarit proche.', 'tapis'],
-    ['Rappel des critères', 4, 'Au tableau : les 5 critères et les règles du combat.', 'explication']],
-   c: [['Ateliers techniques', 12, 'Par deux devant le prof : 3 renversements, une immobilisation de 5 s, 2 dégagements. Les autres font des reprises libres sur les autres tapis.', 'Je montre chaque technique sans prise interdite.', '', 'tapis::sol'],
-    ['Combats arbitrés', 15, 'Poules de 3 ou 4 : combats de 1 min 30, les élèves arbitrent ; le prof note l\'engagement, la sécurité et l\'arbitrage.', 'Je combats et j\'arbitre en respectant les règles.', '', 'tapis']],
-   r: [['Retour au calme', 5, 'Salut collectif. Étirements ; chacun dit ce qu\'il retient du cycle.', 'etirements']]}
+const A = {th: 'Lutte : s\'opposer en sécurité, déséquilibrer, renverser et immobiliser, arbitrer', comp: ['HME1', 'HME3', 'HSC1', 'HSC3', 'GSS2', 'GSS3'], l: [
+  {t: 'Les règles d\'or et le contact', o: 'Connaître et respecter les règles de sécurité ; accepter le contact et saluer.',
+   e: [['regles', 6], ['chat4', 7]],
+   c: [['tortue', 15, '', 'Je respecte toutes les règles pendant les reprises.', 'La tortue peut se déplacer à 4 pattes.'],
+    ['chiffonniers', 16, '', 'Je garde mon foulard plus de 30 s.', 'Deux foulards chacun.'],
+    ['crocodile', 15, '', 'Je touche les deux épaules au moins une fois.', 'Toucher une seule épaule pour les débutants.']],
+   x: [['coffre', 15, '', 'Je garde le ballon 20 s.', '']],
+   r: [['salut', 7]]},
+  {t: 'Pousser, tirer : sortir l\'autre de la zone', o: 'Garder son équilibre et faire sortir l\'adversaire d\'une zone en poussant ou en tirant avec tout le corps.',
+   e: [['regles', 4, 'Un élève redit les règles et montre le « stop ».'], ['coqs', 9]],
+   c: [['sumo', 16, '', 'Je fais sortir mon adversaire au moins une fois.', 'Zone plus petite.'],
+    ['roitapis', 15, '', 'Je reste sur le tapis jusqu\'à la fin d\'une reprise.', ''],
+    ['planche', 15, '', 'Je reste gainé et je résiste.', 'La planche peut ramper.']],
+   x: [['tire', 15, '', 'Je gagne au moins une manche.', '']],
+   r: [['salut', 7, 'Qu\'est-ce qui aide à garder l\'équilibre ? (jambes fléchies, pieds écartés, centre bas).']]},
+  {t: 'Déséquilibrer et renverser au sol', o: 'Renverser un adversaire à 4 pattes sur le dos en le faisant basculer, sans le soulever.',
+   e: [['chutes', 7], ['coqs', 6]],
+   c: [['renverse', 16, '', 'Je réussis {4|3} renversements sur 5.', 'Le partenaire résiste un peu.'],
+    ['tortue', 15, 'On utilise les renversements appris.', 'Je retourne la tortue en moins de 20 s.', ''],
+    ['tresor', 15, '', 'Je prends le trésor au moins une fois.', '']],
+   x: [['roitapis', 15, '', 'Je reste sur le tapis.', '']],
+   r: [['salut', 7, 'Rappel : on ne soulève jamais l\'autre.']]},
+  {t: 'Immobiliser et se dégager', o: 'Maintenir un adversaire sur le dos 5 secondes (immobilisation) et savoir se dégager.',
+   e: [['chutes', 6], ['tortue', 7, 'Rappel en 3 reprises de 20 s.']],
+   c: [['immo', 16, '', 'Je tiens l\'immobilisation 5 s.', ''],
+    ['degage', 15, '', 'Je me dégage au moins une fois sur trois.', 'L\'immobilisateur ne serre qu\'à moitié au début.'],
+    ['enchaine', 15, '', 'J\'enchaîne renversement et immobilisation.', '']],
+   x: [['coffre', 15, 'Au sol.', 'Je garde le ballon 20 s.', '']],
+   r: [['salut', 7]]},
+  {t: 'Combats arbitrés', o: 'Lutter en respectant les règles et arbitrer un combat : départ, points, arrêt, vainqueur.',
+   e: [['coqs', 6], ['Les règles du combat', 7, 'Combat au sol, départ à genoux, 1 min 30 : sortie de la zone = 1 point à l\'autre, renversement = 1 point, immobilisation 5 s = 2 points. L\'arbitre dit « allez », « stop » et annonce le score avec les doigts.', '', '', 'explication', '']],
+   c: [['poules', 22, '', 'Je marque des points dans chaque combat.', 'Combats de 1 min pour les débutants.'],
+    ['Le tribunal de l\'arbitre', 10, 'Chaque poule rejoue une situation difficile à arbitrer ; la classe vote la bonne décision avec la règle.', 'J\'explique une décision avec la règle.', '', 'explication', ''],
+    ['roitapis', 14, '', 'Je reste sur le tapis.', '']],
+   x: [['tresor', 15, '', 'Je prends le trésor.', '']],
+   r: [['salut', 7, 'Chacun dit une règle de sécurité qu\'il a appliquée.']]},
+  {t: 'Évaluation : combattre et arbitrer', o: 'Montrer renversement, immobilisation, dégagement en combat et un arbitrage juste, en sécurité.',
+   crit: [['Renversement (3 essais, partenaire qui résiste un peu)', 5, '5 : 3 réussis, sans soulever · 4 : 2 · 2 : 1 · 0 : aucun'], ['Immobilisation 5 s', 4, '4 : tenue 5 s, sans prise au cou · 2 : moins de 5 s · 0 : non réussie'], ['Dégagement (2 essais)', 3, '3 : se dégage 2 fois · 2 : 1 fois · 1 : tente en pont ou en se retournant'], ['Combat : engagement et stratégie', 4, '4 : attaque, enchaîne renversement et immobilisation · 2 : surtout en défense · 1 : peu actif'], ['Sécurité, salut et arbitrage', 4, '4 : règles toujours respectées, arbitre juste et clair · 2 : un rappel · 0 : règle de sécurité non respectée']],
+   e: [['chutes', 6], ['coqs', 7]],
+   c: [['Épreuve 1 : les gestes', 12, 'Par 3 : renversements, immobilisation, dégagements devant le prof.', '', '', 'tapis::sol', 'g3'],
+    ['Épreuve 2 : combats arbitrés', 26, 'Poules de gabarit proche ; chacun arbitre au moins un combat.', '', '', 'tapis', 'g4']],
+   r: [['salut', 6]]}
 ]};
-PREPA_ADD({id: 'lutte', sport: 'Lutte (sport d\'opposition)', mat: A.mat, divers: true, an: {1: A, 2: A, 3: A, 4: A, 5: A, 6: A}});
+PREPA_JEUX({id: 'lutte', sport: 'Lutte', divers: true,
+mat: [['tapis', 0.5, 'tapis'], ['foulard', 1], ['ballon en mousse', 6, 'mousse'], ['coupelle', 20, 'plots'], ['chronomètre', 2], ['fiche d\'arbitrage et crayon', 0.25]],
+sal: {
+  tk: {zone: 'la zone de tapis'},
+  g: {src: 'la Petite salle', note: 'les tapis Sarneige sont à apporter de la Petite salle (local partagé) : zones de 2 tapis (2 m × 2 m) séparées de 1 m, le reste de la classe assis au bord.'},
+  p: {note: 'la meilleure salle : 15 tapis Sarneige en zones de 2 m × 2 m, les gros tapis contre les murs. Avec plus de 20 élèves, la moitié lutte, l\'autre arbitre.'},
+  b: {src: 'la Petite salle', note: 'tapis à apporter de la Petite salle ; zones le long des murs, loin des poteaux.', warn: 'Peu de tapis transportables : jeux debout (sumo, coqs) sur le parquet, jeux au sol uniquement sur les tapis.'},
+  c: {note: 'dehors : seulement sur l\'herbe, avec des tapis si possible.', warn: 'Sur le dur : uniquement les jeux debout (sumo, coqs, tir à deux), jamais de jeu au sol.'}
+},
+J: {
+  regles: {n: 'Les règles d\'or', k: 'fp', s: 'explication', d: 'Assis au bord des tapis : on salue avant et après ; interdit : coups, clés, prises au cou ou à la tête, cheveux, vêtements tirés fort ; on lâche tout de suite si l\'autre tape 2 fois ou dit « stop ». Bijoux enlevés, ongles courts, pieds nus ou chaussettes.'},
+  chat4: {n: 'Le chat à quatre pattes', k: 'opp', s: 'tapis::sol', d: 'Sur {zone}, tout le monde à 4 pattes : {n/8 chat} touchent le dos des autres. Un touché se met en tortue (en boule) et est délivré quand un camarade passe par-dessus.'},
+  coqs: {n: 'Le combat des coqs', k: 'opp', s: 'tapis::cercle', f: 'p', d: 'Par deux, accroupis face à face, paumes contre paumes : en poussant ou en esquivant avec les mains seulement, faire perdre l\'équilibre à l\'autre (mains ou fesses au sol). 3 points et on change de partenaire.'},
+  chutes: {n: 'Apprendre à tomber', k: 'coop', s: 'tapis::sol', d: 'Sur les tapis : roulades avant et arrière, chute sur le côté en tapant le tapis avec le bras, chute arrière menton rentré. Puis par deux : A pousse doucement B qui chute correctement.'},
+  tortue: {n: 'Retourner la tortue', k: 'opp', s: 'tapis::sol', f: 'p', d: 'Par deux sur un tapis : A à 4 pattes (la tortue), B essaie de la retourner sur le dos en 20 s, sans la soulever et sans prise à la tête. On inverse ; on change de partenaire toutes les 2 reprises.'},
+  crocodile: {n: 'Le crocodile', k: 'opp', s: 'tapis::sol', f: 'p', d: 'Par deux à genoux, dos contre dos : au signal, se retourner et essayer de poser les deux épaules de l\'autre au sol. 30 s par reprise.'},
+  chiffonniers: {n: 'Les chiffonniers', k: 'opp', s: 'tapis', d: 'Chacun un foulard dans la ceinture, dans {zone} : à genoux, on attrape le foulard des autres sans protéger le sien avec les mains. Celui qui n\'a plus de foulard sort 20 s et fait 5 abdos.'},
+  coffre: {n: 'Le coffre-fort', k: 'opp', s: 'tapis::sol', f: 'p', d: 'A est couché sur un ballon en mousse (le trésor), B a 20 s pour le lui prendre en le faisant rouler ou en glissant les mains dessous (jamais par la tête). On inverse.'},
+  sumo: {n: 'Le sumo', k: 'opp', s: 'tapis::cercle', f: 'p', d: 'Par deux dans un cercle de coupelles : debout, mains sur les épaules ou les bras de l\'autre, on le fait sortir du cercle en poussant ou en tirant. Jambes fléchies, dos droit. 30 s, puis on change de partenaire.'},
+  roitapis: {n: 'Le roi du tapis', k: 'opp', s: 'tapis', f: 'g4', d: 'Par 4 sur un tapis : à genoux, chacun essaie de faire sortir les autres. Le dernier sur le tapis gagne 1 point. Reprises de 45 s.'},
+  planche: {n: 'La planche', k: 'opp', s: 'tapis::sol', f: 'p', d: 'A est allongé sur le ventre, gainé comme une planche ; B essaie de le retourner sur le dos en 15 s. Puis A à 4 pattes. On inverse.'},
+  tire: {n: 'Le tir à deux', k: 'opp', s: 'tapis::cercle', f: 'p', d: 'Par deux, assis dos à dos, bras crochetés : au signal, chacun essaie d\'entraîner l\'autre au-delà de sa ligne en poussant avec les jambes. Puis face à face, mains tenues, debout : tirer l\'autre au-delà d\'une ligne.'},
+  renverse: {n: 'Les deux renversements', k: 'coop', s: 'tapis::sol', f: 'p', d: 'Le prof montre : 1) saisir le bras et la jambe du même côté et tirer vers soi ; 2) passer le bras sous le ventre et faire rouler l\'autre sur l\'épaule. Par deux : 5 essais chacun, le partenaire se laisse faire, puis résiste un peu.'},
+  tresor: {n: 'Le gardien du trésor', k: 'opp', s: 'tapis', f: 'g3', d: 'Un ballon (le trésor) au centre du tapis, un gardien à genoux devant ; deux voleurs à genoux essaient de le prendre et de le sortir du tapis. Le gardien peut renverser les voleurs (qui reviennent alors au bord). On tourne toutes les 45 s.'},
+  immo: {n: 'L\'immobilisation 5 secondes', k: 'coop', s: 'tapis::sol', f: 'g3', d: 'Le prof montre : en travers du partenaire couché sur le dos, poitrine contre poitrine, un bras qui entoure son bras, l\'autre sous son épaule (jamais autour du cou). L\'arbitre compte 5 s à voix haute. On tourne les rôles.'},
+  degage: {n: 'L\'évasion', k: 'opp', s: 'tapis::sol', f: 'p', d: 'A immobilise B ; B a 15 s pour s\'évader en pont (pousser sur les pieds, rouler sur l\'épaule) ou en se retournant sur le ventre. Évasion réussie = 1 point. On inverse.'},
+  enchaine: {n: 'Renverser puis immobiliser', k: 'opp', s: 'tapis', f: 'p', d: 'Départ à 4 pattes / à genoux : renverser = 1 point, renverser puis immobiliser 5 s = 2 points. Reprises de 45 s, on change de partenaire.'},
+  poules: {n: 'Les combats par poules', k: 'opp', s: 'tapis', f: 'g4', d: 'Poules de 4 de gabarit proche par tapis : chacun lutte contre les 3 autres (1 min 30) ; ceux qui ne luttent pas arbitrent et tiennent la fiche. On se salue avant et après chaque combat.'},
+  salut: {n: 'Le salut et le dos qui respire', k: 'fp', s: 'etirements', d: 'Salut du partenaire. Étirements du dos (position de l\'enfant, chat-vache), des épaules et de la nuque, doucement. Un élève redit les règles d\'or ; chacun nomme un partenaire respectueux.'}
+},
+an: {1: A, 2: A, 3: A, 4: A, 5: A, 6: A}});
 })();

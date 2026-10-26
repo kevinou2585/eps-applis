@@ -1695,15 +1695,19 @@ function perteBoss(n = 1) {
   if (--C.billes > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Bille de combat perdue', C.billes > 1 ? 'Encore ' + C.billes + ' billes avant l’élimination' : 'DERNIÈRE BILLE : sinon, éliminé !', '#ffb86b', 28, 1.6); SON.outlane(); return; }
   combatPerdu('bille');
 }
-function finCombat() { // boss vaincu : retour au gymnase : on reprend EXACTEMENT là où on en était (mêmes billes, mêmes compteurs)
+function finCombat() { // boss vaincu (n'importe lequel, empereur compris) : retour au gymnase, la bille attend au lanceur (Kevin, 26/10)
   const C = combat; if (!C) return;
-  table = 'base'; if (C.sauve) { const v = C.sauve; balles = v.balles; sauveT = v.sauveT; table = v.table || 'base'; nuit = !!v.nuit; multiball = !!v.multiball; protegeT = v.protegeT || 0; cageAttente = v.cageAttente || 0; aServir = v.aServir || 0; }
+  table = 'base'; nuit = false; multiball = false;
+  if (C.sauve) { const v = C.sauve; sauveT = 0; protegeT = v.protegeT || 0; cageAttente = v.cageAttente || 0; aServir = 0;
+    balles = (v.balles || []).filter(b => b.collee); } // la bille en colle y reste ; les autres sont remplacées par celle du lanceur
+  else balles = [];
+  if (CASIER.balle) CASIER.balle = null;
+  finTilt(); balles.push(balleNeuve(375, 697, 0, 0, false));
   for (const b of balles) { b.ax = b.x; b.ay = b.y; b.at = temps; }
   combat = null; finCombatT = temps; charge.src = {}; charge.actif = false; arreterCharge();
   gelT = 1.3; flash = Math.max(flash, 0.5); popups = []; particules = [];
   const p = prochainBoss();
-  const ou = table === 'goth' ? 'Retour dans la crypte · ' : multiball ? 'Retour à la récré · ' : '';
-  annonce('REPRISE !', ou + (C.ultime ? 'Tu es le boss caché… continue !' : p ? 'Prochain boss : n°' + p.rang + ' à ' + fmt(p.score) + ' pts' : 'Les 3 boss sont tombés !'), '#7cf', 40, 1.4);
+  annonce('REPRISE !', 'Relance la bille · ' + (C.ultime ? 'Tu es le boss caché… continue !' : p ? 'Prochain boss : n°' + p.rang + ' à ' + fmt(p.score) + ' pts' : 'Les 3 boss sont tombés !'), '#7cf', 40, 1.4);
   SON.depart();
 }
 

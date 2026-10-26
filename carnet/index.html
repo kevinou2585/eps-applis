@@ -864,7 +864,9 @@ function effA(p, L){ const mm = L.m[p.id] || {}; if (mm.a) return mm.a; return c
 /* ====== Calcul des points ====== */
 /* Colonne Travaux (Kevin, 26/10) : débloquée pour un élève à partir de la période où il reçoit son 1er travail (jamais sinon),
    sur S.settings.W points (4 par défaut), remise au maximum à chaque période. Un travail non remis (m.tz) retire en travaux,
-   puis en tenue, puis en attitude quand la colonne est vide. r.w = null : colonne pas débloquée. */
+   puis en tenue, puis en attitude quand la colonne est vide. r.w = null : colonne pas débloquée.
+   Elle compte pour moitié dans le savoir-être (W_POIDS, Kevin 26/10) : moins d'impact, sauf quand elle est vide et retire ailleurs. */
+const W_POIDS = 0.5;
 function travPremier(c){
   const o = {}, put = (pid, d) => { if (d && (!o[pid] || d < o[pid])) o[pid] = d; };
   c.lessons.forEach(l => Object.entries(l.m || {}).forEach(([pid, m]) => { if (m.tr || m.tz || m.trOk) put(pid, l.date); }));
@@ -906,7 +908,8 @@ function compute(c, p){
     const r = res[pu.id];
     evs.forEach(e => { const s = e.s[pu.id]; r.evals.push({e, s}); if (typeof s === 'number'){ r.sfS += s; r.sfM += +e.max; } });
     r.seMax = T + Cc + (r.w != null ? W : 0);
-    r.se = r.seMax ? (r.t + r.c + (r.w || 0)) / r.seMax * st.se : 0;
+    const den = T + Cc + (r.w != null ? W * W_POIDS : 0);
+    r.se = den ? (r.t + r.c + (r.w || 0) * W_POIDS) / den * st.se : 0;
     r.sf = r.sfM ? r.sfS / r.sfM * (100 - st.se) : null;
     r.total = r.sf == null ? null : r.se + r.sf;
   });
@@ -1689,7 +1692,7 @@ function periodSheet(c, p){
     {v: avg(r => r.sf), s: XS.AVGN}, {v: avg(r => r.total), s: XS.AVGN}, ...cols.slice((wCol ? 6 : 5) + evals.length + 2).map(() => ({v: '', s: XS.AVGL}))];
   rows.push({h: 22, cells: ar});
   rows.push({h: 8, cells: blank()});
-  const nt = blank(); nt[0] = {v: `En rouge : total sous 50 % et évaluations sous la moitié. Tenue et attitude : ${T} et ${Cc} points par période, une colonne à 0 fait retirer dans l'autre.${wCol ? ` Travaux : ${stN('W')} points, seulement pour les élèves qui ont reçu un travail ; un travail non remis retire en travaux, puis en tenue, puis en attitude.` : ''} Exporté le ${dFR(today())} depuis le Carnet EPS.`, s: XS.NOTE}; rows.push({h: 30, cells: nt}); merges.push(`A${rows.length}:${last}${rows.length}`);
+  const nt = blank(); nt[0] = {v: `En rouge : total sous 50 % et évaluations sous la moitié. Tenue et attitude : ${T} et ${Cc} points par période, une colonne à 0 fait retirer dans l'autre.${wCol ? ` Travaux : ${stN('W')} points comptés pour moitié, seulement pour les élèves qui ont reçu un travail ; un travail non remis retire en travaux, puis en tenue, puis en attitude.` : ''} Exporté le ${dFR(today())} depuis le Carnet EPS.`, s: XS.NOTE}; rows.push({h: 30, cells: nt}); merges.push(`A${rows.length}:${last}${rows.length}`);
   return {name: `${c.name} ${p.name}`, rows, merges, cols: cols.map(c => c.w), freeze: 5, titleRows: 4, footer: `Carnet EPS · ${c.name} · ${p.name}`};
 }
 /* Feuille récapitulative de l'année */
@@ -4074,7 +4077,7 @@ function regCards(){
       <p class="small muted" style="margin:0">Chaque élève commence chaque période avec tous ses points, puis on retire.</p>
       <div class="row2"><label class="f" style="flex:1">Points de tenue par période<input class="inp num" id="s-T" inputmode="numeric" value="${st.T}"></label>
       <label class="f" style="flex:1">Points d'attitude par période<input class="inp num" id="s-C" inputmode="numeric" value="${st.C}"></label></div>
-      ${n('s-W', 'W', 'Points de travaux par période', 'Colonne seulement pour les élèves qui ont reçu un travail (📝 à l\'appel). Travail non remis : −1 en travaux, puis en tenue, puis en attitude.')}
+      ${n('s-W', 'W', 'Points de travaux par période', 'Colonne seulement pour les élèves qui ont reçu un travail (📝 à l\'appel). Elle compte pour moitié dans le savoir-être. Travail non remis : −1 en travaux, puis en tenue, puis en attitude.')}
       <label class="f">Savoir-être en % du bulletin<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
       <p class="small" id="s-separt" style="margin:-4px 0 0">${regPart(st.se)}</p>
       <b class="small reg-sub">Points retirés</b>

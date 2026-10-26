@@ -36,7 +36,7 @@ function regCards(){
       <p class="small muted" style="margin:0">Chaque élève commence chaque période avec tous ses points, puis on retire.</p>
       <div class="row2"><label class="f" style="flex:1">Points de tenue par période<input class="inp num" id="s-T" inputmode="numeric" value="${st.T}"></label>
       <label class="f" style="flex:1">Points d'attitude par période<input class="inp num" id="s-C" inputmode="numeric" value="${st.C}"></label></div>
-      ${n('s-W', 'W', 'Points de travaux par période', 'Colonne seulement pour les élèves qui ont reçu un travail (📝 à l\'appel). Travail non remis : −1 en travaux, puis en tenue, puis en attitude.')}
+      ${n('s-W', 'W', 'Points de travaux par période', 'Colonne seulement pour les élèves qui ont reçu un travail (📝 à l\'appel). Elle compte pour moitié dans le savoir-être. Travail non remis : −1 en travaux, puis en tenue, puis en attitude.')}
       <label class="f">Savoir-être en % du bulletin<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
       <p class="small" id="s-separt" style="margin:-4px 0 0">${regPart(st.se)}</p>
       <b class="small reg-sub">Points retirés</b>

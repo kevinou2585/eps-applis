@@ -14,7 +14,7 @@ const regPl = (n, w) => `${fr(n, 2)} ${w}${n > 1 ? 's' : ''}`;
 function regKitTxt(){
   return `−${fr(stN('kitPts'), 2)} tenue${stB('spill') ? ' ; plus de points en tenue : retiré en attitude' : ''}`;
 }
-const REG_SECS = [['tt-card', 'Horaire'], ['sp-card', 'Sports'], ['reg-bareme', 'Barème'], ['reg-pool', 'Piscine'], ['reg-evals', 'Évaluations'], ['reg-com', 'Commentaires'], ['reg-per', 'Périodes'], ['reg-save', 'Sauvegarde']];
+const REG_SECS = [['tt-card', 'Horaire'], ['sp-card', 'Sports'], ['reg-bareme', 'Barème'], ['reg-pool', 'Piscine'], ['reg-evals', 'Évaluations'], ['reg-com', 'Commentaires'], ['reg-per', 'Année & périodes'], ['reg-save', 'Sauvegarde']];
 const REG_JUMP = {today: 'reg-bareme', evals: 'reg-evals', classes: 'reg-bareme', agenda: 'tt-card'};
 function regJump(id){
   setTimeout(() => { const el = $(id); if (!el) return; el.scrollIntoView({block: 'start'}); window.scrollBy(0, -12);
@@ -63,13 +63,15 @@ function regPart(se){ se = Math.max(0, Math.min(100, Math.round(+se) || 0));
 function regPerCard(){
   const cl = S.classes.filter(c => !c.act);
   return `<div class="card sec reg" style="padding-block:14px" id="reg-per">
-      <h3>Périodes et dates</h3>
+      <h3>Année scolaire, périodes et dates</h3>
+      ${window.carnetAnnee ? `<div class="row2" style="align-items:center"><span style="flex:1">Année scolaire ouverte</span><button class="btn annee-reg${carnetAnnee.vieux ? ' vieux' : ''}" type="button" id="reg-annee">${esc(carnetAnnee.cur)} ▾</button></div>` : ''}
       <p class="small muted" style="margin:0">Chaque classe a ses périodes (nom, date de début, salle ou piscine). Touche une classe pour les modifier.</p>
       ${cl.length ? `<div class="row2">${cl.map(c => `<button class="chip" type="button" data-regper="${c.id}">${esc(c.name)} · ${c.periods.length} pér.</button>`).join('')}</div>` : '<span class="small muted">Pas encore de classe.</span>'}
     </div>`;
 }
 function bindReg(){
   const st = S.settings;
+  if ($('reg-annee')) $('reg-annee').onclick = () => carnetAnnee();   // Kevin (26/10) : le choix de l'année est ici, plus dans le haut de l'écran
   const num = (id, k, lo, hi, int = true) => { const el = $(id); if (!el) return; el.onchange = e => { let v = parseNum(e.target.value); if (v != null && int) v = Math.round(v);
     if (v == null || isNaN(v) || v < lo || v > hi){ e.target.value = k in REG_DEF ? fr(stN(k), 2) : st[k]; toast(`Entre ${lo} et ${hi}`); return; }
     st[k] = v; save(); toast('Enregistré'); }; };

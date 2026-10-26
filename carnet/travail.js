@@ -55,5 +55,72 @@
     const x = travLine(c, L, p, rg);
     return x ? h.replace(/<\/div>\s*$/, x + '</div>') : h;
   };
+  /* --- Onglet « Travaux » dans le haut de l'écran (Kevin, 26/10) : tous les travaux pas encore rendus, sans passer par les présences.
+     Classes par année puis par nom (1A, 1B… 2A…), élèves par ordre alphabétique. Mêmes choix que le rappel à l'appel :
+     ils s'enregistrent sur le dernier cours de la classe (aujourd'hui ou avant), donc l'appel, les points et le bulletin suivent. */
+  const st2 = document.createElement('style');
+  st2.textContent = `.trv-btn{border:1px solid var(--line); background:var(--surface); color:var(--fg); border-radius:99px; padding:5px 10px; font:700 .85rem var(--body); white-space:nowrap}
+  .trv-btn b{display:inline-block; min-width:18px; margin-left:4px; padding:0 5px; border-radius:99px; background:var(--accent); color:#fff; font-size:.75rem; line-height:18px; text-align:center}
+  .trv h3{margin:14px 0 6px; font:700 1.1rem var(--display)}
+  .trv-it{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:10px 12px; margin:0 0 8px; display:grid; gap:8px}
+  .trv-it .nm{display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px}
+  .trv-it .nm span{font-size:.85rem; color:var(--muted)}
+  .trv-it .nm span.late{color:var(--bad, #c0392b); font-weight:700}
+  .trv-it .bt{display:flex; flex-wrap:wrap; gap:6px}
+  .trv-it .bt button{border:1.5px solid var(--line); background:var(--surface); color:var(--fg); border-radius:999px; padding:4px 12px; min-height:36px; font-size:13.5px; font-weight:700}
+  .trv-it .bt button.ok{border-color:var(--good, #2e8b57); color:var(--good, #2e8b57)}
+  .trv-it .bt button.z{border-color:var(--bad, #c0392b); color:var(--bad, #c0392b)}
+  .trv-it.fait{background:var(--surface2, var(--surface)); border-style:dashed}`;
+  document.head.appendChild(st2);
+  const nomTri = p => (p.n || nomCourt(p) || '').toString();
+  const travTous = () => {
+    const out = [];
+    S.classes.forEach(c => Object.entries(c.trav || {}).forEach(([pid, t]) => { const p = c.pupils.find(x => x.id === pid); if (p && t) out.push({c, p, t}); }));
+    return out;
+  };
+  const classeTri = (a, b) => (progYear(a) || 9) - (progYear(b) || 9) || a.name.localeCompare(b.name, 'fr', {numeric: true});
+  // le cours sur lequel on note le choix : le dernier de la classe jusqu'à aujourd'hui (sinon celui où le travail a été donné)
+  const coursPour = (c, t) => { const d = today(); let L = null;
+    c.lessons.forEach(l => { if (l.date <= d && (!L || l.date > L.date || (l.date === L.date && (l.h || '') > (L.h || '')))) L = l; });
+    return L || c.lessons.find(l => l.id === t.l) || null; };
+  let faits = [];   // choix faits dans cet écran : on peut les annuler tant qu'il est ouvert
+  function majTrvBtn(){ const b = document.getElementById('trv-btn'); if (!b) return; const n = travTous().length;
+    b.innerHTML = 'Travaux' + (n ? `<b>${n}</b>` : ''); b.setAttribute('aria-label', `Travaux pas encore rendus : ${n}`); }
+  function openTravaux(){
+    const L0 = travTous(), d = today(), cls = [...new Set(L0.map(x => x.c))].sort(classeTri);
+    const ligne = ({c, p, t}) => { const late = t.due <= d;
+      return `<div class="trv-it" data-c="${c.id}" data-p="${p.id}"><div class="nm"><b>${esc(p.n || nomCourt(p))}</b><span>donné le ${jj(t.d)}${t.due > addDays(t.d, 7) ? ' (prolongé)' : ''}</span><span class="${late ? 'late' : ''}">${late ? 'à rendre depuis le ' : 'à rendre le '}${jj(t.due)}</span></div>
+        <div class="bt"><button type="button" class="ok" data-trv="ok">✓ Remis</button><button type="button" data-trv="plus">+1 semaine</button><button type="button" class="z" data-trv="zero">Zéro (−1 tenue)</button></div></div>`; };
+    const fait = f => `<div class="trv-it fait" data-f="${faits.indexOf(f)}"><div class="nm"><b>${esc(nomCourt(f.p))}</b><span>${esc(f.c.name)} · ${f.txt}</span></div><div class="bt"><button type="button" data-trv="undo">Annuler</button></div></div>`;
+    openSheet('Travaux', `<div class="trv">
+      <p class="small muted" style="margin:0">Les élèves qui ont un 📝 travail pas encore rendu, toutes classes. Il apparaît ici dès que tu le donnes à l'appel ; ce que tu choisis ici se retrouve à l'appel et dans les points.</p>
+      ${faits.length ? `<h3>Fait à l'instant</h3>${faits.map(fait).join('')}` : ''}
+      ${cls.length ? cls.map(c => `<h3>${esc(c.name)}</h3>${L0.filter(x => x.c === c).sort((a, b) => nomTri(a.p).localeCompare(nomTri(b.p), 'fr')).map(ligne).join('')}`).join('')
+        : '<p style="margin:14px 0 0"><b>Aucun travail en attente.</b> 👍</p>'}
+    </div>`);
+    const box = document.querySelector('#sheetroot .trv'); if (!box) return;
+    box.onclick = e => { const b = e.target.closest('[data-trv]'); if (!b) return; const it = b.closest('.trv-it'), act = b.dataset.trv;
+      if (act === 'undo'){ const f = faits[+it.dataset.f]; if (!f) return;
+        if (f.act === 'plus') f.t.due = f.due0; else travAct('tr-undo', f.c, f.L, f.p);
+        faits = faits.filter(x => x !== f); save(f.c.id); toast(`${nomCourt(f.p)} : annulé`); }
+      else {
+        const c = S.classes.find(x => x.id === it.dataset.c), p = c && c.pupils.find(x => x.id === it.dataset.p), t = c && (c.trav || {})[p && p.id]; if (!t) return;
+        const L = coursPour(c, t); if (!L){ toast('Pas de cours pour cette classe'); return; }
+        if (act === 'plus'){ const due0 = t.due; t.due = addDays(d, 7); faits.unshift({act, c, p, L, t, due0, txt: `prolongé jusqu'au ${jj(t.due)}`}); toast(`${nomCourt(p)} : une semaine de plus`); }
+        else { travAct(act === 'ok' ? 'tr-ok' : 'tr-zero', c, L, p); faits.unshift({act, c, p, L, txt: act === 'ok' ? 'remis ✓' : 'zéro, −1 point de tenue'}); }
+        save(c.id);
+      }
+      render(); openTravaux(); };
+    sheetOnClose = () => { faits = []; };
+  }
+  window.openTravaux = openTravaux;
+  const top = document.querySelector('header.top .wrap'), brand = top && top.querySelector('.brand');
+  if (brand && !window.DEMO_LS && !document.getElementById('trv-btn')){   // entre « Carnet EPS » et « Aide » (pas dans la démo des collègues : kevin n'y touche plus)
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'trv-btn'; b.id = 'trv-btn';
+    b.onclick = () => { faits = []; openTravaux(); }; brand.after(b);
+  }
+  const render0 = render;
+  render = function(){ const r = render0.apply(this, arguments); majTrvBtn(); return r; };
+
   try { render(); } catch (e) {}   // le premier affichage a eu lieu avant ce fichier
 })();

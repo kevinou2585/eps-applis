@@ -19,6 +19,7 @@ window.CARNET_AIDE = [
     ['Règles', 'Chez les filles, en salle comme à la piscine : <b>R · règles</b> = elle ne participe pas (ne nage pas) à cause de ses règles. C\'est une trace datée, sans point retiré ; un avertissement apparaît à partir de la 2e fois de suite.'],
     ['Alertes', 'Au 3e oubli ou à la 3e perturbation de la période, un bandeau prévient à l\'appel et dans la fiche de l\'élève.'],
     ['Travail', 'Sous un élève qui ne fait pas le cours (absent, dispensé, oubli, ne nage pas, règles, perturbe) : <b>📝 Travail</b> = tu lui as donné un travail. Au cours de la semaine suivante, un rappel propose <b>✓ Remis</b> (rien n\'est retiré), <b>+1 semaine</b> ou <b>Zéro</b> : −1 point de tenue (en attitude s\'il n\'en reste plus). Chaque choix s\'annule.'],
+    ['Onglet Travaux', 'En haut, à côté du titre : tous les élèves qui ont un travail pas encore rendu, classe par classe (1res, 2es…), par ordre alphabétique. Un élève te le donne dans le couloir : Travaux › <b>✓ Remis</b>, <b>+1 semaine</b> ou <b>Zéro</b>, sans chercher dans les présences. C\'est relié à l\'appel et aux points.'],
     ['Ce cours', 'En bas : la même fiche que dans l\'Agenda (sport, prévu au planning, programme, 📋 sélectionner une préparation, ▶ Lancer la prépa et 🎤 Dicter, puis <b>ce que tu as fait</b> : la prépa choisie s\'y écrit en 1re ligne et change si tu en choisis une autre). Ce que tu changes ici change aussi dans l\'Agenda, à la bonne date.'],
     ['Piscine : éducateurs', 'Le message à copier ou à envoyer sur WhatsApp liste ceux qui restent à l\'école (affaires oubliées, ne nage pas, règles, dispensés) et les <b>absents</b>.'],
     ['Autre cours', '« + Autre » : faire l\'appel d\'un cours qui n\'est pas dans l\'horaire (remplacement, cours déplacé).'],
@@ -78,7 +79,7 @@ window.CARNET_AIDE = [
     ['Sauvegarde complète', 'Dans l\'accueil d\'EPS ultime, ⚙️ Paramètres › 💾 Sauvegarde complète : un fichier .zip avec l\'appli et toutes tes données (protégé par un code).']
   ]},
   {ic: '🗓', t: 'Année scolaire', pts: [
-    ['Le bouton de l\'année', 'En haut, à côté du titre (ex. 2026-2027). Une année à la fois.'],
+    ['Où la changer', 'Réglages (⚙) › Année &amp; périodes › « Année scolaire ouverte » (ex. 2026-2027). Une année à la fois.'],
     ['Nouvelle année', 'En fin d\'année, choisis la suivante : l\'ancienne est rangée dans les archives (tu peux y revenir quand tu veux) et tu repars d\'un carnet vide, en gardant tes réglages de barème.']
   ]},
   {ic: '💡', t: 'Bon à savoir', pts: [

@@ -160,7 +160,7 @@ function fiHistHTML(c, p, vp){
     if (a === 'D') add(certOn(p, l.date, l.type) ? 'Dispensé (certificat)' : 'Dispensé', '🩺', '');
     if (m.k) add(pool ? 'Affaires de piscine oubliées' : 'Tenue de sport oubliée', '👕', 'k');
     if (m.np) add('Ne nage pas', '🏊', '');
-    if (m.rg && pool){ const s = rgStreak(c, l, p); add('Règles (ne nage pas)' + (s > 1 ? ` · ${s}e semaine de suite` : ''), 'R', ''); }
+    if (m.rg){ const s = rgStreak(c, l, p); add((pool ? 'Règles (ne nage pas)' : 'Règles (ne participe pas)') + (s > 1 ? ` · ${s}e ${rgSuite(l)} de suite` : ''), 'R', ''); }
     if (m.x) add('Exclu du cours', '⛔', 'd'); else if (m.d) add('Perturbe le cours', '👎', 'd');
   });
   c.evals.filter(e => e.date ? inP(e.date) : (year || e.periodId === vp.id)).forEach(e => { const s = e.s[p.id]; if (s == null) return;

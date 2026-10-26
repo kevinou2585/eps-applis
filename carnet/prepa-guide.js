@@ -192,7 +192,7 @@
     b.onclick = () => { closeSheet();
       const st = agState(date, it), g = agGet(date, it), ids = it.cls;
       plLancer({date, ids, n: it.b - it.a + 1, type: st.type, sp: g.s, an: ids.map(clsById).map(progYear).find(Boolean) || 1,
-        get: () => agGet(date, it).pp, save: pp => { const g2 = agGet(date, it); agSet(date, it, ids, g2.s, g2.n, g2.p, pp); }}); };
+        get: () => agGet(date, it).pp, save: pp => { const g2 = agGet(date, it); agSet(date, it, ids, g2.s, ppNote(g2.n, g2.pp, pp), g2.p, pp); }}); };
   };
   const bindAgRoll0 = bindAgRoll;
   bindAgRoll = function(cls, Ls){
@@ -203,7 +203,7 @@
       const sp = ($('rc-sp') && $('rc-sp').value) || l0.sport || '';
       plLancer({date, ids: cls.map(c => c.id), n: it ? it.b - it.a + 1 : (l0.h2 && l0.h2 !== l0.h ? hI(l0.h2) - hI(l0.h) + 1 : 1), type: l0.type, sp, an: cls.map(progYear).find(Boolean) || 1,
         get: () => (Ls.find(l => l && l.prepa) || {}).prepa || (it ? agGet(date, it).pp : null),
-        save: pp => { cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; l.prepa = JSON.parse(JSON.stringify(pp)); save(c.id); }); }}); };
+        save: pp => { cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; const n = ppNote(l.note, l.prepa, pp); if (n) l.note = n; else delete l.note; l.prepa = JSON.parse(JSON.stringify(pp)); save(c.id); }); }}); };
   };
 
   /* --- Agenda › 📚 Préparations : Mes prépas + Bibliothèque --- */

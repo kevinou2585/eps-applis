@@ -237,8 +237,8 @@ function openAgSlot(date, id){
       ${sportField('ags', g.s)}
       ${!g.s && agPlanned(date, it) && agPlanned(date, it) !== 'Congé' ? `<button class="btn ag-plb" type="button" id="ags-plan">🗓 Prévu au planning : <b>${esc(agPlanned(date, it))}</b> · choisir</button>` : ''}
       ${progField('ags', g.p, it.cls)}
-      <label class="f">Ce que j'ai fait<textarea class="inp" id="ags-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>${micBtn('ags-note')}
-      <button class="btn block ag-ppb" type="button" id="ags-prepa">📋 ${g.pp ? `Prépa : ${esc(prepaCourt(g.pp))}` : 'Préparer cette leçon (échauffement, corps, retour au calme)'}</button>
+      ${ppBtn('ags', g.pp)}${micBtn('ags-note')}
+      <label class="f">Ce que j'ai fait<textarea class="inp" id="ags-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>
       ${st.done ? '' : '<span class="small muted">Pas encore d\'appel : c\'est gardé et repris dans l\'appel de ce cours.</span>'}
       <button class="btn block" type="button" id="ags-save">Enregistrer</button></div>
     <div class="card sec" style="padding-block:14px"><h3>Semaine type · chaque ${esc(dayName(d).toLowerCase())}</h3>
@@ -318,8 +318,9 @@ function openAgEdit(date, h, it){
 }
 
 /* --- Dans l'appel : sport + ce que j'ai fait --- */
-/* Sous l'appel : la même fenêtre « Ce cours » que dans l'agenda (Kevin, 26/10) : sport, prévu au planning, programme,
-   ce que j'ai fait (dictée), prépa et « Lancer la prépa ». Mêmes données (agGet / agSet) : l'agenda suit à la bonne date.
+/* Sous l'appel : la même fenêtre « Ce cours » que dans l'agenda (Kevin, 26/10) : sport (+ ordre), prévu au planning, programme,
+   sélectionner une préparation, « Lancer la prépa » et Dicter, puis ce que j'ai fait. Mêmes données (agGet / agSet) : l'agenda suit.
+   Choisir un sport n'écrit rien dans « ce que j'ai fait » ; choisir une prépa y met son nom en 1re ligne (ppNote). 
    Appel hors horaire (sans heure ou pas dans la semaine type) : l'ancienne petite fiche (sport + ce que j'ai fait). */
 function agRollIt(Ls, cls){
   const l0 = Ls.find(Boolean); if (!l0 || !l0.h || !cls) return null;
@@ -338,8 +339,8 @@ function agRollBox(Ls, cls){
       ${sportField('rc', g.s)}
       ${pl && pl !== 'Congé' ? `<button class="btn ag-plb" type="button" id="rc-plan">🗓 Prévu au planning : <b>${esc(pl)}</b> · choisir</button>` : ''}
       ${progField('rc', g.p, it.cls)}
-      <label class="f">Ce que j'ai fait<textarea class="inp" id="rc-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>${micBtn('rc-note')}
-      <button class="btn block ag-ppb" type="button" id="rc-prepa">📋 ${g.pp ? `Prépa : ${esc(prepaCourt(g.pp))}` : 'Préparer cette leçon (échauffement, corps, retour au calme)'}</button>
+      ${ppBtn('rc', g.pp)}${micBtn('rc-note')}
+      <label class="f">Ce que j'ai fait<textarea class="inp" id="rc-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>
       <span class="small muted" style="margin:0">La même fiche que dans l'Agenda : ce que tu changes ici change aussi là-bas.</span></div>`;
 }
 function bindAgRoll(cls, Ls){
@@ -364,7 +365,7 @@ function bindAgRoll(cls, Ls){
   ta.oninput = () => { clearTimeout(tm); tm = setTimeout(keep, 500); };
   ta.onblur = () => { if (tm) keep(); };
   bindMic('rc-note');
-  $('rc-prepa').onclick = () => { keep(); micStop(); openPrepa(date, it.id, ids); };
+  $('rc-prepa').onclick = () => { keep(); micStop(); openPrepa(date, it.id, ids, true); };
 }
 
 /* --- Dictée 🎤 : parler, le texte s'ajoute dans la case --- */
@@ -534,6 +535,16 @@ function prepaLoad(ids){
 /* cycles d'une année : 6 leçons chacun (cy = thèmes, sinon le thème de l'année) */
 const ppCycles = A => Array.from({length: Math.max(1, Math.ceil(A.l.length / 6))}, (_, i) => ({k: i + 1, th: (A.cy && A.cy[i]) || A.th, de: i * 6 + 1, a: Math.min(A.l.length, i * 6 + 6)}));
 const prepaRef = ref => { const [id, an, n] = String(ref || '').split('|'), L = PREPA_LIB[id], A = L && L.an && L.an[+an], l = A && A.l[+n - 1]; return l ? {L, A, l, id, an: +an, n: +n} : null; };
+// bouton « Sélectionner une préparation » de la fiche Ce cours (agenda et appel)
+const ppBtn = (pre, pp) => `<button class="btn block ag-ppb" type="button" id="${pre}-prepa">📋 ${pp ? `Prépa : <b>${esc(prepaCourt(pp))}</b> · changer` : 'Sélectionner une préparation'}</button>`;
+/* « Ce que j'ai fait » suit la prépa choisie (Kevin, 26/10) : sa 1re ligne = la prépa, remplacée à chaque changement de prépa ;
+   ce qui a été écrit ou dicté en dessous reste. Prépa effacée : la ligne part. */
+function ppNote(n, old, nw){
+  n = String(n || ''); const t = nw ? prepaCourt(nw) : '', o = old ? prepaCourt(old) : '', ls = n.split('\n');
+  if (!n.trim()) return t;
+  if (o && ls[0] === o){ if (t) ls[0] = t; else ls.shift(); return ls.join('\n').trim(); }
+  return !t || ls[0] === t ? n : t + '\n' + n;
+}
 function prepaCourt(pp){
   if (!pp) return '';
   const hv = /^hiver\|/.test(pp.ref || '');
@@ -565,7 +576,7 @@ function prepaSuite(ids, id, an, date){
   const last = done[done.length - 1]; return {n: +last.pp.ref.split('|')[2], date: last.date, faites: new Set(done.map(x => +x.pp.ref.split('|')[2]))};
 }
 
-function openPrepa(date, slotId, ids){
+function openPrepa(date, slotId, ids, dansAppel){
   const d = wdOf(date), it = agItems(d).find(x => x.id === slotId); if (!it){ render(); return; }
   const g = agGet(date, it), cls = ids.map(clsById).filter(Boolean);
   const an0 = cls.map(progYear).find(Boolean) || 1;
@@ -651,17 +662,17 @@ function openPrepa(date, slotId, ids){
   const saveIt = given => {
     const o = given || read(); if (empty(o)){ toast('Écris au moins le thème ou une partie de la leçon'); return false; }
     const lib = prepaRef(o.ref); if (lib && o.t !== lib.l.t && !o.c.includes(lib.l.c[0] && lib.l.c[0][0] || '§')) o.ref = '';  // tout réécrit : plus de schémas de la bibliothèque
-    pp = o; const sport = g.s || addSport(o.sp) || o.sp, note = g.n || [prepaCourt(o)].join('');
+    const note = ppNote(g.n, g.pp, o); pp = o; const sport = g.s || addSport(o.sp) || o.sp;
     agSet(date, it, ids, sport, note, comp.length || Array.isArray(g.p) ? comp : null, o);
     Object.assign(g, {s: sport, n: note, p: comp, pp: o}); if ($('pp-del')) $('pp-del').hidden = false; return true; };
   $('pp-ok').onclick = () => { if (saveIt()){ toast('Prépa enregistrée'); closeSheet(); } };
   $('pp-note').onclick = () => { if (!saveIt()) return; sheetOnClose = null; closeSheet(); critFromPrepa(date, cls, pp); };
   $('pp-print').onclick = () => { const o = read(); if (empty(o)){ toast('La prépa est vide'); return; } saveIt();
     prepaPrint([{date, h: it.h, cls, pp: o, prog: comp}], `Prépa ${prepaCourt(o)}`); };
-  $('pp-back').onclick = () => { const o = read(); if (!empty(o)) saveIt(); openAgSlot(date, slotId); };
+  $('pp-back').onclick = () => { const o = read(); if (!empty(o)) saveIt(); if (dansAppel){ sheetOnClose = null; closeSheet(); render(); } else openAgSlot(date, slotId); };
   $('pp-del').onclick = () => { $('pp-delc').innerHTML = `<div class="confirm"><b>Effacer la prépa de ce cours ?</b><span class="small">Le sport et la note restent.</span><div class="row2"><button class="btn" type="button" id="ppd-no">Garder</button><button class="btn pri" style="background:var(--bad);border-color:var(--bad)" type="button" id="ppd-yes">Effacer</button></div></div>`;
     $('ppd-no').onclick = () => $('pp-delc').innerHTML = '';
-    $('ppd-yes').onclick = () => { agSet(date, it, ids, g.s, g.n, g.p, null); toast('Prépa effacée'); openAgSlot(date, slotId); }; };
+    $('ppd-yes').onclick = () => { agSet(date, it, ids, g.s, ppNote(g.n, g.pp, null), g.p, null); toast('Prépa effacée'); if (dansAppel){ sheetOnClose = null; closeSheet(); render(); } else openAgSlot(date, slotId); }; };
   sheetOnClose = () => { const o = live; if (o && !empty(o) && JSON.stringify(o) !== JSON.stringify(g.pp ? {...g.pp, comp: o.comp} : null)) saveIt(o); render(); };
 }
 

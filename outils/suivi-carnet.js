@@ -10,7 +10,7 @@ const SU_COLS = [
   {k: 'ks', cat: 'salle', l: 'Tenue salle', long: 'Tenue de sport oubliée (salle)', ic: () => IC.shirt},
   {k: 'kp', cat: 'pool', l: 'Tenue piscine', long: 'Tenue de piscine oubliée', ic: c => typeof maillot === 'function' ? maillot(c) : IC.bag},
   {k: 'np', cat: 'pool', l: 'Ne nage pas', long: 'Ne nage pas', ic: () => IC.swim},
-  {k: 'rg', cat: 'rg', l: 'Règles', long: 'Règles (ne nage pas)', ic: () => SU_R},
+  {k: 'rg', cat: 'rg', l: 'Règles', long: 'Règles', ic: () => SU_R},
   {k: 'd', cat: 'att', l: 'Perturbe', long: 'Perturbe le cours', ic: () => IC.down},
   {k: 'x', cat: 'att', l: 'Exclu', long: 'Exclu du cours', ic: () => SU_X},
 ];
@@ -36,7 +36,7 @@ function suData(c, vp){
       const m = l.m[p.id] || {}, add = (k, extra) => { n[k]++; ev.push({k, l, ...extra}); };
       if (m.k) add(l.type === 'piscine' ? 'kp' : 'ks');
       if (m.np) add('np');
-      if (m.rg && l.type === 'piscine'){ const s = rgStreak(c, l, p); rgMax = Math.max(rgMax, s); add('rg', {s}); }
+      if (m.rg){ const s = rgStreak(c, l, p); rgMax = Math.max(rgMax, s); add('rg', {s}); }
       if (m.x) add('x'); else if (m.d) add('d');
     });
     const adj = {t: 0, c: 0};
@@ -85,7 +85,7 @@ function renderSuivi(c, m){
     </div>
     <div class="row2" style="align-items:center"><span class="small muted" style="flex:1">Trier :</span>
       <div class="seg" role="group" aria-label="Trier">${[['n', 'Plus de remarques'], ['az', 'Ordre de la classe']].map(([k, l]) => `<button type="button" data-susort="${k}" aria-pressed="${sort === k}">${l}</button>`).join('')}</div></div>
-    <p class="small muted" style="margin:0">Touche un élève pour la liste datée. Les règles ne coûtent jamais de point ; « de suite » = semaines de piscine consécutives où elle était présente.</p>
+    <p class="small muted" style="margin:0">Touche un élève pour la liste datée. Les règles ne coûtent jamais de point ; « de suite » = semaines de piscine (ou cours en salle) consécutifs où elle était présente.</p>
     <button class="btn pri block" type="button" id="su-copy">📋 Copier le suivi (${esc(c.name)})</button>
     <button class="btn block" type="button" id="su-xls">Exporter Excel</button>
   </section>`;
@@ -113,7 +113,7 @@ function openSuivi(c, vp, pid, f, order){
     ${D.year ? `<div class="card small">Points perdus sur l'année : tenue ${r.pts.lt}, attitude ${r.pts.lc}</div>`
       : `<div class="card small">Points restants : <b>tenue ${r.pts.t}/${D.T}</b> · <b>attitude ${r.pts.c}/${D.Cc}</b></div>`}
     <div class="card su-list">${ev.length ? ev.map(e => { const o = SU_COLS.find(x => x.k === e.k);
-      return `<div class="su-ev"><span class="su-d">${suD(e.l.date)}${suH(e.l) ? `<small>${suH(e.l)}</small>` : ''}</span><span class="su-ic">${o.ic(c)}</span><span class="su-l">${o.long}${e.k === 'rg' && e.s > 1 ? ` <span class="su-stt">⚠ ${e.s}e semaine de suite</span>` : ''}</span></div>`; }).join('')
+      return `<div class="su-ev"><span class="su-d">${suD(e.l.date)}${suH(e.l) ? `<small>${suH(e.l)}</small>` : ''}</span><span class="su-ic">${o.ic(c)}</span><span class="su-l">${e.k === 'rg' ? (e.l.type === 'piscine' ? 'Règles (ne nage pas)' : 'Règles (ne participe pas)') : o.long}${e.k === 'rg' && e.s > 1 ? ` <span class="su-stt">⚠ ${e.s}e ${rgSuite(e.l)} de suite</span>` : ''}</span></div>`; }).join('')
       : '<span class="muted small">Aucun événement daté.</span>'}
       ${showAdj ? `<div class="su-ev"><span class="su-d">sans date</span><span class="su-ic">📄</span><span class="su-l">Repris du relevé : ${[r.adj.t ? '−' + r.adj.t + ' tenue' : '', r.adj.c ? '−' + r.adj.c + ' attitude' : ''].filter(Boolean).join(', ')}</span></div>` : ''}</div>
     <button class="btn pri block" type="button" id="su-pcopy">📋 Copier le suivi de ${esc(r.p.n)}</button>`,
@@ -121,7 +121,7 @@ function openSuivi(c, vp, pid, f, order){
   $('su-pcopy').onclick = () => comCopy(suPupilText(c, vp, D, r, f), 'Suivi copié');
 }
 /* Textes à copier (dates dans l'ordre chronologique) */
-function suEvTxt(e){ return suD(e.l.date) + (suH(e.l) ? ' ' + suH(e.l) : '') + (e.k === 'rg' && e.s > 1 ? ` (${e.s}e semaine de suite)` : ''); }
+function suEvTxt(e){ return suD(e.l.date) + (suH(e.l) ? ' ' + suH(e.l) : '') + (e.k === 'rg' ? (e.l.type === 'piscine' ? '' : ' (salle)') + (e.s > 1 ? ` (${e.s}e ${rgSuite(e.l)} de suite)` : '') : ''); }
 function suPtsTxt(D, r){ return D.year ? `Points perdus sur l'année : tenue ${r.pts.lt}, attitude ${r.pts.lc}` : `Points restants : tenue ${r.pts.t}/${D.T}, attitude ${r.pts.c}/${D.Cc}`; }
 function suHead(c, vp, f){
   return `Suivi EPS – tenue et attitude · ${c.name} · ${vp === 'year' ? 'Année' : vp.name} (${suRange(c, vp)})${f !== 'all' ? ' · ' + SU_CATS.find(x => x[0] === f)[1] : ''}`;

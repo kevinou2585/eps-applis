@@ -22,9 +22,10 @@ const pupilG = (c, p) => c.sexe === 'F' || c.sexe === 'G' ? c.sexe : (p.g || nul
 
 /* --- Règles à la piscine --- */
 const rgKey = l => l.date + String(l.h ? hI(l.h) + 1 : 0).padStart(2, '0');
+const rgSuite = l => l.type === 'piscine' ? 'semaine' : 'cours';   // piscine : 1 fois par semaine ; salle : cours de suite
 function rgPrev(c, l, pu){
   const k = rgKey(l); let best = null;
-  c.lessons.forEach(x => { if (x === l || x.type !== 'piscine' || rgKey(x) >= k || effA(pu, x) === 'A') return; if (!best || rgKey(x) > rgKey(best)) best = x; });
+  c.lessons.forEach(x => { if (x === l || (x.type === 'piscine') !== (l.type === 'piscine') || rgKey(x) >= k || effA(pu, x) === 'A') return; if (!best || rgKey(x) > rgKey(best)) best = x; });
   return best;
 }
 // nombre de semaines de suite (cette leçon comprise) avec ses règles : 0 si pas de règles à cette leçon
@@ -34,10 +35,10 @@ function rgStreak(c, l, pu){
   return n;
 }
 function rgChip(c, L, p, pool, off){
-  if (!pool || off || pupilG(c, p) !== 'F') return '';
+  if (off || pupilG(c, p) !== 'F') return '';   // salle aussi (Kevin, 26/10) : « elle a ses règles, ne participe pas » = une trace, sans point retiré
   const on = !!(L.m[p.id] || {}).rg, n = on ? rgStreak(c, L, p) : 0;
   return `<div class="rg-line"><button class="rg-chip${on ? ' on' : ''}" type="button" data-act="rg" aria-pressed="${on}" aria-label="Règles : ${on ? 'oui' : 'non'}">${on ? '✓ ' : ''}R · règles</button>`
-    + (n > 1 && S.settings.rgWarn !== false ? `<span class="rg-warn">⚠ ${n}e semaine de suite</span>` : '') + '</div>';
+    + (n > 1 && S.settings.rgWarn !== false ? `<span class="rg-warn">⚠ ${n}e ${rgSuite(L)} de suite</span>` : '') + '</div>';
 }
 
 /* --- Filles / garçons : un réglage pour toute la classe (jamais de groupe mixte) --- */
@@ -45,7 +46,7 @@ function classSexeHTML(c){
   const sx = c.sexe === 'G' || c.sexe === 'F' ? c.sexe : '';
   return `<span class="small muted" style="font-weight:600">Groupe</span>
     <div class="seg full" role="group" aria-label="Groupe : garçons ou filles" style="margin-top:0">${[['G', '♂ Garçons'], ['F', '♀ Filles']].map(([k, l]) => `<button type="button" data-sexe="${k}" aria-pressed="${sx === k}">${l}${sx === k ? ' ✓' : ''}</button>`).join('')}</div>
-    <span class="small muted">Toute la classe d'un coup, les élèves ajoutés plus tard aussi (sert pour la piscine : bouton « règles » chez les filles).</span>`;
+    <span class="small muted">Toute la classe d'un coup, les élèves ajoutés plus tard aussi (sert pour le bouton « règles » chez les filles, en salle et à la piscine).</span>`;
 }
 function bindClassSexe(c){
   document.querySelectorAll('[data-sexe]').forEach(b => b.onclick = () => { const k = b.dataset.sexe; c.sexe = k; c.pupils.forEach(p => p.g = k); save(c.id); render();

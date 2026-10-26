@@ -1335,12 +1335,14 @@ function poolAbs(pairs){
   return out;
 }
 function poolMessage(pairs, date){
-  const st = poolStay(pairs), ab = poolAbs(pairs), d = dOf(date), classes = pairs.map(([c]) => c.name).join(', ');
-  const work = S.settings.work ?? 'J\'ai laissé un travail à faire.';
-  const when = `piscine du ${JOURSL[d.getDay()]} ${d.getDate()} ${MOISL[d.getMonth()]} (${classes})`;
-  const abs = ab.length ? `\nAbsent${ab.length > 1 ? 's' : ''} :\n` + ab.map(x => `- ${x.p.n} (${x.c.name}) : absent`).join('\n') : '';
-  if (!st.length) return `Bonjour, ${when} : personne ne reste à l'école, tous les présents nagent.` + abs + '\nMerci !';
-  return `Bonjour, ${when}.\nCes élèves restent à l'école :\n` + st.map(x => `- ${x.p.n} (${x.c.name}) : ${x.why}`).join('\n') + (work.trim() ? '\n' + work.trim() : '') + abs + '\nMerci !';
+  // Kevin (26/10) : élèves groupés par classe (le nom de la classe une seule fois), le travail dans la phrase, absents en simple liste
+  const st = poolStay(pairs), ab = poolAbs(pairs), d = dOf(date), cls = pairs.map(([c]) => c), plusieurs = cls.length > 1;
+  const when = `piscine du ${JOURSL[d.getDay()]} ${d.getDate()} ${MOISL[d.getMonth()]} (${cls.map(c => c.name).join(', ')})`;
+  const liste = (xs, ligne) => cls.map(c => { const ys = xs.filter(x => x.c === c); if (!ys.length) return '';
+    return (plusieurs ? c.name + '\n' : '') + ys.map(x => '- ' + ligne(x)).join('\n'); }).filter(Boolean).join('\n');
+  const reste = st.length ? `\nCes élèves restent à l'école avec un travail :\n` + liste(st, x => `${x.p.n} : ${x.why}`) : `\nTous les présents nagent, personne ne reste à l'école.`;
+  const abs = ab.length ? `\nAbsent${ab.length > 1 ? 's' : ''} :\n` + liste(ab, x => x.p.n) : '';
+  return `Bonjour, ${when}.` + reste + abs + '\nMerci !';
 }
 function poolRecap(pairs, date){
   const st = poolStay(pairs), ab = poolAbs(pairs);
@@ -1348,7 +1350,6 @@ function poolRecap(pairs, date){
     <h3>Restent à l'école (${st.length})</h3>
     ${st.length ? st.map(x => `<div class="evt"><span class="l"><b>${esc(x.p.n)}</b> <span class="small muted">${esc(x.c.name)}</span><br><span class="small">${esc(x.why)}</span></span></div>`).join('') : '<span class="small muted">Tout le monde nage.</span>'}
     ${ab.length ? `<h3>Absents (${ab.length})</h3>` + ab.map(x => `<div class="evt"><span class="l"><b>${esc(x.p.n)}</b> <span class="small muted">${esc(x.c.name)}</span></span></div>`).join('') : ''}
-    <label class="f">Travail laissé<input class="inp" id="pr-work" value="${esc(S.settings.work ?? 'J\'ai laissé un travail à faire.')}" placeholder="ex. J'ai laissé un questionnaire sur la natation à remplir."></label>
     <label class="f">Message pour le groupe des éducateurs<textarea class="inp" id="pr-msg" style="min-height:170px">${esc(poolMessage(pairs, date))}</textarea></label>
     <div class="row2"><button class="btn pri" type="button" id="pr-copy">Copier le message</button><a class="btn" id="pr-wa" href="https://wa.me/?text=${encodeURIComponent(poolMessage(pairs, date))}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">Ouvrir WhatsApp</a></div>
     <p class="small muted" style="margin:0">Tu peux corriger le texte avant de copier.</p>
@@ -1357,7 +1358,6 @@ function poolRecap(pairs, date){
 function bindPoolRecap(pairs, date){
   const upd = () => { $('pr-wa').href = 'https://wa.me/?text=' + encodeURIComponent($('pr-msg').value); };
   $('pr-msg').oninput = upd;
-  $('pr-work').onchange = e => { S.settings.work = e.target.value; save(); $('pr-msg').value = poolMessage(pairs, date); upd(); };
   $('pr-copy').onclick = () => { const t = $('pr-msg');
     navigator.clipboard.writeText(t.value).then(() => toast('Message copié : colle-le dans WhatsApp'), () => { t.focus(); t.select(); toast('Sélectionné : appuie sur Copier'); }); };
 }

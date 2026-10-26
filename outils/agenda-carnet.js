@@ -318,21 +318,53 @@ function openAgEdit(date, h, it){
 }
 
 /* --- Dans l'appel : sport + ce que j'ai fait --- */
-function agRollBox(Ls){
-  const f = Ls.find(l => l && (l.sport || l.note)) || {};
-  return `<div class="card sec" style="padding-block:14px" id="ag-rc"><h3>📝 Ce cours</h3>${sportField('rc', f.sport || '')}
+/* Sous l'appel : la même fenêtre « Ce cours » que dans l'agenda (Kevin, 26/10) : sport, prévu au planning, programme,
+   ce que j'ai fait (dictée), prépa et « Lancer la prépa ». Mêmes données (agGet / agSet) : l'agenda suit à la bonne date.
+   Appel hors horaire (sans heure ou pas dans la semaine type) : l'ancienne petite fiche (sport + ce que j'ai fait). */
+function agRollIt(Ls, cls){
+  const l0 = Ls.find(Boolean); if (!l0 || !l0.h || !cls) return null;
+  return agItems(wdOf(l0.date)).find(x => x.h === l0.h && cls.every(c => x.cls.includes(c.id))) || null;
+}
+function agRollBox(Ls, cls){
+  const it = agRollIt(Ls, cls);
+  if (!it){
+    const f = Ls.find(l => l && (l.sport || l.note)) || {};
+    return `<div class="card sec" style="padding-block:14px" id="ag-rc"><h3>📝 Ce cours</h3>${sportField('rc', f.sport || '')}
     <label class="f">Ce que j'ai fait<textarea class="inp" id="rc-note" rows="3" style="min-height:80px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(f.note || '')}</textarea></label>${micBtn('rc-note')}
     <span class="small muted" style="margin:0">Visible aussi dans l'onglet Agenda et le journal des leçons de la classe.</span></div>`;
+  }
+  const date = Ls.find(Boolean).date, g = agGet(date, it), pl = !g.s && agPlanned(date, it);
+  return `<div class="card sec" style="padding-block:14px" id="ag-rc"><h3>📝 Ce cours · ${esc(fmtD(date))}</h3>
+      ${sportField('rc', g.s)}
+      ${pl && pl !== 'Congé' ? `<button class="btn ag-plb" type="button" id="rc-plan">🗓 Prévu au planning : <b>${esc(pl)}</b> · choisir</button>` : ''}
+      ${progField('rc', g.p, it.cls)}
+      <label class="f">Ce que j'ai fait<textarea class="inp" id="rc-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc(g.n)}</textarea></label>${micBtn('rc-note')}
+      <button class="btn block ag-ppb" type="button" id="rc-prepa">📋 ${g.pp ? `Prépa : ${esc(prepaCourt(g.pp))}` : 'Préparer cette leçon (échauffement, corps, retour au calme)'}</button>
+      <span class="small muted" style="margin:0">La même fiche que dans l'Agenda : ce que tu changes ici change aussi là-bas.</span></div>`;
 }
 function bindAgRoll(cls, Ls){
   if (!$('ag-rc')) return;
-  const put = (k, v) => cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; if (v) l[k] = v; else delete l[k]; save(c.id); });
-  bindSportField('rc', v => { put('sport', v); toast(v ? 'Sport : ' + v : 'Sport retiré'); });
-  const ta = $('rc-note'); let tm = null;
-  const keep = () => { clearTimeout(tm); tm = null; put('note', ta.value.trim()); };
+  const it = agRollIt(Ls, cls), ta = $('rc-note'); let tm = null;
+  if (!it){
+    const put = (k, v) => cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; if (v) l[k] = v; else delete l[k]; save(c.id); });
+    bindSportField('rc', v => { put('sport', v); toast(v ? 'Sport : ' + v : 'Sport retiré'); });
+    const keep = () => { clearTimeout(tm); tm = null; put('note', ta.value.trim()); };
+    ta.oninput = () => { clearTimeout(tm); tm = setTimeout(keep, 500); };
+    ta.onblur = () => { if (tm) keep(); };
+    bindMic('rc-note');
+    return;
+  }
+  const date = Ls.find(Boolean).date, ids = cls.map(c => c.id), g = agGet(date, it);
+  let cur = g.s, s0 = g.s, n0 = g.n, p0 = JSON.stringify(g.p || null);
+  const PF = bindProgField('rc', g.p, () => cur, () => keep());
+  const keep = () => { clearTimeout(tm); tm = null; const nv = ta.value.trim(), pv = JSON.stringify(PF.get());
+    if (cur === s0 && nv === n0 && pv === p0) return; agSet(date, it, ids, cur, nv, PF.get(), agGet(date, it).pp); s0 = cur; n0 = nv; p0 = pv; };
+  bindSportField('rc', v => { cur = v; PF.sport(v); keep(); if ($('rc-plan')) $('rc-plan').remove(); toast(v ? 'Sport : ' + v : 'Sport retiré'); });
+  if ($('rc-plan')) $('rc-plan').onclick = () => { const sp = agPlanned(date, it), sel = $('rc-sp'); if (![...sel.options].some(o => o.value === sp)) sel.innerHTML = sportOptions(sp); sel.value = sp; sel.onchange(); };
   ta.oninput = () => { clearTimeout(tm); tm = setTimeout(keep, 500); };
   ta.onblur = () => { if (tm) keep(); };
   bindMic('rc-note');
+  $('rc-prepa').onclick = () => { keep(); micStop(); openPrepa(date, it.id, ids); };
 }
 
 /* --- Dictée 🎤 : parler, le texte s'ajoute dans la case --- */

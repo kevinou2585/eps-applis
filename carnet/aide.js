@@ -17,7 +17,9 @@ window.CARNET_AIDE = [
     ['Tenue', 'Le t-shirt : un toucher = <b>oubli de tenue</b>. À la piscine : maillot oublié ou « ne nage pas ».'],
     ['Attitude', 'Le pouce : 1er toucher = <b>perturbe</b>, 2e = <b>exclu du cours</b>, 3e = annuler. Les points retirés suivent ton barème (Réglages › Barème).'],
     ['Alertes', 'Au 3e oubli ou à la 3e perturbation de la période, un bandeau prévient à l\'appel et dans la fiche de l\'élève.'],
-    ['Ce cours', 'En bas : le <b>sport</b> du jour et <b>ce que tu as fait</b> (au clavier ou avec 🎤 Dicter). On le retrouve dans l\'Agenda et dans le journal de la classe.'],
+    ['Travail', 'Sous un élève qui ne fait pas le cours (absent, dispensé, oubli, ne nage pas, règles, perturbe) : <b>📝 Travail</b> = tu lui as donné un travail. Au cours de la semaine suivante, un rappel propose <b>✓ Remis</b> (rien n\'est retiré), <b>+1 semaine</b> ou <b>Zéro</b> : −1 point de tenue (en attitude s\'il n\'en reste plus). Chaque choix s\'annule.'],
+    ['Ce cours', 'En bas : la même fiche que dans l\'Agenda (sport, prévu au planning, programme, <b>ce que tu as fait</b> avec 🎤 Dicter, prépa, ▶ Lancer la prépa). Ce que tu changes ici change aussi dans l\'Agenda, à la bonne date.'],
+    ['Piscine : éducateurs', 'Le message à copier ou à envoyer sur WhatsApp liste ceux qui restent à l\'école (affaires oubliées, ne nage pas, règles, dispensés) et les <b>absents</b>.'],
     ['Autre cours', '« + Autre » : faire l\'appel d\'un cours qui n\'est pas dans l\'horaire (remplacement, cours déplacé).'],
     ['Fiche d\'un élève', 'Touche son nom : son bulletin, tout son historique daté, ses certificats médicaux.']
   ]},

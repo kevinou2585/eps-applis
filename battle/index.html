@@ -4589,13 +4589,14 @@ function garderIntroUltime(r, avant, nom, genre, ultAvant) { // tu bats tout le 
   const ancien = ultAvant ? { nom: ultAvant.inconnu ? '???' : ultAvant.nom, genre: ultAvant.genre, photo: ultAvant.photo || '', inconnu: !!ultAvant.inconnu } : null;
   lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang: 0, ultime: true, battus, avant, ancien });
 }
-function garderIntroDieu(r, avant, nom, genre, dieuAvant) { // même entrée au château que l'empereur, mais c'est l'ancien dieu qui est chassé
+function garderIntroDieu(r, avant, nom, genre, dieuAvant, ultAvant) { // Kevin : tu entres au château en empereur, tu chasses l'ancien empereur, puis tu t'envoles au ciel : tu deviens dieu ; l'ancien dieu tombe dans le château
   if (r && !r.ok) return;
   const sc = Math.round(score);
   if (!dieu || sc >= +dieu.score) { dieu = { jeu: JEU_DIEU, nom, score: sc, genre, photo: photoData }; lsSet('battle-dieu', dieu); }
   const battus = avant.filter(b => b.score < sc).map(b => b.rang).sort((a, b) => b - a);
   const ancien = dieuAvant ? { nom: dieuAvant.inconnu ? '???' : dieuAvant.nom, genre: dieuAvant.genre, photo: dieuAvant.photo || '', inconnu: !!dieuAvant.inconnu } : null;
-  lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang: -1, ultime: true, dieu: true, battus, avant, ancien });
+  const emp = ultAvant ? { nom: ultAvant.inconnu ? '???' : ultAvant.nom, genre: ultAvant.genre, photo: ultAvant.photo || '', inconnu: !!ultAvant.inconnu } : null;
+  lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang: -1, ultime: true, dieu: true, battus, avant, ancien, emp });
 }
 function verifierIntro() {
   const d = lsGet('battle-intro', null); lsSet('battle-intro', null);
@@ -4628,7 +4629,7 @@ async function jouerIntro(d) {
   const s = Math.round(175 * k), hw = Math.round(s * .78), h = ajoute('heros', `<canvas style="width:${hw}px;height:${s}px"></canvas><b>${esc(d.nom)}</b>`);
   h.style.transformOrigin = `${hw / 2}px ${s / 2}px`;
   const hc = h.querySelector('canvas'), himg = imageDe(d.photo || AVATAR);
-  let pasH = 0, enMarche = false, tPrec = 0, tPouf = 0;
+  let pasH = 0, enMarche = false, tPrec = 0, tPouf = 0, rangH = d.dieu ? 0 : d.rang; // le futur dieu arrive en empereur
   const peindre = t => {
     if (!h.isConnected) return;
     const dt = Math.min(0.05, (t - (tPrec || t)) / 1000); tPrec = t;
@@ -4637,7 +4638,7 @@ async function jouerIntro(d) {
     const dp = Math.min(window.devicePixelRatio || 1, 2); if (hc.width !== Math.round(hw * dp)) { hc.width = Math.round(hw * dp); hc.height = Math.round(s * dp); }
     const c = hc.getContext('2d'), kk = Math.min(hw / 100, s / 132) * dp;
     c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, hc.width, hc.height);
-    c.setTransform(kk, 0, 0, kk, hc.width / 2 - 5 * kk, hc.height / 2 - 2 * kk); dessinerPerso(c, d.rang, d.genre, himg, { pas: pasH });
+    c.setTransform(kk, 0, 0, kk, hc.width / 2 - 5 * kk, hc.height / 2 - 2 * kk); dessinerPerso(c, rangH, d.genre, himg, { pas: pasH });
     requestAnimationFrame(peindre);
   };
   requestAnimationFrame(peindre);
@@ -4750,19 +4751,55 @@ async function jouerIntro(d) {
     son('porte'); if (hz) await anim(hz, [{ transform: 'translateY(0)' }, { transform: 'translateY(-32px)' }], { duration: 1100, easing: 'cubic-bezier(.5,0,.3,1)' });
     await anim(h, [{ transform: T(pos), opacity: 1 }, { transform: T({ x: door.x, y: door.y - 10 * k, sc: .15 }), opacity: 0 }], { duration: 650 });
     for (const [t, m] of [['BAM !', -30], ['PAF !', 25], ['BOUM !', -5]]) { boom(t, door.x + m * k, door.y - (60 + Math.abs(m)) * k, '#b26bff'); eclats(door.x, door.y - 14 * k, '#d9b3ff', 12); son('pare'); await attendre(380); }
-    const a = d.ancien || { nom: '???', genre: 'H', photo: '', inconnu: true };
+    const a = (d.dieu ? d.emp : d.ancien) || { nom: '???', genre: 'H', photo: '', inconnu: true };
     const v = ajoute('heros', `<canvas style="width:${s}px;height:${s}px"></canvas><b style="background:#b26bff;color:#fff">${esc(a.nom)}</b>`);
-    v.style.transformOrigin = `${s / 2}px ${s / 2}px`; dessinerPortrait(v.querySelector('canvas'), d.dieu ? -1 : 0, a.genre, a.photo || (a.inconnu ? '' : AVATAR), true);
+    v.style.transformOrigin = `${s / 2}px ${s / 2}px`; dessinerPortrait(v.querySelector('canvas'), 0, a.genre, a.photo || (a.inconnu ? '' : AVATAR), true);
     const p0 = { x: door.x, y: door.y - 10 * k, sc: .2 }, p1 = { x: W * .3, y: H * .12, sc: 1.1 }, p2 = { x: -s, y: -s * .6, sc: .3 };
     son('ejecte');
     anim(v, [{ transform: T(p0) + ' rotate(0deg)' }, { transform: T(p1) + ' rotate(320deg)', offset: .45 }, { transform: T(p2) + ' rotate(900deg)' }], { duration: 1900, easing: 'cubic-bezier(.3,.6,.6,1)' });
     await attendre(250); await bulle('NOOOOON !', W * .45, H * .2);
     if (hz) anim(hz, [{ transform: 'translateY(-32px)' }, { transform: 'translateY(0)' }], { duration: 450, easing: 'cubic-bezier(.6,0,1,.6)' });
-    await attendre(450); son('fanfare'); eclats(door.x, door.y - 20 * k, '#b26bff', 30);
+    await attendre(450);
+    if (d.dieu) { await envolDieu(door); return; }
+    son('fanfare'); eclats(door.x, door.y - 20 * k, '#b26bff', 30);
     const an3 = ajoute('i-annonce', d.dieu ? `${d.genre === 'F' ? 'Une nouvelle déesse' : 'Un nouveau dieu'} veille sur le Valhalla…<small>Chut… c’est toi, ${esc(d.nom)}</small>` : `Un nouveau boss se cache dans le château…<small>Chut… c’est toi, ${esc(d.nom)}</small>`);
     an3.style.fontSize = '22px';
     anim(an3, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 450, easing: 'cubic-bezier(.2,1.6,.4,1)' });
     await attendre(2600);
+  }
+  async function envolDieu(door) { // l'empereur s'envole du haut de son donjon vers le ciel et devient dieu ; l'ancien dieu tombe dans le château
+    const tour = { x: door.x, y: door.y - 184 * k }, F = d.genre === 'F';
+    const lueur = ajoute('i-lueur', '', 0, 0); lueur.style.cssText = `position:absolute;left:${tour.x - 120 * k}px;top:${tour.y - 40 * k}px;width:${240 * k}px;height:${260 * k}px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,236,170,.75),rgba(255,207,74,0));opacity:0`;
+    son('grondement'); anim(lueur, [{ opacity: 0 }, { opacity: 1, offset: .3 }, { opacity: .6 }], { duration: 1600 }); secouer(1); await attendre(500); secouer(1.5); await attendre(600);
+    const rayon = ajoute('i-rayon', '', 0, 0); rayon.style.cssText = `position:absolute;left:${tour.x - 26 * k}px;top:0;width:${52 * k}px;height:${tour.y}px;background:linear-gradient(to top,rgba(255,246,208,.95),rgba(255,207,74,.35) 70%,rgba(255,207,74,0));box-shadow:0 0 ${30 * k}px rgba(255,220,140,.8);transform-origin:50% 100%;transform:scaleY(0)`;
+    son('portesValhalla'); await anim(rayon, [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], { duration: 700, easing: 'cubic-bezier(.2,.8,.3,1)' });
+    // il ressort par le haut du donjon… et change de costume dans la lumière
+    pos = { x: tour.x, y: tour.y - s * .05, sc: .3 };
+    await anim(h, [{ transform: T(pos), opacity: 0 }, { transform: T(pos), opacity: 1 }], { duration: 400 });
+    eclats(tour.x, tour.y, '#ffcf4a', 20);
+    await marcheVol({ x: tour.x, y: tour.y - s * .35, sc: .45 }, 1000);
+    await marcheVol({ x: W * .5, y: H * .32, sc: 1.05 }, 1400);
+    // dans le ciel : l'éclair, il devient dieu (son costume change)
+    son('tonnerre'); rangH = -1; secouer(2); vib([40, 30, 80]);
+    eclats(pos.x, pos.y, '#ffffff', 30); eclats(pos.x, pos.y, '#ffcf4a', 26); eclats(pos.x, pos.y, '#7fd8ff', 16);
+    boom('⚡', pos.x - 70 * k, pos.y - s * .35, '#dff4ff', 46); boom('⚡', pos.x + 70 * k, pos.y - s * .2, '#dff4ff', 38);
+    await anim(h, [{ transform: T(pos) }, { transform: T(pos) + ' scale(1.15)', offset: .4 }, { transform: T(pos) }], { duration: 600 });
+    await bulle(F ? 'Je suis une DÉESSE !' : 'Je suis un DIEU !', pos.x, pos.y - s * .55);
+    await marcheVol({ x: W * .5, y: -s * .8, sc: .8 }, 900);
+    anim(rayon, [{ opacity: 1 }, { opacity: 0 }], { duration: 900 });
+    // l'ancien dieu tombe des nuages dans le château : il redevient empereur
+    const a = d.ancien || { nom: '???', genre: 'H', photo: '', inconnu: true };
+    const v = ajoute('heros', `<canvas style="width:${s}px;height:${s}px"></canvas><b style="background:#7fd8ff;color:#06203a">${esc(a.nom)}</b>`);
+    v.style.transformOrigin = `${s / 2}px ${s / 2}px`; dessinerPortrait(v.querySelector('canvas'), -1, a.genre, a.photo || (a.inconnu ? '' : AVATAR), true);
+    son('ejecte'); const q0 = { x: W * .3, y: -s, sc: .9 }, q1 = { x: tour.x, y: tour.y, sc: .25 };
+    const chute = anim(v, [{ transform: T(q0) + ' rotate(0deg)' }, { transform: T(q1) + ' rotate(720deg)' }], { duration: 1500, easing: 'cubic-bezier(.5,0,.9,.6)' });
+    await attendre(300); await bulle('AAAAAAH !', W * .4, H * .18); await chute;
+    v.remove(); impact('PLOUF !', tour, '#7fd8ff', 1.5); son('tombe');
+    son('grosseFanfare'); eclats(tour.x, tour.y, '#ffcf4a', 30); anim(lueur, [{ opacity: .6 }, { opacity: 0 }], { duration: 800 });
+    const an4 = ajoute('i-annonce', `${F ? 'Une nouvelle déesse' : 'Un nouveau dieu'} veille sur le Valhalla…<small>Chut… c’est toi, ${esc(d.nom)}</small>`);
+    an4.style.fontSize = '22px';
+    anim(an4, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 450, easing: 'cubic-bezier(.2,1.6,.4,1)' });
+    await attendre(2800);
   }
 }
 
@@ -4976,7 +5013,7 @@ function montrerFin() {
       if (dieuAvant && !dieuAvant.inconnu) await envoyer({ code: CODE, action: 'jeu', jeu: JEU_CACHE, nom: dieuAvant.nom, score: Math.round(dieuAvant.score), photo: photoOk(dieuAvant.photo) && dieuAvant.photo.length < 48000 ? dieuAvant.photo : '', genre: dieuAvant.genre });
       if (ultAvant && !ultAvant.inconnu) await envoyer({ code: CODE, action: 'jeu', jeu: JEU, nom: ultAvant.nom, score: Math.round(ultAvant.score), photo: photoOk(ultAvant.photo) && ultAvant.photo.length < 48000 ? ultAvant.photo : '', genre: ultAvant.genre });
     }
-    if (mode === 'top' && r !== false) { if (dieuF) garderIntroDieu(r, liste, nom, genre, dieuAvant); else if (ult) garderIntroUltime(r, liste, nom, genre, ultAvant); else garderIntro(r, liste, rang, nom, genre); }
+    if (mode === 'top' && r !== false) { if (dieuF) garderIntroDieu(r, liste, nom, genre, dieuAvant, ultAvant); else if (ult) garderIntroUltime(r, liste, nom, genre, ultAvant); else garderIntro(r, liste, rang, nom, genre); }
     const ret = $('retour') || document.createElement('div');
     if ($('rejouer')) { $('rejouer').classList.remove('cache'); $('vers-accueil').classList.remove('cache'); }
     if (r === null) ret.innerHTML = `<div class="msg">📡 Hors ligne : ton score est gardé et sera envoyé dès que possible.</div>`;

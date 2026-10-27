@@ -4,7 +4,7 @@
 window.CARNET_AIDE = [
   {ic: '🚀', t: 'Mettre en route (une seule fois)', intro: 'Dans l\'ordre, compte 15 minutes. Les étapes 3 à 5 se font sur un ordinateur.', pts: [
     ['1. Installer l\'appli', 'Ouvre le lien d\'EPS ultime dans <b>Safari</b> (iPhone) ou <b>Chrome</b> (Android), pas depuis WhatsApp ou un mail. Touche « Ouvrir l\'appli EPS ultime », puis Partager › <b>Sur l\'écran d\'accueil</b> (Android : menu ⋮ › Installer l\'application). Ouvre ensuite l\'appli par son icône et entre le code de l\'école.'],
-    ['2. Ouvrir le Carnet', 'Touche la grande tuile <b>Carnet EPS</b> et entre le code du Carnet. Tu peux d\'abord essayer avec la <b>classe d\'exemple</b>, puis la supprimer.'],
+    ['2. Ouvrir le Carnet', 'Touche la grande tuile <b>Carnet EPS</b> : le code EPS ultime suffit, il n\'y a pas d\'autre code. Tu peux d\'abord essayer avec la <b>classe d\'exemple</b>, puis la supprimer.'],
     ['3. Créer le tableau Google', 'Sur ordinateur, connecté à ton compte Google, ouvre <b>sheets.new</b> : un tableau vide se crée sur ton Drive. Nomme-le « Carnet EPS ».'],
     ['4. Coller le script', 'Dans ce tableau : <b>Extensions › Apps Script</b>. Efface tout, puis colle le script de la page <b>carnet/google/</b> (bouton « Copier le script »). 💾 Enregistrer. Rien à modifier dedans.'],
     ['5. Déployer le script', '<b>Déployer › Nouveau déploiement</b>, roue dentée › <b>Application Web</b>. Exécuter en tant que : <b>Moi</b>. Qui a accès : <b>Tout le monde</b>. Déployer, puis autoriser l\'accès (si Google prévient « application non validée » : Paramètres avancés › Accéder, c\'est ton propre script). Copie l\'adresse qui finit par <b>/exec</b> et envoie-la-toi.'],

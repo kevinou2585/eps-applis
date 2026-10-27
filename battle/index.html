@@ -870,6 +870,9 @@ const PANIER = { x: 36, y: 414 };       // cercle du panier de basket, au bout d
 const CHANCE_PANIER = 0.5, VIT_RAMPE = 400;
 // trou de colle (en bas à gauche) : la balle y reste collée jusqu'à la fin de la balle en cours
 const COLLE = { x: 104, y: 452, r: 12, prise: 12, vmax: 1000, balle: null }; // Kevin (26/10) : la bille qui passe sur le trou s'y colle (sauf tir très rapide)
+// sortie de colle (Kevin, 27/10) : la bille libérée par le casier tremble dans le trou, puis roule doucement jusqu'au couloir
+// gauche et descend sur le flipper gauche (avant : éjectée vers le bas, elle filait entre les flippers)
+const T_DECOLLE = 0.7, VIT_SORTIE = 150, SORTIE_COLLE = rail([[104, 452], [92, 444], [76, 448], [62, 462], [54, 482], [52, 505]]);
 const A_REPOS = 0.55, A_HAUT = -0.42;
 function flipper(px, py, cote) { return { px, py, cote, L: 64, a: A_REPOS, w: 0, appui: false }; }
 const FL = [flipper(106, 638, 1), flipper(264, 638, -1)];
@@ -892,14 +895,16 @@ seg(BUT.x1, BUT.haut, BUT.x1, BUT.ligne, { epais: 3, rail: false, type: 'poteau'
 // (VISE.plonge px de plus que son corps) : un tir au hasard rentre environ 1 fois sur 3, un tir bien placé côté opposé rentre.
 const VISE = { periode: 1.4, delai: 3, plonge: 10, marge: R + 3 };
 const GARDIEN = { plongeX: null, plongeT: 0, x: BUT.cx, y: BUT.ligne + 7, l: 3, amp: 20, ph: 0, joie: 0, seg: { ax: 0, ay: 0, bx: 0, by: 0, e: 0.5, epais: 4, kick: 0 } };
-// trous du lanceur : selon la puissance, la bille lancée se bloque dans le trou 1, 2 ou 3 (très fort : elle passe)
+// trous du lanceur : selon la puissance, la bille lancée se bloque dans le trou 1, 2 ou 3 ; hors des fenêtres de la jauge, elle passe.
+// Kevin (27/10) : il faut la puissance pile poil ; le 1 (petite fenêtre, faible puissance) rapporte le plus, le 3 (puissance forte) le moins
 const TROUS_L = [
-  { n: 1, x: 375, y: 330, pts: 1000, ang: null },
+  { n: 1, x: 375, y: 330, pts: 3000, ang: null },
   { n: 2, ang: -0.42, pts: 2000 },
-  { n: 3, ang: -0.98, pts: 3000 }
+  { n: 3, ang: -0.98, pts: 1000 }
 ].map(t => { if (t.ang != null) { t.x = 200 + 177 * Math.cos(t.ang); t.y = 200 + 177 * Math.sin(t.ang); } return Object.assign(t, { balle: null, flash: 0 }); });
 const T_TROU_L = 0.8, VIT_RELANCE = [1000, 760, 680];
-function trouVise(p) { return p < 0.3 ? 1 : p < 0.55 ? 2 : p < 0.8 ? 3 : 0; }
+const FENETRES_L = [[0.22, 0.29], [0.45, 0.54], [0.66, 0.78]]; // puissance (0 à 1) qui bloque la bille dans le trou 1, 2, 3
+function trouVise(p) { return FENETRES_L.findIndex(([a, b]) => p >= a && p < b) + 1; }
 // casier (en haut à gauche, contre la paroi) : la bille qui remonte le côté gauche y entre au lieu de faire le tour
 const CASIER = { a: Math.PI + 0.33, amin: Math.PI + 0.13, amax: Math.PI + 0.56, rmin: 146, balle: null, visites: 0, ouvert: 0, secoue: 0 };
 CASIER.x = 200 + Math.cos(CASIER.a) * 167; CASIER.y = 200 + Math.sin(CASIER.a) * 167;
@@ -1098,7 +1103,7 @@ function collPlot(b, x, y, r, e = 0.4) { // obstacle rond sans éjection (balle 
   b.x = x + nx * rr; b.y = y + ny * rr; const vn = b.vx * nx + b.vy * ny;
   if (vn < 0) { b.vx -= (1 + e) * vn * nx; b.vy -= (1 + e) * vn * ny; }
 }
-const libre = b => !(b.tient > 0 || b.rampe || b.collee || b.tunnel || b.boucle || b.trou || b.filet);
+const libre = b => !(b.tient > 0 || b.rampe || b.collee || b.sortie || b.tunnel || b.boucle || b.trou || b.filet);
 function pas(h) {
   for (const f of FL) {
     const cible = f.appui ? A_HAUT : A_REPOS, vit = f.appui ? 22 : 12, old = f.a;
@@ -1234,7 +1239,7 @@ function passeTrou(b, t) {
 }
 function capturerTrou(b, t) {
   t.balle = b; t.flash = T_TROU_L; b.trou = { t: T_TROU_L, n: t.n }; b.vise = 0; b.x = t.x; b.y = t.y; b.vx = b.vy = 0;
-  stats.trous[t.n - 1]++; points(t.pts, Math.min(t.x, 330), t.y + 26); SON.trou(t.n); vib([15, 20, 15]); etincelles(t.x, t.y, 10 + 4 * t.n, '#ffe600');
+  stats.trous[t.n - 1]++; points(t.pts, Math.min(t.x, 330), t.y + 26); SON.trou(t.pts / 1000); vib([15, 20, 15]); etincelles(t.x, t.y, 10 + 4 * t.pts / 1000, '#ffe600');
   blague('TROU ' + t.n + ' !', Math.min(t.x, 300) - 20, t.y + (t.n === 1 ? -10 : 52), '#ffe600');
 }
 function relancerTrou(b) {
@@ -1257,7 +1262,7 @@ function entrerCasier(b) {
   else {
     CASIER.visites = 0;
     if (COLLE.balle) { // le casier ouvert libère aussi la bille en colle : deux billes en jeu
-      const bc = COLLE.balle; COLLE.balle = null; bc.collee = false; bc.y = COLLE.y + COLLE.r + R + 2; bc.vx = 90; bc.vy = 120; bc.ax = bc.x; bc.ay = bc.y; bc.at = temps;
+      const bc = COLLE.balle; COLLE.balle = null; bc.collee = false; bc.sortie = { t: T_DECOLLE, d: 0 }; bc.vx = bc.vy = 0; bc.ax = bc.x; bc.ay = bc.y; bc.at = temps;
       if (!balles.includes(bc)) balles.push(bc);
       blague('Fin de la colle ! 🎉', COLLE.x, COLLE.y - 30, '#d9b3ff'); etincelles(COLLE.x, COLLE.y, 14, '#d9b3ff');
     }
@@ -1281,7 +1286,7 @@ function toucheBumper(c, b) {
   if (TXT[c.type] && Math.random() < 0.18) blague(pick(TXT[c.type]), c.x, c.y - 60, c.type === 'foot' ? '#ff6b6b' : undefined);
 }
 function berce(b) { return FL.some(f => { if (!f.appui) return false; const p = distFlip(b, f); return Math.hypot(b.x - p.cx, b.y - p.cy) < R + 14; }); }
-function enAttente(b) { return b.tient <= 0 && !b.rampe && !b.tunnel && !b.boucle && !b.trou && !b.filet && b.x > 362 && b.y > 560 && Math.abs(b.vx) + Math.abs(b.vy) < 40; }
+function enAttente(b) { return b.tient <= 0 && !b.rampe && !b.sortie && !b.tunnel && !b.boucle && !b.trou && !b.filet && b.x > 362 && b.y > 560 && Math.abs(b.vx) + Math.abs(b.vy) < 40; }
 function lancer(b, p) {
   b.vy = -(LANCE_MIN + (LANCE_MAX - LANCE_MIN) * p); b.vx = 0; b.lance = 0; arreterCharge(); SON.lance(); vib(25);
   b.vise = table !== 'base' ? 0 : trouVise(p); b.viseT = 1.6; // trou 1, 2 ou 3 selon la puissance (0 : très fort, la bille passe)
@@ -1382,6 +1387,12 @@ function relacherRampe(b, vx, vy) {
   if (!multiball && cagePleine && paniers >= besoin && spectacleT <= 0) recreGenerale();
 }
 // ---- trou de colle
+function majSortieColle(b, dt) {
+  const s = b.sortie;
+  if (s.t > 0) { s.t -= dt; b.x = COLLE.x + Math.sin(temps * 60) * 1.5; b.y = COLLE.y; return; } // elle tremble : ça se décolle…
+  s.d += VIT_SORTIE * dt; [b.x, b.y] = surRail(SORTIE_COLLE, Math.min(s.d, SORTIE_COLLE.total));
+  if (s.d >= SORTIE_COLLE.total) { b.sortie = null; b.vx = 15; b.vy = 90; } // lâchée en haut du couloir gauche, vers le flipper
+}
 function coller(b) {
   b.collee = true; b.x = COLLE.x; b.y = COLLE.y; b.vx = b.vy = 0; COLLE.balle = b;
   SON.colle(); vib([60, 30, 60]); secousse = 0.15; etincelles(COLLE.x, COLLE.y, 14, '#fff');
@@ -1769,6 +1780,7 @@ function maj(dt) {
     if (b.tunnel) { majTunnel(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
     if (b.boucle) { majLoop(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
     if (b.collee) continue;
+    if (b.sortie) { majSortieColle(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
     if (b.trou) { b.trou.t -= dt; b.ax = b.x; b.ay = b.y; b.at = temps; if (b.trou.t <= 0) relancerTrou(b); continue; }
     if (b.filet) { b.filet.t -= dt; b.ax = b.x; b.ay = b.y; b.at = temps; if (b.filet.t <= 0) sortirBut(b); continue; }
     if (b.vise) { b.viseT -= dt; if (b.viseT <= 0) b.vise = 0; }
@@ -2951,6 +2963,12 @@ function rendu() {
     const p = charge.actif ? puissance() : 0;
     rrect(ctx, 366, 540, 18, 136, 5); ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fill();
     if (p > 0) { rrect(ctx, 368, 674 - 132 * p, 14, 132 * p, 4); ctx.fillStyle = `hsl(${120 - 120 * p},95%,55%)`; ctx.fill(); }
+    if (table === 'base') FENETRES_L.forEach(([a, b], i) => { // fenêtres des trous 1, 2, 3 sur la jauge
+      const y1 = 674 - 132 * b, hh = 132 * (b - a), dans = p >= a && p < b;
+      ctx.fillStyle = dans ? 'rgba(255,230,0,.55)' : 'rgba(255,230,0,.18)'; ctx.fillRect(367, y1, 16, hh);
+      ctx.strokeStyle = '#ffe600'; ctx.lineWidth = 1; ctx.strokeRect(367, y1, 16, hh);
+      ctx.font = '900 8px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = dans ? '#000' : '#ffe600'; ctx.fillText(String(i + 1), 375, y1 + hh / 2 + 0.5);
+    });
     ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.5; rrect(ctx, 366, 540, 18, 136, 5); ctx.stroke();
     if (!charge.actif && Math.floor(temps * 2.5) % 2 === 0) texte('▼', 375, 530, 14, '#ffd23f');
   }

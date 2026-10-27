@@ -161,6 +161,21 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .chemin .chateau{position:absolute;right:6px;top:calc(60px * var(--k));width:calc(150px * var(--k));height:calc(180px * var(--k));z-index:1;border:0;background:transparent;-webkit-tap-highlight-color:transparent}
 .chemin .rumeur{position:absolute;right:10px;top:calc(250px * var(--k));z-index:4;max-width:220px;padding:8px 12px;border-radius:12px;background:rgba(20,6,30,.92);border:2px solid #b26bff;color:#e9d8ff;font:800 13px/1.3 system-ui,-apple-system,sans-serif;text-align:center;box-shadow:0 0 18px rgba(178,107,255,.5);animation:glisse .3s both}
 .chemin .rumeur small{font-weight:700;color:#c9a8f0}
+.chemin .secret-btn{position:absolute;right:calc(20px * var(--k));top:calc(232px * var(--k));z-index:3;padding:5px 10px;border-radius:999px;border:2px solid #ffcf4a;background:rgba(30,12,4,.9);color:#ffe9a8;font:900 12px system-ui,-apple-system,sans-serif;box-shadow:0 0 14px rgba(255,207,74,.55);animation:pulse 1.6s ease-in-out infinite}
+.chemin .secret-btn.dieu{border-color:#7fd8ff;color:#dff4ff;box-shadow:0 0 14px rgba(127,216,255,.6)}
+.chemin .secret{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:8;width:min(320px,88%);max-height:72%;overflow:auto;padding:14px 14px 10px;border-radius:16px;background:rgba(18,8,4,.96);border:2px solid #ffcf4a;color:#fff3d6;font:700 14px/1.3 system-ui,-apple-system,sans-serif;box-shadow:0 0 30px rgba(255,207,74,.45)}
+.chemin .secret.dieu{border-color:#7fd8ff;box-shadow:0 0 30px rgba(127,216,255,.5)}
+.chemin .secret h3{margin:0 0 10px;text-align:center;font:900 18px Georgia,"Times New Roman",serif;color:#ffcf4a}
+.chemin .secret.dieu h3{color:#7fd8ff}
+.chemin .secret .l{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:10px}
+.chemin .secret .l:nth-child(even){background:rgba(255,255,255,.05)}
+.chemin .secret .l em{font-style:normal;min-width:30px;text-align:center;font-weight:900;color:#ffcf4a}
+.chemin .secret .l b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chemin .secret .l span{font-weight:900;color:#ffe9a8}
+.chemin .secret .l.moi{background:rgba(255,207,74,.18);outline:1px solid rgba(255,207,74,.6)}
+.chemin .secret .sep{margin:10px 0 4px;font:900 11px system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#c9a888;text-align:center}
+.chemin .secret small{display:block;margin-top:10px;text-align:center;color:#c9a888;font-weight:700}
+.chemin .secret button{display:block;margin:10px auto 0;padding:8px 22px;border-radius:999px;border:0;background:#ffcf4a;color:#2a1408;font:900 14px system-ui,sans-serif}
 .heros{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;will-change:transform}
 .heros canvas{animation:none;background:radial-gradient(circle at 50% 55%,rgba(255,240,170,.55),transparent 62%);filter:drop-shadow(0 0 14px rgba(255,220,120,.8)) drop-shadow(0 8px 10px rgba(0,0,0,.55))}
 .heros b{position:relative;margin-top:-10px;padding:3px 10px;border-radius:999px;background:#ffd23f;color:#2a0f3d;font:900 13px system-ui,-apple-system,sans-serif;box-shadow:0 3px 0 #7a5200;white-space:nowrap}
@@ -4354,7 +4369,7 @@ function garderUltime(r) {
   if (t && (!ultime || +t.score >= +ultime.score)) { ultime = { jeu: JEU_CACHE, nom: String(t.nom || '').trim(), score: +t.score, genre: t.genre === 'F' ? 'F' : 'H', photo: photoOk(t.photo) ? t.photo : '' }; lsSet('battle-ultime', ultime); }
 }
 async function chargerUltime() {
-  try { garderUltime(await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU_CACHE)}`)); } catch (e) {}
+  try { garderUltime(await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU_CACHE)}`)); if (etat === 'accueil') afficherAccueil(); } catch (e) {}
 }
 // Kevin (27/10) : le dieu / la déesse = n°1 d'un 3e classement caché (même script, nom de jeu JEU + '-dieu'), jamais affiché ; il attend au Valhalla
 const JEU_DIEU = JEU + '-dieu';
@@ -4370,7 +4385,7 @@ function garderDieu(r) {
   if (t && (!dieu || +t.score >= +dieu.score)) { dieu = { jeu: JEU_DIEU, nom: String(t.nom || '').trim(), score: +t.score, genre: t.genre === 'F' ? 'F' : 'H', photo: photoOk(t.photo) ? t.photo : '' }; lsSet('battle-dieu', dieu); }
 }
 async function chargerDieu() {
-  try { garderDieu(await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU_DIEU)}`)); } catch (e) {}
+  try { garderDieu(await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU_DIEU)}`)); if (etat === 'accueil') afficherAccueil(); } catch (e) {}
 }
 const garderReponse = (p, r) => { if (r && r.ok) { if (p.jeu === JEU_CACHE) garderUltime(r); else if (p.jeu === JEU_DIEU) garderDieu(r); else garderClassement(r); } };
 let classement = (() => { const c = lsGet('battle-classement', null); return c && c.jeu === JEU ? c : null; })();
@@ -4392,7 +4407,9 @@ async function chargerClassement() {
 function dateCourte(d) { if (/^\d\d\/\d\d$/.test(String(d))) return d; const x = new Date(d); return isNaN(x) ? '' : String(x.getDate()).padStart(2, '0') + '/' + String(x.getMonth() + 1).padStart(2, '0'); }
 function garderClassement(r) {
   if (!r || !r.ok) return;
-  classement = { jeu: JEU, top: Array.isArray(r.top) ? r.top.slice(0, 3) : [], boss: r.boss && typeof r.boss === 'object' ? r.boss : null, t: Date.now() };
+  // Kevin (27/10) : le dieu voit tous les scores → on garde aussi la liste complète (sans photos)
+  const tous = Array.isArray(r.top) ? r.top.map(t => ({ nom: String(t.nom || '').trim(), score: +t.score || 0 })).filter(t => t.nom && t.score > 0).sort((a, b) => b.score - a.score) : [];
+  classement = { jeu: JEU, top: Array.isArray(r.top) ? r.top.slice(0, 3) : [], tous, boss: r.boss && typeof r.boss === 'object' ? r.boss : null, t: Date.now() };
   // ancien script (top 5 sans photos) : seule la photo du n°1 est dans « boss » ; on ne la garde pas en double
   if (classement.top[0] && classement.boss && classement.top[0].photo && classement.boss.photo === classement.top[0].photo) classement.boss = Object.assign({}, classement.boss, { photo: '' });
   lsSet('battle-classement', classement);
@@ -4497,6 +4514,27 @@ function decorChemin(W, H, k) {
   </svg>`;
 }
 let accueilDessine = false;
+// Kevin (27/10) : l'empereur caché voit le top 3 et sa place d'empereur ; le dieu / la déesse voit TOUS les scores (et l'empereur)
+function quiSuisJe() {
+  const n = lsGetTxt('battle-nom').trim().toLowerCase(); if (!n || !CLASSEMENT_OK) return null;
+  if (dieu && String(dieu.nom).trim().toLowerCase() === n) return 'dieu';
+  if (ultime && String(ultime.nom).trim().toLowerCase() === n) return 'empereur';
+  return null;
+}
+function secretBouton() { const q = quiSuisJe(); return q ? `<button class="secret-btn${q === 'dieu' ? ' dieu' : ''}" type="button">${q === 'dieu' ? '⚡' : '👑'} Mon classement</button>` : ''; }
+function montrerSecret(ch) {
+  const q = quiSuisJe(); if (!q || ch.querySelector('.secret')) return;
+  const n = lsGetTxt('battle-nom').trim().toLowerCase(), F = (q === 'dieu' ? dieu : ultime).genre === 'F', moi = nom => String(nom).trim().toLowerCase() === n;
+  const ligne = (rang, nom, score, cls = '') => `<div class="l${moi(nom) ? ' moi' : ''}${cls}"><em>${rang}</em><b>${esc(nom)}${moi(nom) ? ' (toi)' : ''}</b><span>${esc(fmt(score))}</span></div>`;
+  let h = `<h3>${q === 'dieu' ? (F ? '⚡ Le classement de la déesse' : '⚡ Le classement du dieu') : '👑 Le classement secret'}</h3>`;
+  if (q === 'dieu') h += ligne('⚡', dieu.nom, dieu.score) + (ultime ? ligne('👑', ultime.nom, ultime.score) : '');
+  else h += ligne('👑', ultime.nom, ultime.score);
+  const liste = q === 'dieu' ? ((classement && classement.tous && classement.tous.length ? classement.tous : listeBoss().filter(b => !b.defaut))) : listeBoss().filter(b => !b.defaut);
+  h += `<div class="sep">${q === 'dieu' ? 'Tous les scores' : 'Le top 3'}</div>` + (liste.length ? liste.map((b, i) => ligne(i + 1, b.nom, b.score)).join('') : '<small>Personne pour l’instant</small>');
+  h += `<small>${q === 'dieu' ? 'Chut… toi seul' + (F ? 'e' : '') + ' vois tout.' : 'Deviens dieu ou déesse pour voir tous les scores.'}</small><button type="button">Fermer</button>`;
+  const e = document.createElement('div'); e.className = 'secret' + (q === 'dieu' ? ' dieu' : ''); e.innerHTML = h; ch.appendChild(e);
+  e.querySelector('button').onclick = () => e.remove();
+}
 function afficherAccueil() {
   const liste = listeBoss();
   let html;
@@ -4513,14 +4551,16 @@ function afficherAccueil() {
     };
     const T = [[50, 99], [10, 86], [92, 72], [54, 58], [76, 43]]; // torches au bord du chemin (% largeur, % hauteur)
     html = `<div class="chemin" style="--k:${k.toFixed(3)};height:${Math.round(H)}px">${decorChemin(W, H, k)}<div class="ttl"><b>Battle des profs</b><span>Novembre · grimpe jusqu'au trône</span></div>`
-      + `${T.map(([x, y]) => `<i class="torche" style="left:${x}%;top:${y}%"></i>`).join('')}<button class="chateau" type="button" aria-label="Le château"></button>${etape(1)}${etape(2)}${etape(3)}</div>`;
+      + `${T.map(([x, y]) => `<i class="torche" style="left:${x}%;top:${y}%"></i>`).join('')}<button class="chateau" type="button" aria-label="Le château"></button>${secretBouton()}${etape(1)}${etape(2)}${etape(3)}</div>`;
   }
   const cle = html + JSON.stringify(liste.map(b => [b.photo.length, b.genre]));
   if (cle !== accueilDessine) {
     accueilDessine = cle;
     $('bloc-boss').innerHTML = html;
     const img = $('bloc-boss').querySelector('img'); if (img) img.src = AVATAR;
-    const cht = $('bloc-boss').querySelector('.chateau'); if (cht) cht.onclick = () => { // Kevin : on ne montre rien du boss caché, juste une rumeur
+    const sb = $('bloc-boss').querySelector('.secret-btn'); if (sb) sb.onclick = () => montrerSecret(sb.parentNode);
+    const cht = $('bloc-boss').querySelector('.chateau'); if (cht) cht.onclick = () => { // Kevin : on ne montre rien du boss caché, juste une rumeur (sauf à l'empereur et au dieu : leur classement)
+      if (quiSuisJe()) { montrerSecret(cht.parentNode); return; }
       const ch = cht.parentNode; if (ch.querySelector('.rumeur')) return;
       const e = document.createElement('div'); e.className = 'rumeur'; e.innerHTML = '🔒 Quelqu’un se cache dans ce château…<br><small>Bats le roi… et continue de jouer.</small>'; ch.appendChild(e);
       setTimeout(() => e.remove(), 3200);

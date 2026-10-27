@@ -30,12 +30,12 @@ a.tuile b{font-size:17px}
 a.tuile span{color:var(--muted);font-size:13px;line-height:1.3}
 .tuile[hidden]{display:none}
 /* Le carnet en grand (80 % du temps), les autres plus petits */
-.tuiles{grid-template-columns:repeat(3,1fr);gap:10px}
+.tuiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px} /* Classeur EPS retiré de l'accueil (dossier classeur/ gardé en réserve) : les 4 autres sur une ligne */
 a.tuile.principale{grid-column:1/-1;flex-direction:row;text-align:left;gap:16px;padding:18px 16px}
 a.tuile.principale span{font-size:14px}
 a.tuile:not(.principale){padding:12px 6px;gap:6px;border-radius:16px}
-a.tuile:not(.principale) img,a.tuile:not(.principale) .ph{width:56px;height:56px;border-radius:14px;font-size:28px}
-a.tuile:not(.principale) b{font-size:14px;line-height:1.2}
+a.tuile:not(.principale) img,a.tuile:not(.principale) .ph{width:48px;height:48px;border-radius:12px;font-size:24px}
+a.tuile:not(.principale) b{font-size:12.5px;line-height:1.2;overflow-wrap:anywhere}
 a.tuile:not(.principale) span{font-size:11.5px}
 .ph{width:84px;height:84px;border-radius:20px;background:var(--line);display:grid;place-items:center;font-size:40px}
 .beta{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:#f2c230;color:#2b2100;border-radius:99px;padding:2px 7px;vertical-align:middle}
@@ -64,7 +64,7 @@ a.tuile b{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
 a.tuile img{box-shadow:0 3px 10px rgba(0,0,0,.25)}
 a.tuile.principale b{font-size:22px}
 a.tuile.principale{align-items:center}
-a.tuile:not(.principale){padding:14px 6px}
+a.tuile:not(.principale){padding:12px 4px}
 a.tuile.c-carnet{background:linear-gradient(140deg,#1f5fc8,#4f9bff)}
 a.tuile.c-tournoi{background:linear-gradient(140deg,#e08a00,#ffc23a)}
 a.tuile.c-koh{background:linear-gradient(140deg,#0f8a6a,#3cc79a)}
@@ -82,7 +82,6 @@ a.tuile .beta{background:#fff;color:#1f5fc8}
   <a class="tuile c-tournoi" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><b>Tournoi</b></a>
   <a class="tuile c-koh" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b></a>
   <a class="tuile c-fist" href="le-fist/"><img src="icones/le-fist-192.png" alt=""><b>Le Fist</b></a>
-  <a class="tuile c-classeur" href="classeur/"><img src="icones/classeur-192.png" alt=""><b>Classeur EPS</b></a>
   <a class="tuile c-battle" href="battle/"><img src="icones/battle-192.png" alt=""><b>Battle des profs</b></a>
 </div>
 <script>

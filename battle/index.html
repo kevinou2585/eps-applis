@@ -287,7 +287,8 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 const JEU = 'flipper-2026-11c'; // changer ce nom = classement remis à zéro (Kevin, 24/10 puis 27/10/2026 ; l'ancien reste dans le tableur)
 const URL_SCRIPT = (() => { try { return localStorage.getItem('eps-script') || ''; } catch (e) { return ''; } })();
 const CODE = (() => { try { return localStorage.getItem('eps-code') || ''; } catch (e) { return ''; } })();
-const CLASSEMENT_OK = !!(URL_SCRIPT && CODE);
+const TEST = (() => { try { return new URLSearchParams(location.search).get('test') || ''; } catch (e) { return ''; } })(); // ?test=valh ou ?test=dieu : Kevin essaie le Valhalla, rien n'est envoyé au classement
+const CLASSEMENT_OK = !!(URL_SCRIPT && CODE) && !TEST;
 
 const $ = id => document.getElementById(id);
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -4211,7 +4212,7 @@ function montrer(id) { document.querySelectorAll('.ecran').forEach(s => s.classL
 function pause() { if (etat !== 'jeu') return; etat = 'pause'; FL.forEach(f => f.appui = false); charge.src = {}; charge.actif = false; arreterCharge(); majMusique(); montrer('pause-ecran'); }
 $('pause').onclick = () => { $('quitter').hidden = true; pause(); };
 $('reprendre').onclick = () => { deverrouiller(); montrer(null); etat = 'jeu'; dernier = 0; };
-$('recommencer').onclick = () => { pleinEcran(); deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); };
+$('recommencer').onclick = () => { pleinEcran(); deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); partieTest(); };
 // Android : plein écran (barres du téléphone cachées) dès qu'on joue ; iPhone : sans effet
 function pleinEcran() { try { const d = document.documentElement; if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen({ navigationUI: 'hide' }).catch(() => {}); } catch (e) {} }
 // Bouton TILT : bouscule la table (bille coincée dans une rigole). Ne compte pas pour le vrai TILT des secousses.
@@ -4252,7 +4253,13 @@ window.addEventListener('popstate', () => {
 $('quitter-non').onclick = () => { $('quitter').hidden = true; $('reprendre').onclick(); };
 $('quitter-oui').onclick = () => { $('quitter').hidden = true; $('abandon').onclick(); };
 $('abandon').onclick = () => { montrer(null); etat = 'jeu'; balleNo = 4; balles = []; attenteBalle = 0; finPartie(); };
-$('jouer').onclick = () => { pleinEcran(); deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); };
+$('jouer').onclick = () => { pleinEcran(); deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); partieTest(); };
+function partieTest() { // empereur déjà battu : on part du Valhalla (?test=dieu : juste sous le palier du dieu)
+  if (TEST !== 'valh' && TEST !== 'dieu') return;
+  bossFile.forEach(b => b.vaincu = true); ultimeTente = true; ultimeBattu = true; score = TEST === 'dieu' ? DIEU_DEPART - 5000 : ULTIME_DEPART + 1;
+  table = 'valh'; nuit = false; resetValh(); balles = [balleNeuve(375, 697, 0, 0, true)];
+  annonce('LE VALHALLA', 'Partie d’essai : pas de classement', '#ffd23f', 38, 2.4);
+}
 // bouton son 🔊 / 🔇 (mémorisé)
 function majBoutonsSon() {
   document.querySelectorAll('.btn-son').forEach(b => { b.textContent = muet ? '🔇 Son coupé' : '🔊 Son activé'; b.setAttribute('aria-pressed', String(!muet)); b.classList.toggle('coupe', muet); });
@@ -4885,7 +4892,7 @@ function montrerFin() {
     if ($('envoyer') && !$('envoyer').disabled) $('envoyer').classList.remove('cache');
     if (!photoData) $('photo').click();
   }));
-  $('rejouer').onclick = () => { pleinEcran(); deverrouiller(); montrer(null); nouvellePartie(); };
+  $('rejouer').onclick = () => { pleinEcran(); deverrouiller(); montrer(null); nouvellePartie(); partieTest(); };
   $('vers-accueil').onclick = () => { etat = 'accueil'; balles = []; table = 'base'; combat = null; montrer('accueil'); accueilDessine = false; chargerClassement(); };
   if ($('montrer-nom')) $('montrer-nom').onclick = () => { $('zone-nom').classList.remove('cache'); $('montrer-nom').classList.add('cache'); $('nom').focus(); };
   if ($('photo')) $('photo').onchange = async e => {

@@ -236,7 +236,6 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 #bienvenue .bv-carte{position:relative;background:linear-gradient(180deg,#1b2552,#101a36);border:3px solid var(--jaune);border-radius:22px;padding:20px 18px 18px;box-shadow:0 0 0 6px rgba(255,210,63,.15),0 18px 50px rgba(0,0,0,.6)}
 #bienvenue .bv-k{display:inline-block;background:var(--rouge);color:#fff;font-weight:900;font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:4px 12px;border-radius:999px;transform:rotate(-2deg)}
 #bienvenue h2{margin:10px 0 2px;font-size:clamp(30px,9vw,42px);line-height:.95;font-weight:900;text-transform:uppercase;letter-spacing:.02em;color:var(--jaune);text-shadow:0 3px 0 #b8860b,0 0 24px rgba(255,210,63,.45)}
-#bienvenue .bv-ec{font-weight:800;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:#e9d8ff}
 #bienvenue .bv-l{margin:12px 0 0;font-size:16px;line-height:1.4;opacity:0;transform:translateY(8px);animation:bvL .5s ease-out forwards}
 #bienvenue .bv-l b{color:var(--jaune)} #bienvenue .bv-l em{font-style:normal;color:#ff8a95;font-weight:800}
 #bienvenue .bv-mois{margin-top:14px;padding:10px 12px;border:2px dashed rgba(255,210,63,.6);border-radius:14px;background:rgba(255,210,63,.08)}
@@ -5134,7 +5133,7 @@ function montrerBienvenue(revoir) {
   ];
   d.innerHTML = `<div class="bv"><div class="bv-boss"><canvas data-r="3"></canvas><canvas data-r="1"></canvas><canvas data-r="2"></canvas></div>
     <div class="bv-carte"><span class="bv-cof" aria-hidden="true">🎁</span><span class="bv-k">Avis à tous les profs</span>
-      <h2>Bienvenue au Battle des profs</h2><div class="bv-ec">de l’Institut Saint-Louis</div>
+      <h2>Bienvenue au Battle des profs</h2>
       ${L.map((t, i) => `<p class="bv-l" style="animation-delay:${0.9 + i * 0.7}s">${t}</p>`).join('')}
       <div class="bv-l bv-mois" style="animation-delay:2.4s">📅 <b>Chaque mois, un nouveau jeu.</b> Le classement repart à zéro.<br>Le meilleur score du mois recevra une récompense…<span class="bv-rec">INCOMMENSURABLE</span></div>
       <p class="bv-l bv-chut" style="animation-delay:3.2s">On n’en dira pas plus. Certains secrets se méritent.</p>

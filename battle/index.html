@@ -62,6 +62,17 @@ h1.titre{clear:both;margin:14px 0 0;font-size:40px;line-height:1;font-weight:900
 h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris);margin:18px 0 4px}
 .champ{width:100%;padding:13px 14px;border-radius:14px;border:2px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);font-size:18px;font-weight:700;text-align:center;-webkit-user-select:text;user-select:text}
 .score-fin{font-size:46px;font-weight:900;color:var(--jaune);text-shadow:0 3px 0 #c2410c;margin:4px 0;font-variant-numeric:tabular-nums}
+#dieu-ecran{background:radial-gradient(circle at 50% 12%,rgba(255,210,63,.35),rgba(30,60,140,.94) 45%,rgba(6,10,30,.97) 80%)}
+.dieu-titre{color:#ffe9a8;text-shadow:0 0 18px rgba(255,210,63,.8),0 3px 0 #7a5a00;animation:tampon .7s cubic-bezier(.2,1.6,.4,1) both}
+.dieu-eclair{font-size:64px;line-height:1;margin:6px 0;filter:drop-shadow(0 0 14px #7fd8ff);animation:pulse 1.2s ease-in-out infinite}
+.dieu-reste{margin:6px 0 14px;font-weight:700;color:#dfe8ff}
+.dieu-choix{display:grid;gap:10px}
+.dieu-choix button{display:block;width:100%;padding:13px 14px;border-radius:16px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;text-align:left}
+.dieu-choix button b{display:block;font-size:20px;font-weight:900}.dieu-choix button small{display:block;font-size:14px;opacity:.85;margin-top:2px}
+.dieu-choix .m-nuit{border-color:#ff2bd6;background:linear-gradient(90deg,rgba(255,43,214,.25),rgba(0,229,255,.2))}
+.dieu-choix .m-goth{border-color:#b26bff;background:rgba(60,20,90,.55)}
+.dieu-choix .m-valh{border-color:#ffd23f;background:linear-gradient(90deg,rgba(255,210,63,.25),rgba(127,216,255,.18))}
+.dieu-choix button:active{transform:scale(.97)}
 .bandeau{font-size:34px;font-weight:900;text-transform:uppercase;margin:24px 0 4px;line-height:1.05}
 .bandeau.boss-n{color:var(--jaune);animation:tampon .7s cubic-bezier(.2,1.6,.4,1) both,arcenciel 1.5s .7s linear infinite}
 @keyframes arcenciel{0%,100%{color:var(--jaune)}33%{color:#7cf}66%{color:#ff8fab}}
@@ -254,13 +265,26 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
   </div>
 </section>
 
+<section id="dieu-ecran" class="ecran">
+  <div class="boite">
+    <div class="bandeau dieu-titre" id="dieu-titre">Tu es devenu un dieu !</div>
+    <div class="dieu-eclair">⚡</div>
+    <p class="dieu-reste" id="dieu-reste"></p>
+    <div class="dieu-choix">
+      <button type="button" data-monde="base"><b>🏀 Le gymnase</b><small>La table du début</small></button>
+      <button type="button" data-monde="nuit" class="m-nuit"><b>🪩 La récré</b><small>La table colorée, une seule bille</small></button>
+      <button type="button" data-monde="goth" class="m-goth"><b>☠ La crypte</b><small>Crânes, chauves-souris, orgue hanté</small></button>
+      <button type="button" data-monde="valh" class="m-valh"><b>ᚱ Le Valhalla</b><small>Odin, Asgard, le Bifröst</small></button>
+    </div>
+  </div>
+</section>
 <section id="fin" class="ecran">
   <div class="boite" id="fin-boite"></div>
 </section>
 
 <script>
 'use strict';
-const JEU = 'flipper-2026-11b'; // changer ce nom = classement remis à zéro (Kevin, 24/10/2026 ; l'ancien reste dans le tableur)
+const JEU = 'flipper-2026-11c'; // changer ce nom = classement remis à zéro (Kevin, 24/10 puis 27/10/2026 ; l'ancien reste dans le tableur)
 const URL_SCRIPT = (() => { try { return localStorage.getItem('eps-script') || ''; } catch (e) { return ''; } })();
 const CODE = (() => { try { return localStorage.getItem('eps-code') || ''; } catch (e) { return ''; } })();
 const CLASSEMENT_OK = !!(URL_SCRIPT && CODE);
@@ -329,7 +353,7 @@ function audio() {
   return AC;
 }
 function deverrouiller() { // à chaque geste : crée / relance le contexte (indispensable sur iPhone)
-  sessionLecture(); const ac = audio(); if (!ac) return;
+  sessionLecture(); deverrouillerParole(); const ac = audio(); if (!ac) return;
   if (!deverrouille) { try { const s = ac.createBufferSource(); s.buffer = ac.createBuffer(1, 1, 22050); s.connect(ac.destination); s.start(0); deverrouille = true; } catch (e) {} }
   if (!muet && !('audioSession' in navigator)) {
     try {
@@ -407,7 +431,31 @@ function arrValse(m) { // la crypte : valse de vampire 3/4 (clavecin + orgue), 1
   if (m < 8) return { b: 1, s: 1, l: 0, cloche: m % 4 === 0, f0: 5000, f1: 5000 };
   return { b: 1, p: 1, l: 1, tim: 1, cloche: m % 4 === 0, f0: 3000, f1: 4500 };
 }
+function arrValh(m) { // le Valhalla : 16 mesures ; bourdon + tambours de guerre, puis les cors, puis le chœur des Valkyries
+  if (m < 4) return { tim: 1, b: 1, toms: m === 3, p: m >= 2, f0: 1400 + m * 500, f1: 2200 + m * 500 };
+  if (m < 12) return { k: 1, tim: 1, sn: m >= 8, b: 1, s: 1, l: 0, p: 1, crash: m === 4 || m === 8, cloche: m % 4 === 0, f0: 3200, f1: 3800 };
+  return { k: 1, tim: 1, sn: 1, h: 1, b: 1, s: 1, l: 1, p: 1, crash: m === 12, roll: m === 15 ? 2 : 0, toms: m === 15, f0: 3800, f1: 4200 };
+}
+function arrDuel(m) { // le duel des dieux : rapide et tendu ; orgue + chœur, puis cuivres et cloches à toute volée
+  const B = m >= 4;
+  return { k: 1, tim: 1, sn: 1, h: 1, b: 1, s: 1, l: B ? 1 : 0, p: 1, crash: m % 4 === 0, roll: m === 7 ? 2 : 0, toms: m === 3 || m === 7, cloche: B && m % 2 === 0, f0: B ? 4200 : 3000, f1: 4200 };
+}
 const PISTES = {
+  valh: { // le Valhalla (Kevin, 27/10) : épique nordique en ré mineur, cors + chœur, tambours de guerre
+    bpm: 112, pb: 16, racine: 50, gamme: 'min', cycle: 16, section: arrValh,
+    accords: [[0, 3, 7], [-2, 2, 5], [-4, 0, 3], [-5, -2, 2], [0, 3, 7], [-4, 0, 3], [-2, 2, 5], [-5, -1, 2]],
+    kick: 'x.....x.x.......', kickSon: 'boum', timbale: 'x..x..x.....x...', caisse: '....x.......x..x', hat: 'x.x.x.x.x.x.x.x.',
+    basse: 'r.......r...5...', basseSon: 'pedale', basseLong: 7, stab: 'x.....x...x.....', stabSon: 'orgue', padSon: 'choeur', padOct: 12,
+    leads: ['0-----2-3---4---3-----2-0-------4-----5-7---7---5-----4-3---2---0-----2-3---4---7-----5-4-------3-----2-0---G---0---------------',
+      '7-----9-a---9---7-----5-4-------7-----9-a---9---a-----9-7-------9-----7-5---4---3-----2-0---G---0-----2-3---4---0---------------'], leadSon: 'cuivre', double: 'cloche'
+  },
+  dieu: { // le duel des dieux : la mineur harmonique, 156 bpm, orgue + chœur, cuivres
+    bpm: 156, pb: 16, racine: 45, gamme: 'harm', cycle: 8, section: arrDuel,
+    accords: [[0, 3, 7], [-4, 0, 3], [-2, 2, 5], [-5, -1, 2], [0, 3, 7], [1, 5, 8], [-4, 0, 3], [-5, -1, 2, 5]],
+    kick: 'x...x...x...x.x.', kickSon: 'boum', timbale: 'x.......x.......', caisse: '....x.......x...', hat: 'x.xxx.xxx.xxx.xx',
+    basse: 'r.ror.ror.ror5rs', basseSon: 'boss', stab: 'x..x..x...x..x..', stabSon: 'orgue', stabOct: 12, padSon: 'choeur', padOct: 12,
+    leads: ['4---4-5-7---5-4-2-------0---2---3---3-4-5---4-3-2-------G---2---4---4-5-7---9-7-5---4-------7---6---4-------2-------0-------'], leadSon: 'cuivre', leadOct: 12, double: 'cloche'
+  },
   boss0: { // l'empereur caché (Kevin : « une vraie musique, l'Empire qui arrive ») : marche impériale composée pour le jeu, sol mineur harmonique
     bpm: 96, pb: 16, racine: 43, gamme: 'harm', cycle: 8, section: arrEmpereur,
     accords: [[0, 3, 7], [-4, 0, 3], [5, 8, 12], [-5, -1, 2], [0, 3, 7], [1, 5, 8], [-5, -1, 2], [-5, -1, 2, 5]],
@@ -542,8 +590,12 @@ function note(d, son, m, t, dur, vol) { // les instruments de la musique (oscill
   else { const g = env(vol, 0.01, dur + 0.1, d.basseF, true); osc('orgue', f, g); osc('sine', f / 2, g); } // basse d'orgue (pédalier)
 }
 function pisteVoulue() { // quelle musique pour l'écran actuel ?
+  if (etat === 'dieu') return 'valh'; // la fenêtre « tu es devenu un dieu »
   if (etat !== 'jeu') return null;
-  if (combat) return combat.phase === 'alerte' || combat.phase === 'elimine' ? null : 'boss' + (combat.ultime ? 0 : combat.rang || 1);
+  if (DECH) return DECH.phase === 'ouvre' ? 'valh' : null;
+  if (combat) return combat.phase === 'alerte' || combat.phase === 'elimine' || combat.phase === 'adieu' ? null : combat.dieu ? 'dieu' : 'boss' + (combat.ultime ? 0 : combat.rang || 1);
+  if (table === 'valh') return 'valh';
+  if (verrou === 'nuit') return 'multi';
   if (bascule && bascule.vers) return bascule.vers === 'goth' ? 'crypte' : 'base';
   if (table === 'goth') return 'crypte';
   if (multiball || spectacleT > 0) return 'multi';
@@ -786,9 +838,59 @@ const SON = {
   vaincu(rang) {
     musDuck(0.25, 2.4); drop(0.5); echantillon('crash', 0.3); foule(0.32, 0.1, 1.1); [5, 6, 7, 8, 9, 10, 12].forEach((k, i) => piece(P(k), 0.06, 0.3 + i * 0.07));
     if (rang === 1) { corne(0.07, 0.6, [0, 0.16, 0.32, 0.64], [0.12, 0.12, 0.25, 0.7]); etoiles(10, 0.05, 1.2, 4, 0.05); }
-  }
+  },
+  // ---- l'empereur : les 4 sceaux
+  sceau(n) { cloche(P(5 + n * 2), 0.6, 0.09); ton('sine', P(9 + n), P(4 + n), 0.3, 0.06, 0.02, 0, true); bruit(0.08, 0.08, 6000, 3); }, // cristal qui s'éteint (verre)
+  sceauxTombent() { musDuck(0.3, 1.6); [9, 7, 5, 2].forEach((k, i) => cloche(P(k), 0.9, 0.08, i * 0.09)); whoosh(0.7, 0.16, 5000, 300, 0.2); drop(0.35, 0.35, 120, 0.8); },
+  sceauxRallument() { [2, 4, 6, 8].forEach((k, i) => ton('sine', P(k), P(k) * 1.01, 0.18, 0.05, i * 0.05, 0, true)); ton('sawtooth', 180, 420, 0.4, 0.04, 0, 1400); },
+  garde() { cogne(48, 0.3); echantillon('tom', 0.25, 0, 0.55); bruit(0.18, 0.12, 400, 0.8, 0, 120, 'lowpass'); },
+  portesValhalla() { musDuck(0.15, 3.5); orgueSfx([50, 57, 62, 66, 69], 2.6, 0.05, 0.1); corne(0.05, 0.4, [0, 0.5], [0.4, 1.4]); cloche(P(0, -1), 2.4, 0.08, 0.6); },
+  // ---- la déchirure
+  tonnerre(k = 1) { // coup de tonnerre : craquement sec puis grondement qui roule
+    musDuck(0.15, 1.6 * k + 0.6); bruit(0.12, 0.35 * k, 3000, 0.6, 0, 0, 'highpass'); echantillon('crash', 0.35 * k, 0, 0.6);
+    bruit(2.4 * k, 0.32 * k, 900, 0.7, 0.05, 60, 'lowpass', 0.05); drop(0.45 * k, 0.03, 90, 1.4 * k); cogne(40, 0.3 * k, 0.4); cogne(36, 0.22 * k, 0.9);
+  },
+  craque(i) { // la table se fend : craquement de bois et de pierre (de plus en plus fort)
+    const k = 0.6 + 0.12 * i; bruit(0.06, 0.3 * k, 2400, 2, 0); bruit(0.05, 0.25 * k, 1300, 3, 0.04); bruit(0.09, 0.2 * k, 700, 2, 0.08);
+    cogne(55 - i * 3, 0.25 * k); echantillon('tom', 0.2 * k, 0.02, 0.5 + i * 0.05);
+    if (i === 4) { bruit(1.2, 0.2, 800, 0.7, 0.1, 80, 'lowpass', 0.1); riser(0.7, 0.1); }
+  },
+  arriveeValh() { corne(0.06, 0, [0, 0.35, 0.7], [0.3, 0.3, 1.2]); orgueSfx([50, 57, 62, 66], 1.6, 0.04, 0.7); [0, 2, 4, 7].forEach((k, i) => cloche(P(k), 1.2, 0.06, 0.7 + i * 0.12)); foule(0.2, 0.7, 1); },
+  // ---- le Valhalla
+  rune(petit) { pop(P(grimpe()), 0.16); cloche(petit ? 2200 : 1200 + 80 * grimpeN % 600, 0.35, 0.05); cogne(petit ? 120 : 70, 0.12); },
+  corbeau() { syllabe(900, 700, 0.12, 0.12, 0, 1300, 2600); syllabe(850, 650, 0.16, 0.12, 0.16, 1300, 2600); whoosh(0.25, 0.1, 1500, 4000); },
+  odin() { musDuck(0.4, 1.8); corne(0.07); [0, 0.4, 0.8].forEach((d, i) => cloche(P(2 + i * 2), 1.2, 0.09, d)); drop(0.3, 0.8, 110, 0.9); },
+  asgard() { orgueSfx([62, 66, 69, 74], 1.0, 0.04); cloche(P(7), 0.8, 0.06); },
+  jackpotAsgard() { musDuck(0.25, 2.4); riser(0.8, 0.14); corne(0.07, 0.8, [0, 0.16, 0.32, 0.64], [0.12, 0.12, 0.25, 0.8]); orgueSfx([38, 50, 62, 66, 69, 74], 1.6, 0.05, 0.8); drop(0.45, 0.8); foule(0.26, 0.8, 1); },
+  mjollnir() { cogne(60, 0.3); echantillon('timbale', 0.4); ton('sawtooth', 2600, 300, 0.25, 0.05, 0.05, 3000); },
+  bifrost(dur) { const n = Math.min(14, Math.floor(dur / 0.08)); for (let i = 0; i < n; i++) cloche(P(i + 2), 0.35, 0.04, i * dur / n); whoosh(Math.min(1.2, dur), 0.08, 500, 5000); },
+  grondement() { bruit(2.2, 0.06, 500, 0.7, 0, 70, 'lowpass', 0.4); },
+  // ---- le duel des dieux
+  porteAsgard() { orgueSfx([38, 45, 50, 57], 1.6, 0.05); drop(0.4, 0.7, 110, 0.9); cloche(P(0, -1), 1.8, 0.09, 0.7); echantillon('crash', 0.25, 0.7); },
+  avertEclair() { for (let i = 0; i < 7; i++) bruit(0.03, 0.08 + i * 0.01, 4000 + i * 300, 2, i * 0.11); ton('sawtooth', 300, 900, 0.8, 0.03, 0, 2000); },
+  eclair() { bruit(0.1, 0.35, 5000, 0.7, 0, 0, 'highpass'); ton('sawtooth', 3200, 120, 0.3, 0.08, 0, 4000); cogne(50, 0.3, 0.03); ton('sine', 1900, 2400, 0.4, 0.04, 0.1, 0, true); }, // + gel (cristaux)
+  butDieu() { musDuck(0.2, 2); drop(0.5); corne(0.07, 0.05); foule(0.32, 0.05, 1); [7, 8, 9, 10, 11, 12].forEach((k, i) => cloche(P(k), 0.5, 0.05, 0.2 + i * 0.07)); echantillon('crash', 0.3); },
+  fenetreDieu() { musDuck(0.3, 3); orgueSfx([50, 62, 66, 69, 74], 2.4, 0.05); [0, 2, 4, 7, 9, 12].forEach((k, i) => cloche(P(k), 1.4, 0.06, 0.3 + i * 0.12)); etoiles(10, 0.05, 1, 5, 0.06); foule(0.24, 0.3, 1.2); }
 };
 function vib(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+// Kevin (27/10) : l'empereur (et le dieu) parlent à travers le haut-parleur du téléphone : synthèse vocale, voix grave et lente.
+// iPhone : la 1re phrase doit partir pendant un geste → une phrase vide est lancée au premier toucher (deverrouiller).
+let paroleOk = false;
+function voixFr() { try { const v = (speechSynthesis.getVoices() || []).filter(x => /^fr/i.test(x.lang)); return v.find(x => /fr[-_]FR/i.test(x.lang) && /thomas|daniel|paul|henri|male|homme/i.test(x.name)) || v.find(x => /fr[-_]FR/i.test(x.lang)) || v[0] || null; } catch (e) { return null; } }
+function parler(txt, genre, grave = 0.2) {
+  if (muet || !window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return;
+  try {
+    const u = new SpeechSynthesisUtterance(txt), v = voixFr(); u.lang = 'fr-FR'; if (v) u.voice = v;
+    u.pitch = genre === 'F' ? Math.min(1, grave + 0.45) : grave; u.rate = 0.78; u.volume = 1;
+    u.onstart = () => musDuck(0.35, Math.max(2, txt.length * 0.075));
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function deverrouillerParole() {
+  if (paroleOk || !window.speechSynthesis || typeof SpeechSynthesisUtterance === 'undefined') return;
+  try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); paroleOk = true; speechSynthesis.getVoices(); } catch (e) {}
+}
+function taireParole() { try { if (window.speechSynthesis) speechSynthesis.cancel(); } catch (e) {} }
 
 // ---------------------------------------------------------------- Table (unités logiques 400 x 730)
 const TW = 400, TH = 730, R = 11, G = 900, VMAX = 1600, KICK_BUMP = 470, KICK_SLING = 400;
@@ -874,9 +976,9 @@ const COLLE = { x: 104, y: 452, r: 12, prise: 12, vmax: 1000, balle: null }; // 
 // gauche et descend sur le flipper gauche (avant : éjectée vers le bas, elle filait entre les flippers)
 const T_DECOLLE = 0.7, VIT_SORTIE = 150, SORTIE_COLLE = rail([[104, 452], [92, 444], [76, 448], [62, 462], [54, 482], [52, 505]]);
 const A_REPOS = 0.55, A_HAUT = -0.42;
-function flipper(px, py, cote) { return { px, py, cote, L: 64, a: A_REPOS, w: 0, appui: false }; }
+function flipper(px, py, cote) { return { px, py, cote, L: 64, a: A_REPOS, w: 0, appui: false, gele: 0, alerte: 0 }; } // gele : bloqué par l'éclair du dieu
 const FL = [flipper(106, 638, 1), flipper(264, 638, -1)];
-function flipAngle(f) { return f.cote === 1 ? f.a : Math.PI - f.a; }
+function flipAngle(f) { if (f.haut) return f.cote === 1 ? -f.a : Math.PI + f.a; return f.cote === 1 ? f.a : Math.PI - f.a; } // haut : flippers du dieu, à l'envers
 // salle des profs : la bille plonge dans une trappe en haut du couloir, file dans un conduit SOUS le parquet
 // (visible par intermittence à travers des vitres : plancher de verre), puis remonte une rampe inclinée
 // qui sort du plancher face au BUT gardé par un GARDIEN qui fait des allers-retours
@@ -965,12 +1067,78 @@ const NIV_BOSS = {
   3: { pv: 3, billes: 3, vit: 12, amp: 55, freq: 0.9, esquive: 0, bouclier: false, bonus: 5000, titre: { H: 'Le Garde', F: 'La Garde' }, lieu: 'LE REMPART', bord: '#c9d1de' },
   2: { pv: 5, billes: 3, vit: 15, amp: 75, freq: 1.15, esquive: 0.35, bouclier: false, bonus: 10000, titre: { H: 'Le Bourreau', F: 'La Sorcière' }, lieu: 'LE CACHOT', bord: '#ff8c1a' },
   1: { pv: 7, billes: 3, vit: 17, amp: 90, freq: 1.35, esquive: 0.3, bouclier: true, bonus: 25000, titre: { H: 'Le Roi', F: 'La Reine' }, lieu: 'LA SALLE DU TRÔNE', bord: '#ffd23f' },
-  // Kevin : le boss caché du château (rang 0) : on ne le tape pas avec sa bille, on lui RENVOIE ses boules de feu avec les flippers ; billes = cœurs du joueur
-  0: { pv: 5, billes: 3, vit: 0, amp: 100, freq: 0.7, esquive: 0, bouclier: false, bonus: 50000, titre: { H: 'L’Empereur', F: 'L’Impératrice' }, lieu: 'LE DONJON CACHÉ', bord: '#b26bff', ultime: true }
+  // Kevin (27/10) : le boss caché du château (rang 0), « LES 4 SCEAUX » : 4 cristaux nourrissent son bouclier ; les éteindre tous le fait
+  // tomber 8 s, et seulement là la bille le blesse. 3 cœurs, de plus en plus dur (les cristaux bougent, puis des gardes de pierre)
+  0: { pv: 3, billes: 3, vit: 0, amp: 70, freq: 0.55, esquive: 0, bouclier: false, bonus: 50000, titre: { H: 'L’Empereur', F: 'L’Impératrice' }, lieu: 'LE DONJON CACHÉ', bord: '#b26bff', ultime: true },
+  // Kevin (27/10) : le 2e boss caché, au-dessus de l'empereur : le dieu / la déesse du Valhalla, « LE DUEL DES DIEUX »
+  // (ses propres flippers en haut, 3 buts dans la porte d'Asgard ; pv = buts à marquer, billes = tes cœurs)
+  [-1]: { pv: 3, billes: 3, vit: 0, amp: 0, freq: 0, esquive: 0, bouclier: false, bonus: 100000, titre: { H: 'Le Dieu', F: 'La Déesse' }, lieu: 'ASGARD', bord: '#7fd8ff', dieu: true }
 };
 const REPOUSSE_MAX = 3; // Kevin (26/10) : un boss arrivé aux flippers se repousse 3 fois, ensuite il passe (on le bat en haut, pas en bas)
 const PTS_COUP = 1000, Y_BOSS0 = 152, Y_BOSS_PASSE = 690, R_BOSS = 26;
 function titreBoss(rang, genre) { return NIV_BOSS[rang].titre[genre === 'F' ? 'F' : 'H']; }
+
+// ---------------------------------------------------------------- 4e table : LE VALHALLA (Kevin, 27/10), après l'empereur
+// L'empereur vaincu parle, la table se déchire en deux et s'ouvre par à-coups : derrière, le Valhalla d'Odin.
+// Même bas de table ; en haut : bumpers runes, corbeaux Hugin et Munin, cibles O-D-I-N, porte d'Asgard (jackpot),
+// soucoupe de Mjöllnir, pont Bifröst (rampe arc-en-ciel) et looping. On y reste (bille perdue = bille suivante, au Valhalla)
+// jusqu'au score du dieu / de la déesse : alors Asgard s'ouvre pour le DUEL DES DIEUX.
+const segsV = [];
+cibleSegs = segsV;
+for (let i = 0; i < ARC.length - 1; i++) seg(ARC[i][0], ARC[i][1], ARC[i + 1][0], ARC[i + 1][1]);
+seg(10, 200, 10, 722);
+seg(OUT.g, OUT.haut, OUT.g, OUT.bas, { epais: 1.5 }); seg(OUT.g, OUT.bas, 99, 631);
+seg(390, 200, 390, 712); seg(358, 708, 392, 708, { e: 0.1 }); seg(360, 262, 360, 712);
+seg(OUT.d, OUT.haut, OUT.d, OUT.bas, { epais: 1.5 }); seg(OUT.d, OUT.bas, 271, 631);
+porte(360, 262, 390, 226); porte(10, 215, 62, 255);
+const SLV = [sling(false), sling(true)];
+// porte d'Asgard (en haut au milieu) : même poche que le but du gymnase (toit en pointe, rien où se poser)
+const ASGARD = { x1: 144, x2: 220, haut: 52, ligne: 70, pic: 40, cx: 182 };
+seg(ASGARD.x1, ASGARD.haut, ASGARD.cx, ASGARD.pic, { epais: 2, rail: false }); seg(ASGARD.cx, ASGARD.pic, ASGARD.x2, ASGARD.haut, { epais: 2, rail: false });
+seg(ASGARD.x1, ASGARD.haut, ASGARD.x1, ASGARD.ligne, { epais: 3, rail: false }); seg(ASGARD.x2, ASGARD.haut, ASGARD.x2, ASGARD.ligne, { epais: 3, rail: false });
+// boucliers O-D-I-N : touchables par-dessous seulement (comme I-S-L)
+const ODIN = ['O', 'D', 'I', 'N'].map((l, i) => { const cx = 136 + i * 42; return seg(cx - 18, 446, cx + 18, 446, { type: 'odin', lettre: l, cx, oneWay: true, nx: 0, ny: 1, epais: 6, e: 0.3, rail: false, bas: false }); });
+// entrée du pont Bifröst (au centre, comme la rampe du gymnase) : toit en pointe + couloir d'accès
+seg(163, 252, 191, 232, { epais: 2 }); seg(191, 232, 219, 252, { epais: 2 });
+seg(163, 252, 157, 294); seg(219, 252, 225, 294);
+cibleSegs = segs;
+const RUNES = [ // pierres runiques (bumpers) : même disposition que les bumpers du gymnase + 2 petites
+  { x: 245, y: 112, r: 20, rune: 'ᛟ' }, { x: 310, y: 124, r: 20, rune: 'ᚦ' }, { x: 275, y: 178, r: 20, rune: 'ᛉ' },
+  { x: 110, y: 250, r: 7, kick: 150, petit: true, rune: 'ᚱ' }, { x: 140, y: 240, r: 7, kick: 150, petit: true, rune: 'ᚨ' }
+].map(b => Object.assign(b, { flash: 0, cd: 0 }));
+// Hugin et Munin, les corbeaux d'Odin : cibles qui volent ; touché = il s'envole et revient 4 s plus tard
+const CORBEAUX = [{ nom: 'HUGIN', cx: 190, cy: 318, ax: 76, ay: 16, fx: 0.9, fy: 2.3, ph: 0 }, { nom: 'MUNIN', cx: 186, cy: 374, ax: 64, ay: 12, fx: 0.7, fy: 1.9, ph: 2.2 }]
+  .map(c => Object.assign(c, { x: c.cx, y: c.cy, r: 10, kick: 260, petit: true, hors: 0, chute: null, cd: 0, dir: 1 }));
+const MJOL = { x: 305, y: 335, r: 17 }; // soucoupe de Mjöllnir (même place que la cantine)
+const VALH = { odinReset: 0, allume: false, jackpot: 40000, corbeaux: 0, marteaux: 0, ponts: 0, grondT: 6, eclairs: [] };
+const T_ASGARD = 1.4, T_MJOL = 1.2, ODIN_ATTENTE = 8, VIT_PONT = 430;
+// pont Bifröst : de l'entrée centrale, il passe en arc au-dessus du plateau et dépose la bille en haut du couloir gauche (vers le flipper gauche)
+const BIFROST_PTS = [[191, 266], [191, 222], [187, 186], [170, 160], [142, 150], [110, 158], [78, 172], [54, 196], [42, 232], [40, 280], [44, 340], [48, 400], [50, 455]];
+const BIFROST = rail(BIFROST_PTS);
+
+// ---------------------------------------------------------------- 5e table : LE DUEL DES DIEUX (Kevin, 27/10)
+// Le dieu / la déesse a ses propres flippers EN HAUT (à l'envers). Derrière eux, la porte d'Asgard : 3 buts pour gagner.
+// Une bille qui passe tes flippers = un cœur de moins (3 cœurs). Un éclair gèle parfois un de tes flippers 1 s (annoncé avant).
+// Après chaque but, il réagit plus vite. Kevin : il faut que ça reste possible (il rate parfois, ses coups sont moins forts que les tiens).
+const segsD = [];
+cibleSegs = segsD;
+for (let i = 0; i < ARC.length - 1; i++) seg(ARC[i][0], ARC[i][1], ARC[i + 1][0], ARC[i + 1][1]);
+seg(10, 200, 10, 722);
+seg(OUT.g, OUT.haut, OUT.g, OUT.bas, { epais: 1.5 }); seg(OUT.g, OUT.bas, 99, 631);
+seg(390, 200, 390, 712); seg(358, 708, 392, 708, { e: 0.1 }); seg(360, 262, 360, 712);
+seg(OUT.d, OUT.haut, OUT.d, OUT.bas, { epais: 1.5 }); seg(OUT.d, OUT.bas, 271, 631);
+porte(360, 262, 390, 226);
+const SLD = [sling(false), sling(true)];
+// les murs du dieu : de ses pivots jusqu'aux bords (le mur droit renvoie aussi la bille du lanceur vers le jeu)
+seg(94, 175, 10, 212, { epais: 2, type: 'mur' }); seg(276, 175, 390, 224, { epais: 2, type: 'mur' });
+// deux rampes raides sous ses pivots : une bille qui monte sur le côté glisse vers l'ouverture du milieu au lieu de retomber
+seg(94, 179, 44, 290, { epais: 2 }); seg(276, 179, 326, 290, { epais: 2 });
+cibleSegs = segs;
+const Y_DIEU = 66, BUT_DIEU = 124; // le dieu flotte dans la porte ; bille au-dessus de BUT_DIEU (passée entre ses flippers) = but
+function flipperHaut(px, py, cote) { return Object.assign(flipper(px, py, cote), { L: 50, haut: true, tenu: 0, ia: 0, decl: -1 }); }
+const FLD = [flipperHaut(100, 170, 1), flipperHaut(270, 170, -1)]; // plus courts que les tiens : l'ouverture du milieu reste jouable
+// le dieu après 0, 1, 2 buts encaissés : temps de réaction, chance de rater, vitesse de ses flippers, éclair toutes les ~n s
+const IA_DIEU = [{ reac: 0.15, rate: 0.3, vit: 15, eclair: 7.5 }, { reac: 0.11, rate: 0.22, vit: 17, eclair: 6 }, { reac: 0.08, rate: 0.15, vit: 19, eclair: 4.8 }];
 
 // ---------------------------------------------------------------- État de jeu
 let etat = 'accueil';
@@ -983,6 +1151,8 @@ let paniers = 0, besoin = 3, cagePleine = true, cageFlash = 0, filetT = 0, force
 let nuit = false, bascule = null, gelT = 0, protegeT = 0, cageAttente = 0, aServir = 0, PROTECTION = 20, cibleRecord = 0, recordFait = true;
 let butT = 0, butTxt = '', jaugeFlash = 0;
 let combat = null, bossFile = [], finCombatT = -99, bossUlt = null, ultimeTente = false, ultimeBattu = false; // combat : boss en cours ; bossFile : boss de la partie (n°3 d'abord)
+let bossD = null, dieuTente = false, dieuBattu = false; // le dieu / la déesse (2e boss caché, après l'empereur, dans le Valhalla)
+let verrou = null, DECH = null; // verrou : monde choisi après avoir battu le dieu ('base', 'nuit', 'goth', 'valh') ; DECH : la table qui se déchire
 let table = 'base', butsN = 0, butsFlash = 0, gothDans = 0, gothScore0 = 0; // table : 'base' (gymnase) ou 'goth' (la crypte) ; butsN : compteur de buts (3 = crypte)
 const stats = { buts: 0, bloques: 0, poteaux: 0, sorties: 0, trous: [0, 0, 0], petits: 0, outG: 0, outD: 0, nudges: 0, tilts: 0 };
 let tiltOn = false, tiltT0 = 0, secCompte = [], secAvertiT = -99; // TILT en cours (jusqu'à la bille suivante) ; secousses récentes
@@ -991,20 +1161,20 @@ const charge = { src: {}, actif: false, t0: 0 };
 function balleNeuve(x, y, vx, vy, neuve) { return { x, y, vx, vy, tient: 0, ignoreTrou: 0, ignoreCasier: 0, neuve, lance: 0, ax: x, ay: y, at: temps, rampe: null, tunnel: null, boucle: null, lieu: null, trou: null, filet: null, vise: 0, viseT: 0, tirBut: 0, sansGardien: 0 }; }
 function nouvelleBalle(nouvelle = true) { finTilt(); balles.push(balleNeuve(375, 697, 0, 0, nouvelle)); }
 function nouvellePartie() {
-  balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps;
+  balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps; taireParole();
   paniers = 0; besoin = 3; cagePleine = true; cageFlash = 0; filetT = 0; COLLE.balle = null;
   nuit = false; bascule = null; gelT = 0; protegeT = 0; cageAttente = 0; aServir = 0; CASIER.balle = null; CASIER.visites = 0; CASIER.ouvert = 0;
   cibleRecord = Math.max(+lsGet('battle-record-' + JEU, 0) || 0, classement && classement.boss ? +classement.boss.score || 0 : 0); recordFait = cibleRecord <= 0;
   popups = []; particules = []; grandMsg = null; EPS.forEach(c => { c.bas = false; c.on = true; }); epsReset = 0; attenteBalle = 0;
   butT = 0; jaugeFlash = 0; TROUS_L.forEach(t => { t.balle = null; t.flash = 0; });
   FL.forEach(f => { f.a = A_REPOS; f.w = 0; f.appui = false; });
-  table = 'base'; butsN = 0; butsFlash = 0; gothDans = 0;
+  table = 'base'; butsN = 0; butsFlash = 0; gothDans = 0; verrou = null; DECH = null; FL.forEach(f => f.gele = f.alerte = 0);
   combat = null; finCombatT = -99; preparerBoss(); finTilt();
   nouvelleBalle(true); etat = 'jeu'; $('pause').style.display = 'block';
 }
 function points(n, x, y) {
   if (tiltOn) return; // TILT : plus aucun point jusqu'à la bille suivante
-  if (table === 'boss') return; // Kevin : les combats de boss ne rapportent aucun point (le battre sert juste à continuer)
+  if (table === 'boss' || table === 'dieu') return; // Kevin : les combats de boss ne rapportent aucun point (le battre sert juste à continuer)
   // Kevin (26/10) : en multibille les points montent trop vite → ×0,7 (au lieu de ×2) ; boss atteint → score figé jusqu'au combat
   let p = Math.round(n * mult * (multiball ? 0.7 : 1));
   const plaf = plafondBoss(); if (plaf != null) { if (score >= plaf) return; p = Math.min(p, plaf - score); }
@@ -1059,7 +1229,7 @@ function distFlip(b, f) {
 const FLIP_MIN = 780; // vitesse minimale donnée par un flipper qui se lève (même bille posée tout près du pivot)
 function collFlip(b, f) {
   const ang = flipAngle(f), ux = Math.cos(ang), uy = Math.sin(ang), tl = ((b.x - f.px) * ux + (b.y - f.py) * uy) / f.L;
-  const monte = f.appui && Math.abs(f.w) > 3;
+  const monte = f.appui && !(f.gele > 0) && Math.abs(f.w) > 3;
   let t, cx, cy, nx, ny, d, rr;
   if (tl < 0 && tl > -0.5) {
     // derrière le pivot : surface plate prolongée. Avant, le capuchon rond du pivot formait avec le bout du guide
@@ -1071,15 +1241,15 @@ function collFlip(b, f) {
     nx = b.x - cx; ny = b.y - cy; d = Math.hypot(nx, ny);
     if (d < 1e-9) return; nx /= d; ny /= d;
   }
-  const frappe = monte && ny < -0.3; // flipper qui monte, bille dessus (ou juste au-dessus, ex. bille bercée à peine décollée)
+  const frappe = monte && (f.haut ? ny > 0.3 : ny < -0.3); // flipper qui monte, bille dessus (ou juste au-dessus, ex. bille bercée à peine décollée)
   if (d >= rr + (frappe ? 5 : 0)) return;
   if (d < rr) { b.x += nx * (rr - d); b.y += ny * (rr - d); }
   // vitesse de la surface du flipper au point de contact : plus on tape loin du pivot, plus ça part fort
-  const w = f.cote === 1 ? f.w : -f.w, rx = cx - f.px, ry = cy - f.py, svx = -w * ry, svy = w * rx;
+  const w = (f.cote === 1) !== !!f.haut ? f.w : -f.w, rx = cx - f.px, ry = cy - f.py, svx = -w * ry, svy = w * rx;
   const vrx = b.vx - svx, vry = b.vy - svy, vn = vrx * nx + vry * ny;
   if (vn < 0) { const e = Math.abs(w) > 1 ? 0.3 : 0.1; b.vx -= (1 + e) * vn * nx; b.vy -= (1 + e) * vn * ny; }
   if (frappe) { // coup franc garanti, même bille posée près du pivot
-    const vo = b.vx * nx + b.vy * ny; if (vo < FLIP_MIN) { b.vx += (FLIP_MIN - vo) * nx; b.vy += (FLIP_MIN - vo) * ny; }
+    const vo = b.vx * nx + b.vy * ny, mini = f.haut ? 450 : FLIP_MIN; if (vo < mini) { b.vx += (mini - vo) * nx; b.vy += (mini - vo) * ny; } // le dieu tape moins fort
   }
 }
 function collBump(b, c) {
@@ -1103,10 +1273,10 @@ function collPlot(b, x, y, r, e = 0.4) { // obstacle rond sans éjection (balle 
   b.x = x + nx * rr; b.y = y + ny * rr; const vn = b.vx * nx + b.vy * ny;
   if (vn < 0) { b.vx -= (1 + e) * vn * nx; b.vy -= (1 + e) * vn * ny; }
 }
-const libre = b => !(b.tient > 0 || b.rampe || b.collee || b.sortie || b.tunnel || b.boucle || b.trou || b.filet);
+const libre = b => !(b.tient > 0 || b.rampe || b.pont || b.collee || b.sortie || b.tunnel || b.boucle || b.trou || b.filet);
 function pas(h) {
   for (const f of FL) {
-    const cible = f.appui ? A_HAUT : A_REPOS, vit = f.appui ? 22 : 12, old = f.a;
+    const ap = f.appui && !(f.gele > 0), cible = ap ? A_HAUT : A_REPOS, vit = ap ? 22 : 12, old = f.a; // gelé par l'éclair : il retombe
     if (f.a > cible) f.a = Math.max(cible, f.a - vit * h); else f.a = Math.min(cible, f.a + vit * h);
     f.w = (f.a - old) / h;
   }
@@ -1114,6 +1284,8 @@ function pas(h) {
   sauveVirage();
   if (table === 'goth') { pasGoth(h); return; }
   if (table === 'boss') { pasBoss(h); return; }
+  if (table === 'valh') { pasValh(h); return; }
+  if (table === 'dieu') { pasDieu(h); return; }
   { const g = GARDIEN, sg = g.seg; sg.ax = g.x - g.l; sg.bx = g.x + g.l; sg.ay = sg.by = g.y; }
   const amort = 1 - 0.06 * h;
   for (const b of balles) {
@@ -1134,7 +1306,7 @@ function pas(h) {
     if (b.vise) { const t = TROUS_L[b.vise - 1]; if (!t.balle && passeTrou(b, t)) { capturerTrou(b, t); continue; } }
     if (b.y < BUT.ligne - 4 && b.y > BUT.pic && b.x > BUT.x1 && b.x < BUT.x2) { marquerBut(b); continue; }
     if (b.x < 72 && py > ORBITE_Y && b.y <= ORBITE_Y && b.vy < 0) { entrerTunnel(b); continue; }
-    if (!COLLE.balle && Math.hypot(b.x - COLLE.x, b.y - COLLE.y) < COLLE.prise && b.vx * b.vx + b.vy * b.vy < COLLE.vmax * COLLE.vmax) { coller(b); continue; }
+    if (!COLLE.balle && verrou !== 'nuit' && Math.hypot(b.x - COLLE.x, b.y - COLLE.y) < COLLE.prise && b.vx * b.vx + b.vy * b.vy < COLLE.vmax * COLLE.vmax) { coller(b); continue; }
     if (b.ignoreTrou <= 0 && Math.hypot(b.x - TROU.x, b.y - TROU.y) < 13) {
       b.tient = 1.3; b.x = TROU.x; b.y = TROU.y; b.vx = b.vy = 0;
       points(4000, TROU.x, TROU.y - 20); blague('Cantine ! ' + pick(TXT.cantine), TROU.x - 60, TROU.y - 40, '#ffb86b'); SON.cantine(); vib([20, 40, 20]); tir('cantine', TROU.x, TROU.y);
@@ -1224,7 +1396,8 @@ function marquerBut(b) {
   if (multiball) { points(25000, BUT.cx, BUT.ligne + 30); butTxt = 'JACKPOT GOAL !'; annonce('GOAL !', 'Jackpot pendant la récré', '#ffe600', 44, 1.6); SON.jackpot(); }
   else { // compteur de buts (au-dessus de la cage) : au 3e, la table se retourne → la crypte
     points(10000, BUT.cx, BUT.ligne + 30); butsN = Math.min(3, butsN + 1); butsFlash = 1.4;
-    if (butsN >= 3 && gothDans <= 0) { butTxt = 'TRIPLÉ !'; b.filet.t = 9; gothDans = 1.3; annonce('3e GOAL !', 'Le flipper va se retourner…', '#ffe600', 44, 1.5); SON.triple(); flash = 0.3; }
+    if (verrou) { butsN = 0; butTxt = 'GOAL !'; annonce('GOAL !', 'Le gardien est battu', '#ffe600', 44, 1.6); } // un dieu ne quitte plus son monde
+    else if (butsN >= 3 && gothDans <= 0) { butTxt = 'TRIPLÉ !'; b.filet.t = 9; gothDans = 1.3; annonce('3e GOAL !', 'Le flipper va se retourner…', '#ffe600', 44, 1.5); SON.triple(); flash = 0.3; }
     else { butTxt = 'GOAL !'; annonce('GOAL ! ' + butsN + '/3', butsN === 2 ? 'Encore 1 but : la CRYPTE t’attend…' : 'Le gardien est battu', '#ffe600', 44, 1.6); }
   }
 }
@@ -1286,7 +1459,7 @@ function toucheBumper(c, b) {
   if (TXT[c.type] && Math.random() < 0.18) blague(pick(TXT[c.type]), c.x, c.y - 60, c.type === 'foot' ? '#ff6b6b' : undefined);
 }
 function berce(b) { return FL.some(f => { if (!f.appui) return false; const p = distFlip(b, f); return Math.hypot(b.x - p.cx, b.y - p.cy) < R + 14; }); }
-function enAttente(b) { return b.tient <= 0 && !b.rampe && !b.sortie && !b.tunnel && !b.boucle && !b.trou && !b.filet && b.x > 362 && b.y > 560 && Math.abs(b.vx) + Math.abs(b.vy) < 40; }
+function enAttente(b) { return b.tient <= 0 && !b.rampe && !b.pont && !b.sortie && !b.tunnel && !b.boucle && !b.trou && !b.filet && b.x > 362 && b.y > 560 && Math.abs(b.vx) + Math.abs(b.vy) < 40; }
 function lancer(b, p) {
   b.vy = -(LANCE_MIN + (LANCE_MAX - LANCE_MIN) * p); b.vx = 0; b.lance = 0; arreterCharge(); SON.lance(); vib(25);
   b.vise = table !== 'base' ? 0 : trouVise(p); b.viseT = 1.6; // trou 1, 2 ou 3 selon la puissance (0 : très fort, la bille passe)
@@ -1369,8 +1542,9 @@ function majRampe(b, dt) {
       filetT = 0.7; SON.panier(); vib([20, 30, 40]); etincelles(PANIER.x, PANIER.y, 22, '#ff8c1a');
       if (multiball) { points(25000, PANIER.x + 30, PANIER.y - 30); annonce('JACKPOT PANIER !', 'Swish pendant la récré', '#ff8c1a', 30, 1.6); SON.jackpot(); }
       else {
-        points(10000, PANIER.x + 30, PANIER.y - 30); paniers = Math.min(besoin, paniers + 1); SON.jauge(paniers); jaugeFlash = 1.2;
-        annonce('PANIER !', paniers >= besoin ? 'La cage s’ouvre…' : 'Encore ' + (besoin - paniers) + ' pour la récré', '#ff8c1a', 40, 1.4);
+        points(10000, PANIER.x + 30, PANIER.y - 30);
+        if (verrou) annonce('PANIER !', 'Swish divin', '#ff8c1a', 40, 1.4);
+        else { paniers = Math.min(besoin, paniers + 1); SON.jauge(paniers); jaugeFlash = 1.2; annonce('PANIER !', paniers >= besoin ? 'La cage s’ouvre…' : 'Encore ' + (besoin - paniers) + ' pour la récré', '#ff8c1a', 40, 1.4); }
       }
     } else { SON.rate(); vib(10); blague(pick(TXT.rate), 130, PANIER.y - 30, '#ff6b6b'); }
   }
@@ -1384,7 +1558,7 @@ function majRampe(b, dt) {
 }
 function relacherRampe(b, vx, vy) {
   b.rampe = null; b.vx = vx; b.vy = vy; b.ax = b.x; b.ay = b.y; b.at = temps;
-  if (!multiball && cagePleine && paniers >= besoin && spectacleT <= 0) recreGenerale();
+  if (!multiball && !verrou && cagePleine && paniers >= besoin && spectacleT <= 0) recreGenerale(); // un dieu : jamais de multibille
 }
 // ---- trou de colle
 function majSortieColle(b, dt) {
@@ -1507,6 +1681,7 @@ function changerTable(v) { // appelé à mi-retournement (table de profil)
   } else nouvelleBalle(true); // la bille de la crypte était un bonus : on reprend la même balle au gymnase
 }
 function perteGoth() {
+  if (verrou) { perteValh(); return; } // un dieu reste dans la crypte qu'il a choisie
   if (balles.length) return;
   if (sauveT > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Âme sauvée !', 'La crypte te rend ta bille', '#e3c8ff'); SON.sauve(); sauveT = 3; return; }
   retourBase();
@@ -1534,18 +1709,21 @@ function preparerBoss() { // file des boss de la partie : du n°3 au n°1 (on pe
     .map(b => Object.assign({}, b, { pv: NIV_BOSS[b.rang].pv, vaincu: false, img: imageDe(b.defaut ? '' : b.photo || AVATAR) }));
   const u = bossUltime(); ultimeTente = false; ultimeBattu = false;
   bossUlt = u && Object.assign(u, { pv: NIV_BOSS[0].pv, vaincu: false, img: imageDe(u.photo || (u.inconnu ? '' : AVATAR)) }); // pas encore de boss caché : une ombre « ? »
+  const d = bossDieu(); dieuTente = false; dieuBattu = false;
+  bossD = d && Object.assign(d, { pv: NIV_BOSS[-1].pv, vaincu: false, img: imageDe(d.photo || (d.inconnu ? '' : AVATAR)) });
 }
 function prochainBoss() { return bossFile.find(b => !b.vaincu) || null; }
 function plafondBoss() { // Kevin : dès qu'on dépasse le score du boss suivant, le score ne bouge plus : on part au combat avec ce score-là
   if (table === 'boss' || combat) return null;
   const b = prochainBoss(); if (b) return b.score + 1;
   if (bossUlt && !ultimeTente && bossFile.some(x => x.rang === 1 && x.vaincu)) return bossUlt.score + 1;
+  if (bossD && ultimeBattu && !dieuTente) return bossD.score + 1; // dans le Valhalla : figé au score du dieu
   return null;
 }
 function calmePourBoss() { // jamais pendant un retournement, le spectacle de la récré, un tunnel, une rampe, un trou…
-  if ((table !== 'base' && table !== 'goth') || bascule || spectacleT > 0 || gelT > 0 || gothDans > 0 || attenteBalle > 0 || temps - finCombatT < 6) return false;
+  if ((table !== 'base' && table !== 'goth' && table !== 'valh') || bascule || DECH || spectacleT > 0 || gelT > 0 || gothDans > 0 || attenteBalle > 0 || temps - finCombatT < 6) return false;
   // Kevin : le boss arrive aussi pendant la multibille et dans la crypte ; on y revient ensuite exactement où on en était
-  if (multiball || table === 'goth') return balles.length > 0 && balles.some(b => libre(b) && !enAttente(b));
+  if (multiball || table === 'goth' || table === 'valh') return balles.length > 0 && balles.some(b => libre(b) && !enAttente(b));
   if (aServir > 0 || balles.length !== 1) return false;
   const b = balles[0];
   return libre(b) && b.tirBut <= 0 && !b.vise && (enAttente(b) || b.y < 520); // bille en haut du plateau (ou au lanceur) : reprise équitable
@@ -1554,17 +1732,22 @@ function verifierBoss() {
   const b = prochainBoss();
   if (b) { if (score > b.score && calmePourBoss()) lancerCombat(b); return; }
   // les 3 boss sont tombés (dont le roi) et on dépasse le score caché : le château s'ouvre, une seule fois par partie
-  if (bossUlt && !ultimeTente && bossFile.some(x => x.rang === 1 && x.vaincu) && score > bossUlt.score && calmePourBoss()) { ultimeTente = true; lancerCombat(bossUlt); }
+  if (bossUlt && !ultimeTente && bossFile.some(x => x.rang === 1 && x.vaincu) && score > bossUlt.score && calmePourBoss()) { ultimeTente = true; lancerCombat(bossUlt); return; }
+  // l'empereur est tombé, on est au Valhalla : on dépasse le score du dieu → Asgard s'ouvre (une seule fois par partie)
+  if (bossD && ultimeBattu && !dieuTente && table === 'valh' && score > bossD.score && calmePourBoss()) { dieuTente = true; lancerCombat(bossD); }
 }
 function lancerCombat(boss) {
   const N = NIV_BOSS[boss.rang];
   combat = { boss, N, rang: boss.rang, score0: score, phase: 'alerte', t: 0, x: PORTE.x, y: PORTE.y + 30, echelle: 0.55, pv: boss.pv, pvMax: N.pv, inv: 0, recul: 0, stun: 0, ph: 0, dx: 0, vdx: 0,
-    esqCd: 0, boucl: 0, bouclCd: 5, billes: N.billes, pas: 0, porte: 0, coup: 0, pare: 0, rage: false, sauve: null, tambour: 0, bulle: '', x0: 0, y0: 0, chapeau: null, ultime: !!N.ultime, tir: 0 };
+    esqCd: 0, boucl: 0, bouclCd: 5, billes: N.billes, pas: 0, porte: 0, coup: 0, pare: 0, rage: false, sauve: null, tambour: 0, bulle: '', x0: 0, y0: 0, chapeau: null, ultime: !!N.ultime, dieu: !!N.dieu, tir: 0, niv: 0 };
   charge.src = {}; charge.actif = false; arreterCharge();
-  if (N.ultime) annonce('LE CHÂTEAU S’OUVRE…', 'Un boss caché en sort !', '#b26bff', 34, 1.6);
+  if (N.ultime) { combat.sceaux = SCEAUX.map(p => ({ x0: p.x, y0: p.y, x: p.x, y: p.y, r: 13, kick: 230, petit: true, on: true, flash: 0 })); combat.ouvert = 0; combat.sceauT = 0; combat.gardes = []; }
+  if (N.dieu) { combat.x = 185; combat.y = -30; FLD.forEach(f => { f.a = A_REPOS; f.w = 0; f.appui = false; f.tenu = 0; f.ia = 0; f.decl = -1; }); combat.eclairT = 6; combat.cible = null; }
+  if (N.dieu) annonce('ASGARD S’OUVRE…', (boss.genre === 'F' ? 'La déesse' : 'Le dieu') + ' descend du ciel !', '#7fd8ff', 34, 1.6);
+  else if (N.ultime) annonce('LE CHÂTEAU S’OUVRE…', 'Un boss caché en sort !', '#b26bff', 34, 1.6);
   else annonce('ALERTE BOSS !', 'N°' + boss.rang + ' · ' + titreBoss(boss.rang, boss.genre) + ' arrive…', '#ff4d4d', 38, 1.6);
   SON.alerteBoss(); vib([60, 40, 60, 40, 60]); secousse = 0.2; chaseT = 1.5;
-  if (!fondBoss[boss.rang]) dessinerFondBoss(boss.rang); // pré-rendu pendant que la table est figée
+  if (N.dieu) { if (!fondDieu) dessinerFondDieu(); } else if (!fondBoss[boss.rang]) dessinerFondBoss(boss.rang); // pré-rendu pendant que la table est figée
 }
 function vieillirEffets(dt) {
   if (grandMsg) { grandMsg.age += dt; if (grandMsg.age > grandMsg.vie) grandMsg = null; }
@@ -1580,9 +1763,24 @@ function majScene(dt) { // phases mises en scène : la table est figée, seuls l
     if (C.t >= 1.0) { C.phase = 'entree'; C.t = 0; SON.grogne(C.rang); annonce(titreBoss(C.rang, B.genre).toUpperCase(), B.nom + ' · ' + fmt(B.score) + ' pts', C.N.bord, 36, 2.2); }
   } else if (C.phase === 'entree') {
     const k = Math.min(1, C.t / 1.6); C.pas += dt * 6;
-    C.y = PORTE.y + 30 + (Y_BOSS0 - PORTE.y - 30) * k; C.echelle = 0.55 + 0.45 * k;
-    if (k >= 1) { if (C.ultime) { C.phase = 'parole'; C.t = 0; C.echelle = 1; C.bulle = 'Si tu me bats, tu deviendras le boss caché…\nHA HA HA ! Mais tu n’y arriveras pas !'; SON.rire(0.9); } else debutCombat(); }
-  } else if (C.phase === 'parole') { C.pas += dt * 2; if (C.t >= 4.2) { C.bulle = ''; debutCombat(); } } else if (C.phase === 'mort') { if (C.t >= 2.8) finCombat(); }
+    if (C.dieu) { const e = 1 - Math.pow(1 - k, 3); C.y = -30 + (Y_DIEU + 30) * e; C.echelle = 0.55 + 0.3 * e; } // il descend du ciel, lentement
+    else { C.y = PORTE.y + 30 + (Y_BOSS0 - PORTE.y - 30) * k; C.echelle = 0.55 + 0.45 * k; }
+    if (k >= 1) {
+      if (C.ultime) {
+        C.phase = 'parole'; C.t = 0; C.echelle = 1; C.bulle = 'Si tu me bats, tu deviendras le boss caché…\nHA HA HA ! Mais tu n’y arriveras pas !'; SON.rire(0.9);
+        parler('Si tu me bats, tu deviendras le boss caché. Ha ha ha ! Mais tu n’y arriveras pas !', B.genre, 1.1);
+      } else if (C.dieu) {
+        const F = B.genre === 'F'; C.phase = 'parole'; C.t = 0; C.bulle = 'Mortel… tu oses défier ' + (F ? 'une déesse' : 'un dieu') + ' ?\nMarque 3 buts dans ma porte… si tu peux !'; SON.tonnerre(0.5);
+        parler('Mortel… tu oses défier ' + (F ? 'une déesse' : 'un dieu') + ' ? Marque trois buts dans ma porte… si tu peux !', B.genre, 0.3);
+      } else debutCombat();
+    }
+  } else if (C.phase === 'parole') { C.pas += dt * 2; if (C.t >= (C.dieu ? 4.8 : 4.2)) { C.bulle = ''; debutCombat(); } } else if (C.phase === 'mort') { if (C.t >= 2.8) finCombat(); }
+  else if (C.phase === 'adieu') { // Kevin : l'empereur vaincu parle (écrit + haut-parleur), puis la table se déchire : les portes du Valhalla
+    C.pas += dt * 2; C.coup = 0.12;
+    if (!C.dit1 && C.t >= 0.7) { C.dit1 = true; C.bulle = 'Tu m’as battu !'; parler('Tu m’as battu !', B.genre); }
+    if (!C.dit2 && C.t >= 2.6) { C.dit2 = true; C.bulle = 'Les portes du Valhalla\ns’ouvrent à toi.'; parler('Les portes du Valhalla s’ouvrent à toi.', B.genre); SON.portesValhalla(); }
+    if (C.t >= 6.4) { C.bulle = ''; lancerDechirure(); }
+  }
   else if (C.phase === 'elimine') { // il revient au milieu du plateau, grossit et se moque… puis fin de la partie
     const k = Math.min(1, C.t / 0.7), e = 1 - Math.pow(1 - k, 3); C.pas += dt * 10;
     C.x = C.x0 + (185 - C.x0) * e; C.y = C.y0 + (330 - C.y0) * e; C.echelle = 1 + 0.5 * e;
@@ -1592,14 +1790,15 @@ function majScene(dt) { // phases mises en scène : la table est figée, seuls l
 function entrerArene() { // la table de jeu est mise de côté (billes figées), on passe dans l'arène du boss
   const C = combat;
   C.sauve = { balles, sauveT, table, nuit, multiball, protegeT, cageAttente, aServir }; // tout est mis de côté : multibille et crypte reprennent après le combat
-  balles = []; sauveT = 0; table = 'boss'; nuit = false; multiball = false; protegeT = 0; cageAttente = 0; aServir = 0; C.phase = 'porte'; C.t = 0;
-  flash = 0.6; secousse = 0.25; popups = []; particules = []; BUMPB.forEach(b => { b.flash = 0; b.cd = 0; }); SON.porte();
+  balles = []; sauveT = 0; table = C.dieu ? 'dieu' : 'boss'; nuit = false; multiball = false; protegeT = 0; cageAttente = 0; aServir = 0; C.phase = 'porte'; C.t = 0;
+  flash = 0.6; secousse = 0.25; popups = []; particules = []; BUMPB.forEach(b => { b.flash = 0; b.cd = 0; }); if (C.dieu) SON.porteAsgard(); else SON.porte();
 }
 function debutCombat() {
   const C = combat; C.phase = 'combat'; C.t = 0; C.echelle = 1; C.y = Y_BOSS0; C.rep = 0;
-  if (C.ultime) { C.tir = 1.2; annonce('RENVOIE LE FEU !', 'Ses boules de feu, avec tes flippers · ' + C.billes + ' ♥', '#d9b3ff', 34, 2.6); return; }
   balles.push(balleNeuve(375, 697, 0, 0, true)); // 1re bille du combat (sauvée 8 s après le lancement, comme une balle neuve)
-  annonce('À L’ATTAQUE !', C.billes + ' billes pour ' + C.pv + ' ♥ · sinon ÉLIMINÉ', '#ffffff', 36, 2);
+  if (C.ultime) annonce('LES 4 SCEAUX', 'Éteins les 4 cristaux, puis frappe !', '#d9b3ff', 34, 2.6);
+  else if (C.dieu) annonce('LE DUEL DES DIEUX', '3 buts dans la porte d’Asgard · ' + C.billes + ' ♥', '#7fd8ff', 30, 2.6);
+  else annonce('À L’ATTAQUE !', C.billes + ' billes pour ' + C.pv + ' ♥ · sinon ÉLIMINÉ', '#ffffff', 36, 2);
 }
 function majBoss(dt) { // déplacement du boss pendant le combat
   const C = combat; if (!C || C.phase !== 'combat') return;
@@ -1607,6 +1806,7 @@ function majBoss(dt) { // déplacement du boss pendant le combat
   BUMPB.forEach(b => { b.flash -= dt; b.cd -= dt; }); SLB.forEach(s => s.flash = (s.flash || 0) - dt);
   C.porte = Math.max(0, C.porte - dt); // la porte se referme derrière lui
   if (C.ultime) { majUltime(dt); return; }
+  if (C.dieu) { majDieu(dt); return; }
   const N = C.N, enJeu = balles.some(b => !enAttente(b));
   if (C.boucl > 0) C.boucl -= dt;
   if (!enJeu) { C.pas += dt * 2; return; } // il attend qu'on lance la bille (et nargue)
@@ -1640,17 +1840,47 @@ function majBoss(dt) { // déplacement du boss pendant le combat
   if (C.tambour <= 0) { const k = Math.max(0, Math.min(1, (C.y - Y_BOSS0) / (Y_BOSS_PASSE - Y_BOSS0))); C.tambour = 0.85 - 0.5 * k; SON.tambour(k); }
   if (C.y >= Y_BOSS_PASSE) combatPerdu('passe');
 }
-function majUltime(dt) { // le boss caché reste en haut, va et vient, et lance des boules de feu (2 à la fois quand il se déchaîne)
-  const C = combat, N = C.N;
-  balles = balles.filter(b => !b.mort); // boules renvoyées qui l'ont touché
-  C.ph += dt * N.freq * (C.rage ? 1.5 : 1); C.pas += dt * 3;
-  if (C.recul > 0) { const d = Math.min(C.recul, 300 * dt); C.y -= d; C.recul -= d; } else C.y += (Y_BOSS0 - C.y) * Math.min(1, dt * 3);
+// ---- l'empereur : LES 4 SCEAUX (Kevin, 27/10 : remplace les boules de feu)
+// 4 cristaux nourrissent son bouclier ; tous éteints → le bouclier tombe T_OUVERT s et seulement là la bille le blesse.
+// Trop lent : les cristaux se rallument. Cœur 2 : les cristaux bougent ; dernier cœur : 2 gardes de pierre patrouillent devant lui.
+const SCEAUX = [{ x: 98, y: 262 }, { x: 272, y: 262 }, { x: 142, y: 342 }, { x: 228, y: 342 }];
+const T_OUVERT = 10, T_SCEAUX = [20, 17, 14], Y_GARDES = 222;
+function majUltime(dt) {
+  const C = combat, N = C.N, enJeu = balles.some(b => !enAttente(b));
+  if (!(C.ouvert > 0)) C.ph += dt * N.freq * (C.niv >= 2 ? 1.5 : C.niv ? 1.2 : 1); C.pas += dt * 3; // bouclier tombé : il est sonné, il ne bouge plus
+  const yv = C.ouvert > 0 ? Y_BOSS0 + 34 : Y_BOSS0; // … et il descend un peu (plus facile à toucher)
+  if (C.recul > 0) { const d = Math.min(C.recul, 300 * dt); C.y -= d; C.recul -= d; } else C.y += (yv - C.y) * Math.min(1, dt * 3);
   C.x = 185 + N.amp * Math.sin(C.ph);
-  C.tir -= dt;
-  if (C.tir <= 0 && balles.length < (C.rage ? 2 : 1)) {
-    const b = balleNeuve(C.x, C.y + 42, rnd(-70, 70), C.rage ? 205 : 155, false); b.feu = true; balles.push(b); // Kevin (26/10) : un peu plus facile
-    C.tir = C.rage ? 1.8 : 2.4; SON.lance(); blague(pick(['Boule de feu !', 'Attrape ça !', 'Brûle !', 'HA HA !']), C.x, C.y - 62, '#ffb347');
+  C.boucl = C.ouvert > 0 ? 0 : 1; // bouclier levé tant que les sceaux ne sont pas tous éteints
+  C.sceaux.forEach((c, i) => { // cœur 2 et 3 : les cristaux tournent autour de leur place
+    c.flash = Math.max(0, c.flash - dt);
+    if (C.niv >= 1) { const a = temps * (1.1 + 0.25 * i) + i * 1.7; c.x = c.x0 + 26 * Math.cos(a); c.y = c.y0 + 16 * Math.sin(a * 1.3); } else { c.x = c.x0; c.y = c.y0; }
+  });
+  C.gardes.forEach((g, i) => { g.x = 185 + 92 * Math.sin(temps * 0.95 + i * Math.PI); g.y = Y_GARDES; g.flash = Math.max(0, g.flash - dt); });
+  if (C.ouvert > 0) {
+    const avant = C.ouvert; C.ouvert -= dt;
+    if (Math.ceil(C.ouvert) < Math.ceil(avant) && C.ouvert > 0 && C.ouvert <= 3) SON.tic(Math.ceil(C.ouvert));
+    if (C.ouvert <= 0) { C.ouvert = 0; rallumerSceaux(); blague('Le bouclier revient !', C.x, C.y - 64, '#d9b3ff'); }
+  } else if (C.sceauT > 0 && enJeu) {
+    C.sceauT -= dt;
+    if (C.sceauT <= 0) { rallumerSceaux(); blague('Trop lent ! Les sceaux se rallument', 185, 300, '#d9b3ff'); }
   }
+}
+function rallumerSceaux() { const C = combat; C.sceaux.forEach(c => { c.on = true; c.flash = 0.4; }); C.sceauT = 0; C.ouvert = 0; SON.sceauxRallument(); }
+function toucheSceau(c, b) {
+  const C = combat; if (!c.on) return;
+  c.on = false; c.flash = 0.5; etincelles(c.x, c.y, 16, '#d9b3ff'); vib(15);
+  const reste = C.sceaux.filter(x => x.on).length;
+  if (reste === 3) C.sceauT = T_SCEAUX[C.niv]; // 1er sceau éteint : le compte à rebours démarre
+  if (reste > 0) { SON.sceau(4 - reste); blague('Sceau ' + (4 - reste) + '/4', c.x, c.y - 30, '#d9b3ff'); return; }
+  C.ouvert = T_OUVERT; C.sceauT = 0; SON.sceauxTombent(); flash = Math.max(flash, 0.2); secousse = Math.max(secousse, 0.12);
+  annonce('LE BOUCLIER TOMBE !', 'Frappe-' + (C.boss.genre === 'F' ? 'la' : 'le') + ' : ' + T_OUVERT + ' s', '#d9b3ff', 32, 1.6);
+}
+function niveauUltime() { // après chaque cœur perdu : plus dur (Kevin : ça doit rester plus dur que le roi)
+  const C = combat, F = C.boss.genre === 'F'; C.niv = C.pvMax - C.pv; C.ouvert = 0; rallumerSceaux();
+  if (C.niv === 1) annonce('LES CRISTAUX BOUGENT !', 'Plus que ' + C.pv + ' ♥', '#b26bff', 30, 1.8);
+  else if (C.niv >= 2) { C.gardes = [0, 1].map(() => ({ x: 185, y: Y_GARDES, r: 15, flash: 0 })); annonce(F ? 'SES GARDES DE PIERRE !' : 'SES GARDES DE PIERRE !', 'Dernier cœur : ils ' + (F ? 'la' : 'le') + ' protègent', '#b26bff', 30, 1.8); SON.garde(); }
+  SON.grogne(C.rang);
 }
 function pasBoss(h) { // physique de l'arène : même bas de table, 2 bumpers, le boss est un obstacle rond
   const amort = 1 - 0.06 * h, C = combat;
@@ -1661,6 +1891,10 @@ function pasBoss(h) { // physique de l'arène : même bas de table, 2 bumpers, l
     for (const s of segsB) { if (!s.on) continue; const imp = collSeg(b, s); if (imp > 50) { if (s.type === 'sling') { points(100, b.x, b.y - 14); SON.sling(); vib(10); s.flash = 0.15; etincelles(b.x, b.y, 5, '#fff'); } else SON.mur(imp); } }
     for (const c of BUMPB) if (collBump(b, c) && c.cd <= 0) { c.cd = 0.08; c.flash = 0.22; points(300, c.x, c.y - 34); SON.bumper('sifflet'); vib(8); etincelles(b.x, b.y, 7, '#ffd23f'); }
     if (C && C.phase === 'combat') collBoss(b);
+    if (C && C.ultime && C.phase === 'combat') {
+      for (const c of C.sceaux) if (c.on && collBump(b, c)) toucheSceau(c, b);
+      for (const g of C.gardes) { const d = Math.hypot(b.x - g.x, b.y - g.y); if (d < R + g.r) { collPlot(b, g.x, g.y, g.r, 0.5); if (limite('garde', 0.2)) { g.flash = 0.25; SON.garde(); } } }
+    }
     for (const f of FL) collFlip(b, f);
     const v2 = b.vx * b.vx + b.vy * b.vy; if (v2 > VMAX * VMAX) { const k = VMAX / Math.sqrt(v2); b.vx *= k; b.vy *= k; }
   }
@@ -1668,32 +1902,30 @@ function pasBoss(h) { // physique de l'arène : même bas de table, 2 bumpers, l
 function collBoss(b) {
   const C = combat, cy = C.y + 8, rr = R + R_BOSS;
   let nx = b.x - C.x, ny = b.y - cy; const d2 = nx * nx + ny * ny; if (d2 >= rr * rr) return;
-  if (C.ultime) { // seule une boule de feu qui REMONTE le touche (celles qu'il lance le traversent) ; elle explose sur lui
-    if (b.vy < -90 && !b.mort) { b.mort = true; etincelles(b.x, b.y, 24, '#ffb347'); if (C.inv <= 0) toucherBoss(); }
-    return;
-  }
   const d = Math.sqrt(d2) || 1; nx /= d; ny /= d; b.x = C.x + nx * rr; b.y = cy + ny * rr;
   const vn = b.vx * nx + b.vy * ny; if (vn >= 0) return;
   const tx = -ny, ty = nx, vt = (b.vx * tx + b.vy * ty) * 0.6, k = Math.max(-vn * 0.7, 320);
   b.vx = nx * k + tx * vt; b.vy = ny * k + ty * vt;
   if (C.boucl > 0) { if (limite('bouclier', 0.25)) { SON.bouclier(); etincelles(b.x, b.y, 8, '#ffe600'); blague('Bouclier !', C.x, C.y - 60, '#ffe600'); } return; }
-  if (-vn > 200 && C.inv <= 0) toucherBoss(); else if (limite('bossTape', 0.15)) SON.mur(-vn);
+  if (-vn > (C.ultime ? 60 : 200) && C.inv <= 0) toucherBoss(); else if (limite('bossTape', 0.15)) SON.mur(-vn);
 }
 function toucherBoss() {
   const C = combat, F = C.boss.genre === 'F'; C.pv--; C.boss.pv = C.pv; C.inv = 0.45; C.coup = 0.35; C.recul = C.ultime || !(C.rep >= REPOUSSE_MAX) ? 60 : 0; // repousses épuisées : touché, mais il ne recule plus
   points(PTS_COUP, C.x, C.y - 48); SON.aie(C.rang); vib([30, 20, 30]); etincelles(C.x, C.y, 18, '#ff4d4d'); secousse = Math.max(secousse, 0.08); chaseT = Math.max(chaseT, 0.4);
   if (C.pv <= 0) { bossVaincu(); return; }
-  if ((C.N.bouclier || C.ultime) && !C.rage && C.pv <= C.pvMax / 2) { C.rage = true; annonce(C.ultime ? (F ? 'ELLE SE DÉCHAÎNE !' : 'IL SE DÉCHAÎNE !') : F ? 'ELLE ENRAGE !' : 'IL ENRAGE !', C.ultime ? 'Deux boules de feu à la fois · plus que ' + C.pv + ' ♥' : 'Plus vite… mais plus que ' + C.pv + ' ♥', C.ultime ? '#b26bff' : '#ff4d4d', 30, 1.6); SON.grogne(C.rang); }
+  if (C.ultime) { niveauUltime(); return; }
+  if (C.N.bouclier && !C.rage && C.pv <= C.pvMax / 2) { C.rage = true; annonce(F ? 'ELLE ENRAGE !' : 'IL ENRAGE !', 'Plus vite… mais plus que ' + C.pv + ' ♥', '#ff4d4d', 30, 1.6); SON.grogne(C.rang); }
   else blague(pick(['Aïe !', 'Touché !', 'Ouille !', 'Pan !', 'Bim !']) + ' ' + C.pv + ' ♥', C.x, C.y - 62, '#ff6b6b');
 }
 function bossVaincu() {
-  const C = combat, B = C.boss, F = B.genre === 'F'; C.phase = 'mort'; C.t = 0; B.vaincu = true;
-  points(C.N.bonus, C.x, C.y - 76);
+  const C = combat, B = C.boss, F = B.genre === 'F'; C.phase = C.ultime ? 'adieu' : 'mort'; C.t = 0; B.vaincu = true;
+  points(C.N.bonus, C.x, C.y - 76); balles = []; charge.src = {}; charge.actif = false; arreterCharge();
   flash = 0.5; secousse = 0.35; etincelles(C.x, C.y, 60, '#ffe600'); etincelles(C.x, C.y, 40, '#ffffff'); etincelles(C.x, C.y, 30, '#ff4d4d');
   C.chapeau = { vx: rnd(60, 110) * (C.x < 185 ? 1 : -1), vy: -330 };
   SON.vaincu(C.rang); vib([60, 40, 60, 40, 200]);
   // vaincre le n°1 ne donne pas encore la couronne : c'est le score final qui compte (nom + roi/reine + photo en fin de partie)
-  if (C.ultime) { ultimeBattu = true; annonce('BOSS CACHÉ VAINCU !', 'Le château est à toi', '#d9b3ff', 34, 3); confettis(); }
+  if (C.ultime) { ultimeBattu = true; C.ouvert = 0; C.gardes = []; annonce('BOSS CACHÉ VAINCU !', 'Le château est à toi… et plus encore', '#d9b3ff', 32, 2.4); confettis(); }
+  else if (C.dieu) { dieuBattu = true; annonce(F ? 'DÉESSE VAINCUE !' : 'DIEU VAINCU !', 'Asgard s’incline devant toi', '#7fd8ff', 34, 2.6); confettis(); SON.tonnerre(0.3); }
   else if (C.rang === 1) { annonce('LE TRÔNE EST VIDE !', 'Tiens jusqu’au bout !', '#ffe600', 30, 2.8); confettis(); }
   else annonce(F ? 'VAINCUE !' : 'VAINCU !', titreBoss(C.rang, B.genre) + ' est à terre', C.N.bord, 44, 2.6);
 }
@@ -1702,29 +1934,29 @@ function combatPerdu(cause) { // Kevin : le boss passe les flippers, ou la derni
   // Kevin : battu par le boss = les points du combat ne comptent pas, on reste derrière lui au classement
   // Kevin : tu restes entre le boss battu juste avant et celui-ci (plus tu lui as pris de cœurs, plus tu es près de lui) : plus de scores à 1 point près
   if (C.score0 != null && B.score > 0) {
-    const avant = Math.max(0, ...bossFile.filter(x => x.vaincu && x.score < B.score).map(x => x.score)), pris = (C.pvMax - Math.max(0, C.pv)) / C.pvMax;
+    const battus = bossFile.filter(x => x.vaincu && x.score < B.score).map(x => x.score).concat(C.dieu && bossUlt ? [bossUlt.score] : []);
+    const avant = Math.max(0, ...battus), pris = (C.pvMax - Math.max(0, C.pv)) / C.pvMax;
     score = Math.min(score, C.score0, avant + 1 + Math.floor((B.score - avant - 2) * pris * 0.98));
   }
   charge.src = {}; charge.actif = false; arreterCharge(); FL.forEach(f => f.appui = false);
   C.bulle = pick(['HA HA HA !', 'Trop lent !', 'Retourne t’échauffer !', 'Même pas mal !', 'Au vestiaire !', 'Game over, collègue !']);
   SON.elimine(); vib([120, 60, 120, 60, 300]); flash = 0.5; secousse = 0.35;
-  annonce('ÉLIMINÉ !', (cause === 'passe' ? (F ? 'Elle est passée' : 'Il est passé') : cause === 'feu' ? 'Trop brûlé' : 'Plus de billes') + ' · fin de la partie', '#ff3b3b', 46, 2.6);
+  annonce('ÉLIMINÉ !', (cause === 'passe' ? (F ? 'Elle est passée' : 'Il est passé') : C.dieu ? 'Plus de cœurs' : 'Plus de billes') + ' · fin de la partie', '#ff3b3b', 46, 2.6);
 }
 function perteBoss(n = 1) {
-  if (combat && combat.ultime) { // une boule de feu passe les flippers : un cœur de moins
-    const C = combat; if (C.phase !== 'combat') return;
-    C.billes = Math.max(0, C.billes - n);
-    if (C.billes <= 0) combatPerdu('feu'); else { annonce('BRÛLÉ !', C.billes > 1 ? 'Encore ' + C.billes + ' ♥' : 'DERNIER CŒUR !', '#ff8c1a', 34, 1.4); SON.outlane(); vib([80, 40, 80]); secousse = 0.15; }
-    return;
-  }
   if (balles.length || !combat || combat.phase !== 'combat') return;
   const C = combat;
   if (sauveT > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Bille sauvée !', 'Le combat continue', '#7cf', 30, 1.4); SON.sauve(); sauveT = 0; return; }
+  if (C.dieu) { // le duel des dieux : une bille qui passe tes flippers = un cœur de moins
+    if (--C.billes > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('UN CŒUR DE MOINS', C.billes > 1 ? 'Encore ' + C.billes + ' ♥' : 'DERNIER CŒUR !', '#ff6b6b', 32, 1.5); SON.outlane(); vib([80, 40, 80]); secousse = 0.15; return; }
+    combatPerdu('bille'); return;
+  }
   if (--C.billes > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Bille de combat perdue', C.billes > 1 ? 'Encore ' + C.billes + ' billes avant l’élimination' : 'DERNIÈRE BILLE : sinon, éliminé !', '#ffb86b', 28, 1.6); SON.outlane(); return; }
   combatPerdu('bille');
 }
-function finCombat() { // boss vaincu (n'importe lequel, empereur compris) : retour au gymnase, la bille attend au lanceur (Kevin, 26/10)
+function finCombat() { // boss vaincu : retour au gymnase, la bille attend au lanceur (Kevin, 26/10) ; l'empereur ouvre le Valhalla (dechirure)
   const C = combat; if (!C) return;
+  if (C.dieu) { choixDieu(); return; } // Kevin : tu es devenu un dieu → tu choisis ton monde
   table = 'base'; nuit = false; multiball = false;
   if (C.sauve) { const v = C.sauve; sauveT = 0; protegeT = v.protegeT || 0; cageAttente = v.cageAttente || 0; aServir = 0;
     balles = (v.balles || []).filter(b => b.collee); } // la bille en colle y reste ; les autres sont remplacées par celle du lanceur
@@ -1738,6 +1970,219 @@ function finCombat() { // boss vaincu (n'importe lequel, empereur compris) : ret
   annonce('REPRISE !', 'Relance la bille · ' + (C.ultime ? 'Tu es le boss caché… continue !' : p ? 'Prochain boss : n°' + p.rang + ' à ' + fmt(p.score) + ' pts' : 'Les 3 boss sont tombés !'), '#7cf', 40, 1.4);
   SON.depart();
 }
+
+// ---- le Valhalla (4e table)
+function resetValh() {
+  Object.assign(VALH, { odinReset: 0, allume: false, jackpot: 40000, corbeaux: 0, marteaux: 0, ponts: 0, grondT: 6, eclairs: [] });
+  ODIN.forEach(c => { c.bas = false; c.on = true; }); CORBEAUX.forEach(c => { c.hors = 0; c.chute = null; }); RUNES.forEach(c => { c.flash = 0; c.cd = 0; });
+}
+function pasValh(h) {
+  const amort = 1 - 0.06 * h;
+  for (const b of balles) {
+    if (!libre(b)) continue;
+    if (tiltOn) { pasTilt(b, h, segsV, RUNES); continue; }
+    b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
+    if (b.vy < 0 && b.y < 274 && b.y > 236 && b.x > 160 && b.x < 222 && !balles.some(o => o.pont)) { entrerPont(b); continue; }
+    if (b.vy < -150 && b.y < 292 && b.y > 260 && b.x > 236 && b.x < 266 && !balles.some(o => o.boucle)) { entrerLoop(b); continue; }
+    for (const s of segsV) { if (!s.on) continue; const imp = collSeg(b, s); if (imp > 50) toucheValh(s, b, imp); }
+    for (const c of RUNES) if (collBump(b, c)) toucheRune(c, b);
+    for (const c of CORBEAUX) if (c.hors <= 0 && collBump(b, c)) toucheCorbeau(c, b);
+    for (const f of FL) collFlip(b, f);
+    const v2 = b.vx * b.vx + b.vy * b.vy; if (v2 > VMAX * VMAX) { const k = VMAX / Math.sqrt(v2); b.vx *= k; b.vy *= k; }
+    if (b.y < ASGARD.ligne - 4 && b.y > ASGARD.pic && b.x > ASGARD.x1 && b.x < ASGARD.x2) { entrerAsgard(b); continue; }
+    if (b.ignoreTrou <= 0 && Math.hypot(b.x - MJOL.x, b.y - MJOL.y) < 13) entrerMjol(b);
+  }
+}
+function toucheValh(s, b, imp) {
+  if (s.type === 'sling') { points(100, b.x, b.y - 14); SON.sling(); vib(10); s.flash = 0.15; etincelles(b.x, b.y, 5, '#ffe9a8'); }
+  else if (s.type === 'odin' && !s.bas) abattreOdin(s);
+  else SON.mur(imp);
+}
+function toucheRune(c, b) {
+  if (c.cd > 0) return; c.cd = 0.08; c.flash = 0.25; chaseT = Math.max(chaseT, 0.2);
+  points(c.petit ? 300 : 200, c.x, c.y - (c.petit ? 30 : 42)); SON.rune(c.petit); vib(8); etincelles(b.x, b.y, 7, '#7fd8ff');
+  if (!c.petit && Math.random() < 0.12) blague(pick(['Skål !', 'Par Odin !', 'Rune de feu !', 'Pour Asgard !', 'Ragnarök !']), c.x, c.y - 60, '#ffd23f');
+}
+function toucheCorbeau(c, b) {
+  if (c.cd > 0) return; c.cd = 0.2; c.hors = 4; c.chute = { t: 0, vx: (c.x - b.x) * 6 + rnd(-40, 40), vy: -220 };
+  VALH.corbeaux++; points(1500, c.x, c.y - 24); SON.corbeau(); vib(15); etincelles(c.x, c.y, 10, '#c9d1de');
+  if (CORBEAUX.every(o => o.hors > 0)) { points(10000); annonce('HUGIN ET MUNIN !', 'Les corbeaux d’Odin · +' + fmt(10000 * mult), '#c9d1de', 26, 1.6); SON.nuee(); vib([20, 20, 40]); }
+  else blague(c.nom + ' !', c.x, c.y - 44, '#c9d1de');
+}
+function abattreOdin(s) {
+  s.bas = true; s.on = false; points(1000, s.cx, s.ay - 30); SON.cible(); vib(15); etincelles(s.cx, s.ay - 8, 12, '#ffd23f'); chaseT = Math.max(chaseT, 0.4);
+  if (ODIN.every(c => c.bas)) {
+    points(10000); VALH.allume = true; VALH.odinReset = ODIN_ATTENTE; tir('odin', 199, 400); flash = Math.max(flash, 0.15);
+    annonce('O-D-I-N !', 'La porte d’Asgard s’illumine : vise le JACKPOT', '#ffd23f', 40, 2); SON.odin(); vib([40, 40, 60]);
+  } else blague(ODIN.filter(c => c.bas).map(c => c.lettre).join('-') + ' …', 199, 404, '#ffd23f');
+}
+function entrerAsgard(b) {
+  b.tient = T_ASGARD; b.lieu = 'asgard'; b.x = ASGARD.cx; b.y = ASGARD.haut + 7; b.vx = b.vy = 0; tir('asgard', ASGARD.cx, 150);
+  if (VALH.allume) {
+    points(VALH.jackpot, ASGARD.cx, 110); annonce('JACKPOT D’ASGARD !', 'Les Valkyries chantent : +' + fmt(VALH.jackpot * mult), '#ffd23f', 30, 2.2);
+    SON.jackpotAsgard(); vib([60, 40, 60, 40, 120]); flash = Math.max(flash, 0.3); secousse = 0.15; etincelles(ASGARD.cx, 60, 30, '#ffd23f');
+    VALH.jackpot += 10000; VALH.allume = false;
+  } else { points(5000, ASGARD.cx, 110); blague('Porte d’Asgard !', ASGARD.cx, 130, '#ffd23f'); SON.asgard(); vib([20, 30, 20]); etincelles(ASGARD.cx, 60, 12, '#ffd23f'); }
+}
+function entrerMjol(b) {
+  b.tient = T_MJOL; b.lieu = 'mjol'; b.x = MJOL.x; b.y = MJOL.y; b.vx = b.vy = 0; VALH.marteaux++; tir('mjol', MJOL.x, MJOL.y);
+  if (VALH.marteaux % 3 === 0) {
+    points(15000, MJOL.x, MJOL.y - 24); annonce('COUP DE MJÖLLNIR !', '3 marteaux : +' + fmt(15000 * mult), '#7fd8ff', 26, 1.8);
+    SON.tonnerre(0.6); VALH.eclairs.push({ x: MJOL.x, t: 0.35 }); flash = Math.max(flash, 0.25); secousse = 0.2;
+  } else { points(4000, MJOL.x, MJOL.y - 24); blague('Mjöllnir ! ' + (VALH.marteaux % 3) + '/3', MJOL.x - 60, MJOL.y - 44, '#7fd8ff'); SON.mjollnir(); }
+  vib([20, 40, 20]);
+}
+function sortirValh(b) { // éjection de la porte d'Asgard (vers le bas) ou de la soucoupe (vers la gauche)
+  if (b.lieu === 'asgard') { b.x = ASGARD.cx + rnd(-12, 12); b.y = ASGARD.ligne + 16; b.vx = rnd(-110, 110); b.vy = 240; SON.ejecte(); }
+  else { b.vx = -230; b.vy = 170; b.ignoreTrou = 1; SON.ejecte(); }
+  b.lieu = null; b.ax = b.x; b.ay = b.y; b.at = temps;
+}
+function entrerPont(b) {
+  b.pont = { d: 0 }; b.vx = b.vy = 0; VALH.ponts++;
+  points(3000, 191, 236); SON.bifrost(BIFROST.total / VIT_PONT); vib(15); tir('bifrost', 191, 230); chaseT = Math.max(chaseT, 0.5);
+  if (VALH.ponts % 3 === 0) { points(20000); annonce('LE BIFRÖST BRILLE !', '3 passages sur le pont : +' + fmt(20000 * mult), '#ff8fab', 28, 1.8); SON.fanfare(); flash = Math.max(flash, 0.12); }
+  else blague('Bifröst ! ' + (VALH.ponts % 3) + '/3', 191, 300, '#ffd23f');
+}
+function majPont(b, dt) {
+  const p = b.pont; p.d += VIT_PONT * dt; [b.x, b.y] = surRail(BIFROST, Math.min(p.d, BIFROST.total));
+  if (p.d >= BIFROST.total) { b.pont = null; b.vx = 6; b.vy = 170; } // lâchée en haut du couloir gauche, vers le flipper gauche
+}
+function majValh(dt) {
+  for (const c of RUNES) { c.flash -= dt; c.cd -= dt; }
+  SLV.forEach(s => s.flash = (s.flash || 0) - dt);
+  for (const c of CORBEAUX) {
+    c.cd -= dt; const px = c.x;
+    if (c.chute) { c.chute.t += dt; c.x += c.chute.vx * dt; c.y += c.chute.vy * dt; c.chute.vy += 300 * dt; if (c.chute.t > 0.9) c.chute = null; }
+    else { c.x = c.cx + c.ax * Math.sin(c.fx * temps + c.ph); c.y = c.cy + c.ay * Math.sin(c.fy * temps + c.ph); }
+    if (Math.abs(c.x - px) > 0.01) c.dir = c.x > px ? 1 : -1;
+    if (c.hors > 0) c.hors = Math.max(0, c.hors - dt);
+  }
+  if (VALH.odinReset > 0) {
+    VALH.odinReset -= dt;
+    if (VALH.odinReset <= 0) {
+      if (balles.every(b => Math.abs(b.y - 446) > 24 || b.x < 110 || b.x > 290)) { ODIN.forEach(c => { c.bas = false; c.on = true; }); SON.tombe(); etincelles(199, 440, 14, '#ffd23f'); }
+      else VALH.odinReset = 0.3;
+    }
+  }
+  VALH.eclairs.forEach(e => e.t -= dt); VALH.eclairs = VALH.eclairs.filter(e => e.t > 0);
+  VALH.grondT -= dt; if (VALH.grondT <= 0) { VALH.grondT = rnd(10, 16); SON.grondement(); } // tonnerre lointain (ambiance)
+}
+function perteValh() { // Kevin : au Valhalla (et dans le monde choisi par un dieu), une bille perdue = la bille suivante, sans quitter ce monde
+  if (balles.length) return;
+  if (sauveT > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Bille sauvée !', table === 'valh' ? 'Odin te rend ta bille' : 'On remet la bille', table === 'valh' ? '#ffd23f' : '#7cf'); SON.sauve(); sauveT = 3; return; }
+  perdreBalle();
+}
+
+// ---- la déchirure : l'empereur vaincu a parlé, un éclair fend la table en deux, les moitiés s'écartent par à-coups
+// (images de la table d'avant), et derrière : le Valhalla
+const SACCADES = [[0.1, 0.05, 0.09], [0.8, 0.13, 0.09], [1.4, 0.27, 0.11], [2.0, 0.5, 0.13], [2.55, 1, 0.85]]; // [début, ouverture visée, durée]
+const T_ECLAIR = 1.0, T_OUVRE = 3.5;
+function lancerDechirure() {
+  const C = combat; DECH = { t: 0, phase: 'eclair', img: null, pts: [], saccade: 0 };
+  let x = 185; for (let y = -40; y <= 790; y += 24) { DECH.pts.push([x, y]); x = 185 + rnd(-15, 15); } // fracture en zigzag
+  SON.tonnerre(1); vib([100, 50, 250]); flash = 0.9; secousse = 0.45; FL.forEach(f => f.appui = false);
+  if (C) { etincelles(C.x, C.y, 60, '#ffffff'); etincelles(C.x, C.y, 50, '#d9b3ff'); C.cache = true; }
+  if (!fondValh) dessinerFondValh(); // pré-rendu pendant le flash
+}
+function fracDech(t) { let f = 0; for (const [t0, v, d] of SACCADES) { if (t < t0) break; const k = Math.min(1, (t - t0) / d); f += (v - f) * (1 - Math.pow(1 - k, 3)); } return f; }
+function majDechire(dt) {
+  const D = DECH; D.t += dt; vieillirEffets(dt);
+  if (D.phase === 'eclair') { if (D.t >= T_ECLAIR && D.img) basculerValhalla(); return; }
+  while (D.saccade < SACCADES.length && D.t >= SACCADES[D.saccade][0]) { SON.craque(D.saccade); secousse = Math.max(secousse, D.saccade === SACCADES.length - 1 ? 0.3 : 0.15); vib(D.saccade === SACCADES.length - 1 ? [60, 30, 120] : 40); D.saccade++; }
+  if (D.t >= T_OUVRE) finDechire();
+}
+function basculerValhalla() { // à l'abri des moitiés de l'ancienne table : on installe le Valhalla
+  combat = null; finCombatT = temps; table = 'valh'; nuit = false; multiball = false; protegeT = 0; cageAttente = 0; aServir = 0; sauveT = 0;
+  balles = []; COLLE.balle = null; CASIER.balle = null; popups = []; particules = []; grandMsg = null; finTilt(); resetValh();
+  DECH.phase = 'ouvre'; DECH.t = 0; flash = Math.max(flash, 0.3);
+}
+function finDechire() {
+  DECH = null; finCombatT = temps; balles.push(balleNeuve(375, 697, 0, 0, true)); gelT = 0.4;
+  annonce('LE VALHALLA', bossD ? (bossD.genre === 'F' ? 'La déesse' : 'Le dieu') + ' t’attend à ' + fmt(bossD.score) + ' pts' : 'Bienvenue chez les dieux', '#ffd23f', 40, 2.8);
+  SON.arriveeValh();
+}
+
+// ---- le duel des dieux (5e table)
+function pasDieu(h) {
+  const C = combat, ia = IA_DIEU[Math.min(2, C ? C.niv : 0)];
+  for (const f of FLD) {
+    const cible = f.appui ? A_HAUT : A_REPOS, vit = f.appui ? ia.vit : 10, old = f.a;
+    if (f.a > cible) f.a = Math.max(cible, f.a - vit * h); else f.a = Math.min(cible, f.a + vit * h);
+    f.w = (f.a - old) / h;
+  }
+  const amort = 1 - 0.06 * h;
+  for (const b of balles) {
+    if (!libre(b)) continue;
+    if (tiltOn) { pasTilt(b, h, segsD, []); continue; }
+    b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
+    for (const s of segsD) { if (!s.on) continue; const imp = collSeg(b, s); if (imp > 50) { if (s.type === 'sling') { points(100, b.x, b.y - 14); SON.sling(); vib(10); s.flash = 0.15; etincelles(b.x, b.y, 5, '#fff'); } else SON.mur(imp); } }
+    for (const f of FL) collFlip(b, f);
+    for (const f of FLD) collFlip(b, f);
+    const v2 = b.vx * b.vx + b.vy * b.vy; if (v2 > VMAX * VMAX) { const k = VMAX / Math.sqrt(v2); b.vx *= k; b.vy *= k; }
+    if (C && C.phase === 'combat' && !b.marque && b.y < BUT_DIEU && b.x > 100 && b.x < 270) butDieu(b);
+  }
+  if (balles.some(b => b.marque)) { balles = balles.filter(b => !b.marque); if (combat && combat.phase === 'combat') balles.push(balleNeuve(375, 697, 0, 0, false)); }
+}
+function majDieu(dt) {
+  const C = combat, ia = IA_DIEU[Math.min(2, C.niv)], enJeu = balles.some(b => !enAttente(b));
+  C.ph += dt; C.pas += dt * 2; C.x = 185 + 12 * Math.sin(C.ph * 0.8); C.y = Y_DIEU + 4 * Math.sin(C.ph * 1.7); // il flotte dans la porte
+  SLD.forEach(s => s.flash = (s.flash || 0) - dt); FL.forEach(f => f.gele = Math.max(0, (f.gele || 0) - dt));
+  if (C.eclair) { C.eclair.t -= dt; if (C.eclair.t <= 0) C.eclair = null; }
+  iaDieu(dt, ia);
+  if (!enJeu) return;
+  if (C.cible) { C.cible.alerte -= dt; if (C.cible.alerte <= 0) frapperEclair(C.cible); }
+  else { C.eclairT -= dt; if (C.eclairT <= 0) { C.eclairT = ia.eclair * rnd(0.85, 1.15); C.cible = pick(FL); C.cible.alerte = 0.9; SON.avertEclair(); } }
+}
+function iaDieu(dt, ia) { // le dieu joue ses flippers : il voit venir la bille, réagit après un petit temps, et la rate parfois
+  for (const f of FLD) {
+    if (f.tenu > 0) { f.tenu -= dt; if (f.tenu <= 0) { f.appui = false; f.ia = 0.2; } continue; }
+    if (f.decl >= 0) { f.decl -= dt; if (f.decl < 0) { f.appui = true; f.tenu = 0.22; } continue; }
+    f.ia -= dt; if (f.ia > 0) continue;
+    for (const b of balles) {
+      if (!libre(b) || b.vy > -40) continue;
+      const p = distFlip(b, f), v = Math.hypot(b.vx, b.vy); // il déclenche quand la bille sera sur son flipper à la fin de son temps de réaction
+      if (p.t > 0.12 && b.y > p.cy - 4 && Math.hypot(b.x - p.cx, b.y - p.cy) < R + 12 + v * ia.reac) {
+        if (Math.random() < ia.rate) f.ia = 0.45; // trop lent cette fois : il la laisse passer
+        else f.decl = ia.reac;
+        break;
+      }
+    }
+  }
+}
+function frapperEclair(f) { // l'éclair tombe : le flipper visé est gelé 1 s
+  const C = combat; f.alerte = 0; f.gele = 1; C.cible = null; C.eclair = { f, t: 0.35 };
+  SON.eclair(); vib([30, 20, 60]); flash = Math.max(flash, 0.22); secousse = Math.max(secousse, 0.1);
+  const tx = f.px + Math.cos(flipAngle(f)) * f.L * 0.6, ty = f.py + Math.sin(flipAngle(f)) * f.L * 0.6; etincelles(tx, ty, 18, '#bfefff');
+  blague('Flipper gelé !', f.px + (f.cote === 1 ? 30 : -30), f.py - 46, '#bfefff');
+}
+function butDieu(b) {
+  const C = combat, F = C.boss.genre === 'F'; b.marque = true; C.pv--; C.boss.pv = C.pv; C.coup = 0.5;
+  SON.butDieu(); vib([40, 30, 40, 30, 120]); flash = Math.max(flash, 0.35); secousse = 0.2; etincelles(b.x, BUT_DIEU, 40, '#ffe600'); etincelles(C.x, C.y, 30, '#7fd8ff');
+  if (C.pv <= 0) { bossVaincu(); return; }
+  C.niv = C.pvMax - C.pv; C.cible = null; FL.forEach(f => { f.alerte = 0; f.gele = 0; }); C.eclairT = IA_DIEU[C.niv].eclair; gelT = 1.1; sauveT = 0;
+  annonce('BUT ! ' + C.niv + '/3', C.pv > 1 ? (F ? 'Elle' : 'Il') + ' accélère…' : 'Encore UN but !', '#ffe600', 40, 1.8);
+}
+
+// ---- « Tu es devenu un dieu » : le joueur choisit son monde pour les billes qui restent, et y reste jusqu'à la fin
+function choixDieu() {
+  etat = 'dieu'; FL.forEach(f => { f.appui = false; f.gele = f.alerte = 0; }); charge.src = {}; charge.actif = false; arreterCharge(); $('pause').style.display = 'none';
+  const F = lsGetTxt('battle-genre') === 'F';
+  $('dieu-titre').textContent = F ? 'Tu es devenue une déesse !' : 'Tu es devenu un dieu !';
+  $('dieu-reste').textContent = 'Il te reste ' + (4 - balleNo) + ' bille' + (4 - balleNo > 1 ? 's' : '') + '. Choisis ton monde : tu y resteras jusqu’à la fin de la partie.';
+  montrer('dieu-ecran'); SON.fenetreDieu(); vib([40, 30, 40, 30, 120]);
+}
+function appliquerVerrou(v) {
+  verrou = v; combat = null; finCombatT = temps; montrer(null);
+  table = v === 'nuit' ? 'base' : v; nuit = v === 'nuit'; multiball = false; protegeT = 0; cageAttente = 0; aServir = 0; sauveT = 0; spectacleT = 0; bascule = null;
+  balles = []; COLLE.balle = null; CASIER.balle = null; gothDans = 0; butsN = 0; popups = []; particules = []; finTilt();
+  if (v === 'goth') { gothScore0 = score; Object.assign(CRYPTE, { ripReset: 0, allume: false, jackpot: 30000, chauves: 0, cercueils: 0, glas: 4 }); RIP.forEach(c => { c.bas = false; c.on = true; }); CHAUVES.forEach(c => { c.hors = 0; c.chute = null; }); }
+  if (v === 'valh') resetValh();
+  if (v === 'nuit' && !fondNuit) dessinerFondNuit();
+  balles.push(balleNeuve(375, 697, 0, 0, true)); gelT = 0.8; flash = 0.5; etat = 'jeu'; $('pause').style.display = 'block';
+  annonce({ base: 'LE GYMNASE', nuit: 'LA RÉCRÉ', goth: 'LA CRYPTE', valh: 'LE VALHALLA' }[v], 'Ton monde, jusqu’à la fin de la partie', v === 'nuit' ? NEON.rose : v === 'goth' ? CRYPTE_C.lilas : '#ffd23f', 38, 2.4);
+  SON.depart();
+}
+document.querySelectorAll('#dieu-ecran [data-monde]').forEach(b => b.addEventListener('click', () => { if (etat === 'dieu') { deverrouiller(); appliquerVerrou(b.dataset.monde); } }));
 
 function maj(dt) {
   temps += dt;
@@ -1761,6 +2206,7 @@ function maj(dt) {
   cageFlash = Math.max(0, cageFlash - dt); filetT = Math.max(0, filetT - dt);
   secousse = Math.max(0, secousse - dt); flash = Math.max(0, flash - dt);
   if (etat !== 'jeu') return;
+  if (DECH) { majDechire(dt); return; } // la table se déchire : tout est figé
   if (combat && combat.phase !== 'combat') { majScene(dt); return; } // arrivée / mort du boss, élimination : table figée
   if (spectacleT > 0 || gelT > 0) { // la table se fige pendant le spectacle de la récré (et le retournement de la table)
     let finSpectacle = false;
@@ -1772,12 +2218,14 @@ function maj(dt) {
     return;
   }
   if (table === 'goth') majGoth(dt);
-  if (table === 'boss') majBoss(dt);
+  if (table === 'valh') majValh(dt);
+  if (table === 'boss' || table === 'dieu') majBoss(dt);
   if (gothDans > 0) { gothDans -= dt; if (gothDans <= 0) versGothique(); } // 3e but : on laisse fêter le but, puis la table se retourne
   const N = 4, h = dt / N; for (let i = 0; i < N; i++) pas(h);
   for (const b of balles) {
     if (b.rampe) { majRampe(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
     if (b.tunnel) { majTunnel(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
+    if (b.pont) { majPont(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
     if (b.boucle) { majLoop(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
     if (b.collee) continue;
     if (b.sortie) { majSortieColle(b, dt); b.ax = b.x; b.ay = b.y; b.at = temps; continue; }
@@ -1787,7 +2235,7 @@ function maj(dt) {
     b.tirBut -= dt; b.sansGardien -= dt;
     if (b.tient > 0) {
       b.tient -= dt; b.ax = b.x; b.ay = b.y; b.at = temps;
-      if (b.tient <= 0) { if (b.lieu === 'casier') sortirCasier(b); else if (b.lieu) sortirGoth(b); else { b.vx = -230; b.vy = 170; b.ignoreTrou = 1; SON.ejecte(); } }
+      if (b.tient <= 0) { if (b.lieu === 'casier') sortirCasier(b); else if (b.lieu === 'asgard' || b.lieu === 'mjol') sortirValh(b); else if (b.lieu) sortirGoth(b); else { b.vx = -230; b.vy = 170; b.ignoreTrou = 1; SON.ejecte(); } }
       continue;
     }
     b.ignoreTrou -= dt; b.ignoreCasier -= dt;
@@ -1826,13 +2274,13 @@ function maj(dt) {
   }
   const avant = balles.length;
   balles = balles.filter(b => b.y < TH + 30);
-  if (balles.length < avant) { if (table === 'goth') perteGoth(); else if (table === 'boss') perteBoss(avant - balles.length); else apresPerte(true); }
+  if (balles.length < avant) { if (table === 'goth') perteGoth(); else if (table === 'valh') perteValh(); else if (table === 'boss' || table === 'dieu') perteBoss(avant - balles.length); else apresPerte(true); }
   if (tiltOn && balles.length && balles.every(enAttente)) finTilt(); // bille suivante (ex. bille de combat) : le TILT est levé
   if (attenteBalle > 0) { attenteBalle -= dt; if (attenteBalle <= 0) { if (balleNo > 3) finPartie(); else nouvelleBalle(true); } }
   for (const p of popups) p.age += dt; popups = popups.filter(p => p.age < p.vie);
   for (const p of particules) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; } particules = particules.filter(p => p.age < p.vie);
   if (grandMsg) { grandMsg.age += dt; if (grandMsg.age > grandMsg.vie) grandMsg = null; }
-  if (!combat && (table === 'base' || table === 'goth')) verifierBoss();
+  if (!combat && !verrou && (table === 'base' || table === 'goth' || table === 'valh')) verifierBoss();
 }
 function basculeK() { return bascule ? Math.min(1, Math.max(0, bascule.t / bascule.dur)) : 1; }
 function basculeCss() { // retournement 3D de la table : 0→90° (face jour), puis -90°→0 (face nuit) ou l'inverse
@@ -1845,7 +2293,8 @@ function basculeCss() { // retournement 3D de la table : 0→90° (face jour), p
 }
 function perdreBalle() {
   finMulti(); charge.src = {}; arreterCharge();
-  charge.actif = false; // Kevin : la bille en colle reste en colle (avec le casier déjà rempli) pour la bille suivante SON.perdu(); vib([80, 50, 120]); secousse = 0.3;
+  charge.actif = false; // Kevin : la bille en colle reste en colle (avec le casier déjà rempli) pour la bille suivante
+  SON.perdu(); vib([80, 50, 120]); secousse = 0.3;
   balleNo++; annonce('Retenue !', pick(TXT.perdu), '#ff6b6b');
   if (attenteBalle <= 0) attenteBalle = 1.8;
   if (balleNo > 3) grandMsg = { t: 'Fin du cours !', sous: fmt(score) + ' points', age: 0, vie: 3, coul: '#ffd23f' };
@@ -1867,7 +2316,7 @@ function redim() {
   const libre = dispo - (TH - 8) * S, bande = Math.min(72, Math.max(bmin, libre));
   OX = (CW - TW * S) / 2;
   OY = haut + bande + Math.max(0, (libre - bande) / 2); HUD_Y = OY - bande / 2;
-  fondNuit = null; fondGoth = null; fondBoss = {}; dessinerFond(); sprites();
+  fondNuit = null; fondGoth = null; fondBoss = {}; fondValh = null; fondDieu = null; dessusValh = null; dessinerFond(); sprites();
   const bt = $('tilt'); if (bt){ bt.style.left = (OX + 185 * S) + 'px'; bt.style.top = (OY + 704 * S * KY) + 'px'; } // bouton TILT à la place de « Sauvée »
 }
 const hsla = (h, a, l = 60) => `hsla(${h},100%,${l}%,${a})`;
@@ -1901,6 +2350,7 @@ function sprites() {
   for (const b of BUMP) b.spr = sprite(2 * (b.r + 9), 2 * (b.r + 9), c => { c.translate(b.r + 9, b.r + 9); corpsBumper(c, b); });
   // mode nuit : bumpers néon, halo des billes, cônes de projecteurs (basse résolution, agrandis au dessin)
   for (const b of CRANES) b.spr = sprite(2 * (b.r + 9), 2 * (b.r + 9), c => { c.translate(b.r + 9, b.r + 9); corpsCrane(c, b); });
+  SPR.haloV = sprite(60, 60, c => { const g = c.createRadialGradient(30, 30, 4, 30, 30, 30); g.addColorStop(0, 'rgba(255,250,230,.85)'); g.addColorStop(0.4, 'rgba(255,210,63,.3)'); g.addColorStop(1, 'rgba(255,210,63,0)'); c.fillStyle = g; c.fillRect(0, 0, 60, 60); });
   SPR.haloG = sprite(60, 60, c => { const g = c.createRadialGradient(30, 30, 4, 30, 30, 30); g.addColorStop(0, 'rgba(255,250,235,.85)'); g.addColorStop(0.4, 'rgba(195,139,255,.3)'); g.addColorStop(1, 'rgba(178,107,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 60, 60); });
   for (const b of BUMP) b.sprN = sprite(2 * (b.r + 14), 2 * (b.r + 14), c => { c.translate(b.r + 14, b.r + 14); bumperNeon(c, b); });
   SPR.halo = sprite(60, 60, c => { const g = c.createRadialGradient(30, 30, 4, 30, 30, 30); g.addColorStop(0, 'rgba(160,250,255,.9)'); g.addColorStop(0.35, 'rgba(0,229,255,.35)'); g.addColorStop(1, 'rgba(0,229,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 60, 60); });
@@ -2297,18 +2747,18 @@ function dessinerRampe() {
 }
 // rampe LOOPING : boucle verticale en pseudo-3D (ombre au sol, pilier, panneau transparent, rails)
 function dessinerLooping(c, n, k) {
-  const P = LOOP.pts, { x: lx, y: ly, r: lr } = LOOP_C, coul = n ? NEON.rose : '#ff5a8a';
+  const P = LOOP.pts, { x: lx, y: ly, r: lr } = LOOP_C, coul = n === 'valh' ? '#ffd23f' : n ? NEON.rose : '#ff5a8a', rvb = n === 'valh' ? '255,210,63' : '255,43,214';
   const fil = (off, dx, dy, d0 = 0, d1 = 1e9) => { c.beginPath(); let premier = true; P.forEach((p, i) => { if (LOOP.L[i] < d0 || LOOP.L[i] > d1) return; const q = P[Math.min(P.length - 1, i + 1)], o = P[Math.max(0, i - 1)], tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1, x = p[0] - ty / l * off + dx, y = p[1] + tx / l * off + dy; premier ? c.moveTo(x, y) : c.lineTo(x, y); premier = false; }); };
   if (!n) { // ombre portée de la boucle + pilier
     c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(lx + 9, ly + 16, lr + 8, (lr + 8) * 0.55, 0, 0, 7); c.fill();
     for (const off of [-7, 7]) { fil(off, 6, 10); c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 4; c.stroke(); }
   }
-  const g = c.createRadialGradient(lx, ly, 2, lx, ly, lr); g.addColorStop(0, n ? 'rgba(255,43,214,.05)' : 'rgba(255,255,255,.08)'); g.addColorStop(1, n ? 'rgba(255,43,214,.28)' : 'rgba(255,90,138,.3)');
+  const g = c.createRadialGradient(lx, ly, 2, lx, ly, lr); g.addColorStop(0, n ? `rgba(${rvb},.05)` : 'rgba(255,255,255,.08)'); g.addColorStop(1, n ? `rgba(${rvb},.28)` : 'rgba(255,90,138,.3)');
   c.fillStyle = g; c.beginPath(); c.arc(lx, ly, lr, 0, 7); c.fill();
-  c.strokeStyle = n ? 'rgba(255,43,214,.4)' : 'rgba(42,47,58,.8)'; c.lineWidth = 2;
+  c.strokeStyle = n ? `rgba(${rvb},.4)` : 'rgba(42,47,58,.8)'; c.lineWidth = 2;
   for (let d = 6; d < LOOP.total; d += 14) { const [x, y] = surRail(LOOP, d), [x2, y2] = surRail(LOOP, d + 1), tx = x2 - x, ty = y2 - y, l = Math.hypot(tx, ty) || 1; c.beginPath(); c.moveTo(x - ty / l * 8, y + tx / l * 8); c.lineTo(x + ty / l * 8, y - tx / l * 8); c.stroke(); }
   for (const off of [-7, 7]) {
-    if (n) { c.save(); c.shadowColor = coul; c.shadowBlur = 10 * k; fil(off, 0, 0); c.strokeStyle = coul; c.lineWidth = 3.5; c.stroke(); c.restore(); fil(off, 0, 0); c.strokeStyle = '#ffe0f7'; c.lineWidth = 1.2; c.stroke(); }
+    if (n) { c.save(); c.shadowColor = coul; c.shadowBlur = 10 * k; fil(off, 0, 0); c.strokeStyle = coul; c.lineWidth = 3.5; c.stroke(); c.restore(); fil(off, 0, 0); c.strokeStyle = n === 'valh' ? '#fffbe6' : '#ffe0f7'; c.lineWidth = 1.2; c.stroke(); }
     else { fil(off, 0, 0); c.strokeStyle = '#5a0f2a'; c.lineWidth = 4.5; c.stroke(); fil(off, 0, 0); c.strokeStyle = '#ffd0de'; c.lineWidth = 2.2; c.stroke(); }
   }
   // haut de la boucle plus épais (au premier plan, plus haut)
@@ -2318,10 +2768,11 @@ function dessinerLooping(c, n, k) {
 // entrée du looping (dessinée sur le plateau)
 function dessinerEntreeLoop(c, n) {
   c.beginPath(); c.moveTo(236, 296); c.lineTo(264, 296); c.lineTo(259, 274); c.lineTo(241, 274); c.closePath();
-  if (n) { c.fillStyle = 'rgba(255,43,214,.2)'; c.fill(); c.save(); c.shadowColor = NEON.rose; c.shadowBlur = 8 * S * DPR; c.strokeStyle = NEON.rose; c.lineWidth = 2; c.stroke(); c.restore(); }
+  const neon = n === 'valh' ? '#ffd23f' : NEON.rose;
+  if (n) { c.fillStyle = n === 'valh' ? 'rgba(255,210,63,.2)' : 'rgba(255,43,214,.2)'; c.fill(); c.save(); c.shadowColor = neon; c.shadowBlur = 8 * S * DPR; c.strokeStyle = neon; c.lineWidth = 2; c.stroke(); c.restore(); }
   else { const g = c.createLinearGradient(236, 0, 264, 0); g.addColorStop(0, '#9aa3b4'); g.addColorStop(0.5, '#f4f6fa'); g.addColorStop(1, '#6b7384'); c.fillStyle = g; c.fill(); c.strokeStyle = '#5a0f2a'; c.lineWidth = 1.5; c.stroke(); }
   c.save(); c.translate(250, 304); c.font = '900 9px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-  if (!n) { c.strokeStyle = '#5a0f2a'; c.lineWidth = 3; c.strokeText('LOOPING', 0, 0); } c.fillStyle = n ? NEON.rose : '#fff'; c.fillText('LOOPING', 0, 0); c.restore();
+  if (!n) { c.strokeStyle = '#5a0f2a'; c.lineWidth = 3; c.strokeText('LOOPING', 0, 0); } c.fillStyle = n ? neon : '#fff'; c.fillText('LOOPING', 0, 0); c.restore();
 }
 
 // ---------------------------------------------------------------- La crypte (2e table) : pierre sombre, os, lueurs violettes et vert acide
@@ -2512,6 +2963,322 @@ function renduGoth() {
   for (const c of CHAUVES) dessinerChauve(c);
 }
 
+// ---------------------------------------------------------------- Le Valhalla (4e table) : ciel d'aurores boréales, salle d'Odin en bois et or
+const VALH_C = { or: '#ffd23f', clair: '#ffe9a8', ciel: '#7fd8ff', glace: '#bfefff', aurore: '#5dffb0', nuit: '#0a1236' };
+let fondValh = null, fondDieu = null;
+function aurore(c, y0, amp, coul, alpha, ph) { // voile d'aurore boréale (bande ondulée, fondu vers le bas)
+  c.beginPath(); c.moveTo(0, y0);
+  for (let x = 0; x <= 400; x += 10) c.lineTo(x, y0 + amp * Math.sin(x / 55 + ph) + amp * 0.4 * Math.sin(x / 23 + ph * 2));
+  for (let x = 400; x >= 0; x -= 10) c.lineTo(x, y0 + 46 + amp * Math.sin(x / 55 + ph) * 0.6);
+  c.closePath(); const g = c.createLinearGradient(0, y0 - amp, 0, y0 + 50); g.addColorStop(0, `rgba(${coul},0)`); g.addColorStop(0.35, `rgba(${coul},${alpha})`); g.addColorStop(1, `rgba(${coul},0)`); c.fillStyle = g; c.fill();
+}
+function bouclierViking(c, x, y, r, coul) { // bouclier rond : bois peint, umbo de fer, cerclage
+  c.fillStyle = 'rgba(0,0,0,.4)'; c.beginPath(); c.arc(x + 2, y + 3, r, 0, 7); c.fill();
+  c.fillStyle = coul; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.moveTo(x, y); c.arc(x, y, r, -Math.PI / 2, 0); c.closePath(); c.fill(); c.beginPath(); c.moveTo(x, y); c.arc(x, y, r, Math.PI / 2, Math.PI); c.closePath(); c.fill();
+  c.strokeStyle = '#c9d1de'; c.lineWidth = 1.6; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
+  const g = c.createRadialGradient(x - 1, y - 1, 0.5, x, y, r * 0.3); g.addColorStop(0, '#fff'); g.addColorStop(1, '#6f7a8c'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r * 0.28, 0, 7); c.fill();
+}
+function formeAsgard(c) { c.beginPath(); c.moveTo(ASGARD.x1, ASGARD.ligne); c.lineTo(ASGARD.x1, ASGARD.haut); c.lineTo(ASGARD.cx, ASGARD.pic); c.lineTo(ASGARD.x2, ASGARD.haut); c.lineTo(ASGARD.x2, ASGARD.ligne); c.closePath(); }
+function dessinerFondValh() {
+  fondValh = document.createElement('canvas'); fondValh.width = cv.width; fondValh.height = cv.height;
+  const c = fondValh.getContext('2d'), k = S * DPR, V = VALH_C;
+  c.fillStyle = '#03050f'; c.fillRect(0, 0, fondValh.width, fondValh.height);
+  c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineCap = 'round'; c.lineJoin = 'round';
+  const lueur = (trace, coul, w = 2.5, flou = 10) => { c.save(); c.shadowColor = coul; c.shadowBlur = flou * k; c.strokeStyle = coul; c.lineWidth = w; trace(); c.stroke(); c.shadowBlur = 0; c.globalAlpha = 0.7; c.strokeStyle = '#fff'; c.lineWidth = Math.max(0.7, w * 0.3); trace(); c.stroke(); c.restore(); };
+  let graine = 77; const alea = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+  c.save(); cheminTable(c); c.clip();
+  // le ciel du nord (haut de la table) : nuit bleue, étoiles, aurores boréales
+  let g = c.createLinearGradient(0, 0, 0, 250); g.addColorStop(0, '#050a24'); g.addColorStop(1, '#13285a'); c.fillStyle = g; c.fillRect(0, 0, 400, 252);
+  for (let i = 0; i < 90; i++) { c.fillStyle = `rgba(230,240,255,${0.25 + alea() * 0.7})`; c.beginPath(); c.arc(alea() * 400, alea() * 240, alea() * 1.3 + 0.3, 0, 7); c.fill(); }
+  aurore(c, 70, 18, '93,255,176', 0.32, 0.4); aurore(c, 110, 22, '127,216,255', 0.22, 2.1); aurore(c, 150, 14, '178,107,255', 0.18, 4.2);
+  // la grande salle d'Odin (bas) : planches de bois chaud, clous, lumière des braseros
+  for (let x = 0, i = 0; x < 400; x += 25, i++) {
+    c.fillStyle = `hsl(${24 + alea() * 10},${42 + alea() * 12}%,${17 + alea() * 9}%)`; c.fillRect(x + 0.8, 250, 23.4, 490);
+    c.fillStyle = 'rgba(255,220,160,.07)'; c.fillRect(x + 2, 250, 3, 490);
+    for (let y = 262 + (i % 3) * 60; y < 740; y += 180) { c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(x + 0.8, y, 23.4, 1.6); c.fillStyle = '#c9a25a'; c.beginPath(); c.arc(x + 5, y + 6, 1.2, 0, 7); c.arc(x + 20, y + 6, 1.2, 0, 7); c.fill(); }
+    if (alea() < 0.5) { c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 0.8; c.beginPath(); const yy = 300 + alea() * 400; c.ellipse(x + 12, yy, 4, 9, 0, 0, 7); c.stroke(); } // nœuds du bois
+  }
+  g = c.createRadialGradient(190, 470, 40, 190, 470, 420); g.addColorStop(0, 'rgba(255,170,60,.16)'); g.addColorStop(0.55, 'rgba(60,20,0,.1)'); g.addColorStop(1, 'rgba(0,0,0,.7)'); c.fillStyle = g; c.fillRect(0, 250, 400, 490);
+  // grand cercle de runes (Vegvísir) au centre de la salle
+  c.save(); c.translate(190, 385); c.strokeStyle = 'rgba(255,210,63,.35)'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, 76, 0, 7); c.stroke(); c.beginPath(); c.arc(0, 0, 56, 0, 7); c.stroke();
+  c.font = '900 14px Georgia,serif'; c.fillStyle = 'rgba(255,210,63,.42)'; const RN = 'ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊ'; for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; c.fillText(RN[i], Math.cos(a) * 66, Math.sin(a) * 66); }
+  c.lineWidth = 1.6; for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; c.beginPath(); c.moveTo(Math.cos(a) * 12, Math.sin(a) * 12); c.lineTo(Math.cos(a) * 50, Math.sin(a) * 50); c.stroke(); c.beginPath(); c.arc(Math.cos(a) * 50, Math.sin(a) * 50, 3, 0, 7); c.stroke(); }
+  c.restore();
+  c.save(); c.translate(190, 386); c.rotate(-0.05); c.font = 'italic 900 30px Georgia,"Times New Roman",serif'; c.shadowColor = V.or; c.shadowBlur = 12 * k; c.fillStyle = 'rgba(255,233,168,.6)'; c.fillText('Valhalla', 0, 0); c.restore();
+  // le rempart d'Asgard (entre le ciel et la salle) : pierre + boucliers peints
+  g = c.createLinearGradient(0, 236, 0, 262); g.addColorStop(0, '#5c6270'); g.addColorStop(1, '#2a2f3a'); c.fillStyle = g; c.fillRect(0, 238, 400, 22);
+  c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 1; for (let x = 0; x < 400; x += 20) c.strokeRect(x, 238, 20, 11), c.strokeRect(x + 10, 249, 20, 11);
+  [[30, '#c8102e'], [80, '#1d5bd8'], [290, '#1d5bd8'], [338, '#c8102e']].forEach(([x, col]) => bouclierViking(c, x, 249, 11, col));
+  // couloir du lanceur
+  c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(360, 230, 30, 480);
+  c.save(); c.translate(375, 600); c.rotate(-Math.PI / 2); c.font = '800 12px system-ui,sans-serif'; c.fillStyle = 'rgba(255,233,168,.85)'; c.fillText('LANCEUR ▶', 0, 0); c.restore();
+  // soucoupe de Mjöllnir : trou sombre cerclé d'or + plaque
+  c.fillStyle = 'rgba(0,0,0,.5)'; c.beginPath(); c.arc(MJOL.x + 2, MJOL.y + 3, MJOL.r + 4, 0, 7); c.fill();
+  g = c.createRadialGradient(MJOL.x, MJOL.y - 3, 1, MJOL.x, MJOL.y, MJOL.r + 4); g.addColorStop(0, '#000'); g.addColorStop(0.75, '#0b1530'); g.addColorStop(1, '#ffd23f'); c.fillStyle = g; c.beginPath(); c.arc(MJOL.x, MJOL.y, MJOL.r + 4, 0, 7); c.fill();
+  rrect(c, MJOL.x - 50, MJOL.y + 27, 80, 20, 6); c.fillStyle = '#1a1206'; c.fill(); c.strokeStyle = V.or; c.lineWidth = 1.5; c.stroke();
+  c.font = '900 11px Georgia,serif'; c.fillStyle = V.clair; c.fillText('MJÖLLNIR', MJOL.x - 10, MJOL.y + 37.5);
+  // entrée du pont Bifröst (arc-en-ciel) et du looping
+  const arc7 = ['#ff3b3b', '#ff8c1a', '#ffe600', '#2ec27e', '#3a86ff', '#6a3dff', '#b26bff'];
+  c.save(); c.beginPath(); c.moveTo(163, 252); c.lineTo(191, 232); c.lineTo(219, 252); c.lineTo(225, 294); c.lineTo(157, 294); c.closePath(); c.clip();
+  arc7.forEach((col, i) => { c.fillStyle = col; c.globalAlpha = 0.55; c.fillRect(157 + i * 9.8, 230, 9.8, 66); }); c.restore();
+  c.save(); c.translate(191, 306); c.font = '900 10px system-ui,sans-serif'; c.strokeStyle = '#1a1206'; c.lineWidth = 3; c.strokeText('BIFRÖST', 0, 0); c.fillStyle = '#fff'; c.fillText('BIFRÖST', 0, 0); c.restore();
+  dessinerEntreeLoop(c, 'valh');
+  // porte d'Asgard : palais doré derrière, portail d'étoiles
+  for (const [x, h] of [[116, 22], [136, 34], [228, 34], [248, 22]]) { g = c.createLinearGradient(x - 7, 0, x + 7, 0); g.addColorStop(0, '#8a6200'); g.addColorStop(0.5, '#ffe9a8'); g.addColorStop(1, '#7a5a00'); c.fillStyle = g; c.fillRect(x - 6, 62 - h, 12, h + 8); c.beginPath(); c.moveTo(x - 8, 62 - h); c.lineTo(x, 50 - h); c.lineTo(x + 8, 62 - h); c.closePath(); c.fill(); }
+  formeAsgard(c); g = c.createLinearGradient(0, ASGARD.pic, 0, ASGARD.ligne); g.addColorStop(0, '#2a1a6e'); g.addColorStop(1, '#05030f'); c.fillStyle = g; c.fill();
+  c.save(); formeAsgard(c); c.clip(); for (let i = 0; i < 18; i++) { c.fillStyle = `rgba(255,255,255,${0.3 + alea() * 0.6})`; c.beginPath(); c.arc(ASGARD.x1 + alea() * 76, ASGARD.pic + alea() * 30, alea() + 0.3, 0, 7); c.fill(); } c.restore();
+  c.font = '900 11px Georgia,serif'; c.fillStyle = V.clair; c.fillText('ASGARD', ASGARD.cx, 60);
+  dessinerOutlanes(c, true);
+  c.shadowColor = 'rgba(0,0,0,.8)'; c.shadowBlur = 16 * k; c.lineWidth = 12; c.strokeStyle = 'rgba(0,0,0,.6)'; cheminTable(c); c.stroke(); c.shadowBlur = 0;
+  c.restore();
+  // rails dorés
+  const rails = segsV.filter(s => s.rail || s.oneWay);
+  const tracer = (dx = 0, dy = 0) => { c.beginPath(); for (const s of rails) { if (s.type === 'odin') continue; c.moveTo(s.ax + dx, s.ay + dy); c.lineTo(s.bx + dx, s.by + dy); } };
+  tracer(3, 5); c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = 10; c.stroke();
+  tracer(); c.strokeStyle = '#3a2a08'; c.lineWidth = 9; c.stroke();
+  c.save(); c.shadowColor = V.or; c.shadowBlur = 8 * k; tracer(); c.strokeStyle = '#d9a520'; c.lineWidth = 4; c.stroke(); c.restore();
+  tracer(-0.5, -0.8); c.strokeStyle = V.clair; c.lineWidth = 1.3; c.stroke();
+  for (const m of [false, true]) { // corps des slingshots : bois sombre, lueur dorée
+    const X = x => m ? 370 - x : x, forme = () => { c.beginPath(); c.moveTo(X(64), 478); c.lineTo(X(64), 548); c.lineTo(X(100), 582); c.closePath(); };
+    forme(); c.fillStyle = '#2a1a0a'; c.fill(); lueur(forme, V.or, 2.5);
+  }
+  // cadre doré de la porte d'Asgard (poteaux + toit)
+  c.strokeStyle = '#3a2a08'; c.lineWidth = 7; formeAsgard(c); c.stroke(); c.strokeStyle = V.or; c.lineWidth = 3.5; c.stroke();
+  c.fillStyle = '#2a1a0a'; c.fillRect(366, 710, 18, 18); c.strokeStyle = V.or; c.lineWidth = 1.5; c.strokeRect(366, 710, 18, 18);
+}
+const LAMPES_V = [
+  ...ODIN.map(c => ({ x: c.cx, y: 484, r: 13, h: 45, txt: c.lettre, t: 15, on: () => c.bas })),
+  ...CORBEAUX.map((c, i) => ({ x: 166 + i * 38, y: 530, r: 11, h: 210, txt: c.nom[0], t: 11, on: () => c.hors > 0 })),
+  ...[0, 1, 2].map(i => ({ x: 276 + i * 18, y: 395, r: 6, h: 195, on: () => VALH.marteaux % 3 > i })),
+  ...[0, 1, 2].map(i => ({ x: 175 + i * 16, y: 318, r: 5, h: [0, 120, 270][i], on: () => VALH.ponts % 3 > i })),
+  { x: 182, y: 104, r: 13, forme: 'fleche', ang: 0, h: 48, on: () => Math.floor(temps * (VALH.allume ? 7 : 1.5)) % 2 === 0 },
+  { x: 185, y: 574, forme: 'pilule', w: 104, hh: 18, h: 48, txt: 'ODIN TE SAUVE', t: 10, on: () => sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
+];
+function dessinerCorbeau(c) { // Hugin / Munin : silhouette noire aux ailes qui battent, œil doré
+  let a = 1;
+  if (c.chute) a = 1 - c.chute.t / 0.9; else if (c.hors > 0) { if (c.hors > 0.6) return; a = 1 - c.hors / 0.6; }
+  const bat = Math.sin(temps * 14 + c.ph * 3);
+  ctx.save(); ctx.translate(c.x, c.y); ctx.scale(c.dir, 1); if (c.chute) ctx.rotate(c.chute.t * 8); ctx.globalAlpha = Math.max(0, a);
+  ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(0, 0, 2, 0, 0, 22); gg.addColorStop(0, 'rgba(127,216,255,.35)'); gg.addColorStop(1, 'rgba(127,216,255,0)'); ctx.fillStyle = gg; ctx.fillRect(-22, -22, 44, 44); ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#0c0d14'; ctx.strokeStyle = '#7fd8ff'; ctx.lineWidth = 1;
+  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(-2, -1); ctx.quadraticCurveTo(-4 + s * 2, -10 - 8 * bat * s, -10, -14 * bat * s - (s < 0 ? 4 : 0)); ctx.lineTo(4, -2); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  ctx.beginPath(); ctx.ellipse(0, 0, 10, 5.5, 0, 0, 7); ctx.fill(); ctx.stroke(); // corps
+  ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-16, -3); ctx.lineTo(-16, 3); ctx.closePath(); ctx.fill(); // queue
+  ctx.beginPath(); ctx.arc(9, -2.5, 4.2, 0, 7); ctx.fill(); ctx.stroke(); // tête
+  ctx.fillStyle = '#c9a25a'; ctx.beginPath(); ctx.moveTo(12.5, -3); ctx.lineTo(18, -1.5); ctx.lineTo(12.5, -0.5); ctx.closePath(); ctx.fill(); // bec
+  ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(10, -3.3, 1.1, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function renduValh() {
+  const V = VALH_C;
+  // aurores qui ondulent (au-dessus du ciel pré-dessiné)
+  ctx.save(); cheminTable(ctx); ctx.clip(); ctx.globalCompositeOperation = 'lighter';
+  aurore(ctx, 86 + 6 * Math.sin(temps * 0.4), 16, '93,255,176', 0.12 + 0.06 * Math.sin(temps * 0.7), temps * 0.25);
+  aurore(ctx, 132 + 5 * Math.sin(temps * 0.33 + 1), 12, '127,216,255', 0.08 + 0.05 * Math.sin(temps * 0.9 + 2), -temps * 0.2 + 1);
+  ctx.restore();
+  LAMPES_V.forEach((L, i) => { let on = L.on(); if (chaseT > 0 && (i + Math.floor(temps * 24)) % 3 === 0) on = true; dessinerLampe(L, on, L.h); });
+  // porte d'Asgard : le portail s'illumine (jackpot allumé / bille dedans)
+  const joue = balles.some(b => b.lieu === 'asgard');
+  if (joue || VALH.allume) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const p = joue ? 0.75 + 0.25 * Math.sin(temps * 30) : 0.45 + 0.35 * Math.sin(temps * 5);
+    const gg = ctx.createRadialGradient(ASGARD.cx, 50, 4, ASGARD.cx, 50, 84); gg.addColorStop(0, `rgba(255,210,63,${0.6 * p})`); gg.addColorStop(1, 'rgba(255,210,63,0)'); ctx.fillStyle = gg; ctx.fillRect(ASGARD.cx - 84, -34, 168, 168); ctx.restore();
+    if (VALH.allume && !joue) texte('JACKPOT ' + fmt(VALH.jackpot * mult), ASGARD.cx, 128, 12, Math.floor(temps * 4) % 2 ? V.or : '#ffffff');
+  }
+  // élastiques des slingshots (cordes d'or)
+  SLV.forEach(s => {
+    const f = s.flash > 0;
+    if (f) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,210,63,.5)'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
+    ctx.strokeStyle = '#2a1a0a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke();
+    ctx.strokeStyle = f ? '#ffffff' : V.or; ctx.lineWidth = 3.5; ctx.stroke();
+  });
+  // boucliers O-D-I-N
+  const attente = VALH.odinReset > 0 && ODIN.every(c => c.bas), clign = attente && Math.floor(temps * (VALH.odinReset > 3 ? 2 : 5)) % 2 === 0;
+  const cols = ['#c8102e', '#1d5bd8', '#2e8b57', '#c8102e'];
+  ODIN.forEach((c, i) => {
+    const x0 = c.cx - 18;
+    if (c.bas) {
+      rrect(ctx, x0, 444, 36, 8, 3); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fill();
+      if (attente) { rrect(ctx, x0, 426, 36, 26, 5); ctx.setLineDash([4, 3]); ctx.strokeStyle = clign ? V.or : 'rgba(255,255,255,.3)'; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); }
+      return;
+    }
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(c.cx + 3, 442, 18, 12, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(c.cx, 438, 18, 12, 0, 0, 7); ctx.fillStyle = cols[i]; ctx.fill(); ctx.strokeStyle = '#c9d1de'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(c.cx, 438, 18, 12, 0, Math.PI, 2 * Math.PI); ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fill();
+    ctx.font = '900 15px Georgia,"Times New Roman",serif'; ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 3; ctx.strokeText(c.lettre, c.cx, 439); ctx.fillText(c.lettre, c.cx, 439);
+  });
+  if (attente) {
+    const n = Math.max(1, Math.ceil(VALH.odinReset));
+    rrect(ctx, 136, 432, 126, 20, 10); ctx.fillStyle = 'rgba(10,8,2,.9)'; ctx.fill(); ctx.strokeStyle = clign ? '#fff' : V.or; ctx.lineWidth = 2; ctx.stroke();
+    texte('O-D-I-N DANS ' + n + ' s', 199, 442, 12, V.or);
+  }
+  // pierres runiques : granit gris, rune qui s'allume (bleu glacier quand on la frappe)
+  for (const b of RUNES) {
+    const f = Math.max(0, b.flash), r = b.r * (1 + f * 0.35);
+    if (f > 0) { ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(b.x, b.y, r * 0.5, b.x, b.y, r * 2.4); gg.addColorStop(0, 'rgba(127,216,255,.65)'); gg.addColorStop(1, 'rgba(127,216,255,0)'); ctx.fillStyle = gg; ctx.fillRect(b.x - r * 2.4, b.y - r * 2.4, r * 4.8, r * 4.8); ctx.globalCompositeOperation = 'source-over'; }
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.arc(b.x + 3, b.y + 5, r + 3, 0, 7); ctx.fill();
+    const g = ctx.createRadialGradient(b.x - r * 0.35, b.y - r * 0.4, 1, b.x, b.y, r + 3); g.addColorStop(0, '#c9ced8'); g.addColorStop(0.6, '#6f7686'); g.addColorStop(1, '#2f3440');
+    ctx.beginPath(); ctx.arc(b.x, b.y, r + 3, 0, 7); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#d9a520'; ctx.lineWidth = b.petit ? 1.5 : 2.5; ctx.stroke();
+    ctx.font = `900 ${b.petit ? 9 : 20}px Georgia,serif`; const lum = f > 0 ? '#ffffff' : `rgba(127,216,255,${0.65 + 0.3 * Math.sin(temps * 3 + b.x)})`;
+    ctx.save(); ctx.shadowColor = '#7fd8ff'; ctx.shadowBlur = (f > 0 ? 14 : 6) * S * DPR; ctx.fillStyle = lum; ctx.fillText(b.rune, b.x, b.y + 1); ctx.restore();
+  }
+  // Mjöllnir : le marteau est posé à côté ; bille dedans : il frappe la soucoupe (éclairs)
+  const dedans = balles.some(b => b.lieu === 'mjol');
+  ctx.save();
+  if (dedans) { ctx.translate(MJOL.x, MJOL.y - 4); ctx.rotate(-0.4 + 0.8 * Math.abs(Math.sin(temps * 9))); }
+  else { ctx.translate(MJOL.x + 26, MJOL.y - 10); ctx.rotate(0.6); }
+  ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(-2, -2, 6, 28);
+  ctx.fillStyle = '#6b4423'; ctx.fillRect(-2.5, -4, 5, 26); ctx.strokeStyle = '#c9a25a'; ctx.lineWidth = 1; for (let y = 2; y < 20; y += 4) { ctx.beginPath(); ctx.moveTo(-2.5, y); ctx.lineTo(2.5, y + 2); ctx.stroke(); }
+  const gm = ctx.createLinearGradient(-12, -16, 12, -4); gm.addColorStop(0, '#f4f6fa'); gm.addColorStop(1, '#6f7a8c'); rrect(ctx, -12, -17, 24, 14, 3); ctx.fillStyle = gm; ctx.fill(); ctx.strokeStyle = '#30343e'; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.font = '900 8px Georgia,serif'; ctx.fillStyle = '#1d5bd8'; ctx.fillText('ᚦ', 0, -9.5);
+  ctx.restore();
+  if (dedans || VALH.eclairs.length) { ctx.globalCompositeOperation = 'lighter'; for (let i = 0; i < 3; i++) { ctx.strokeStyle = `rgba(191,239,255,${0.5 + 0.5 * Math.random()})`; ctx.lineWidth = 1.5; ctx.beginPath(); let x = MJOL.x, y = MJOL.y; ctx.moveTo(x, y); for (let j = 0; j < 4; j++) { x += rnd(-12, 12); y -= rnd(6, 14); ctx.lineTo(x, y); } ctx.stroke(); } ctx.globalCompositeOperation = 'source-over'; }
+  for (const e of VALH.eclairs) eclairTrace(ctx, e.x, -10, e.x + rnd(-10, 10), MJOL.y, 2.5 + 3 * e.t, '#bfefff');
+  for (const c of CORBEAUX) dessinerCorbeau(c);
+}
+function eclairTrace(c, x0, y0, x1, y1, w, coul) { // éclair en zigzag (avec halo)
+  const n = Math.max(4, Math.round(Math.hypot(x1 - x0, y1 - y0) / 26)), pts = [[x0, y0]];
+  for (let i = 1; i < n; i++) { const t = i / n; pts.push([x0 + (x1 - x0) * t + rnd(-11, 11), y0 + (y1 - y0) * t + rnd(-4, 4)]); } pts.push([x1, y1]);
+  const trace = () => { c.beginPath(); pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); };
+  c.save(); c.globalCompositeOperation = 'lighter'; c.lineCap = 'round'; c.lineJoin = 'round';
+  trace(); c.strokeStyle = coul; c.globalAlpha = 0.35; c.lineWidth = w * 4; c.stroke();
+  c.globalAlpha = 1; trace(); c.strokeStyle = coul; c.lineWidth = w; c.stroke(); trace(); c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1, w * 0.35); c.stroke(); c.restore();
+}
+let dessusValh = null;
+function dessinerDessusValh() { // pont Bifröst (ruban arc-en-ciel surélevé) + looping doré, au-dessus des billes
+  dessusValh = document.createElement('canvas'); dessusValh.width = cv.width; dessusValh.height = cv.height;
+  const c = dessusValh.getContext('2d'), k = S * DPR, P = BIFROST.pts;
+  c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.lineCap = 'round'; c.lineJoin = 'round';
+  const fil = (off, dx, dy) => { c.beginPath(); P.forEach((p, i) => { const q = P[Math.min(P.length - 1, i + 1)], o = P[Math.max(0, i - 1)], tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1, x = p[0] - ty / l * off + dx, y = p[1] + tx / l * off + dy; i ? c.lineTo(x, y) : c.moveTo(x, y); }); };
+  fil(0, 7, 11); c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 20; c.stroke(); // ombre du pont
+  const arc7 = ['#ff3b3b', '#ff8c1a', '#ffe600', '#2ec27e', '#3a86ff', '#6a3dff', '#b26bff'];
+  arc7.forEach((col, i) => { fil(-7.5 + i * 2.5, 0, 0); c.strokeStyle = col; c.globalAlpha = 0.82; c.lineWidth = 2.8; c.stroke(); }); c.globalAlpha = 1;
+  for (const off of [-9.5, 9.5]) { fil(off, 0, 0); c.strokeStyle = '#3a2a08'; c.lineWidth = 3; c.stroke(); fil(off, 0, 0); c.strokeStyle = '#ffe9a8'; c.lineWidth = 1.3; c.stroke(); }
+  dessinerLooping(c, 'valh', k);
+}
+function renduValhDessus(sx, sy) {
+  if (!dessusValh) dessinerDessusValh();
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, sx * DPR, sy * DPR); ctx.drawImage(dessusValh, 0, 0); ctx.restore();
+  const tb = 2 * R + 4, to = 2 * R + 14;
+  for (const b of balles) {
+    if (b.pont) { // sur le pont : un peu plus grosse, traînée arc-en-ciel
+      ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(SPR.haloV, b.x - 26, b.y - 26, 52, 52); ctx.globalCompositeOperation = 'source-over';
+      ctx.drawImage(SPR.ombre, b.x + 7 - to / 2, b.y + 11 - to / 2, to, to); ctx.drawImage(SPR.balle, b.x - tb * 0.575, b.y - tb * 0.575, tb * 1.15, tb * 1.15);
+    } else if (b.boucle) {
+      const h = hauteurLoop(b.boucle.d), z = 1.15 + 0.3 * h;
+      ctx.globalAlpha = 0.8 - 0.4 * h; ctx.drawImage(SPR.ombre, b.x + 7 + 10 * h - to / 2, b.y + 11 + 16 * h - to / 2, to, to); ctx.globalAlpha = 1;
+      ctx.drawImage(SPR.balle, b.x - tb * z / 2, b.y - tb * z / 2, tb * z, tb * z);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- L'arène du DUEL DES DIEUX : au-dessus des nuages, la porte d'Asgard en haut
+function dessinerFondDieu() {
+  fondDieu = document.createElement('canvas'); fondDieu.width = cv.width; fondDieu.height = cv.height;
+  const c = fondDieu.getContext('2d'), k = S * DPR, V = VALH_C;
+  c.fillStyle = '#03050f'; c.fillRect(0, 0, fondDieu.width, fondDieu.height);
+  c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineCap = 'round'; c.lineJoin = 'round';
+  let graine = 41; const alea = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+  c.save(); cheminTable(c); c.clip();
+  let g = c.createLinearGradient(0, 0, 0, 740); g.addColorStop(0, '#1a2a6e'); g.addColorStop(0.35, '#3d6fc4'); g.addColorStop(0.7, '#8cb8ec'); g.addColorStop(1, '#d6e6fb'); c.fillStyle = g; c.fillRect(0, 0, 400, 740);
+  for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(255,255,255,${0.2 + alea() * 0.6})`; c.beginPath(); c.arc(alea() * 400, alea() * 200, alea() * 1.2 + 0.3, 0, 7); c.fill(); }
+  // rayons de lumière divine depuis la porte
+  c.save(); c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 9; i++) { const a = Math.PI * (0.18 + i * 0.08); g = c.createLinearGradient(185, 80, 185 + Math.cos(a) * 600, 80 + Math.sin(a) * 600); g.addColorStop(0, 'rgba(255,233,168,.22)'); g.addColorStop(1, 'rgba(255,233,168,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(185, 80); c.lineTo(185 + Math.cos(a - 0.03) * 700, 80 + Math.sin(a - 0.03) * 700); c.lineTo(185 + Math.cos(a + 0.03) * 700, 80 + Math.sin(a + 0.03) * 700); c.closePath(); c.fill(); } c.restore();
+  // mer de nuages (bas et côtés)
+  for (let i = 0; i < 46; i++) { const x = alea() * 420 - 10, y = 300 + alea() * 450, r = 18 + alea() * 34; g = c.createRadialGradient(x - r * 0.3, y - r * 0.4, 2, x, y, r); g.addColorStop(0, 'rgba(255,255,255,.75)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
+  // dalles de marbre flottantes sous la porte (zone du but) + arc-en-ciel
+  c.save(); c.globalAlpha = 0.5; ['#ff3b3b', '#ff8c1a', '#ffe600', '#2ec27e', '#3a86ff', '#6a3dff'].forEach((col, i) => { c.strokeStyle = col; c.lineWidth = 5; c.beginPath(); c.arc(185, 420, 250 - i * 5, Math.PI * 1.08, Math.PI * 1.92); c.stroke(); }); c.restore();
+  // la porte d'Asgard (derrière les flippers du dieu) : grande arche dorée, portail lumineux
+  g = c.createRadialGradient(185, 80, 6, 185, 80, 120); g.addColorStop(0, '#fffbe6'); g.addColorStop(0.35, '#ffe9a8'); g.addColorStop(0.7, 'rgba(255,210,63,.45)'); g.addColorStop(1, 'rgba(255,210,63,0)');
+  c.fillStyle = g; c.fillRect(40, -40, 290, 240);
+  for (const x of [118, 252]) { g = c.createLinearGradient(x - 9, 0, x + 9, 0); g.addColorStop(0, '#8a6200'); g.addColorStop(0.5, '#ffe9a8'); g.addColorStop(1, '#7a5a00'); c.fillStyle = g; c.fillRect(x - 8, 30, 16, 120); c.fillRect(x - 12, 26, 24, 8); }
+  c.beginPath(); c.arc(185, 34, 75, Math.PI, 0); c.strokeStyle = '#7a5a00'; c.lineWidth = 12; c.stroke(); c.strokeStyle = '#ffd23f'; c.lineWidth = 7; c.stroke();
+  c.font = '900 12px Georgia,serif'; c.fillStyle = '#7a5a00'; c.fillText('ᚨᛋᚷᚨᚱᛞ', 185, 152); // « Asgard » en runes, juste derrière la ligne de but
+  c.save(); c.translate(185, 300); c.font = 'italic 900 26px Georgia,"Times New Roman",serif'; c.fillStyle = 'rgba(255,255,255,.55)'; c.shadowColor = 'rgba(255,210,63,.8)'; c.shadowBlur = 10 * k; c.fillText('Le Duel des Dieux', 0, 0); c.restore();
+  c.fillStyle = 'rgba(10,20,60,.35)'; c.fillRect(360, 230, 30, 480);
+  c.save(); c.translate(375, 600); c.rotate(-Math.PI / 2); c.font = '800 12px system-ui,sans-serif'; c.fillStyle = 'rgba(255,255,255,.85)'; c.fillText('LANCEUR ▶', 0, 0); c.restore();
+  dessinerOutlanes(c, false);
+  c.shadowColor = 'rgba(0,30,90,.6)'; c.shadowBlur = 16 * k; c.lineWidth = 12; c.strokeStyle = 'rgba(0,30,90,.35)'; cheminTable(c); c.stroke(); c.shadowBlur = 0;
+  c.restore();
+  const rails = segsD.filter(s => s.rail || s.oneWay);
+  const tracer = (dx = 0, dy = 0) => { c.beginPath(); for (const s of rails) { c.moveTo(s.ax + dx, s.ay + dy); c.lineTo(s.bx + dx, s.by + dy); } };
+  tracer(3, 5); c.strokeStyle = 'rgba(0,0,40,.35)'; c.lineWidth = 10; c.stroke();
+  tracer(); c.strokeStyle = '#7a5a00'; c.lineWidth = 8; c.stroke(); tracer(); c.strokeStyle = '#ffd23f'; c.lineWidth = 4; c.stroke(); tracer(-0.5, -0.8); c.strokeStyle = '#fffbe6'; c.lineWidth = 1.3; c.stroke();
+  for (const m of [false, true]) { const X = x => m ? 370 - x : x; c.beginPath(); c.moveTo(X(64), 478); c.lineTo(X(64), 548); c.lineTo(X(100), 582); c.closePath(); c.fillStyle = '#f4f6fa'; c.fill(); c.strokeStyle = '#d9a520'; c.lineWidth = 2.5; c.stroke(); }
+  c.fillStyle = '#ffd23f'; c.fillRect(366, 710, 18, 18);
+}
+function flipperDore(f, gele, alerte) { // flippers du Valhalla et du duel : or, contour bleu glacier (gelé : bloc de glace)
+  cheminFlip(f, 4, f.haut ? -2 : 6); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill();
+  cheminFlip(f, 0, 0); const g = ctx.createLinearGradient(f.px, f.py - 10, f.px, f.py + 10); g.addColorStop(0, '#fff6d0'); g.addColorStop(1, '#d9a520'); ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = f.haut ? '#7a5a00' : f.appui && !gele ? '#ffffff' : '#1d5bd8'; ctx.lineWidth = 3.5; ctx.stroke();
+  ctx.beginPath(); ctx.arc(f.px, f.py, 4.5, 0, 7); ctx.fillStyle = '#3a2a08'; ctx.fill();
+  if (gele > 0) { // gelé par l'éclair : bloc de glace qui fond
+    ctx.save(); ctx.globalAlpha = Math.min(1, gele / 0.3); cheminFlip(f, 0, 0); ctx.lineWidth = 9; ctx.strokeStyle = 'rgba(191,239,255,.75)'; ctx.stroke(); ctx.fillStyle = 'rgba(191,239,255,.55)'; ctx.fill();
+    const a = flipAngle(f); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; for (let i = 1; i <= 4; i++) { const x = f.px + Math.cos(a) * f.L * i / 5, y = f.py + Math.sin(a) * f.L * i / 5; ctx.beginPath(); ctx.moveTo(x - 4, y - 4); ctx.lineTo(x + 4, y + 4); ctx.moveTo(x + 4, y - 4); ctx.lineTo(x - 4, y + 4); ctx.stroke(); }
+    ctx.restore();
+  }
+  if (alerte > 0) { // l'éclair arrive : nuage d'orage qui clignote au-dessus du flipper
+    const a = flipAngle(f), x = f.px + Math.cos(a) * f.L * 0.55, y = f.py - 34, cl = Math.floor(temps * 12) % 2 === 0;
+    ctx.save(); ctx.globalAlpha = 0.9; ctx.fillStyle = cl ? '#3a4466' : '#5b6688';
+    [[-10, 2, 9], [0, -3, 11], [11, 1, 9], [4, 5, 9], [-4, 5, 8]].forEach(([dx, dy, r]) => { ctx.beginPath(); ctx.arc(x + dx, y + dy, r, 0, 7); ctx.fill(); });
+    texte('⚡', x, y + 20, 16, cl ? '#ffe600' : '#ffffff'); ctx.restore();
+  }
+}
+function renduDieu() {
+  const C = combat;
+  // la porte d'Asgard respire ; touchée : flash doré
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; const p = 0.5 + 0.2 * Math.sin(temps * 3) + (C && C.coup > 0 ? 0.5 : 0);
+  const gg = ctx.createRadialGradient(185, 90, 6, 185, 90, 110); gg.addColorStop(0, `rgba(255,233,168,${0.35 * p})`); gg.addColorStop(1, 'rgba(255,210,63,0)'); ctx.fillStyle = gg; ctx.fillRect(75, -20, 220, 220); ctx.restore();
+  // le dieu (derrière ses flippers, dans sa porte)
+  if (C && C.phase !== 'alerte') dessinerCombat();
+  SLD.forEach(s => { const f = s.flash > 0; ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.strokeStyle = f ? '#fff6b0' : '#ffd23f'; ctx.lineWidth = 6; ctx.stroke(); ctx.strokeStyle = '#7a5a00'; ctx.lineWidth = 1.5; ctx.stroke(); });
+  for (const f of FLD) flipperDore(f, 0, 0);
+  if (C && C.phase === 'combat') { // plaque : buts à marquer (orbes d'or) et tes cœurs
+    const B = C.boss, titre = '⚡ ' + titreBoss(-1, B.genre).toUpperCase() + ' · ' + B.nom;
+    ctx.save(); ctx.globalAlpha = 0.85; rrect(ctx, 105, 228, 160, 44, 12); ctx.fillStyle = 'rgba(10,20,60,.82)'; ctx.fill(); ctx.strokeStyle = '#7fd8ff'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+    ctx.font = '900 11px system-ui,-apple-system,sans-serif'; let t = titre; while (ctx.measureText(t).width > 148 && t.length > 4) t = t.slice(0, -2) + '…';
+    ctx.fillStyle = '#7fd8ff'; ctx.fillText(t, 185, 239);
+    ctx.font = '900 9px system-ui,sans-serif'; ctx.fillStyle = '#ffe9a8'; ctx.fillText('BUTS', 128, 258);
+    for (let i = 0; i < C.pvMax; i++) { const on = i < C.pvMax - C.pv; ctx.beginPath(); ctx.arc(150 + i * 13, 258, 5, 0, 7); ctx.fillStyle = on ? '#ffd23f' : 'rgba(255,255,255,.2)'; ctx.fill(); ctx.strokeStyle = '#7a5a00'; ctx.lineWidth = 1; ctx.stroke(); }
+    ctx.fillStyle = '#ffb3b3'; ctx.fillText('TOI', 205, 258); for (let i = 0; i < C.N.billes; i++) coeur(ctx, 224 + i * 12, 253, 10, i < C.billes);
+    if (C.eclair) { const f = C.eclair.f, a = flipAngle(f); eclairTrace(ctx, C.x, C.y + 30, f.px + Math.cos(a) * f.L * 0.6, f.py + Math.sin(a) * f.L * 0.6, 3 * C.eclair.t / 0.35 + 1, '#bfefff'); }
+  }
+}
+
+// ---------------------------------------------------------------- La déchirure (dessinée par-dessus tout, en pixels de l'écran)
+function renduDechire() {
+  const D = DECH; if (!D) return;
+  const px = ([x, y]) => [(OX + x * S) * DPR, (OY + y * S * KY) * DPR], P = D.pts.map(px), W = cv.width, H = cv.height;
+  P[0][1] = Math.min(P[0][1], 0); P[P.length - 1][1] = Math.max(P[P.length - 1][1], H);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (D.phase === 'eclair') {
+    if (D.t >= T_ECLAIR - 0.12 && !D.img) { D.img = document.createElement('canvas'); D.img.width = W; D.img.height = H; D.img.getContext('2d').drawImage(cv, 0, 0); } // l'ancienne table, figée
+    const k = Math.min(1, D.t / 0.22), n = Math.max(2, Math.round(P.length * k)); // l'éclair descend, puis la fissure brille
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const trace = () => { ctx.beginPath(); P.slice(0, n).forEach(([x, y], i) => i ? ctx.lineTo(x + rnd(-2, 2) * DPR, y) : ctx.moveTo(x, y)); };
+    const vie = D.t < 0.4 ? 1 : 0.6 + 0.4 * Math.sin(D.t * 40);
+    trace(); ctx.strokeStyle = `rgba(191,239,255,${0.4 * vie})`; ctx.lineWidth = 26 * DPR; ctx.stroke();
+    trace(); ctx.strokeStyle = `rgba(255,233,168,${0.8 * vie})`; ctx.lineWidth = 8 * DPR; ctx.stroke();
+    trace(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 3 * DPR; ctx.stroke();
+    ctx.restore(); return;
+  }
+  if (!D.img) return;
+  const f = fracDech(D.t), off = f * (W / 2 + 60 * DPR), rot = f * 0.16;
+  const moitie = (sg) => { // sg -1 : moitié gauche ; 1 : moitié droite (elle pivote un peu vers l'extérieur, comme une porte)
+    ctx.save(); ctx.translate(sg * off, 0); ctx.translate(sg < 0 ? 0 : W, H); ctx.rotate(-sg * rot); ctx.translate(sg < 0 ? 0 : -W, -H);
+    ctx.beginPath(); ctx.moveTo(sg < 0 ? 0 : W, 0); P.forEach(([x, y]) => ctx.lineTo(x, y)); ctx.lineTo(sg < 0 ? 0 : W, H); ctx.closePath();
+    ctx.save(); ctx.clip(); ctx.drawImage(D.img, 0, 0); ctx.fillStyle = `rgba(0,0,0,${0.25 * f})`; ctx.fillRect(0, 0, W, H); ctx.restore();
+    ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); P.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); // bord brûlant de la fissure
+    ctx.strokeStyle = 'rgba(255,190,80,.55)'; ctx.lineWidth = 10 * DPR; ctx.stroke(); ctx.strokeStyle = 'rgba(255,240,200,.9)'; ctx.lineWidth = 2.5 * DPR; ctx.stroke();
+    ctx.restore();
+  };
+  moitie(-1); moitie(1);
+  if (f < 1) { // lumière dorée du Valhalla qui passe par la brèche
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createLinearGradient(W / 2 - off - 40 * DPR, 0, W / 2 + off + 40 * DPR, 0);
+    g.addColorStop(0, 'rgba(255,210,63,0)'); g.addColorStop(0.5, `rgba(255,233,168,${0.45 * (1 - f)})`); g.addColorStop(1, 'rgba(255,210,63,0)'); ctx.fillStyle = g; ctx.fillRect(W / 2 - off - 40 * DPR, 0, 2 * off + 80 * DPR, H); ctx.restore();
+  }
+}
+
 // ---------------------------------------------------------------- Boss : déguisements (autour de la photo) et arènes
 // Le personnage est dessiné autour de l'origine = centre de la tête (rayon 20) : corps dessous, arme dans la main droite.
 // n°3 Garde : casque de fer + lance ; n°2 Bourreau : cagoule noire + hache / Sorcière : chapeau pointu + balai ;
@@ -2548,15 +3315,20 @@ function persoCorps(c, rang, F, pas) {
     const g = c.createLinearGradient(-40, 0, 40, 0); g.addColorStop(0, '#3b0d5c'); g.addColorStop(0.5, '#0d0418'); g.addColorStop(1, '#3b0d5c'); c.fillStyle = g; c.fill();
     c.strokeStyle = '#b26bff'; c.lineWidth = 2; c.stroke();
   }
+  if (rang === -1) { // dieu / déesse : cape céleste bordée d'or, derrière tout
+    c.beginPath(); c.moveTo(-14, 12); c.quadraticCurveTo(-46, 38, -40, 64); c.lineTo(40, 64); c.quadraticCurveTo(46, 38, 14, 12); c.closePath();
+    const g = c.createLinearGradient(-40, 0, 40, 0); g.addColorStop(0, '#1d5bd8'); g.addColorStop(0.5, '#7fd8ff'); g.addColorStop(1, '#1d5bd8'); c.fillStyle = g; c.fill();
+    c.strokeStyle = '#ffd23f'; c.lineWidth = 2.2; c.stroke();
+  }
   if (rang === 1) { // cape rouge bordée d'or, derrière tout
     c.beginPath(); c.moveTo(-14, 14); c.quadraticCurveTo(-36, 40, -31, 60); c.lineTo(31, 60); c.quadraticCurveTo(36, 40, 14, 14); c.closePath();
     const g = c.createLinearGradient(-31, 0, 31, 0); g.addColorStop(0, '#6e0b14'); g.addColorStop(0.5, '#d61f2e'); g.addColorStop(1, '#6e0b14'); c.fillStyle = g; c.fill();
     c.strokeStyle = '#ffd23f'; c.lineWidth = 2; c.stroke();
   }
   // jambes + souliers
-  c.strokeStyle = rang === 3 ? '#3d4352' : '#141414'; c.lineWidth = 6;
+  c.strokeStyle = rang === 3 ? '#3d4352' : rang === -1 ? '#f2c79b' : '#141414'; c.lineWidth = 6;
   c.beginPath(); c.moveTo(-7, 40); c.lineTo(-7 + jambe, 54); c.moveTo(7, 40); c.lineTo(7 - jambe, 54); c.stroke();
-  c.fillStyle = '#2a1a0a'; c.beginPath(); c.ellipse(-8 + jambe, 56, 5, 3, 0, 0, 7); c.ellipse(8 - jambe, 56, 5, 3, 0, 0, 7); c.fill();
+  c.fillStyle = rang === -1 ? '#d9a520' : '#2a1a0a'; c.beginPath(); c.ellipse(-8 + jambe, 56, 5, 3, 0, 0, 7); c.ellipse(8 - jambe, 56, 5, 3, 0, 0, 7); c.fill();
   const tronc = (coul, bas = 44, l = 17) => { c.beginPath(); c.moveTo(-13, 13 - bob); c.lineTo(13, 13 - bob); c.lineTo(l, bas); c.lineTo(-l, bas); c.closePath(); c.fillStyle = coul; c.fill(); c.strokeStyle = 'rgba(0,0,0,.65)'; c.lineWidth = 1.5; c.stroke(); };
   let manche = '#8d96a6';
   if (rang === 3) { // cotte de mailles + tabard rouge à croix jaune
@@ -2565,6 +3337,12 @@ function persoCorps(c, rang, F, pas) {
     c.fillStyle = '#ffd23f'; c.fillRect(-1.6, 18, 3.2, 20); c.fillRect(-6, 24, 12, 3.2);
   } else if (rang === 2 && !F) { tronc('#1b1b1b'); c.fillStyle = '#7a4a1d'; c.fillRect(-16, 33, 32, 4); c.fillStyle = '#ffd23f'; c.fillRect(-2.5, 32.5, 5, 5); manche = '#f2c79b'; }
   else if (rang === 2) { tronc('#1b1b1b', 52, 22); c.fillStyle = '#ff8c1a'; c.fillRect(-15, 30, 30, 4); manche = '#1b1b1b'; c.fillStyle = '#ffd23f'; c.font = '8px system-ui'; c.textAlign = 'center'; c.fillText('★', -8, 44); c.fillText('★', 9, 40); }
+  else if (rang === -1) { // toge blanche, plastron et ceinture d'or
+    tronc('#f4f6fa', F ? 52 : 44, F ? 22 : 17); manche = '#f4f6fa';
+    c.fillStyle = '#ffd23f'; c.fillRect(F ? -18 : -16, 31, F ? 36 : 32, 4); c.strokeStyle = '#7a5a00'; c.lineWidth = 1; c.strokeRect(F ? -18 : -16, 31, F ? 36 : 32, 4);
+    c.strokeStyle = '#d9a520'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-9, 14 - bob); c.quadraticCurveTo(0, 24, 9, 14 - bob); c.moveTo(-6, 18 - bob); c.quadraticCurveTo(0, 26, 6, 18 - bob); c.stroke();
+    c.fillStyle = '#7fd8ff'; c.beginPath(); c.arc(0, 33, 2.6, 0, 7); c.fill();
+  }
   else if (rang === 0) { tronc('#1a0b2e', 46, 18); c.fillStyle = '#b26bff'; c.fillRect(-16, 32, 32, 3.5); c.fillStyle = '#e8d6ff'; c.beginPath(); c.arc(0, 33.7, 3, 0, 7); c.fill(); manche = '#1a0b2e'; }
   else { // roi / reine : tunique dorée, col d'hermine
     tronc(F ? '#3a86ff' : '#ffd23f', F ? 50 : 44, F ? 20 : 17); manche = F ? '#3a86ff' : '#ffd23f';
@@ -2590,6 +3368,16 @@ function persoCorps(c, rang, F, pas) {
     c.beginPath(); c.moveTo(17, 42); c.lineTo(5, 66); c.lineTo(31, 66); c.lineTo(23, 42); c.closePath(); c.fillStyle = '#e0a72b'; c.fill(); c.strokeStyle = '#7a4f00'; c.lineWidth = 1.2; c.stroke();
     c.beginPath(); c.moveTo(12, 64); c.lineTo(18, 46); c.moveTo(24, 64); c.lineTo(21, 46); c.stroke();
     c.strokeStyle = '#d61f2e'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(16, 46); c.lineTo(24, 46); c.stroke();
+  } else if (rang === -1 && !F) { // Mjöllnir, le marteau de Thor
+    c.strokeStyle = '#6b4423'; c.lineWidth = 4; c.beginPath(); c.moveTo(25, -12); c.lineTo(25, 44); c.stroke();
+    c.strokeStyle = '#c9a25a'; c.lineWidth = 1; for (let y = -6; y < 40; y += 6) { c.beginPath(); c.moveTo(23, y); c.lineTo(27, y + 3); c.stroke(); }
+    const g = c.createLinearGradient(12, -28, 38, -10); g.addColorStop(0, '#ffffff'); g.addColorStop(0.5, '#aeb6c6'); g.addColorStop(1, '#4a5160');
+    rrect(c, 12, -28, 26, 16, 3); c.fillStyle = g; c.fill(); c.strokeStyle = '#30343e'; c.lineWidth = 1.4; c.stroke();
+    c.font = '900 9px Georgia,serif'; c.fillStyle = '#1d5bd8'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('ᚦ', 25, -19.5);
+    c.strokeStyle = 'rgba(127,216,255,.85)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(38, -24); c.lineTo(43, -30); c.lineTo(41, -22); c.lineTo(47, -27); c.stroke(); // étincelle
+  } else if (rang === -1) { // lance d'or de la déesse
+    c.strokeStyle = '#7a5a00'; c.lineWidth = 4.5; c.beginPath(); c.moveTo(25, -46); c.lineTo(25, 58); c.stroke(); c.strokeStyle = '#ffd23f'; c.lineWidth = 2.5; c.stroke();
+    c.beginPath(); c.moveTo(25, -64); c.lineTo(31, -48); c.lineTo(25, -42); c.lineTo(19, -48); c.closePath(); const g = c.createLinearGradient(19, -64, 31, -42); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#7fd8ff'); c.fillStyle = g; c.fill(); c.strokeStyle = '#1d5bd8'; c.lineWidth = 1.2; c.stroke();
   } else if (rang === 0) { // bâton noir à orbe violet
     c.strokeStyle = '#000'; c.lineWidth = 5; c.beginPath(); c.moveTo(25, -22); c.lineTo(25, 58); c.stroke(); c.strokeStyle = '#4a2a6a'; c.lineWidth = 3; c.stroke();
     const g = c.createRadialGradient(23, -33, 1, 25, -31, 11); g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, '#d9b3ff'); g.addColorStop(1, '#5b1f9a');
@@ -2621,6 +3409,18 @@ function persoChapeau(c, rang, F) {
     c.beginPath(); c.ellipse(0, -14, 33, 7, 0, 0, 7); c.fillStyle = '#262626'; c.fill(); c.strokeStyle = '#000'; c.stroke();
     c.beginPath(); c.moveTo(-15.5, -17); c.lineTo(15.5, -17); c.lineTo(14.5, -23); c.lineTo(-14, -23); c.closePath(); c.fillStyle = '#ff8c1a'; c.fill();
     c.strokeStyle = '#ffd23f'; c.lineWidth = 1.6; c.strokeRect(-3.5, -23, 7, 6);
+  } else if (rang === -1) { // casque ailé (dieu : argent ; déesse : or)
+    for (const sg of [-1, 1]) {
+      c.beginPath(); c.moveTo(sg * 17, -16); c.quadraticCurveTo(sg * 28, -30, sg * 42, -46); c.quadraticCurveTo(sg * 37, -36, sg * 41, -33); c.quadraticCurveTo(sg * 33, -29, sg * 37, -24); c.quadraticCurveTo(sg * 29, -22, sg * 31, -17); c.quadraticCurveTo(sg * 24, -15, sg * 21, -9); c.closePath();
+      c.fillStyle = '#ffffff'; c.fill(); c.strokeStyle = '#9aa6c4'; c.lineWidth = 1.2; c.stroke();
+      c.beginPath(); c.moveTo(sg * 22, -15); c.lineTo(sg * 35, -36); c.moveTo(sg * 22, -13); c.lineTo(sg * 31, -25); c.stroke();
+    }
+    c.save(); c.translate(0, -8); c.beginPath(); c.arc(0, -3, 21.5, Math.PI, 0); c.closePath();
+    g = c.createLinearGradient(-12, -26, 12, 0); if (F) { g.addColorStop(0, '#fff3c4'); g.addColorStop(0.5, '#ffd23f'); g.addColorStop(1, '#8a6200'); } else { g.addColorStop(0, '#ffffff'); g.addColorStop(0.45, '#c9d1de'); g.addColorStop(1, '#5c6270'); }
+    c.fillStyle = g; c.fill(); c.strokeStyle = F ? '#7a5a00' : '#30343e'; c.lineWidth = 1.4; c.stroke();
+    rrect(c, -22, -6, 44, 6, 2); c.fillStyle = F ? '#e0a72b' : '#ffd23f'; c.fill(); c.strokeStyle = '#7a5a00'; c.lineWidth = 1; c.stroke();
+    c.fillStyle = '#7fd8ff'; c.beginPath(); c.moveTo(0, -11); c.lineTo(4, -5); c.lineTo(0, 1); c.lineTo(-4, -5); c.closePath(); c.fill(); c.strokeStyle = '#1d5bd8'; c.stroke();
+    c.restore();
   } else if (rang === 0) { // cornes + couronne noire à pointes et pierres violettes
     for (const sg of [-1, 1]) { c.beginPath(); c.moveTo(sg * 13, -16); c.quadraticCurveTo(sg * 30, -24, sg * 30, -46); c.quadraticCurveTo(sg * 22, -30, sg * 8, -22); c.closePath(); c.fillStyle = '#efe6d6'; c.fill(); c.strokeStyle = '#3a2a1a'; c.lineWidth = 1.2; c.stroke(); }
     c.beginPath(); c.moveTo(-17, -16); c.lineTo(-17, -30); c.lineTo(-10, -24); c.lineTo(-5, -40); c.lineTo(0, -26); c.lineTo(5, -40); c.lineTo(10, -24); c.lineTo(17, -30); c.lineTo(17, -16); c.closePath();
@@ -2735,6 +3535,7 @@ function renduBoss() { // éléments animés de l'arène : torches, bumpers, él
     else { const gg = ctx.createRadialGradient(-r * 0.35, -r * 0.4, 1, 0, 0, r + 3); gg.addColorStop(0, '#ffffff'); gg.addColorStop(0.4, rang === 0 ? '#b26bff' : '#ffd23f'); gg.addColorStop(1, rang === 0 ? '#2a0f45' : '#8a6200'); ctx.beginPath(); ctx.arc(0, 0, r + 3, 0, 7); ctx.fillStyle = gg; ctx.fill(); ctx.strokeStyle = '#7a5a00'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#c8102e'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fill(); }
     ctx.restore();
   }
+  if (C && C.ultime && C.sceaux && C.phase === 'combat') renduSceaux(C);
   SLB.forEach(s => { // élastiques
     const f = s.flash > 0;
     ctx.beginPath(); ctx.moveTo(s.ax + 1.5, s.ay + 2.5); ctx.lineTo(s.bx + 1.5, s.by + 2.5); ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 7; ctx.stroke();
@@ -2754,34 +3555,73 @@ function renduBoss() { // éléments animés de l'arène : torches, bumpers, él
   if (ouv > 0) { ctx.fillStyle = `rgba(0,0,0,${0.5 * ouv})`; ctx.fillRect(x - w / 2, y - 6, w, h + 6); }
   ctx.restore();
 }
+function renduSceaux(C) { // les 4 cristaux (rayons vers le bouclier de l'empereur), les gardes de pierre, les comptes à rebours
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const c of C.sceaux) if (c.on) { ctx.strokeStyle = `rgba(178,107,255,${0.35 + 0.2 * Math.sin(temps * 9 + c.x)})`; ctx.lineWidth = 2.5; ctx.setLineDash([5, 6]); ctx.lineDashOffset = temps * 40; ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(C.x, C.y + 8); ctx.stroke(); }
+  ctx.setLineDash([]); ctx.restore();
+  for (const c of C.sceaux) {
+    ctx.save(); ctx.translate(c.x, c.y);
+    if (c.on) { ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(0, 0, 2, 0, 0, 26 + 8 * c.flash); gg.addColorStop(0, 'rgba(217,179,255,.7)'); gg.addColorStop(1, 'rgba(178,107,255,0)'); ctx.fillStyle = gg; ctx.fillRect(-34, -34, 68, 68); ctx.globalCompositeOperation = 'source-over'; }
+    ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(10, -4); ctx.lineTo(7, 11); ctx.lineTo(-7, 11); ctx.lineTo(-10, -4); ctx.closePath(); // cristal taillé
+    const g = ctx.createLinearGradient(-10, -15, 10, 11);
+    if (c.on) { g.addColorStop(0, '#ffffff'); g.addColorStop(0.4, '#d9b3ff'); g.addColorStop(1, '#5b1f9a'); } else { g.addColorStop(0, '#5a546a'); g.addColorStop(1, '#1a1426'); }
+    ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = c.on ? '#f3e8ff' : '#3a3346'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(0, 11); ctx.moveTo(-10, -4); ctx.lineTo(10, -4); ctx.strokeStyle = c.on ? 'rgba(255,255,255,.5)' : 'rgba(0,0,0,.4)'; ctx.lineWidth = 1; ctx.stroke();
+    if (!c.on) { ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.beginPath(); ctx.moveTo(-5, -8); ctx.lineTo(1, 0); ctx.lineTo(-3, 7); ctx.stroke(); } // éteint : fêlé
+    ctx.restore();
+  }
+  for (const gd of C.gardes) { // garde de pierre : bloc de granit à heaume
+    ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.arc(gd.x + 3, gd.y + 5, gd.r + 2, 0, 7); ctx.fill();
+    const g = ctx.createRadialGradient(gd.x - 5, gd.y - 6, 1, gd.x, gd.y, gd.r + 2); g.addColorStop(0, gd.flash > 0 ? '#ffffff' : '#b9bec8'); g.addColorStop(1, '#3d4352');
+    ctx.beginPath(); ctx.arc(gd.x, gd.y, gd.r + 2, 0, 7); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#1d2230'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#1d2230'; ctx.fillRect(gd.x - 9, gd.y - 3, 18, 3.5); ctx.fillRect(gd.x - 1.5, gd.y - 3, 3, 10); // fente du heaume
+    ctx.fillStyle = '#b26bff'; ctx.beginPath(); ctx.arc(gd.x - 5, gd.y - 1.2, 1.3, 0, 7); ctx.arc(gd.x + 5, gd.y - 1.2, 1.3, 0, 7); ctx.fill();
+  }
+  if (C.ouvert > 0) texte('FRAPPE ! ' + Math.ceil(C.ouvert), 185, C.y + 96, 18, Math.floor(temps * 6) % 2 ? '#ffffff' : '#d9b3ff');
+  else if (C.sceauT > 0) { const n = Math.ceil(C.sceauT), urg = C.sceauT <= 4;
+    rrect(ctx, 125, 296, 120, 18, 9); ctx.fillStyle = 'rgba(10,4,20,.85)'; ctx.fill(); ctx.strokeStyle = urg && Math.floor(temps * 5) % 2 ? '#fff' : '#b26bff'; ctx.lineWidth = 1.5; ctx.stroke();
+    texte('SCEAUX · ' + n + ' s', 185, 305, 11, urg ? '#ff9ad5' : '#d9b3ff'); }
+}
 function dessinerCombat() { // le boss (au-dessus des billes), sa plaque (titre + cœurs), ses effets
   const C = combat, B = C.boss, s = (C.echelle || 1) * 1.05;
   if (C.phase !== 'alerte') {
     const mort = C.phase === 'mort', km = mort ? Math.min(1, C.t / 1.5) : 0;
-    if (km < 1) {
-      ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(C.x + 4, C.y + 54 * s, 22 * s * (1 - km), 6 * s * (1 - km), 0, 0, 7); ctx.fill();
+    if (km < 1 && !C.cache) {
+      if (C.ultime && C.phase === 'combat' && C.ouvert > 0) { // bouclier tombé : il est vulnérable (halo blanc qui palpite)
+        ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(C.x, C.y + 8, 8, C.x, C.y + 8, 66); gg.addColorStop(0, `rgba(255,255,255,${0.3 + 0.2 * Math.sin(temps * 16)})`); gg.addColorStop(1, 'rgba(217,179,255,0)'); ctx.fillStyle = gg; ctx.fillRect(C.x - 66, C.y - 58, 132, 132); ctx.globalCompositeOperation = 'source-over';
+      }
+      if (!C.dieu) { ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(C.x + 4, C.y + 54 * s, 22 * s * (1 - km), 6 * s * (1 - km), 0, 0, 7); ctx.fill(); }
+      else { ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(C.x, C.y + 10, 10, C.x, C.y + 10, 70); gg.addColorStop(0, 'rgba(255,240,190,.45)'); gg.addColorStop(1, 'rgba(127,216,255,0)'); ctx.fillStyle = gg; ctx.fillRect(C.x - 70, C.y - 60, 140, 140); ctx.globalCompositeOperation = 'source-over'; } // auréole divine
       if (C.rage && !mort) { ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(C.x, C.y + 8, 10, C.x, C.y + 8, 62); gg.addColorStop(0, `rgba(255,40,40,${0.35 + 0.2 * Math.sin(temps * 12)})`); gg.addColorStop(1, 'rgba(255,40,40,0)'); ctx.fillStyle = gg; ctx.fillRect(C.x - 62, C.y - 54, 124, 124); ctx.globalCompositeOperation = 'source-over'; }
       ctx.save(); ctx.translate(C.x + (C.coup > 0 ? rnd(-2.5, 2.5) : 0), C.y);
       if (mort) { ctx.rotate(C.t * 9); ctx.scale(1 - km, 1 - km); }
       else if (C.phase === 'elimine' || (C.phase === 'combat' && !balles.some(b => !enAttente(b)))) ctx.rotate(Math.sin(temps * 9) * 0.12); // il se moque
-      ctx.scale(s, s); dessinerPerso(ctx, B.rang, B.genre, B.img, { pas: C.pas, flash: C.coup > 0 || mort, sansChapeau: mort });
+      ctx.scale(s, s); dessinerPerso(ctx, B.rang, B.genre, B.img, { pas: C.pas, flash: (C.coup > 0 && C.phase !== 'adieu') || mort, sansChapeau: mort });
       ctx.restore();
     }
     if (mort && C.chapeau) { // le couvre-chef s'envole
       const t = C.t, hx = C.x + C.chapeau.vx * t, hy = C.y - 22 + C.chapeau.vy * t + 450 * t * t;
       if (hy < 760) { ctx.save(); ctx.translate(hx, hy); ctx.rotate(t * 5); ctx.scale(s, s); ctx.translate(0, 22); dessinerPerso(ctx, B.rang, B.genre, null, { chapeauSeul: true }); ctx.restore(); }
     }
-    if (C.boucl > 0 && C.phase === 'combat') { const a = Math.min(1, C.boucl / 0.3); ctx.globalAlpha = a; ctx.strokeStyle = '#ffe600'; ctx.lineWidth = 3; ctx.setLineDash([7, 4]); ctx.lineDashOffset = -temps * 40; ctx.beginPath(); ctx.arc(C.x, C.y + 8, R_BOSS + 9, 0, 7); ctx.stroke(); ctx.setLineDash([]); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,230,0,.35)'; ctx.lineWidth = 9; ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
-    const nargue = C.phase === 'elimine' || C.phase === 'parole' ? C.bulle : C.phase === 'combat' && !C.ultime && !balles.some(b => !enAttente(b)) ? 'Viens te battre !' : '';
+    if (C.ultime && C.phase === 'combat' && C.ouvert <= 0) { // le bouclier des 4 sceaux : dôme violet, runes qui tournent
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; const r = R_BOSS + 16 + 2 * Math.sin(temps * 5);
+      const gg = ctx.createRadialGradient(C.x, C.y + 6, r * 0.55, C.x, C.y + 6, r); gg.addColorStop(0, 'rgba(178,107,255,0)'); gg.addColorStop(0.8, 'rgba(178,107,255,.22)'); gg.addColorStop(1, 'rgba(217,179,255,.55)');
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(C.x, C.y + 6, r, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(217,179,255,.85)'; ctx.lineWidth = 2; ctx.setLineDash([8, 5]); ctx.lineDashOffset = -temps * 30; ctx.stroke(); ctx.setLineDash([]);
+      ctx.font = '900 9px Georgia,serif'; ctx.fillStyle = 'rgba(230,210,255,.9)'; for (let i = 0; i < 8; i++) { const a = temps * 0.8 + i * Math.PI / 4; ctx.fillText('ᛟᛉᚦᛊᚨᚱᚲᚷ'[i], C.x + Math.cos(a) * (r - 6), C.y + 6 + Math.sin(a) * (r - 6)); }
+      ctx.restore();
+    }
+    if (C.boucl > 0 && C.phase === 'combat' && !C.ultime) { const a = Math.min(1, C.boucl / 0.3); ctx.globalAlpha = a; ctx.strokeStyle = '#ffe600'; ctx.lineWidth = 3; ctx.setLineDash([7, 4]); ctx.lineDashOffset = -temps * 40; ctx.beginPath(); ctx.arc(C.x, C.y + 8, R_BOSS + 9, 0, 7); ctx.stroke(); ctx.setLineDash([]); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,230,0,.35)'; ctx.lineWidth = 9; ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
+    const nargue = C.phase === 'elimine' || C.phase === 'parole' || C.phase === 'adieu' ? C.bulle : C.phase === 'combat' && !balles.some(b => !enAttente(b)) ? (C.dieu ? 'Approche, mortel !' : 'Viens te battre !') : '';
     if (nargue) { // bulle (une ou deux lignes)
       ctx.font = '900 13px system-ui,-apple-system,sans-serif'; const lignes = nargue.split('\n'), lw = Math.max(...lignes.map(l => ctx.measureText(l).width)) + 18, hb = 10 + 16 * lignes.length;
-      const bx = Math.max(16 + lw / 2, Math.min(354 - lw / 2, C.x + 30)), by = C.phase === 'parole' ? C.y + 92 : Math.max(24, C.y - 72 * s); // sous lui quand il parle (il est collé en haut)
+      const dessous = C.phase === 'parole' || C.phase === 'adieu' || (C.dieu && C.phase !== 'elimine'); // sous lui quand il parle (il est collé en haut)
+      const bx = Math.max(16 + lw / 2, Math.min(354 - lw / 2, C.x + 30)), by = dessous ? C.y + (C.dieu ? 70 : 92) + (hb - 26) / 2 : Math.max(24, C.y - 72 * s);
       rrect(ctx, bx - lw / 2, by - hb / 2, lw, hb, 12); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#101a36'; ctx.lineWidth = 2; ctx.stroke();
-      ctx.beginPath(); if (C.phase === 'parole') { ctx.moveTo(C.x - 8, by - hb / 2 + 1); ctx.lineTo(C.x, by - hb / 2 - 12); ctx.lineTo(C.x + 8, by - hb / 2 + 1); } else { ctx.moveTo(bx - 14, by + hb / 2 - 1); ctx.lineTo(bx - 20, by + hb / 2 + 9); ctx.lineTo(bx - 4, by + hb / 2 - 1); } ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.beginPath(); if (dessous) { ctx.moveTo(C.x - 8, by - hb / 2 + 1); ctx.lineTo(C.x, by - hb / 2 - 12); ctx.lineTo(C.x + 8, by - hb / 2 + 1); } else { ctx.moveTo(bx - 14, by + hb / 2 - 1); ctx.lineTo(bx - 20, by + hb / 2 + 9); ctx.lineTo(bx - 4, by + hb / 2 - 1); } ctx.fillStyle = '#fff'; ctx.fill();
       ctx.fillStyle = '#101a36'; lignes.forEach((l, i) => ctx.fillText(l, bx, by + 1 + (i - (lignes.length - 1) / 2) * 16));
     }
   }
-  if (C.phase === 'combat' || C.phase === 'mort') { // plaque sous la porte : n° + titre + nom, cœurs
+  if ((C.phase === 'combat' || C.phase === 'mort') && !C.dieu) { // plaque sous la porte : n° + titre + nom, cœurs
     const titre = (C.rang ? 'N°' + C.rang : 'BOSS CACHÉ') + ' · ' + titreBoss(C.rang, B.genre).toUpperCase() + ' · ' + B.nom;
     ctx.font = '900 11px system-ui,-apple-system,sans-serif'; const lw = Math.min(250, Math.max(ctx.measureText(titre).width + 20, C.pvMax * 16 + 60));
     rrect(ctx, 185 - lw / 2, 86, lw, 38, 10); ctx.fillStyle = 'rgba(10,12,30,.86)'; ctx.fill(); ctx.strokeStyle = C.N.bord; ctx.lineWidth = 2; ctx.stroke();
@@ -2789,8 +3629,7 @@ function dessinerCombat() { // le boss (au-dessus des billes), sa plaque (titre 
     ctx.fillStyle = C.N.bord; ctx.fillText(t, 185, 96);
     for (let i = 0; i < C.pvMax; i++) coeur(ctx, 185 + (i - (C.pvMax - 1) / 2) * 16 - 14, 104, 13, i < C.pv);
     const xb = 185 + (C.pvMax - 1) / 2 * 16 - 2; // billes de combat restantes (à droite des cœurs)
-    if (C.ultime) { ctx.font = '900 10px system-ui,sans-serif'; ctx.fillStyle = '#ffb347'; ctx.fillText('TOI', 185, 134); for (let i = 0; i < C.N.billes; i++) coeur(ctx, 205 + i * 11, 129, 9, i < C.billes); } // tes cœurs
-    else for (let i = 0; i < C.N.billes; i++) { ctx.beginPath(); ctx.arc(xb + 6 + i * 8, 110.5, 3.2, 0, 7); ctx.fillStyle = i < C.billes ? '#e6e9f0' : 'rgba(255,255,255,.18)'; ctx.fill(); }
+    for (let i = 0; i < C.N.billes; i++) { ctx.beginPath(); ctx.arc(xb + 6 + i * 8, 110.5, 3.2, 0, 7); ctx.fillStyle = i < C.billes ? '#e6e9f0' : 'rgba(255,255,255,.18)'; ctx.fill(); }
   }
 }
 
@@ -2838,14 +3677,16 @@ function rendu() {
   if (nuit && !fondNuit) dessinerFondNuit();
   if (table === 'goth' && !fondGoth) dessinerFondGoth();
   if (table === 'boss' && combat && !fondBoss[combat.rang]) dessinerFondBoss(combat.rang);
-  ctx.drawImage(table === 'goth' ? fondGoth : table === 'boss' && combat ? fondBoss[combat.rang] : nuit ? fondNuit : fond, 0, 0);
+  if (table === 'valh' && !fondValh) dessinerFondValh();
+  if (table === 'dieu' && !fondDieu) dessinerFondDieu();
+  ctx.drawImage(table === 'goth' ? fondGoth : table === 'valh' ? fondValh : table === 'dieu' ? fondDieu : table === 'boss' && combat ? fondBoss[combat.rang] : nuit ? fondNuit : fond, 0, 0);
   const tc = temps - acoup.t, kc = tc >= 0 && tc < 0.5 ? Math.exp(-tc * 7) * Math.cos(tc * 28) : 0; // la table part d'un coup puis revient en vibrant
   const sx = (secousse > 0 ? rnd(-3, 3) * secousse * 8 : 0) + acoup.x * kc, sy = (secousse > 0 ? rnd(-3, 3) * secousse * 8 : 0) + acoup.y * kc;
   ctx.setTransform(DPR * S, 0, 0, DPR * S * KY, (OX + sx) * DPR, (OY + sy) * DPR);
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   const attract = etat !== 'jeu' && etat !== 'pause', arcEnCiel = multiball || (attract && Math.floor(temps / 4) % 2 === 1);
   let g;
-  if (table === 'goth') renduGoth(); else if (table === 'boss') renduBoss(); else { // ---- gymnase
+  if (table === 'goth') renduGoth(); else if (table === 'boss') renduBoss(); else if (table === 'valh') renduValh(); else if (table === 'dieu') renduDieu(); else { // ---- gymnase
   if (nuit) lumieresNuit();
   // lampes : état de jeu + chenillard sur les gros coups + spectacle au repos
   LAMPES.forEach((L, i) => {
@@ -2974,6 +3815,7 @@ function rendu() {
   }
   // flippers en relief
   for (const f of FL) {
+    if (table === 'valh' || table === 'dieu') { flipperDore(f, f.gele, f.alerte); continue; }
     if (table === 'goth') { // flippers en os, contour violet
       cheminFlip(f, 4, 6); ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fill();
       cheminFlip(f, 0, 0); g = ctx.createLinearGradient(f.px, f.py - 10, f.px, f.py + 10); g.addColorStop(0, '#fffaf0'); g.addColorStop(1, '#bfb49a'); ctx.fillStyle = g; ctx.fill();
@@ -2995,8 +3837,8 @@ function rendu() {
   }
   // balles : ombre portée puis bille chromée
   const tb = 2 * R + 4, to = 2 * R + 14;
-  const auSol = b => !b.rampe && !b.tunnel && !b.boucle && !b.trou && !b.filet && !(b.tient > 0 && b.lieu === 'casier');
-  if (nuit || table === 'goth') { ctx.globalCompositeOperation = 'lighter'; for (const b of balles) if (auSol(b)) ctx.drawImage(nuit ? SPR.halo : SPR.haloG, b.x - 26, b.y - 26, 52, 52); ctx.globalCompositeOperation = 'source-over'; }
+  const auSol = b => !b.rampe && !b.pont && !b.tunnel && !b.boucle && !b.trou && !b.filet && !(b.tient > 0 && b.lieu === 'casier');
+  if (nuit || table === 'goth' || table === 'valh') { ctx.globalCompositeOperation = 'lighter'; for (const b of balles) if (auSol(b)) ctx.drawImage(nuit ? SPR.halo : table === 'valh' ? SPR.haloV : SPR.haloG, b.x - 26, b.y - 26, 52, 52); ctx.globalCompositeOperation = 'source-over'; }
   else for (const b of balles) if (b.tient <= 0 && auSol(b)) { // ombre portée + ombre de contact sous la bille
     ctx.drawImage(SPR.ombre, b.x + 3 - to / 2, b.y + 6 - to / 2, to, to);
     ctx.globalAlpha = 0.55; ctx.drawImage(SPR.ombre, b.x + 1 - to * 0.32, b.y + 3 - to * 0.32, to * 0.64, to * 0.64); ctx.globalAlpha = 1;
@@ -3010,13 +3852,8 @@ function rendu() {
     if (b.tient > 0) { ctx.globalAlpha = 0.55; ctx.drawImage(SPR.balle, b.x - tb * 0.4, b.y - tb * 0.4, tb * 0.8, tb * 0.8); ctx.globalAlpha = 1; }
     else ctx.drawImage(SPR.balle, b.x - tb / 2, b.y - tb / 2, tb, tb);
   }
-  if (table === 'boss' && combat && combat.ultime) for (const b of balles) if (b.feu) { // boules de feu : halo et traînée
-    ctx.globalCompositeOperation = 'lighter'; const v = Math.hypot(b.vx, b.vy) || 1, rr = tb * (1.3 + 0.15 * Math.sin(temps * 30));
-    for (let i = 1; i <= 4; i++) { const t = i * 7; ctx.globalAlpha = 0.35 - i * 0.07; ctx.fillStyle = '#ff6a00'; ctx.beginPath(); ctx.arc(b.x - b.vx / v * t, b.y - b.vy / v * t, tb * (0.55 - i * 0.08), 0, 7); ctx.fill(); }
-    ctx.globalAlpha = 1; const gg = ctx.createRadialGradient(b.x, b.y, 1, b.x, b.y, rr); gg.addColorStop(0, 'rgba(255,240,180,.95)'); gg.addColorStop(0.45, 'rgba(255,120,20,.7)'); gg.addColorStop(1, 'rgba(255,40,0,0)');
-    ctx.fillStyle = gg; ctx.fillRect(b.x - rr, b.y - rr, 2 * rr, 2 * rr); ctx.globalCompositeOperation = 'source-over';
-  }
   if (table === 'boss' && combat) dessinerCombat(); // le boss passe au-dessus de la bille
+  if (table === 'valh') renduValhDessus(sx, sy); // pont Bifröst et looping, surélevés
   if (table === 'base') { // ---- gymnase : éléments au-dessus des billes
   // rampe surélevée, panier de basket, balle sur le rail (au-dessus de tout le plateau)
   ctx.save(); ctx.setTransform(1, 0, 0, 1, sx * DPR, sy * DPR); ctx.drawImage(nuit && rampeNuit ? rampeNuit : rampeCv, 0, 0); ctx.restore();
@@ -3075,6 +3912,7 @@ function rendu() {
     ctx.strokeStyle = Math.floor(temps * 6) % 2 ? '#ff3344' : '#ffffff'; ctx.lineWidth = 8; ctx.stroke();
   }
   if (flash > 0) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(255,255,255,${flash})`; ctx.fillRect(0, 0, cv.width, cv.height); }
+  if (DECH) renduDechire();
   // HUD
   if (etat !== 'jeu' && etat !== 'pause') return;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -3083,8 +3921,9 @@ function rendu() {
   ctx.textAlign = 'left'; ctx.font = '800 12px system-ui,sans-serif'; ctx.fillStyle = '#9aa6c4'; ctx.fillText('BALLE', 12, hy - 10);
   for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(18 + i * 16, hy + 8, 6, 0, 7); ctx.fillStyle = i >= balleNo - 1 ? '#e6e9f0' : 'rgba(255,255,255,.15)'; ctx.fill(); }
   ctx.textAlign = 'center';
-  const etiq = table === 'boss' && combat ? (combat.rang ? '⚔ COMBAT DE BOSS · N°' + combat.rang : '💀 BOSS CACHÉ') + (mult > 1 ? ' · x' + mult : '') : table === 'goth' ? '☠ LA CRYPTE · BILLE BONUS' + (mult > 1 ? ' · x' + mult : '') : (multiball ? 'MULTIBALLE ' : 'MULTIPLICATEUR ') + 'x' + (mult * (multiball ? 2 : 1));
-  texte(etiq, CW / 2, hy + 23, 11, table === 'boss' && combat ? combat.N.bord : table === 'goth' ? CRYPTE_C.lilas : multiball ? '#ff8fab' : (mult > 1 ? '#9ef' : '#9aa6c4'));
+  const xm = mult > 1 ? ' · x' + mult : '', dieuTxt = verrou ? ' · ⚡ MONDE D’UN DIEU' : '';
+  const etiq = table === 'dieu' ? '⚡ LE DUEL DES DIEUX' : table === 'boss' && combat ? (combat.rang ? '⚔ COMBAT DE BOSS · N°' + combat.rang : '💀 BOSS CACHÉ · LES 4 SCEAUX') + xm : table === 'valh' ? 'ᚱ LE VALHALLA' + xm + dieuTxt : table === 'goth' ? (verrou ? '☠ LA CRYPTE' + xm + dieuTxt : '☠ LA CRYPTE · BILLE BONUS' + xm) : verrou ? (nuit ? '🪩 LA RÉCRÉ' : '🏀 LE GYMNASE') + ' · x' + mult + dieuTxt : (multiball ? 'MULTIBALLE ' : 'MULTIPLICATEUR ') + 'x' + (mult * (multiball ? 2 : 1));
+  texte(etiq, CW / 2, hy + 23, 11, table === 'dieu' ? '#7fd8ff' : table === 'boss' && combat ? combat.N.bord : table === 'valh' ? '#ffd23f' : table === 'goth' ? CRYPTE_C.lilas : verrou ? '#ffe9a8' : multiball ? '#ff8fab' : (mult > 1 ? '#9ef' : '#9aa6c4'));
 }
 
 function dessinerCage() {
@@ -3322,7 +4161,7 @@ function appuis(gauche, droite) {
 }
 // le lanceur ne réagit que quand une bille attend au lanceur et qu'aucune autre bille n'est en jeu :
 // sinon toute la moitié droite de l'écran reste au flipper droit (plus de lancer « volé » en voulant frapper)
-function lanceurPret() { return etat === 'jeu' && !(combat && combat.phase !== 'combat') && spectacleT <= 0 && gelT <= 0 && !bascule && balles.some(enAttente) && balles.every(enAttente); }
+function lanceurPret() { return etat === 'jeu' && !DECH && !(combat && combat.phase !== 'combat') && spectacleT <= 0 && gelT <= 0 && !bascule && balles.some(enAttente) && balles.every(enAttente); }
 // zone du lanceur (couloir de droite, en bas) : on y appuie longtemps pour charger le piston
 function zoneLanceur(x, y) { return x > OX + 340 * S && y > OY + 470 * S * KY && lanceurPret(); }
 // centre bas de l'écran (sous et entre les flippers, autour du bouton TILT) : n'actionne aucun flipper
@@ -3455,7 +4294,23 @@ function garderUltime(r) {
 async function chargerUltime() {
   try { garderUltime(await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU_CACHE)}`)); } catch (e) {}
 }
-const garderReponse = (p, r) => { if (r && r.ok) { if (p.jeu === JEU_CACHE) garderUltime(r); else garderClassement(r); } };
+// Kevin (27/10) : le dieu / la déesse = n°1 d'un 3e classement caché (même script, nom de jeu JEU + '-dieu'), jamais affiché ; il attend au Valhalla
+const JEU_DIEU = JEU + '-dieu';
+let dieu = (() => { const u = lsGet('battle-dieu', null); return u && +u.score > 0 && u.jeu === JEU_DIEU ? u : null; })();
+function bossDieu() { // le dieu de la partie, toujours au-dessus de l'empereur ; personne encore : une ombre « ? » (dieu ou déesse selon le joueur)
+  const u = bossUltime(); if (!u) return null;
+  const d = dieu, sc = d ? +d.score : DIEU_DEPART, g = d ? d.genre : lsGetTxt('battle-genre');
+  return { rang: -1, nom: d ? String(d.nom || '').trim() || '???' : '???', score: Math.max(sc, u.score + 1), genre: g === 'F' ? 'F' : 'H', photo: d && photoOk(d.photo) ? d.photo : '', inconnu: !d };
+}
+function garderDieu(r) {
+  if (!r || !r.ok || !Array.isArray(r.top)) return;
+  const t = r.top.filter(x => +x.score > 0).sort((a, b) => b.score - a.score)[0];
+  if (t && (!dieu || +t.score >= +dieu.score)) { dieu = { jeu: JEU_DIEU, nom: String(t.nom || '').trim(), score: +t.score, genre: t.genre === 'F' ? 'F' : 'H', photo: photoOk(t.photo) ? t.photo : '' }; lsSet('battle-dieu', dieu); }
+}
+async function chargerDieu() {
+  try { garderDieu(await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU_DIEU)}`)); } catch (e) {}
+}
+const garderReponse = (p, r) => { if (r && r.ok) { if (p.jeu === JEU_CACHE) garderUltime(r); else if (p.jeu === JEU_DIEU) garderDieu(r); else garderClassement(r); } };
 let classement = (() => { const c = lsGet('battle-classement', null); return c && c.jeu === JEU ? c : null; })();
 function avecTimeout(url, opts = {}) {
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 8000);
@@ -3467,7 +4322,7 @@ async function chargerClassement() {
   etatTxt = classement ? 'Mise à jour du classement…' : 'Chargement du classement…'; afficherAccueil();
   try {
     const r = await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU)}`);
-    if (r && r.ok) { garderClassement(r); etatTxt = ''; chargerUltime(); } else etatTxt = 'Classement indisponible pour le moment';
+    if (r && r.ok) { garderClassement(r); etatTxt = ''; chargerUltime(); chargerDieu(); } else etatTxt = 'Classement indisponible pour le moment';
   } catch (e) { etatTxt = classement ? 'Hors ligne — dernier classement connu' : 'Hors ligne — classement indisponible'; }
   const n = lsGet('battle-attente', []).length; if (n) etatTxt += (etatTxt ? ' · ' : '') + n + ' score' + (n > 1 ? 's' : '') + ' en attente d’envoi';
   afficherAccueil();
@@ -3487,11 +4342,12 @@ function listeBoss() { // les 3 boss à battre : { rang, nom, score, genre ('H' 
     nom: String(t.nom || '').trim(), score: +t.score || 0, genre: t.genre === 'F' || t.genre === 'H' ? t.genre : '',
     photo: photoOk(t.photo) ? t.photo : i === 0 && boss && photoOk(boss.photo) && String(boss.nom).trim().toLowerCase() === String(t.nom).trim().toLowerCase() ? boss.photo : ''
   })).filter(b => b.nom && b.score > 0);
-  // Kevin : 3 boss de départ « ??? » (50 000 / 100 000 / 150 000) pour qu'on doive les battre dans l'ordre ; un vrai score les pousse vers le bas
+  // Kevin : 3 boss de départ « ??? » (100 000 / 200 000 / 400 000) pour qu'on doive les battre dans l'ordre ; un vrai score les pousse vers le bas
   const defauts = BOSS_DEPART.map(score => ({ nom: '???', score, genre: '', photo: '', defaut: true }));
   return reels.concat(defauts).sort((a, b) => b.score - a.score).slice(0, 3).map((b, i) => Object.assign(b, { rang: i + 1 }));
 }
-const BOSS_DEPART = [150000, 100000, 50000], ULTIME_DEPART = 200000;
+// Kevin (27/10) : garde 100 000, bourreau / sorcière 200 000, roi 400 000, empereur 600 000, dieu / déesse 800 000
+const BOSS_DEPART = [400000, 200000, 100000], ULTIME_DEPART = 600000, DIEU_DEPART = 800000;
 // place de quelqu'un dans le classement affiché (vrais scores + boss de départ) ; 0 = hors du top 3
 const rangDe = (nom, sc) => { const j = listeBoss().findIndex(b => !b.defaut && b.nom.toLowerCase() === String(nom).trim().toLowerCase() && b.score === sc); return j + 1; };
 function dessinerPortrait(cnv, rang, genre, src, buste) { // portrait déguisé (accueil / fin de partie) dans un <canvas> ; buste = zoom sur la tête
@@ -3671,6 +4527,14 @@ function garderIntroUltime(r, avant, nom, genre, ultAvant) { // tu bats tout le 
   const ancien = ultAvant ? { nom: ultAvant.inconnu ? '???' : ultAvant.nom, genre: ultAvant.genre, photo: ultAvant.photo || '', inconnu: !!ultAvant.inconnu } : null;
   lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang: 0, ultime: true, battus, avant, ancien });
 }
+function garderIntroDieu(r, avant, nom, genre, dieuAvant) { // même entrée au château que l'empereur, mais c'est l'ancien dieu qui est chassé
+  if (r && !r.ok) return;
+  const sc = Math.round(score);
+  if (!dieu || sc >= +dieu.score) { dieu = { jeu: JEU_DIEU, nom, score: sc, genre, photo: photoData }; lsSet('battle-dieu', dieu); }
+  const battus = avant.filter(b => b.score < sc).map(b => b.rang).sort((a, b) => b - a);
+  const ancien = dieuAvant ? { nom: dieuAvant.inconnu ? '???' : dieuAvant.nom, genre: dieuAvant.genre, photo: dieuAvant.photo || '', inconnu: !!dieuAvant.inconnu } : null;
+  lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang: -1, ultime: true, dieu: true, battus, avant, ancien });
+}
 function verifierIntro() {
   const d = lsGet('battle-intro', null); lsSet('battle-intro', null);
   if (!d || Date.now() - d.t > 2 * 864e5 || !Array.isArray(d.avant)) return;
@@ -3826,14 +4690,14 @@ async function jouerIntro(d) {
     for (const [t, m] of [['BAM !', -30], ['PAF !', 25], ['BOUM !', -5]]) { boom(t, door.x + m * k, door.y - (60 + Math.abs(m)) * k, '#b26bff'); eclats(door.x, door.y - 14 * k, '#d9b3ff', 12); son('pare'); await attendre(380); }
     const a = d.ancien || { nom: '???', genre: 'H', photo: '', inconnu: true };
     const v = ajoute('heros', `<canvas style="width:${s}px;height:${s}px"></canvas><b style="background:#b26bff;color:#fff">${esc(a.nom)}</b>`);
-    v.style.transformOrigin = `${s / 2}px ${s / 2}px`; dessinerPortrait(v.querySelector('canvas'), 0, a.genre, a.photo || (a.inconnu ? '' : AVATAR), true);
+    v.style.transformOrigin = `${s / 2}px ${s / 2}px`; dessinerPortrait(v.querySelector('canvas'), d.dieu ? -1 : 0, a.genre, a.photo || (a.inconnu ? '' : AVATAR), true);
     const p0 = { x: door.x, y: door.y - 10 * k, sc: .2 }, p1 = { x: W * .3, y: H * .12, sc: 1.1 }, p2 = { x: -s, y: -s * .6, sc: .3 };
     son('ejecte');
     anim(v, [{ transform: T(p0) + ' rotate(0deg)' }, { transform: T(p1) + ' rotate(320deg)', offset: .45 }, { transform: T(p2) + ' rotate(900deg)' }], { duration: 1900, easing: 'cubic-bezier(.3,.6,.6,1)' });
     await attendre(250); await bulle('NOOOOON !', W * .45, H * .2);
     if (hz) anim(hz, [{ transform: 'translateY(-32px)' }, { transform: 'translateY(0)' }], { duration: 450, easing: 'cubic-bezier(.6,0,1,.6)' });
     await attendre(450); son('fanfare'); eclats(door.x, door.y - 20 * k, '#b26bff', 30);
-    const an3 = ajoute('i-annonce', `Un nouveau boss se cache dans le château…<small>Chut… c’est toi, ${esc(d.nom)}</small>`);
+    const an3 = ajoute('i-annonce', d.dieu ? `${d.genre === 'F' ? 'Une nouvelle déesse' : 'Un nouveau dieu'} veille sur le Valhalla…<small>Chut… c’est toi, ${esc(d.nom)}</small>` : `Un nouveau boss se cache dans le château…<small>Chut… c’est toi, ${esc(d.nom)}</small>`);
     an3.style.fontSize = '22px';
     anim(an3, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 450, easing: 'cubic-bezier(.2,1.6,.4,1)' });
     await attendre(2600);
@@ -3917,7 +4781,7 @@ const NARGUE = ['Tu ne m’as pas battu ! 😜', 'Retourne à l’échauffement 
 function finPartie() {
   if (etat === 'fin') return;
   etat = 'fin'; $('pause').style.display = 'none'; FL.forEach(f => f.appui = false); arreterCharge(); majMusique();
-  if (bascule && bascule.vers) bascule = null; gothDans = 0;
+  if (bascule && bascule.vers) bascule = null; gothDans = 0; DECH = null; taireParole();
   if (!(combat && combat.phase === 'elimine')) { table = 'base'; combat = null; } // (abandon pendant la crypte ou un combat) ; éliminé : le boss reste à l'écran et se moque
   const rec = lsGet('battle-record-' + JEU, 0); if (score > rec) lsSet('battle-record-' + JEU, score);
   setTimeout(montrerFin, 1300);
@@ -3934,19 +4798,34 @@ function montrerFin() {
   // le nom, le roi / la reine et la photo ne sont demandés qu'ici : le score FINAL donne la place (n°1, 2 ou 3)
   // Kevin : une même personne peut occuper plusieurs places du top 3 (chaque partie compte)
   const liste = listeBoss(), boss1 = liste[0] || null;
-  const ult = CLASSEMENT_OK && ultimeBattu && score > 0, ultAvant = ult ? bossUltime() || bossUlt : null;
-  const rang = ult ? 0 : 1 + liste.filter(b => b.score >= score).length, dansTop = CLASSEMENT_OK && score > 0 && rang <= 3;
+  const dieuF = CLASSEMENT_OK && dieuBattu && score > 0, dieuAvant = dieuF ? bossD : null; // tu as battu le dieu : tu prends sa place (3e classement caché)
+  const ult = CLASSEMENT_OK && ultimeBattu && !dieuF && score > 0, ultAvant = ult || dieuF ? bossUltime() || bossUlt : null;
+  const rang = dieuF ? -1 : ult ? 0 : 1 + liste.filter(b => b.score >= score).length, dansTop = CLASSEMENT_OK && score > 0 && rang <= 3;
   photoData = '';
   const nomFixe = !!lsGetTxt('battle-nom').trim(); // prénom connu : en fin de partie, on choisit roi / reine → photo → envoi → animation
   let html = '', mode = 'simple', genre = lsGetTxt('battle-genre'), moqueur = null;
   if (genre !== 'H' && genre !== 'F') genre = '';
   // Kevin : boss battu (top 3 ou boss caché) et prénom connu → un écran simple : roi / reine (rien de coché) → photo → score enregistré → animation
-  const simple = CLASSEMENT_OK && (ult || dansTop) && nomFixe;
+  const simple = CLASSEMENT_OK && (dieuF || ult || dansTop) && nomFixe;
   if (simple) genre = '';
   if (!CLASSEMENT_OK) {
     html = `<div class="bandeau">Fin du cours !</div><div class="score-fin">${esc(fmt(score))}</div>
       <div class="manque">Record sur cet appareil : ${esc(fmt(Math.max(score, lsGet('battle-record-' + JEU, 0))))}</div>
       <div class="msg">Classement indisponible sur cet appareil</div>`;
+  } else if (dieuF) {
+    mode = 'top';
+    html = `<div class="bandeau boss-n">⚡<br>Le Valhalla<br>est à toi !</div>
+      <div class="score-fin">${esc(fmt(score))}</div>
+      <div class="manque">Tu as vaincu ${dieuAvant && !dieuAvant.inconnu ? esc(dieuAvant.nom) : 'le maître d’Asgard'} ! Chut… seuls les dieux le sauront.</div>
+      <canvas class="portrait-fin" id="portrait-fin" style="width:140px;height:185px"></canvas>
+      <div class="aide" id="titre-fin" style="margin:0;font-weight:800;color:var(--clair)"></div>
+      <div class="genre" id="genre">
+        <label${genre === 'H' ? ' class="on"' : ''}><input type="radio" name="genre" value="H"${genre === 'H' ? ' checked' : ''}>⚡ Un dieu</label>
+        <label${genre === 'F' ? ' class="on"' : ''}><input type="radio" name="genre" value="F"${genre === 'F' ? ' checked' : ''}>⚡ Une déesse</label>
+      </div>
+      <label class="btn photo-btn${nomFixe ? ' cache' : ''}" id="photo-lbl">📸 Prends une photo divine<input type="file" accept="image/*" capture="user" id="photo"></label>
+      <div class="aide${simple ? ' cache' : ''}" style="margin:0 0 10px">Ta tête attendra au Valhalla. Seuls ceux qui battent l’empereur ET atteignent ton score te verront.</div>
+      ${blocNom('Devenir le dieu du Valhalla ⚡', true)}`;
   } else if (ult) {
     mode = 'top';
     html = `<div class="bandeau boss-n">💀<br>Boss caché !</div>
@@ -3993,7 +4872,7 @@ function montrerFin() {
   const majPortrait = () => {
     if (!$('portrait-fin')) return;
     dessinerPortrait($('portrait-fin'), rang, genre, photoData || AVATAR);
-    $('titre-fin').textContent = nomFixe && !photoData ? (rang ? 'Touche ce que tu es, puis prends ta photo :' : 'Touche ce que tu es, puis prends ta photo terrifiante :') : genre ? 'Tu deviens : ' + titreBoss(rang, genre) : rang ? 'Roi ou reine ? Coche ta case :' : 'Empereur ou impératrice ? Coche ta case :';
+    $('titre-fin').textContent = nomFixe && !photoData ? (rang > 0 ? 'Touche ce que tu es, puis prends ta photo :' : rang ? 'Touche ce que tu es, puis prends ta photo divine :' : 'Touche ce que tu es, puis prends ta photo terrifiante :') : genre ? 'Tu deviens : ' + titreBoss(rang, genre) : rang > 0 ? 'Roi ou reine ? Coche ta case :' : rang ? 'Dieu ou déesse ? Coche ta case :' : 'Empereur ou impératrice ? Coche ta case :';
     document.querySelectorAll('#genre label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
   };
   if (mode === 'top') { majPortrait(); if (rang <= 1) { SON.fanfare(); vib([60, 40, 60, 40, 200]); confettis(); } else { SON.sauve(); confettis(70); } }
@@ -4022,19 +4901,25 @@ function montrerFin() {
   if ($('envoyer')) $('envoyer').onclick = async () => {
     const nom = $('nom').value.trim().replace(/\s+/g, ' ').slice(0, 24);
     if (!nom) { $('nom').focus(); $('nom').style.borderColor = 'var(--rouge)'; return; }
-    if (mode === 'top' && !genre) { $('genre').classList.add('manque-choix'); $('titre-fin').textContent = 'Coche d’abord : roi ou reine ?'; $('genre').scrollIntoView({ block: 'center' }); return; }
+    if (mode === 'top' && !genre) { $('genre').classList.add('manque-choix'); $('titre-fin').textContent = dieuF ? 'Coche d’abord : dieu ou déesse ?' : 'Coche d’abord : roi ou reine ?'; $('genre').scrollIntoView({ block: 'center' }); return; }
     lsSetTxt('battle-nom', nom); if (genre) lsSetTxt('battle-genre', genre);
     const btn = $('envoyer'); btn.disabled = true; btn.textContent = 'Envoi…';
-    const p = { code: CODE, action: 'jeu', jeu: ult ? JEU_CACHE : JEU, nom, score: Math.round(score), photo: mode === 'top' && photoData.length < 48000 ? photoData : '', genre: mode === 'top' ? genre : '' };
+    const p = { code: CODE, action: 'jeu', jeu: dieuF ? JEU_DIEU : ult ? JEU_CACHE : JEU, nom, score: Math.round(score), photo: mode === 'top' && photoData.length < 48000 ? photoData : '', genre: mode === 'top' ? genre : '' };
     const r = await envoyer(p);
     // Kevin (25/10) : l'empereur battu redescend roi : son score entre dans le classement normal, le roi devient bourreau, le bourreau garde, la garde sort
     if (ult && r !== false && (r === null || r.ok) && ultAvant && !ultAvant.inconnu)
       await envoyer({ code: CODE, action: 'jeu', jeu: JEU, nom: ultAvant.nom, score: Math.round(ultAvant.score), photo: photoOk(ultAvant.photo) && ultAvant.photo.length < 48000 ? ultAvant.photo : '', genre: ultAvant.genre });
-    if (mode === 'top' && r !== false) { if (ult) garderIntroUltime(r, liste, nom, genre, ultAvant); else garderIntro(r, liste, rang, nom, genre); }
+    // Kevin (27/10) : le dieu battu descend empereur (classement caché) et l'ancien empereur descend roi : tout le monde recule d'une place
+    if (dieuF && r !== false && (r === null || r.ok)) {
+      if (dieuAvant && !dieuAvant.inconnu) await envoyer({ code: CODE, action: 'jeu', jeu: JEU_CACHE, nom: dieuAvant.nom, score: Math.round(dieuAvant.score), photo: photoOk(dieuAvant.photo) && dieuAvant.photo.length < 48000 ? dieuAvant.photo : '', genre: dieuAvant.genre });
+      if (ultAvant && !ultAvant.inconnu) await envoyer({ code: CODE, action: 'jeu', jeu: JEU, nom: ultAvant.nom, score: Math.round(ultAvant.score), photo: photoOk(ultAvant.photo) && ultAvant.photo.length < 48000 ? ultAvant.photo : '', genre: ultAvant.genre });
+    }
+    if (mode === 'top' && r !== false) { if (dieuF) garderIntroDieu(r, liste, nom, genre, dieuAvant); else if (ult) garderIntroUltime(r, liste, nom, genre, ultAvant); else garderIntro(r, liste, rang, nom, genre); }
     const ret = $('retour') || document.createElement('div');
     if ($('rejouer')) { $('rejouer').classList.remove('cache'); $('vers-accueil').classList.remove('cache'); }
     if (r === null) ret.innerHTML = `<div class="msg">📡 Hors ligne : ton score est gardé et sera envoyé dès que possible.</div>`;
     else if (!r.ok) { ret.innerHTML = `<div class="msg ko">Envoi refusé${r.erreur || r.error ? ' : ' + esc(r.erreur || r.error) : ''}.</div>`; btn.disabled = false; btn.textContent = 'Réessayer'; return; }
+    else if (dieuF) ret.innerHTML = `<div class="msg ok">⚡ C’est fait : tu es ${genre === 'F' ? 'la déesse' : 'le dieu'} du Valhalla. Chut…${dieuAvant && !dieuAvant.inconnu ? `<br><small>${esc(dieuAvant.nom)} redescend au château.</small>` : ''}</div>`;
     else if (ult) ret.innerHTML = `<div class="msg ok">💀 C’est fait : tu es ${genre === 'F' ? 'l’impératrice cachée' : 'l’empereur caché'} du château. Chut…${ultAvant && !ultAvant.inconnu ? `<br><small>${esc(ultAvant.nom)} redescend sur le trône du roi.</small>` : ''}</div>`;
     else {
       const i = rangDe(nom, Math.round(score)) - 1;

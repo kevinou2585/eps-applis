@@ -865,6 +865,7 @@ const SON = {
   jackpotAsgard() { musDuck(0.25, 2.4); riser(0.8, 0.14); corne(0.07, 0.8, [0, 0.16, 0.32, 0.64], [0.12, 0.12, 0.25, 0.8]); orgueSfx([38, 50, 62, 66, 69, 74], 1.6, 0.05, 0.8); drop(0.45, 0.8); foule(0.26, 0.8, 1); },
   mjollnir() { cogne(60, 0.3); echantillon('timbale', 0.4); ton('sawtooth', 2600, 300, 0.25, 0.05, 0.05, 3000); },
   bifrost(dur) { const n = Math.min(14, Math.floor(dur / 0.08)); for (let i = 0; i < n; i++) cloche(P(i + 2), 0.35, 0.04, i * dur / n); whoosh(Math.min(1.2, dur), 0.08, 500, 5000); },
+  serpent(dur) { bruit(Math.min(1.6, dur), 0.07, 5200, 2.5, 0, 3000, 'bandpass', 0.05); ton('sawtooth', 70, 45, Math.min(1.4, dur), 0.05, 0, 400); [0, 0.25, 0.5].forEach(d => cogne(55, 0.08, d)); },
   grondement() { bruit(2.2, 0.06, 500, 0.7, 0, 70, 'lowpass', 0.4); },
   // ---- le duel des dieux
   porteAsgard() { orgueSfx([38, 45, 50, 57], 1.6, 0.05); drop(0.4, 0.7, 110, 0.9); cloche(P(0, -1), 1.8, 0.09, 0.7); echantillon('crash', 0.25, 0.7); },
@@ -1080,42 +1081,52 @@ const PTS_COUP = 1000, Y_BOSS0 = 152, Y_BOSS_PASSE = 690, R_BOSS = 26;
 function titreBoss(rang, genre) { return NIV_BOSS[rang].titre[genre === 'F' ? 'F' : 'H']; }
 
 // ---------------------------------------------------------------- 4e table : LE VALHALLA (Kevin, 27/10), après l'empereur
-// L'empereur vaincu parle, la table se déchire en deux et s'ouvre par à-coups : derrière, le Valhalla d'Odin.
-// Même bas de table ; en haut : bumpers runes, corbeaux Hugin et Munin, cibles O-D-I-N, porte d'Asgard (jackpot),
-// soucoupe de Mjöllnir, pont Bifröst (rampe arc-en-ciel) et looping. On y reste (bille perdue = bille suivante, au Valhalla)
-// jusqu'au score du dieu / de la déesse : alors Asgard s'ouvre pour le DUEL DES DIEUX.
+// L'empereur vaincu parle, la table se déchire en deux et s'ouvre par à-coups : derrière, la grande salle d'Odin.
+// Kevin : « un flipper de fou, on est chez les dieux », rien de la table de base. Salle en ogive sous un toit de boucliers d'or :
+// au centre l'arbre-monde Yggdrasil, autour duquel tournent les 3 Nornes (bumpers mobiles) ; Mjöllnir tourne en haut à gauche ;
+// 3e flipper (celui de Thor) à droite ; 2 rampes surélevées qui se croisent : le pont Bifröst (entrée à gauche, il passe sous
+// le toit et rend la bille au flipper de Thor) et le serpent Jörmungandr (entrée à droite, spirale, il recrache la bille à
+// gauche) ; cibles T-H-O-R en chevron ; porte du Valhalla en haut (s'ouvre avec T-H-O-R : jackpot) ; la Valkyrie sauve le
+// couloir gauche (allumée par le serpent) ; RAGNARÖK : Bifröst ×2 + serpent ×2 + T-H-O-R → 25 s de points doublés.
+// On y reste (bille perdue = bille suivante, au Valhalla) jusqu'au score du dieu / de la déesse : alors le DUEL DES DIEUX.
 const segsV = [];
 cibleSegs = segsV;
-for (let i = 0; i < ARC.length - 1; i++) seg(ARC[i][0], ARC[i][1], ARC[i + 1][0], ARC[i + 1][1]);
-seg(10, 200, 10, 722);
-seg(OUT.g, OUT.haut, OUT.g, OUT.bas, { epais: 1.5 }); seg(OUT.g, OUT.bas, 99, 631);
-seg(390, 200, 390, 712); seg(358, 708, 392, 708, { e: 0.1 }); seg(360, 262, 360, 712);
+const OGIVE = (() => { // toit en ogive : deux arcs de rayon 300 qui se rejoignent en pointe au-dessus de la porte
+  const P = []; for (let a = 180; a <= 245; a += 5) P.push([310 + 300 * Math.cos(a * Math.PI / 180), 300 + 300 * Math.sin(a * Math.PI / 180)]);
+  return P.concat(P.map(([x, y]) => [400 - x, y]).reverse());
+})();
+for (let i = 0; i < OGIVE.length - 1; i++) seg(OGIVE[i][0], OGIVE[i][1], OGIVE[i + 1][0], OGIVE[i + 1][1]);
+seg(10, 300, 10, 722);
+seg(390, 300, 390, 712); seg(358, 708, 392, 708, { e: 0.1 }); seg(360, 296, 360, 712); porte(360, 296, 386, 272); // couloir de Gungnir (le lanceur)
+seg(OUT.g, OUT.haut, OUT.g, OUT.bas, { epais: 1.5 }); seg(OUT.g, OUT.bas, 99, 631); // couloir de la Valkyrie (gauche) / de Hel (droite)
 seg(OUT.d, OUT.haut, OUT.d, OUT.bas, { epais: 1.5 }); seg(OUT.d, OUT.bas, 271, 631);
-porte(360, 262, 390, 226); porte(10, 215, 62, 255);
-const SLV = [sling(false), sling(true)];
-// porte d'Asgard (en haut au milieu) : même poche que le but du gymnase (toit en pointe, rien où se poser)
-const ASGARD = { x1: 144, x2: 220, haut: 52, ligne: 70, pic: 40, cx: 182 };
-seg(ASGARD.x1, ASGARD.haut, ASGARD.cx, ASGARD.pic, { epais: 2, rail: false }); seg(ASGARD.cx, ASGARD.pic, ASGARD.x2, ASGARD.haut, { epais: 2, rail: false });
-seg(ASGARD.x1, ASGARD.haut, ASGARD.x1, ASGARD.ligne, { epais: 3, rail: false }); seg(ASGARD.x2, ASGARD.haut, ASGARD.x2, ASGARD.ligne, { epais: 3, rail: false });
-// boucliers O-D-I-N : touchables par-dessous seulement (comme I-S-L)
-const ODIN = ['O', 'D', 'I', 'N'].map((l, i) => { const cx = 136 + i * 42; return seg(cx - 18, 446, cx + 18, 446, { type: 'odin', lettre: l, cx, oneWay: true, nx: 0, ny: 1, epais: 6, e: 0.3, rail: false, bas: false }); });
-// entrée du pont Bifröst (au centre, comme la rampe du gymnase) : toit en pointe + couloir d'accès
-seg(163, 252, 191, 232, { epais: 2 }); seg(191, 232, 219, 252, { epais: 2 });
-seg(163, 252, 157, 294); seg(219, 252, 225, 294);
+seg(360, 362, 344, 386, { epais: 1.5 }); // au-dessus du pivot du flipper de Thor : la bille qui longe le lanceur glisse sur le flipper
+// entrées des rampes : toit en pointe (rien où se poser) + couloir d'accès
+const ENTREE_B = { x: 88, y: 300 }, ENTREE_S = { x: 272, y: 314 };
+for (const E of [ENTREE_B, ENTREE_S]) { seg(E.x - 20, E.y + 16, E.x, E.y, { epais: 2 }); seg(E.x, E.y, E.x + 20, E.y + 16, { epais: 2 }); seg(E.x - 20, E.y + 16, E.x - 24, E.y + 52); seg(E.x + 20, E.y + 16, E.x + 24, E.y + 52); }
+// T-H-O-R : 4 plaques en chevron, touchées elles tombent
+const THOR = [[100, 476, 128, 456, 'T'], [128, 456, 156, 436, 'H'], [244, 436, 272, 456, 'O'], [272, 456, 300, 476, 'R']]
+  .map(([ax, ay, bx, by, l]) => seg(ax, ay, bx, by, { type: 'thor', lettre: l, epais: 4, e: 0.3, rail: false, bas: false }));
+// porte du Valhalla (sous la pointe) : fermée, c'est une cible touchable par-dessous ; ouverte, la bille entre
+const PORTE_V = Object.assign(seg(180, 74, 220, 74, { type: 'porteV', oneWay: true, nx: 0, ny: 1, epais: 3, e: 0.4, rail: false }), { cx: 200, haut: 46 });
 cibleSegs = segs;
-const RUNES = [ // pierres runiques (bumpers) : même disposition que les bumpers du gymnase + 2 petites
-  { x: 245, y: 112, r: 20, rune: 'ᛟ' }, { x: 310, y: 124, r: 20, rune: 'ᚦ' }, { x: 275, y: 178, r: 20, rune: 'ᛉ' },
-  { x: 110, y: 250, r: 7, kick: 150, petit: true, rune: 'ᚱ' }, { x: 140, y: 240, r: 7, kick: 150, petit: true, rune: 'ᚨ' }
-].map(b => Object.assign(b, { flash: 0, cd: 0 }));
-// Hugin et Munin, les corbeaux d'Odin : cibles qui volent ; touché = il s'envole et revient 4 s plus tard
-const CORBEAUX = [{ nom: 'HUGIN', cx: 190, cy: 318, ax: 76, ay: 16, fx: 0.9, fy: 2.3, ph: 0 }, { nom: 'MUNIN', cx: 186, cy: 374, ax: 64, ay: 12, fx: 0.7, fy: 1.9, ph: 2.2 }]
-  .map(c => Object.assign(c, { x: c.cx, y: c.cy, r: 10, kick: 260, petit: true, hors: 0, chute: null, cd: 0, dir: 1 }));
-const MJOL = { x: 305, y: 335, r: 17 }; // soucoupe de Mjöllnir (même place que la cantine)
-const VALH = { odinReset: 0, allume: false, jackpot: 40000, corbeaux: 0, marteaux: 0, ponts: 0, grondT: 6, eclairs: [] };
-const T_ASGARD = 1.4, T_MJOL = 1.2, ODIN_ATTENTE = 8, VIT_PONT = 430;
-// pont Bifröst : de l'entrée centrale, il passe en arc au-dessus du plateau et dépose la bille en haut du couloir gauche (vers le flipper gauche)
-const BIFROST_PTS = [[191, 266], [191, 222], [187, 186], [170, 160], [142, 150], [110, 158], [78, 172], [54, 196], [42, 232], [40, 280], [44, 340], [48, 400], [50, 455]];
-const BIFROST = rail(BIFROST_PTS);
+const FL_THOR = Object.assign(flipper(336, 398, -1), { L: 46 }); // 3e flipper, à droite : il suit le bouton droit
+const YGG = { x: 205, y: 222, r: 24, kick: 200, petit: true, flash: 0, cd: 0 }; // le tronc (bumper doux)
+const NORNES = ['URD', 'VERDANDI', 'SKULD'].map((nom, i) => ({ nom, a: i * 2 * Math.PI / 3, x: 0, y: 0, r: 12, flash: 0, cd: 0 })); // tournent autour du tronc
+const R_NORNES = 54, VIT_NORNES = 0.9;
+const MJOL = { px: 106, py: 196, L: 32, a: 0, x: 0, y: 0, r: 11, kick: 430, petit: true, flash: 0, cd: 0, vit: 1.7 }; // le marteau tourne autour de son manche
+const FEUX = [{ x: 180, y: 372, r: 14 }, { x: 330, y: 288, r: 14 }].map(b => Object.assign(b, { flash: 0, cd: 0 })); // braseros (bumpers)
+const BOUCLIERS = [{ x: 78, y: 505, r: 17 }, { x: 292, y: 505, r: 17 }].map(b => Object.assign(b, { flash: 0, cd: 0 })); // remplacent les slingshots
+const VALH = { thorReset: 0, ouverte: false, jackpot: 40000, marteaux: 0, ponts: 0, serpents: 0, nornes: 0, valk: false, ragna: 0, prog: { b: 0, s: 0, t: 0 }, grondT: 6, eclairs: [], spin: 0, spinV: 0 };
+const T_PORTE = 1.5, THOR_ATTENTE = 8, VIT_PONT = 430, VIT_SERPENT = 480, T_RAGNA = 25;
+// Bifröst : de l'entrée gauche, il monte sous le toit, passe devant la porte et redescend à droite sur le flipper de Thor
+const BIFROST = rail([[88, 322], [84, 286], [70, 250], [62, 206], [68, 160], [92, 120], [130, 92], [170, 80], [200, 78], [240, 86], [282, 100], [322, 124], [346, 164], [352, 214], [350, 262], [344, 310], [332, 352]]);
+// Jörmungandr : il avale la bille à droite, l'enroule 1 tour ½ en spirale, file sous le toit et la recrache en haut du couloir gauche
+const SERPENT = rail((() => {
+  const P = [[272, 334], [272, 296], [276, 252], [286, 212]], cx = 290, cy = 150;
+  for (let a = 90, i = 0; a >= -450; a -= 20, i++) { const r = 40 - 16 * i / 27; P.push([cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)]); }
+  return P.concat([[250, 118], [205, 116], [158, 120], [112, 130], [64, 150], [34, 200], [26, 262], [26, 330], [32, 400], [40, 470], [46, 528]]);
+})());
 
 // ---------------------------------------------------------------- 5e table : LE DUEL DES DIEUX (Kevin, 27/10)
 // Le dieu / la déesse a ses propres flippers EN HAUT (à l'envers). Derrière eux, la porte d'Asgard : 3 buts pour gagner.
@@ -1139,7 +1150,9 @@ const Y_DIEU = 66, BUT_DIEU = 124; // le dieu flotte dans la porte ; bille au-de
 function flipperHaut(px, py, cote) { return Object.assign(flipper(px, py, cote), { L: 50, haut: true, tenu: 0, ia: 0, decl: -1 }); }
 const FLD = [flipperHaut(100, 170, 1), flipperHaut(270, 170, -1)]; // plus courts que les tiens : l'ouverture du milieu reste jouable
 // le dieu après 0, 1, 2 buts encaissés : temps de réaction, chance de rater, vitesse de ses flippers, éclair toutes les ~n s
-const IA_DIEU = [{ reac: 0.15, rate: 0.3, vit: 15, eclair: 7.5 }, { reac: 0.11, rate: 0.22, vit: 17, eclair: 6 }, { reac: 0.08, rate: 0.15, vit: 19, eclair: 4.8 }];
+const IA_DIEU = [{ reac: 0.13, rate: 0.22, vit: 16, eclair: 7, egide: 1.4 }, { reac: 0.1, rate: 0.16, vit: 18, eclair: 5.6, egide: 1.9 }, { reac: 0.07, rate: 0.1, vit: 20, eclair: 4.5, egide: 2.4 }];
+// son égide (bouclier d'or) va et vient sur la ligne de but, de plus en plus vite : il faut tirer quand elle est de l'autre côté
+const EGIDE = { y: 130, r: 10, amp: 30, kick: 420, petit: true };
 
 // ---------------------------------------------------------------- État de jeu
 let etat = 'accueil';
@@ -1743,7 +1756,7 @@ function lancerCombat(boss) {
     esqCd: 0, boucl: 0, bouclCd: 5, billes: N.billes, pas: 0, porte: 0, coup: 0, pare: 0, rage: false, sauve: null, tambour: 0, bulle: '', x0: 0, y0: 0, chapeau: null, ultime: !!N.ultime, dieu: !!N.dieu, tir: 0, niv: 0 };
   charge.src = {}; charge.actif = false; arreterCharge();
   if (N.ultime) { combat.sceaux = SCEAUX.map(p => ({ x0: p.x, y0: p.y, x: p.x, y: p.y, r: 13, kick: 230, petit: true, on: true, flash: 0 })); combat.ouvert = 0; combat.sceauT = 0; combat.gardes = []; }
-  if (N.dieu) { combat.x = 185; combat.y = -30; FLD.forEach(f => { f.a = A_REPOS; f.w = 0; f.appui = false; f.tenu = 0; f.ia = 0; f.decl = -1; }); combat.eclairT = 6; combat.cible = null; }
+  if (N.dieu) { combat.x = 185; combat.y = -30; FLD.forEach(f => { f.a = A_REPOS; f.w = 0; f.appui = false; f.tenu = 0; f.ia = 0; f.decl = -1; }); combat.eclairT = 6; combat.cible = null; combat.ex = 185; combat.egideT = 0; }
   if (N.dieu) annonce('ASGARD S’OUVRE…', (boss.genre === 'F' ? 'La déesse' : 'Le dieu') + ' descend du ciel !', '#7fd8ff', 34, 1.6);
   else if (N.ultime) annonce('LE CHÂTEAU S’OUVRE…', 'Un boss caché en sort !', '#b26bff', 34, 1.6);
   else annonce('ALERTE BOSS !', 'N°' + boss.rang + ' · ' + titreBoss(boss.rang, boss.genre) + ' arrive…', '#ff4d4d', 38, 1.6);
@@ -1974,100 +1987,127 @@ function finCombat() { // boss vaincu : retour au gymnase, la bille attend au la
 
 // ---- le Valhalla (4e table)
 function resetValh() {
-  Object.assign(VALH, { odinReset: 0, allume: false, jackpot: 40000, corbeaux: 0, marteaux: 0, ponts: 0, grondT: 6, eclairs: [] });
-  ODIN.forEach(c => { c.bas = false; c.on = true; }); CORBEAUX.forEach(c => { c.hors = 0; c.chute = null; }); RUNES.forEach(c => { c.flash = 0; c.cd = 0; });
+  Object.assign(VALH, { thorReset: 0, ouverte: false, jackpot: 40000, marteaux: 0, ponts: 0, serpents: 0, nornes: 0, valk: false, ragna: 0, prog: { b: 0, s: 0, t: 0 }, grondT: 6, eclairs: [], spin: 0, spinV: 0, dernierPont: null, dernierT: -9 });
+  THOR.forEach(c => { c.bas = false; c.on = true; }); PORTE_V.on = true; FL_THOR.a = A_REPOS; FL_THOR.w = 0;
+  [YGG, MJOL, ...NORNES, ...FEUX, ...BOUCLIERS].forEach(c => { c.flash = 0; c.cd = 0; }); majValh(0);
 }
+const pv = n => n * (VALH.ragna > 0 ? 2 : 1); // Ragnarök : points doublés
 function pasValh(h) {
+  const f3 = FL_THOR, ap = FL[1].appui && !(FL[1].gele > 0) && !tiltOn, cible = ap ? A_HAUT : A_REPOS, old = f3.a; // le flipper de Thor suit le bouton droit
+  if (f3.a > cible) f3.a = Math.max(cible, f3.a - (ap ? 22 : 12) * h); else f3.a = Math.min(cible, f3.a + (ap ? 22 : 12) * h);
+  f3.w = (f3.a - old) / h;
   const amort = 1 - 0.06 * h;
   for (const b of balles) {
     if (!libre(b)) continue;
-    if (tiltOn) { pasTilt(b, h, segsV, RUNES); continue; }
+    if (tiltOn) { pasTilt(b, h, segsV, [YGG, ...NORNES, ...FEUX, ...BOUCLIERS]); collFlip(b, f3); continue; }
     b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
-    if (b.vy < 0 && b.y < 274 && b.y > 236 && b.x > 160 && b.x < 222 && !balles.some(o => o.pont)) { entrerPont(b); continue; }
-    if (b.vy < -150 && b.y < 292 && b.y > 260 && b.x > 236 && b.x < 266 && !balles.some(o => o.boucle)) { entrerLoop(b); continue; }
+    if (!balles.some(o => o.pont)) {
+      if (b.vy < -60 && b.y < ENTREE_B.y + 36 && b.y > ENTREE_B.y + 10 && Math.abs(b.x - ENTREE_B.x) < 18) { entrerPont(b, BIFROST); continue; }
+      if (b.vy < -60 && b.y < ENTREE_S.y + 36 && b.y > ENTREE_S.y + 10 && Math.abs(b.x - ENTREE_S.x) < 18) { entrerPont(b, SERPENT); continue; }
+    }
     for (const s of segsV) { if (!s.on) continue; const imp = collSeg(b, s); if (imp > 50) toucheValh(s, b, imp); }
-    for (const c of RUNES) if (collBump(b, c)) toucheRune(c, b);
-    for (const c of CORBEAUX) if (c.hors <= 0 && collBump(b, c)) toucheCorbeau(c, b);
+    if (collBump(b, YGG)) toucheYgg(b);
+    for (const c of NORNES) if (collBump(b, c)) toucheNorne(c, b);
+    if (collBump(b, MJOL)) toucheMarteau(b);
+    collPlot(b, MJOL.px, MJOL.py, 5);
+    for (const c of FEUX) if (collBump(b, c)) toucheFeu(c, b);
+    for (const c of BOUCLIERS) if (collBump(b, c)) toucheBouclier(c, b);
     for (const f of FL) collFlip(b, f);
+    collFlip(b, f3);
     const v2 = b.vx * b.vx + b.vy * b.vy; if (v2 > VMAX * VMAX) { const k = VMAX / Math.sqrt(v2); b.vx *= k; b.vy *= k; }
-    if (b.y < ASGARD.ligne - 4 && b.y > ASGARD.pic && b.x > ASGARD.x1 && b.x < ASGARD.x2) { entrerAsgard(b); continue; }
-    if (b.ignoreTrou <= 0 && Math.hypot(b.x - MJOL.x, b.y - MJOL.y) < 13) entrerMjol(b);
+    if (VALH.ouverte && b.vy < -40 && b.y < PORTE_V.ay && b.y > PORTE_V.haut && Math.abs(b.x - PORTE_V.cx) < 18) { entrerPorte(b); continue; }
+    if (VALH.valk && b.x < OUT.g && b.y > 650 && b.vy > 0) valkyrie(b);
   }
 }
 function toucheValh(s, b, imp) {
-  if (s.type === 'sling') { points(100, b.x, b.y - 14); SON.sling(); vib(10); s.flash = 0.15; etincelles(b.x, b.y, 5, '#ffe9a8'); }
-  else if (s.type === 'odin' && !s.bas) abattreOdin(s);
+  if (s.type === 'thor' && !s.bas) abattreThor(s);
+  else if (s.type === 'porteV' && (s.cd || 0) < temps) { s.cd = temps + 0.4; points(pv(1000), 200, 100); SON.cible(); vib(10); blague('Porte fermée : T-H-O-R !', 200, 120, '#ffd23f'); }
   else SON.mur(imp);
 }
-function toucheRune(c, b) {
-  if (c.cd > 0) return; c.cd = 0.08; c.flash = 0.25; chaseT = Math.max(chaseT, 0.2);
-  points(c.petit ? 300 : 200, c.x, c.y - (c.petit ? 30 : 42)); SON.rune(c.petit); vib(8); etincelles(b.x, b.y, 7, '#7fd8ff');
-  if (!c.petit && Math.random() < 0.12) blague(pick(['Skål !', 'Par Odin !', 'Rune de feu !', 'Pour Asgard !', 'Ragnarök !']), c.x, c.y - 60, '#ffd23f');
+function toucheYgg(b) {
+  if (YGG.cd > 0) return; YGG.cd = 0.1; YGG.flash = 0.3; points(pv(250), YGG.x, YGG.y - 36); SON.rune(false); vib(8); etincelles(b.x, b.y, 8, '#9be37a');
+  if (Math.random() < 0.1) blague(pick(['Yggdrasil !', 'L’arbre-monde tremble !', 'Par les neuf mondes !']), YGG.x, YGG.y - 60, '#9be37a');
 }
-function toucheCorbeau(c, b) {
-  if (c.cd > 0) return; c.cd = 0.2; c.hors = 4; c.chute = { t: 0, vx: (c.x - b.x) * 6 + rnd(-40, 40), vy: -220 };
-  VALH.corbeaux++; points(1500, c.x, c.y - 24); SON.corbeau(); vib(15); etincelles(c.x, c.y, 10, '#c9d1de');
-  if (CORBEAUX.every(o => o.hors > 0)) { points(10000); annonce('HUGIN ET MUNIN !', 'Les corbeaux d’Odin · +' + fmt(10000 * mult), '#c9d1de', 26, 1.6); SON.nuee(); vib([20, 20, 40]); }
-  else blague(c.nom + ' !', c.x, c.y - 44, '#c9d1de');
+function toucheNorne(c, b) {
+  if (c.cd > 0) return; c.cd = 0.1; c.flash = 0.3; VALH.nornes++; points(pv(400), c.x, c.y - 26); SON.rune(true); vib(10); etincelles(b.x, b.y, 8, '#ffe9a8');
+  if (NORNES.every(n => n.flash > 0)) { points(pv(8000)); annonce('LES 3 NORNES !', 'Le destin est avec toi · +' + fmt(pv(8000) * mult), '#ffe9a8', 26, 1.6); SON.fanfare(); }
+  else if (Math.random() < 0.25) blague(c.nom + ' !', c.x, c.y - 44, '#ffe9a8');
 }
-function abattreOdin(s) {
-  s.bas = true; s.on = false; points(1000, s.cx, s.ay - 30); SON.cible(); vib(15); etincelles(s.cx, s.ay - 8, 12, '#ffd23f'); chaseT = Math.max(chaseT, 0.4);
-  if (ODIN.every(c => c.bas)) {
-    points(10000); VALH.allume = true; VALH.odinReset = ODIN_ATTENTE; tir('odin', 199, 400); flash = Math.max(flash, 0.15);
-    annonce('O-D-I-N !', 'La porte d’Asgard s’illumine : vise le JACKPOT', '#ffd23f', 40, 2); SON.odin(); vib([40, 40, 60]);
-  } else blague(ODIN.filter(c => c.bas).map(c => c.lettre).join('-') + ' …', 199, 404, '#ffd23f');
-}
-function entrerAsgard(b) {
-  b.tient = T_ASGARD; b.lieu = 'asgard'; b.x = ASGARD.cx; b.y = ASGARD.haut + 7; b.vx = b.vy = 0; tir('asgard', ASGARD.cx, 150);
-  if (VALH.allume) {
-    points(VALH.jackpot, ASGARD.cx, 110); annonce('JACKPOT D’ASGARD !', 'Les Valkyries chantent : +' + fmt(VALH.jackpot * mult), '#ffd23f', 30, 2.2);
-    SON.jackpotAsgard(); vib([60, 40, 60, 40, 120]); flash = Math.max(flash, 0.3); secousse = 0.15; etincelles(ASGARD.cx, 60, 30, '#ffd23f');
-    VALH.jackpot += 10000; VALH.allume = false;
-  } else { points(5000, ASGARD.cx, 110); blague('Porte d’Asgard !', ASGARD.cx, 130, '#ffd23f'); SON.asgard(); vib([20, 30, 20]); etincelles(ASGARD.cx, 60, 12, '#ffd23f'); }
-}
-function entrerMjol(b) {
-  b.tient = T_MJOL; b.lieu = 'mjol'; b.x = MJOL.x; b.y = MJOL.y; b.vx = b.vy = 0; VALH.marteaux++; tir('mjol', MJOL.x, MJOL.y);
+function toucheMarteau(b) {
+  if (MJOL.cd > 0) return; MJOL.cd = 0.25; MJOL.flash = 0.35; VALH.marteaux++; secousse = Math.max(secousse, 0.08); etincelles(b.x, b.y, 12, '#bfefff');
   if (VALH.marteaux % 3 === 0) {
-    points(15000, MJOL.x, MJOL.y - 24); annonce('COUP DE MJÖLLNIR !', '3 marteaux : +' + fmt(15000 * mult), '#7fd8ff', 26, 1.8);
-    SON.tonnerre(0.6); VALH.eclairs.push({ x: MJOL.x, t: 0.35 }); flash = Math.max(flash, 0.25); secousse = 0.2;
-  } else { points(4000, MJOL.x, MJOL.y - 24); blague('Mjöllnir ! ' + (VALH.marteaux % 3) + '/3', MJOL.x - 60, MJOL.y - 44, '#7fd8ff'); SON.mjollnir(); }
-  vib([20, 40, 20]);
+    points(pv(15000), MJOL.x, MJOL.y - 30); annonce('COUP DE MJÖLLNIR !', '3 coups de marteau · +' + fmt(pv(15000) * mult), '#bfefff', 26, 1.8);
+    SON.tonnerre(0.6); VALH.eclairs.push({ x: MJOL.x, y: MJOL.y, t: 0.4 }); flash = Math.max(flash, 0.25); secousse = 0.2; vib([30, 30, 60]);
+  } else { points(pv(1500), MJOL.x, MJOL.y - 30); blague('Mjöllnir ! ' + (VALH.marteaux % 3) + '/3', MJOL.x + 40, MJOL.y - 40, '#bfefff'); SON.mjollnir(); vib(20); }
 }
-function sortirValh(b) { // éjection de la porte d'Asgard (vers le bas) ou de la soucoupe (vers la gauche)
-  if (b.lieu === 'asgard') { b.x = ASGARD.cx + rnd(-12, 12); b.y = ASGARD.ligne + 16; b.vx = rnd(-110, 110); b.vy = 240; SON.ejecte(); }
-  else { b.vx = -230; b.vy = 170; b.ignoreTrou = 1; SON.ejecte(); }
+function toucheFeu(c, b) {
+  if (c.cd > 0) return; c.cd = 0.08; c.flash = 0.3; points(pv(300), c.x, c.y - 30); SON.rune(false); vib(8); etincelles(b.x, b.y, 10, '#ff9a3c');
+}
+function toucheBouclier(c, b) {
+  if (c.cd > 0) return; c.cd = 0.08; c.flash = 0.2; points(pv(100), c.x, c.y - 28); SON.sling(); vib(10); etincelles(b.x, b.y, 6, '#ffd23f');
+}
+function abattreThor(s) {
+  s.bas = true; s.on = false; points(pv(1000), (s.ax + s.bx) / 2, s.ay - 28); SON.cible(); vib(15); etincelles((s.ax + s.bx) / 2, (s.ay + s.by) / 2, 12, '#ffd23f'); chaseT = Math.max(chaseT, 0.4);
+  if (THOR.every(c => c.bas)) {
+    points(pv(10000)); VALH.ouverte = true; PORTE_V.on = false; VALH.thorReset = THOR_ATTENTE; VALH.prog.t++; tir('thor', 200, 420); flash = Math.max(flash, 0.15);
+    annonce('T-H-O-R !', 'La porte du Valhalla s’ouvre : vise le JACKPOT', '#ffd23f', 40, 2); SON.odin(); vib([40, 40, 60]); verifierRagna();
+  } else blague(THOR.filter(c => c.bas).map(c => c.lettre).join('-') + ' …', 200, 420, '#ffd23f');
+}
+function entrerPorte(b) {
+  b.tient = T_PORTE; b.lieu = 'asgard'; b.x = PORTE_V.cx; b.y = PORTE_V.haut + 6; b.vx = b.vy = 0; tir('porte', 200, 150);
+  points(pv(VALH.jackpot), 200, 110); annonce('JACKPOT DU VALHALLA !', 'Les Valkyries chantent : +' + fmt(pv(VALH.jackpot) * mult), '#ffd23f', 30, 2.2);
+  SON.jackpotAsgard(); vib([60, 40, 60, 40, 120]); flash = Math.max(flash, 0.3); secousse = 0.15; etincelles(200, 60, 30, '#ffd23f');
+  VALH.jackpot += 10000; VALH.ouverte = false; PORTE_V.on = true;
+}
+function sortirValh(b) { // la porte rend la bille vers le bas, devant Yggdrasil
+  b.x = PORTE_V.cx + rnd(-10, 10); b.y = PORTE_V.ay + 16; b.vx = rnd(-160, 160); b.vy = 200; SON.ejecte();
   b.lieu = null; b.ax = b.x; b.ay = b.y; b.at = temps;
 }
-function entrerPont(b) {
-  b.pont = { d: 0 }; b.vx = b.vy = 0; VALH.ponts++;
-  points(3000, 191, 236); SON.bifrost(BIFROST.total / VIT_PONT); vib(15); tir('bifrost', 191, 230); chaseT = Math.max(chaseT, 0.5);
-  if (VALH.ponts % 3 === 0) { points(20000); annonce('LE BIFRÖST BRILLE !', '3 passages sur le pont : +' + fmt(20000 * mult), '#ff8fab', 28, 1.8); SON.fanfare(); flash = Math.max(flash, 0.12); }
-  else blague('Bifröst ! ' + (VALH.ponts % 3) + '/3', 191, 300, '#ffd23f');
+function valkyrie(b) { // la Valkyrie rattrape la bille du couloir gauche et la renvoie en haut
+  VALH.valk = false; b.vy = -980; b.vx = 0; b.sauveDir = 1; points(pv(2500));
+  annonce('VALKYRIE !', 'Elle t’emporte loin de Hel', '#ffe9a8', 30, 1.6); SON.sauve(); vib([30, 20, 60]); etincelles(b.x, b.y, 20, '#ffffff'); flash = Math.max(flash, 0.15);
+}
+function entrerPont(b, rail) {
+  const S_ = rail === SERPENT; b.pont = { d: 0, rail }; b.vx = b.vy = 0; chaseT = Math.max(chaseT, 0.5);
+  const croise = VALH.dernierPont && VALH.dernierPont !== rail && temps - VALH.dernierT < 8; VALH.dernierPont = rail; VALH.dernierT = temps;
+  if (S_) {
+    VALH.serpents++; VALH.prog.s++; points(pv(4000), ENTREE_S.x, ENTREE_S.y - 30); SON.serpent(rail.total / VIT_SERPENT); vib(20); tir('serpent', ENTREE_S.x, ENTREE_S.y);
+    if (!VALH.valk) { VALH.valk = true; blague('La Valkyrie veille à gauche', 200, 300, '#ffe9a8'); } else blague('Jörmungandr !', 200, 300, '#9be37a');
+  } else {
+    VALH.ponts++; VALH.prog.b++; VALH.spinV = 30; points(pv(3000), ENTREE_B.x, ENTREE_B.y - 30); SON.bifrost(rail.total / VIT_PONT); vib(15); tir('bifrost', ENTREE_B.x, ENTREE_B.y);
+    blague('Bifröst !', 200, 300, '#ffd23f');
+  }
+  if (croise) { points(pv(10000)); annonce('PONTS CROISÉS !', 'Bifröst et serpent à la suite · +' + fmt(pv(10000) * mult), '#ffd23f', 26, 1.6); SON.fanfare(); }
+  verifierRagna();
 }
 function majPont(b, dt) {
-  const p = b.pont; p.d += VIT_PONT * dt; [b.x, b.y] = surRail(BIFROST, Math.min(p.d, BIFROST.total));
-  if (p.d >= BIFROST.total) { b.pont = null; b.vx = 6; b.vy = 170; } // lâchée en haut du couloir gauche, vers le flipper gauche
+  const p = b.pont, S_ = p.rail === SERPENT; p.d += (S_ ? VIT_SERPENT : VIT_PONT) * dt; [b.x, b.y] = surRail(p.rail, Math.min(p.d, p.rail.total));
+  if (p.d >= p.rail.total) { b.pont = null; if (S_) { b.vx = 50; b.vy = 150; } else { b.vx = -30; b.vy = 120; } } // serpent : haut du couloir gauche ; Bifröst : sur le flipper de Thor
+}
+function verifierRagna() {
+  const P = VALH.prog; if (VALH.ragna > 0 || P.b < 2 || P.s < 2 || P.t < 1) return;
+  VALH.ragna = T_RAGNA; VALH.prog = { b: 0, s: 0, t: 0 };
+  annonce('RAGNARÖK !', 'Le monde brûle : tous les points ×2 pendant ' + T_RAGNA + ' s', '#ff7a1a', 42, 2.6);
+  SON.tonnerre(1); SON.grosseFanfare(); vib([60, 40, 60, 40, 200]); flash = 0.5; secousse = 0.3;
 }
 function majValh(dt) {
-  for (const c of RUNES) { c.flash -= dt; c.cd -= dt; }
-  SLV.forEach(s => s.flash = (s.flash || 0) - dt);
-  for (const c of CORBEAUX) {
-    c.cd -= dt; const px = c.x;
-    if (c.chute) { c.chute.t += dt; c.x += c.chute.vx * dt; c.y += c.chute.vy * dt; c.chute.vy += 300 * dt; if (c.chute.t > 0.9) c.chute = null; }
-    else { c.x = c.cx + c.ax * Math.sin(c.fx * temps + c.ph); c.y = c.cy + c.ay * Math.sin(c.fy * temps + c.ph); }
-    if (Math.abs(c.x - px) > 0.01) c.dir = c.x > px ? 1 : -1;
-    if (c.hors > 0) c.hors = Math.max(0, c.hors - dt);
-  }
-  if (VALH.odinReset > 0) {
-    VALH.odinReset -= dt;
-    if (VALH.odinReset <= 0) {
-      if (balles.every(b => Math.abs(b.y - 446) > 24 || b.x < 110 || b.x > 290)) { ODIN.forEach(c => { c.bas = false; c.on = true; }); SON.tombe(); etincelles(199, 440, 14, '#ffd23f'); }
-      else VALH.odinReset = 0.3;
+  const ag = temps * VIT_NORNES;
+  NORNES.forEach((c, i) => { c.a = ag + i * 2 * Math.PI / 3; c.x = YGG.x + R_NORNES * Math.cos(c.a); c.y = YGG.y + R_NORNES * Math.sin(c.a); c.flash -= dt; c.cd -= dt; });
+  MJOL.a = temps * MJOL.vit; MJOL.x = MJOL.px + MJOL.L * Math.cos(MJOL.a); MJOL.y = MJOL.py + MJOL.L * Math.sin(MJOL.a);
+  for (const c of [YGG, MJOL, ...FEUX, ...BOUCLIERS]) { c.flash -= dt; c.cd -= dt; }
+  VALH.spin += VALH.spinV * dt; VALH.spinV *= Math.pow(0.25, dt);
+  if (VALH.thorReset > 0 && !VALH.ouverte) { // la porte a servi : les plaques remontent (pas sur une bille)
+    VALH.thorReset -= dt;
+    if (VALH.thorReset <= 0) {
+      if (balles.every(b => THOR.every(c => { const p = distSeg(b, c); return p > R + 8; }))) { THOR.forEach(c => { c.bas = false; c.on = true; }); SON.tombe(); etincelles(200, 450, 14, '#ffd23f'); }
+      else VALH.thorReset = 0.3;
     }
   }
+  if (VALH.ragna > 0) { const av = VALH.ragna; VALH.ragna = Math.max(0, VALH.ragna - dt); if (Math.ceil(VALH.ragna) < Math.ceil(av) && VALH.ragna > 0 && VALH.ragna <= 5) SON.tic(Math.ceil(VALH.ragna)); if (VALH.ragna <= 0) annonce('Fin du Ragnarök', 'Le monde renaît…', '#ffe9a8', 26, 1.6); }
   VALH.eclairs.forEach(e => e.t -= dt); VALH.eclairs = VALH.eclairs.filter(e => e.t > 0);
   VALH.grondT -= dt; if (VALH.grondT <= 0) { VALH.grondT = rnd(10, 16); SON.grondement(); } // tonnerre lointain (ambiance)
 }
+function distSeg(b, s) { const dx = s.bx - s.ax, dy = s.by - s.ay; let t = ((b.x - s.ax) * dx + (b.y - s.ay) * dy) / (dx * dx + dy * dy); t = Math.max(0, Math.min(1, t)); return Math.hypot(b.x - s.ax - t * dx, b.y - s.ay - t * dy); }
 function perteValh() { // Kevin : au Valhalla (et dans le monde choisi par un dieu), une bille perdue = la bille suivante, sans quitter ce monde
   if (balles.length) return;
   if (sauveT > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Bille sauvée !', table === 'valh' ? 'Odin te rend ta bille' : 'On remet la bille', table === 'valh' ? '#ffd23f' : '#7cf'); SON.sauve(); sauveT = 3; return; }
@@ -2119,6 +2159,7 @@ function pasDieu(h) {
     for (const s of segsD) { if (!s.on) continue; const imp = collSeg(b, s); if (imp > 50) { if (s.type === 'sling') { points(100, b.x, b.y - 14); SON.sling(); vib(10); s.flash = 0.15; etincelles(b.x, b.y, 5, '#fff'); } else SON.mur(imp); } }
     for (const f of FL) collFlip(b, f);
     for (const f of FLD) collFlip(b, f);
+    if (C && C.phase === 'combat' && collBump(b, Object.assign(EGIDE, { x: C.ex }))) { C.egideT = 0.2; SON.mur(600); etincelles(b.x, b.y, 6, '#ffe9a8'); }
     const v2 = b.vx * b.vx + b.vy * b.vy; if (v2 > VMAX * VMAX) { const k = VMAX / Math.sqrt(v2); b.vx *= k; b.vy *= k; }
     if (C && C.phase === 'combat' && !b.marque && b.y < BUT_DIEU && b.x > 100 && b.x < 270) butDieu(b);
   }
@@ -2130,6 +2171,7 @@ function majDieu(dt) {
   SLD.forEach(s => s.flash = (s.flash || 0) - dt); FL.forEach(f => f.gele = Math.max(0, (f.gele || 0) - dt));
   if (C.eclair) { C.eclair.t -= dt; if (C.eclair.t <= 0) C.eclair = null; }
   iaDieu(dt, ia);
+  C.ep = (C.ep || 0) + dt * ia.egide; C.ex = 185 + EGIDE.amp * Math.sin(C.ep); C.egideT = Math.max(0, (C.egideT || 0) - dt); // l'égide fait des allers-retours devant la porte : à toi de viser au bon moment
   if (!enJeu) return;
   if (C.cible) { C.cible.alerte -= dt; if (C.cible.alerte <= 0) frapperEclair(C.cible); }
   else { C.eclairT -= dt; if (C.eclairT <= 0) { C.eclairT = ia.eclair * rnd(0.85, 1.15); C.cible = pick(FL); C.cible.alerte = 0.9; SON.avertEclair(); } }
@@ -2149,6 +2191,15 @@ function iaDieu(dt, ia) { // le dieu joue ses flippers : il voit venir la bille,
       }
     }
   }
+}
+function dessinerEgide(C) { // bouclier rond d'or, rune d'Asgard ; flash blanc quand il pare
+  const x = C.ex, y = EGIDE.y, r = EGIDE.r, f = C.egideT > 0;
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.arc(x + 2, y + 4, r + 2, 0, 7); ctx.fill();
+  const g = ctx.createRadialGradient(x - 5, y - 6, 1, x, y, r + 2); g.addColorStop(0, f ? '#ffffff' : '#fff6d0'); g.addColorStop(0.6, '#e8b830'); g.addColorStop(1, '#8a6200');
+  ctx.beginPath(); ctx.arc(x, y, r + 2, 0, 7); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#7fd8ff'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(x, y, r - 5, 0, 7); ctx.strokeStyle = 'rgba(122,90,0,.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.font = '900 13px Georgia,serif'; ctx.fillStyle = '#7a5a00'; ctx.fillText('ᛟ', x, y + 1);
+  if (f) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2.6); gg.addColorStop(0, 'rgba(255,240,180,.7)'); gg.addColorStop(1, 'rgba(255,240,180,0)'); ctx.fillStyle = gg; ctx.fillRect(x - r * 3, y - r * 3, r * 6, r * 6); ctx.restore(); }
 }
 function frapperEclair(f) { // l'éclair tombe : le flipper visé est gelé 1 s
   const C = combat; f.alerte = 0; f.gele = 1; C.cible = null; C.eclair = { f, t: 0.35 };
@@ -2236,7 +2287,7 @@ function maj(dt) {
     b.tirBut -= dt; b.sansGardien -= dt;
     if (b.tient > 0) {
       b.tient -= dt; b.ax = b.x; b.ay = b.y; b.at = temps;
-      if (b.tient <= 0) { if (b.lieu === 'casier') sortirCasier(b); else if (b.lieu === 'asgard' || b.lieu === 'mjol') sortirValh(b); else if (b.lieu) sortirGoth(b); else { b.vx = -230; b.vy = 170; b.ignoreTrou = 1; SON.ejecte(); } }
+      if (b.tient <= 0) { if (b.lieu === 'casier') sortirCasier(b); else if (b.lieu === 'asgard') sortirValh(b); else if (b.lieu) sortirGoth(b); else { b.vx = -230; b.vy = 170; b.ignoreTrou = 1; SON.ejecte(); } }
       continue;
     }
     b.ignoreTrou -= dt; b.ignoreCasier -= dt;
@@ -2967,12 +3018,6 @@ function renduGoth() {
 // ---------------------------------------------------------------- Le Valhalla (4e table) : ciel d'aurores boréales, salle d'Odin en bois et or
 const VALH_C = { or: '#ffd23f', clair: '#ffe9a8', ciel: '#7fd8ff', glace: '#bfefff', aurore: '#5dffb0', nuit: '#0a1236' };
 let fondValh = null, fondDieu = null;
-function aurore(c, y0, amp, coul, alpha, ph) { // voile d'aurore boréale (bande ondulée, fondu vers le bas)
-  c.beginPath(); c.moveTo(0, y0);
-  for (let x = 0; x <= 400; x += 10) c.lineTo(x, y0 + amp * Math.sin(x / 55 + ph) + amp * 0.4 * Math.sin(x / 23 + ph * 2));
-  for (let x = 400; x >= 0; x -= 10) c.lineTo(x, y0 + 46 + amp * Math.sin(x / 55 + ph) * 0.6);
-  c.closePath(); const g = c.createLinearGradient(0, y0 - amp, 0, y0 + 50); g.addColorStop(0, `rgba(${coul},0)`); g.addColorStop(0.35, `rgba(${coul},${alpha})`); g.addColorStop(1, `rgba(${coul},0)`); c.fillStyle = g; c.fill();
-}
 function bouclierViking(c, x, y, r, coul) { // bouclier rond : bois peint, umbo de fer, cerclage
   c.fillStyle = 'rgba(0,0,0,.4)'; c.beginPath(); c.arc(x + 2, y + 3, r, 0, 7); c.fill();
   c.fillStyle = coul; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
@@ -2980,162 +3025,155 @@ function bouclierViking(c, x, y, r, coul) { // bouclier rond : bois peint, umbo 
   c.strokeStyle = '#c9d1de'; c.lineWidth = 1.6; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke();
   const g = c.createRadialGradient(x - 1, y - 1, 0.5, x, y, r * 0.3); g.addColorStop(0, '#fff'); g.addColorStop(1, '#6f7a8c'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r * 0.28, 0, 7); c.fill();
 }
-function formeAsgard(c) { c.beginPath(); c.moveTo(ASGARD.x1, ASGARD.ligne); c.lineTo(ASGARD.x1, ASGARD.haut); c.lineTo(ASGARD.cx, ASGARD.pic); c.lineTo(ASGARD.x2, ASGARD.haut); c.lineTo(ASGARD.x2, ASGARD.ligne); c.closePath(); }
+// Valhalla (Kevin : ni les couleurs de la récré ni celles du gymnase) : or, braise et pierre sombre, un peu de vert pour l'arbre
+const VAL2 = { or: '#ffcf4a', orF: '#8a5a00', braise: '#ff7a1a', feu: '#ffb347', sang: '#8b1e1e', ivoire: '#fff3d6', feuille: '#9be37a', serpent: '#1f3d1a' };
+function cheminValh(c) { c.beginPath(); c.moveTo(10, 740); c.lineTo(10, 300); for (const p of OGIVE) c.lineTo(p[0], p[1]); c.lineTo(390, 740); c.closePath(); }
 function dessinerFondValh() {
   fondValh = document.createElement('canvas'); fondValh.width = cv.width; fondValh.height = cv.height;
-  const c = fondValh.getContext('2d'), k = S * DPR, V = VALH_C;
-  c.fillStyle = '#03050f'; c.fillRect(0, 0, fondValh.width, fondValh.height);
+  const c = fondValh.getContext('2d'), k = S * DPR, V = VAL2;
+  c.fillStyle = '#050302'; c.fillRect(0, 0, fondValh.width, fondValh.height);
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineCap = 'round'; c.lineJoin = 'round';
-  const lueur = (trace, coul, w = 2.5, flou = 10) => { c.save(); c.shadowColor = coul; c.shadowBlur = flou * k; c.strokeStyle = coul; c.lineWidth = w; trace(); c.stroke(); c.shadowBlur = 0; c.globalAlpha = 0.7; c.strokeStyle = '#fff'; c.lineWidth = Math.max(0.7, w * 0.3); trace(); c.stroke(); c.restore(); };
-  let graine = 77; const alea = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
-  c.save(); cheminTable(c); c.clip();
-  // le ciel du nord (haut de la table) : nuit bleue, étoiles, aurores boréales
-  let g = c.createLinearGradient(0, 0, 0, 250); g.addColorStop(0, '#050a24'); g.addColorStop(1, '#13285a'); c.fillStyle = g; c.fillRect(0, 0, 400, 252);
-  for (let i = 0; i < 90; i++) { c.fillStyle = `rgba(230,240,255,${0.25 + alea() * 0.7})`; c.beginPath(); c.arc(alea() * 400, alea() * 240, alea() * 1.3 + 0.3, 0, 7); c.fill(); }
-  aurore(c, 70, 18, '93,255,176', 0.32, 0.4); aurore(c, 110, 22, '127,216,255', 0.22, 2.1); aurore(c, 150, 14, '178,107,255', 0.18, 4.2);
-  // la grande salle d'Odin (bas) : planches de bois chaud, clous, lumière des braseros
-  for (let x = 0, i = 0; x < 400; x += 25, i++) {
-    c.fillStyle = `hsl(${24 + alea() * 10},${42 + alea() * 12}%,${17 + alea() * 9}%)`; c.fillRect(x + 0.8, 250, 23.4, 490);
-    c.fillStyle = 'rgba(255,220,160,.07)'; c.fillRect(x + 2, 250, 3, 490);
-    for (let y = 262 + (i % 3) * 60; y < 740; y += 180) { c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(x + 0.8, y, 23.4, 1.6); c.fillStyle = '#c9a25a'; c.beginPath(); c.arc(x + 5, y + 6, 1.2, 0, 7); c.arc(x + 20, y + 6, 1.2, 0, 7); c.fill(); }
-    if (alea() < 0.5) { c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 0.8; c.beginPath(); const yy = 300 + alea() * 400; c.ellipse(x + 12, yy, 4, 9, 0, 0, 7); c.stroke(); } // nœuds du bois
+  let graine = 91; const alea = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
+  c.save(); cheminValh(c); c.clip();
+  // sol de la grande salle : dalles de pierre sombre, chauffées par les braseros
+  let g = c.createRadialGradient(200, 400, 30, 200, 420, 460); g.addColorStop(0, '#4a2c14'); g.addColorStop(0.5, '#24150a'); g.addColorStop(1, '#0a0604'); c.fillStyle = g; c.fillRect(0, 0, 400, 740);
+  c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 1.2;
+  for (let y = 250; y < 740; y += 34) { const dec = (y / 34 % 2) * 26; for (let x = -dec; x < 400; x += 52 + alea() * 10) { c.strokeRect(x, y, 52, 34); } }
+  c.strokeStyle = 'rgba(255,200,120,.05)'; for (let i = 0; i < 40; i++) { c.beginPath(); const x = alea() * 400, y = 260 + alea() * 470; c.moveTo(x, y); c.lineTo(x + rnd(-20, 20), y + rnd(4, 14)); c.stroke(); }
+  // racines d'Yggdrasil : elles partent du tronc et courent sous les dalles
+  c.strokeStyle = 'rgba(40,22,8,.85)'; for (let i = 0; i < 9; i++) { const a = -0.3 + i * 0.47 + alea() * 0.2; c.lineWidth = 7 - i * 0.4; c.beginPath(); c.moveTo(YGG.x, YGG.y); let x = YGG.x, y = YGG.y; for (let j = 0; j < 6; j++) { x += Math.cos(a + Math.sin(j) * 0.4) * 34; y += Math.sin(a + Math.sin(j) * 0.4) * 34; c.lineTo(x, y); } c.stroke(); }
+  c.strokeStyle = 'rgba(155,227,122,.12)'; c.lineWidth = 1.5; c.beginPath(); c.arc(YGG.x, YGG.y, R_NORNES, 0, 7); c.stroke(); // chemin des Nornes
+  // le toit d'Odin : des boucliers d'or qui se chevauchent (comme le dit la légende), sous l'ogive
+  for (let y = 16, row = 0; y < 300; y += 14, row++) for (let x = (row % 2) * 13 - 13; x < 413; x += 26) {
+    const f = 1 - y / 300; g = c.createRadialGradient(x - 4, y - 5, 1, x, y, 14); g.addColorStop(0, `rgba(255,236,170,${0.75 * f + 0.1})`); g.addColorStop(0.55, `rgba(214,150,30,${0.85 * f + 0.1})`); g.addColorStop(1, `rgba(70,40,5,${0.9 * f + 0.1})`);
+    c.beginPath(); c.arc(x, y, 13, 0, Math.PI); c.closePath(); c.fillStyle = g; c.fill(); c.strokeStyle = `rgba(40,20,0,${0.6 * f + 0.2})`; c.lineWidth = 1; c.stroke();
+    c.fillStyle = `rgba(255,250,220,${0.5 * f})`; c.beginPath(); c.arc(x, y + 4, 2, 0, 7); c.fill(); // umbo
   }
-  g = c.createRadialGradient(190, 470, 40, 190, 470, 420); g.addColorStop(0, 'rgba(255,170,60,.16)'); g.addColorStop(0.55, 'rgba(60,20,0,.1)'); g.addColorStop(1, 'rgba(0,0,0,.7)'); c.fillStyle = g; c.fillRect(0, 250, 400, 490);
-  // grand cercle de runes (Vegvísir) au centre de la salle
-  c.save(); c.translate(190, 385); c.strokeStyle = 'rgba(255,210,63,.35)'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, 76, 0, 7); c.stroke(); c.beginPath(); c.arc(0, 0, 56, 0, 7); c.stroke();
-  c.font = '900 14px Georgia,serif'; c.fillStyle = 'rgba(255,210,63,.42)'; const RN = 'ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊ'; for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; c.fillText(RN[i], Math.cos(a) * 66, Math.sin(a) * 66); }
-  c.lineWidth = 1.6; for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; c.beginPath(); c.moveTo(Math.cos(a) * 12, Math.sin(a) * 12); c.lineTo(Math.cos(a) * 50, Math.sin(a) * 50); c.stroke(); c.beginPath(); c.arc(Math.cos(a) * 50, Math.sin(a) * 50, 3, 0, 7); c.stroke(); }
-  c.restore();
-  c.save(); c.translate(190, 386); c.rotate(-0.05); c.font = 'italic 900 30px Georgia,"Times New Roman",serif'; c.shadowColor = V.or; c.shadowBlur = 12 * k; c.fillStyle = 'rgba(255,233,168,.6)'; c.fillText('Valhalla', 0, 0); c.restore();
-  // le rempart d'Asgard (entre le ciel et la salle) : pierre + boucliers peints
-  g = c.createLinearGradient(0, 236, 0, 262); g.addColorStop(0, '#5c6270'); g.addColorStop(1, '#2a2f3a'); c.fillStyle = g; c.fillRect(0, 238, 400, 22);
-  c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 1; for (let x = 0; x < 400; x += 20) c.strokeRect(x, 238, 20, 11), c.strokeRect(x + 10, 249, 20, 11);
-  [[30, '#c8102e'], [80, '#1d5bd8'], [290, '#1d5bd8'], [338, '#c8102e']].forEach(([x, col]) => bouclierViking(c, x, 249, 11, col));
-  // couloir du lanceur
-  c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(360, 230, 30, 480);
-  c.save(); c.translate(375, 600); c.rotate(-Math.PI / 2); c.font = '800 12px system-ui,sans-serif'; c.fillStyle = 'rgba(255,233,168,.85)'; c.fillText('LANCEUR ▶', 0, 0); c.restore();
-  // soucoupe de Mjöllnir : trou sombre cerclé d'or + plaque
-  c.fillStyle = 'rgba(0,0,0,.5)'; c.beginPath(); c.arc(MJOL.x + 2, MJOL.y + 3, MJOL.r + 4, 0, 7); c.fill();
-  g = c.createRadialGradient(MJOL.x, MJOL.y - 3, 1, MJOL.x, MJOL.y, MJOL.r + 4); g.addColorStop(0, '#000'); g.addColorStop(0.75, '#0b1530'); g.addColorStop(1, '#ffd23f'); c.fillStyle = g; c.beginPath(); c.arc(MJOL.x, MJOL.y, MJOL.r + 4, 0, 7); c.fill();
-  rrect(c, MJOL.x - 50, MJOL.y + 27, 80, 20, 6); c.fillStyle = '#1a1206'; c.fill(); c.strokeStyle = V.or; c.lineWidth = 1.5; c.stroke();
-  c.font = '900 11px Georgia,serif'; c.fillStyle = V.clair; c.fillText('MJÖLLNIR', MJOL.x - 10, MJOL.y + 37.5);
-  // entrée du pont Bifröst (arc-en-ciel) et du looping
-  const arc7 = ['#ff3b3b', '#ff8c1a', '#ffe600', '#2ec27e', '#3a86ff', '#6a3dff', '#b26bff'];
-  c.save(); c.beginPath(); c.moveTo(163, 252); c.lineTo(191, 232); c.lineTo(219, 252); c.lineTo(225, 294); c.lineTo(157, 294); c.closePath(); c.clip();
-  arc7.forEach((col, i) => { c.fillStyle = col; c.globalAlpha = 0.55; c.fillRect(157 + i * 9.8, 230, 9.8, 66); }); c.restore();
-  c.save(); c.translate(191, 306); c.font = '900 10px system-ui,sans-serif'; c.strokeStyle = '#1a1206'; c.lineWidth = 3; c.strokeText('BIFRÖST', 0, 0); c.fillStyle = '#fff'; c.fillText('BIFRÖST', 0, 0); c.restore();
-  dessinerEntreeLoop(c, 'valh');
-  // porte d'Asgard : palais doré derrière, portail d'étoiles
-  for (const [x, h] of [[116, 22], [136, 34], [228, 34], [248, 22]]) { g = c.createLinearGradient(x - 7, 0, x + 7, 0); g.addColorStop(0, '#8a6200'); g.addColorStop(0.5, '#ffe9a8'); g.addColorStop(1, '#7a5a00'); c.fillStyle = g; c.fillRect(x - 6, 62 - h, 12, h + 8); c.beginPath(); c.moveTo(x - 8, 62 - h); c.lineTo(x, 50 - h); c.lineTo(x + 8, 62 - h); c.closePath(); c.fill(); }
-  formeAsgard(c); g = c.createLinearGradient(0, ASGARD.pic, 0, ASGARD.ligne); g.addColorStop(0, '#2a1a6e'); g.addColorStop(1, '#05030f'); c.fillStyle = g; c.fill();
-  c.save(); formeAsgard(c); c.clip(); for (let i = 0; i < 18; i++) { c.fillStyle = `rgba(255,255,255,${0.3 + alea() * 0.6})`; c.beginPath(); c.arc(ASGARD.x1 + alea() * 76, ASGARD.pic + alea() * 30, alea() + 0.3, 0, 7); c.fill(); } c.restore();
-  c.font = '900 11px Georgia,serif'; c.fillStyle = V.clair; c.fillText('ASGARD', ASGARD.cx, 60);
-  dessinerOutlanes(c, true);
-  c.shadowColor = 'rgba(0,0,0,.8)'; c.shadowBlur = 16 * k; c.lineWidth = 12; c.strokeStyle = 'rgba(0,0,0,.6)'; cheminTable(c); c.stroke(); c.shadowBlur = 0;
-  c.restore();
-  // rails dorés
-  const rails = segsV.filter(s => s.rail || s.oneWay);
-  const tracer = (dx = 0, dy = 0) => { c.beginPath(); for (const s of rails) { if (s.type === 'odin') continue; c.moveTo(s.ax + dx, s.ay + dy); c.lineTo(s.bx + dx, s.by + dy); } };
-  tracer(3, 5); c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = 10; c.stroke();
-  tracer(); c.strokeStyle = '#3a2a08'; c.lineWidth = 9; c.stroke();
-  c.save(); c.shadowColor = V.or; c.shadowBlur = 8 * k; tracer(); c.strokeStyle = '#d9a520'; c.lineWidth = 4; c.stroke(); c.restore();
-  tracer(-0.5, -0.8); c.strokeStyle = V.clair; c.lineWidth = 1.3; c.stroke();
-  for (const m of [false, true]) { // corps des slingshots : bois sombre, lueur dorée
-    const X = x => m ? 370 - x : x, forme = () => { c.beginPath(); c.moveTo(X(64), 478); c.lineTo(X(64), 548); c.lineTo(X(100), 582); c.closePath(); };
-    forme(); c.fillStyle = '#2a1a0a'; c.fill(); lueur(forme, V.or, 2.5);
+  g = c.createLinearGradient(0, 200, 0, 310); g.addColorStop(0, 'rgba(36,21,10,0)'); g.addColorStop(1, 'rgba(36,21,10,1)'); c.fillStyle = g; c.fillRect(0, 200, 400, 110);
+  // les chevrons du toit : des lances (pointes d'or)
+  for (const [x0, y0, x1, y1] of [[14, 290, 120, 70], [386, 290, 280, 70], [60, 300, 200, 40], [340, 300, 200, 40]]) {
+    c.strokeStyle = 'rgba(30,15,5,.75)'; c.lineWidth = 5; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+    const a = Math.atan2(y1 - y0, x1 - x0); c.save(); c.translate(x1, y1); c.rotate(a); c.fillStyle = V.or; c.beginPath(); c.moveTo(12, 0); c.lineTo(-4, -5); c.lineTo(-4, 5); c.closePath(); c.fill(); c.restore();
   }
-  // cadre doré de la porte d'Asgard (poteaux + toit)
-  c.strokeStyle = '#3a2a08'; c.lineWidth = 7; formeAsgard(c); c.stroke(); c.strokeStyle = V.or; c.lineWidth = 3.5; c.stroke();
-  c.fillStyle = '#2a1a0a'; c.fillRect(366, 710, 18, 18); c.strokeStyle = V.or; c.lineWidth = 1.5; c.strokeRect(366, 710, 18, 18);
+  // lumière dorée qui tombe de la porte
+  c.save(); c.globalCompositeOperation = 'lighter'; g = c.createRadialGradient(200, 60, 5, 200, 120, 230); g.addColorStop(0, 'rgba(255,220,140,.35)'); g.addColorStop(1, 'rgba(255,220,140,0)'); c.fillStyle = g; c.fillRect(0, 0, 400, 360); c.restore();
+  // « VALHÖLL » gravé dans la pierre
+  c.save(); c.translate(200, 538); c.font = 'italic 900 34px Georgia,"Times New Roman",serif'; c.fillStyle = 'rgba(0,0,0,.55)'; c.fillText('Valhöll', 2, 3); c.shadowColor = V.braise; c.shadowBlur = 12 * k; c.fillStyle = 'rgba(255,190,90,.55)'; c.fillText('Valhöll', 0, 0); c.restore();
+  c.font = '900 10px Georgia,serif'; c.fillStyle = 'rgba(255,207,74,.45)'; c.fillText('ᚹ ᚨ ᛚ ᚺ ᛟ ᛚ ᛚ', 200, 562);
+  // la porte du Valhalla : arche d'or sous la pointe
+  c.fillStyle = '#120a03'; c.beginPath(); c.moveTo(176, 76); c.lineTo(176, 50); c.quadraticCurveTo(200, 26, 224, 50); c.lineTo(224, 76); c.closePath(); c.fill();
+  c.strokeStyle = '#3a2208'; c.lineWidth = 7; c.stroke(); c.strokeStyle = V.or; c.lineWidth = 3; c.stroke();
+  // entrée du Bifröst : arche de cristal ; entrée du serpent : la gueule (crocs)
+  { const E = ENTREE_B; g = c.createLinearGradient(E.x - 22, 0, E.x + 22, 0); g.addColorStop(0, 'rgba(255,255,255,.08)'); g.addColorStop(0.5, 'rgba(230,245,255,.4)'); g.addColorStop(1, 'rgba(255,255,255,.08)');
+    c.fillStyle = g; c.beginPath(); c.moveTo(E.x - 20, E.y + 16); c.lineTo(E.x, E.y); c.lineTo(E.x + 20, E.y + 16); c.lineTo(E.x + 24, E.y + 52); c.lineTo(E.x - 24, E.y + 52); c.closePath(); c.fill();
+    c.font = '900 9px Georgia,serif'; c.fillStyle = V.ivoire; c.strokeStyle = '#1a0d04'; c.lineWidth = 3; c.strokeText('BIFRÖST', E.x, E.y + 62); c.fillText('BIFRÖST', E.x, E.y + 62); }
+  { const E = ENTREE_S; c.fillStyle = '#0d1a0b'; c.beginPath(); c.moveTo(E.x - 20, E.y + 16); c.lineTo(E.x, E.y); c.lineTo(E.x + 20, E.y + 16); c.lineTo(E.x + 24, E.y + 52); c.lineTo(E.x - 24, E.y + 52); c.closePath(); c.fill();
+    c.fillStyle = '#f4ecd8'; for (let i = 0; i < 4; i++) { const x = E.x - 15 + i * 10; c.beginPath(); c.moveTo(x - 3, E.y + 20 + Math.abs(i - 1.5) * 3); c.lineTo(x + 3, E.y + 20 + Math.abs(i - 1.5) * 3); c.lineTo(x, E.y + 30 + Math.abs(i - 1.5) * 3); c.closePath(); c.fill(); }
+    c.font = '900 8px Georgia,serif'; c.fillStyle = V.feuille; c.strokeStyle = '#06100a'; c.lineWidth = 3; c.strokeText('JÖRMUNGANDR', E.x, E.y + 62); c.fillText('JÖRMUNGANDR', E.x, E.y + 62); }
+  // couloir de Gungnir (le lanceur) : fer sombre, la lance d'Odin gravée
+  g = c.createLinearGradient(360, 0, 390, 0); g.addColorStop(0, '#0d0906'); g.addColorStop(0.5, '#2a1c10'); g.addColorStop(1, '#0d0906'); c.fillStyle = g; c.fillRect(360, 280, 30, 440);
+  c.strokeStyle = 'rgba(255,207,74,.35)'; c.lineWidth = 2; c.beginPath(); c.moveTo(375, 690); c.lineTo(375, 330); c.stroke(); c.fillStyle = 'rgba(255,207,74,.45)'; c.beginPath(); c.moveTo(375, 312); c.lineTo(369, 334); c.lineTo(381, 334); c.closePath(); c.fill();
+  c.save(); c.translate(375, 560); c.rotate(-Math.PI / 2); c.font = '800 11px Georgia,serif'; c.fillStyle = 'rgba(255,207,74,.85)'; c.fillText('GUNGNIR ▶', 0, -1); c.restore();
+  // couloirs du bas : à gauche la Valkyrie, à droite Hel
+  for (const m of [false, true]) {
+    const xo = m ? OUT.d : OUT.g, xm = m ? 360 : 10, X = x => m ? 370 - x : x;
+    c.beginPath(); c.moveTo(xm, OUT.haut - 30); c.lineTo(xo, OUT.haut - 30); c.lineTo(xo, OUT.bas); c.lineTo(X(99), 631); c.lineTo(X(99), 740); c.lineTo(xm, 740); c.closePath();
+    c.fillStyle = m ? 'rgba(60,0,0,.55)' : 'rgba(0,0,0,.45)'; c.fill();
+    c.save(); c.translate((xo + xm) / 2, 650); c.rotate(m ? Math.PI / 2 : -Math.PI / 2); c.font = '900 10px Georgia,serif'; c.fillStyle = m ? '#ff5a3c' : V.ivoire; c.fillText(m ? 'HEL' : 'VALKYRIE', 0, 1); c.restore();
+  }
+  c.restore();
+  // murs : bronze sombre, liseré ambre
+  const rails = segsV.filter(s => s.rail);
+  const tracer = (dx = 0, dy = 0) => { c.beginPath(); for (const s of rails) { c.moveTo(s.ax + dx, s.ay + dy); c.lineTo(s.bx + dx, s.by + dy); } };
+  tracer(3, 5); c.strokeStyle = 'rgba(0,0,0,.55)'; c.lineWidth = 10; c.stroke();
+  tracer(); c.strokeStyle = '#2a1408'; c.lineWidth = 9; c.stroke();
+  c.save(); c.shadowColor = V.braise; c.shadowBlur = 7 * k; tracer(); c.strokeStyle = '#d9822b'; c.lineWidth = 3.5; c.stroke(); c.restore();
+  tracer(-0.5, -0.8); c.strokeStyle = V.ivoire; c.lineWidth = 1; c.stroke();
+  c.lineWidth = 14; c.strokeStyle = '#1a0d04'; cheminValh(c); c.stroke(); c.lineWidth = 3; c.strokeStyle = '#b8862b'; c.stroke(); // cadre
+  c.fillStyle = '#2a1408'; c.fillRect(366, 710, 18, 18); c.strokeStyle = V.or; c.lineWidth = 1.5; c.strokeRect(366, 710, 18, 18);
 }
 const LAMPES_V = [
-  ...ODIN.map(c => ({ x: c.cx, y: 484, r: 13, h: 45, txt: c.lettre, t: 15, on: () => c.bas })),
-  ...CORBEAUX.map((c, i) => ({ x: 166 + i * 38, y: 530, r: 11, h: 210, txt: c.nom[0], t: 11, on: () => c.hors > 0 })),
-  ...[0, 1, 2].map(i => ({ x: 276 + i * 18, y: 395, r: 6, h: 195, on: () => VALH.marteaux % 3 > i })),
-  ...[0, 1, 2].map(i => ({ x: 175 + i * 16, y: 318, r: 5, h: [0, 120, 270][i], on: () => VALH.ponts % 3 > i })),
-  { x: 182, y: 104, r: 13, forme: 'fleche', ang: 0, h: 48, on: () => Math.floor(temps * (VALH.allume ? 7 : 1.5)) % 2 === 0 },
-  { x: 185, y: 574, forme: 'pilule', w: 104, hh: 18, h: 48, txt: 'ODIN TE SAUVE', t: 10, on: () => sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
+  { x: 23, y: 610, r: 9, h: 45, txt: 'V', t: 10, on: () => VALH.valk && Math.floor(temps * 4) % 2 === 0 },
+  { x: ENTREE_B.x, y: ENTREE_B.y + 80, r: 10, forme: 'fleche', h: 40, on: () => Math.floor(temps * 2 + 0.5) % 2 === 0 },
+  { x: ENTREE_S.x, y: ENTREE_S.y + 80, r: 10, forme: 'fleche', h: 100, on: () => Math.floor(temps * 2) % 2 === 0 },
+  { x: 200, y: 96, r: 10, forme: 'fleche', h: 45, on: () => VALH.ouverte && Math.floor(temps * 7) % 2 === 0 },
+  ...[0, 1].map(i => ({ x: 154 + i * 16, y: 404, r: 6, h: 45, txt: 'B', t: 7, on: () => VALH.prog.b > i || VALH.ragna > 0 })),
+  ...[0, 1].map(i => ({ x: 194 + i * 16, y: 404, r: 6, h: 100, txt: 'S', t: 7, on: () => VALH.prog.s > i || VALH.ragna > 0 })),
+  { x: 234, y: 404, r: 6, h: 20, txt: 'T', t: 7, on: () => VALH.prog.t > 0 || VALH.ragna > 0 },
+  ...[0, 1, 2].map(i => ({ x: 92 + i * 14, y: 250, r: 5, h: 200, on: () => VALH.marteaux % 3 > i })),
+  { x: 200, y: 600, forme: 'pilule', w: 108, hh: 18, h: 40, txt: 'ODIN TE SAUVE', t: 10, on: () => sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
 ];
-function dessinerCorbeau(c) { // Hugin / Munin : silhouette noire aux ailes qui battent, œil doré
-  let a = 1;
-  if (c.chute) a = 1 - c.chute.t / 0.9; else if (c.hors > 0) { if (c.hors > 0.6) return; a = 1 - c.hors / 0.6; }
-  const bat = Math.sin(temps * 14 + c.ph * 3);
-  ctx.save(); ctx.translate(c.x, c.y); ctx.scale(c.dir, 1); if (c.chute) ctx.rotate(c.chute.t * 8); ctx.globalAlpha = Math.max(0, a);
-  ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(0, 0, 2, 0, 0, 22); gg.addColorStop(0, 'rgba(127,216,255,.35)'); gg.addColorStop(1, 'rgba(127,216,255,0)'); ctx.fillStyle = gg; ctx.fillRect(-22, -22, 44, 44); ctx.globalCompositeOperation = 'source-over';
-  ctx.fillStyle = '#0c0d14'; ctx.strokeStyle = '#7fd8ff'; ctx.lineWidth = 1;
-  for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(-2, -1); ctx.quadraticCurveTo(-4 + s * 2, -10 - 8 * bat * s, -10, -14 * bat * s - (s < 0 ? 4 : 0)); ctx.lineTo(4, -2); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  ctx.beginPath(); ctx.ellipse(0, 0, 10, 5.5, 0, 0, 7); ctx.fill(); ctx.stroke(); // corps
-  ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(-16, -3); ctx.lineTo(-16, 3); ctx.closePath(); ctx.fill(); // queue
-  ctx.beginPath(); ctx.arc(9, -2.5, 4.2, 0, 7); ctx.fill(); ctx.stroke(); // tête
-  ctx.fillStyle = '#c9a25a'; ctx.beginPath(); ctx.moveTo(12.5, -3); ctx.lineTo(18, -1.5); ctx.lineTo(12.5, -0.5); ctx.closePath(); ctx.fill(); // bec
-  ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(10, -3.3, 1.1, 0, 7); ctx.fill();
-  ctx.restore();
-}
 function renduValh() {
-  const V = VALH_C;
-  // aurores qui ondulent (au-dessus du ciel pré-dessiné)
-  ctx.save(); cheminTable(ctx); ctx.clip(); ctx.globalCompositeOperation = 'lighter';
-  aurore(ctx, 86 + 6 * Math.sin(temps * 0.4), 16, '93,255,176', 0.12 + 0.06 * Math.sin(temps * 0.7), temps * 0.25);
-  aurore(ctx, 132 + 5 * Math.sin(temps * 0.33 + 1), 12, '127,216,255', 0.08 + 0.05 * Math.sin(temps * 0.9 + 2), -temps * 0.2 + 1);
-  ctx.restore();
+  const V = VAL2;
+  if (VALH.ragna > 0) { // Ragnarök : la salle brûle
+    ctx.save(); cheminValh(ctx); ctx.clip(); ctx.globalCompositeOperation = 'lighter';
+    const p = 0.18 + 0.1 * Math.sin(temps * 8); const gg = ctx.createRadialGradient(200, 740, 40, 200, 500, 520); gg.addColorStop(0, `rgba(255,90,20,${p + 0.15})`); gg.addColorStop(1, 'rgba(255,60,0,0)'); ctx.fillStyle = gg; ctx.fillRect(0, 0, 400, 740);
+    for (let i = 0; i < 26; i++) { const x = (i * 97 + temps * 20 * (1 + i % 3)) % 400, y = 740 - ((temps * (60 + i * 7) + i * 53) % 700); ctx.fillStyle = `rgba(255,${120 + (i * 37) % 100},40,${0.5 + 0.4 * Math.sin(temps * 9 + i)})`; ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 7); ctx.fill(); }
+    ctx.restore();
+    texte('RAGNARÖK ×2 · ' + Math.ceil(VALH.ragna) + ' s', 200, 506, 13, Math.floor(temps * 4) % 2 ? V.braise : '#ffffff');
+  }
   LAMPES_V.forEach((L, i) => { let on = L.on(); if (chaseT > 0 && (i + Math.floor(temps * 24)) % 3 === 0) on = true; dessinerLampe(L, on, L.h); });
-  // porte d'Asgard : le portail s'illumine (jackpot allumé / bille dedans)
-  const joue = balles.some(b => b.lieu === 'asgard');
-  if (joue || VALH.allume) {
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const p = joue ? 0.75 + 0.25 * Math.sin(temps * 30) : 0.45 + 0.35 * Math.sin(temps * 5);
-    const gg = ctx.createRadialGradient(ASGARD.cx, 50, 4, ASGARD.cx, 50, 84); gg.addColorStop(0, `rgba(255,210,63,${0.6 * p})`); gg.addColorStop(1, 'rgba(255,210,63,0)'); ctx.fillStyle = gg; ctx.fillRect(ASGARD.cx - 84, -34, 168, 168); ctx.restore();
-    if (VALH.allume && !joue) texte('JACKPOT ' + fmt(VALH.jackpot * mult), ASGARD.cx, 128, 12, Math.floor(temps * 4) % 2 ? V.or : '#ffffff');
+  // la porte : deux battants d'or ; ouverte (T-H-O-R) ils s'écartent et la lumière sort
+  const dedans = balles.some(b => b.lieu === 'asgard'), ouv = VALH.ouverte || dedans;
+  if (ouv) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const p = dedans ? 0.8 + 0.2 * Math.sin(temps * 30) : 0.5 + 0.3 * Math.sin(temps * 5); const gg = ctx.createRadialGradient(200, 60, 3, 200, 70, 90); gg.addColorStop(0, `rgba(255,240,190,${0.8 * p})`); gg.addColorStop(1, 'rgba(255,207,74,0)'); ctx.fillStyle = gg; ctx.fillRect(110, -20, 180, 180); ctx.restore(); }
+  for (const s of [-1, 1]) { const w = ouv ? 5 : 22; ctx.fillStyle = ouv ? '#ffe9a8' : '#c8901e'; ctx.strokeStyle = '#3a2208'; ctx.lineWidth = 1.5; const x = s < 0 ? 178 : 222 - w; rrect(ctx, x, 46, w, 28, 2); ctx.fill(); ctx.stroke(); if (!ouv) { ctx.fillStyle = '#3a2208'; ctx.beginPath(); ctx.arc(200 + s * 4, 62, 1.6, 0, 7); ctx.fill(); } }
+  if (VALH.ouverte && !dedans) texte('JACKPOT ' + fmt(pv(VALH.jackpot) * mult), 200, 116, 12, Math.floor(temps * 4) % 2 ? V.or : '#ffffff');
+  // plaques T-H-O-R (pierre gravée) : tombées, il reste une fente
+  const attente = VALH.thorReset > 0 && !VALH.ouverte && THOR.every(c => c.bas);
+  for (const s of THOR) {
+    const mx = (s.ax + s.bx) / 2, my = (s.ay + s.by) / 2, a = Math.atan2(s.by - s.ay, s.bx - s.ax);
+    ctx.save(); ctx.translate(mx, my); ctx.rotate(a);
+    if (s.bas) { rrect(ctx, -15, -2, 30, 4, 2); ctx.fillStyle = 'rgba(0,0,0,.7)'; ctx.fill(); if (attente && Math.floor(temps * 3) % 2) { ctx.strokeStyle = V.or; ctx.lineWidth = 1; ctx.stroke(); } ctx.restore(); continue; }
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; rrect(ctx, -15, -5, 32, 12, 3); ctx.fill();
+    const g = ctx.createLinearGradient(0, -7, 0, 7); g.addColorStop(0, '#9b8f80'); g.addColorStop(1, '#4a4038'); rrect(ctx, -16, -7, 32, 13, 3); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = V.or; ctx.lineWidth = 1.6; ctx.stroke();
+    ctx.rotate(-a); ctx.font = '900 12px Georgia,serif'; ctx.save(); ctx.shadowColor = V.braise; ctx.shadowBlur = 6 * S * DPR; ctx.fillStyle = '#ffe9a8'; ctx.fillText(s.lettre, 0, 0); ctx.restore();
+    ctx.restore();
   }
-  // élastiques des slingshots (cordes d'or)
-  SLV.forEach(s => {
-    const f = s.flash > 0;
-    if (f) { ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = 'rgba(255,210,63,.5)'; ctx.lineWidth = 14; ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke(); ctx.globalCompositeOperation = 'source-over'; }
-    ctx.strokeStyle = '#2a1a0a'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.stroke();
-    ctx.strokeStyle = f ? '#ffffff' : V.or; ctx.lineWidth = 3.5; ctx.stroke();
-  });
-  // boucliers O-D-I-N
-  const attente = VALH.odinReset > 0 && ODIN.every(c => c.bas), clign = attente && Math.floor(temps * (VALH.odinReset > 3 ? 2 : 5)) % 2 === 0;
-  const cols = ['#c8102e', '#1d5bd8', '#2e8b57', '#c8102e'];
-  ODIN.forEach((c, i) => {
-    const x0 = c.cx - 18;
-    if (c.bas) {
-      rrect(ctx, x0, 444, 36, 8, 3); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fill();
-      if (attente) { rrect(ctx, x0, 426, 36, 26, 5); ctx.setLineDash([4, 3]); ctx.strokeStyle = clign ? V.or : 'rgba(255,255,255,.3)'; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); }
-      return;
-    }
-    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.ellipse(c.cx + 3, 442, 18, 12, 0, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(c.cx, 438, 18, 12, 0, 0, 7); ctx.fillStyle = cols[i]; ctx.fill(); ctx.strokeStyle = '#c9d1de'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.beginPath(); ctx.ellipse(c.cx, 438, 18, 12, 0, Math.PI, 2 * Math.PI); ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fill();
-    ctx.font = '900 15px Georgia,"Times New Roman",serif'; ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 3; ctx.strokeText(c.lettre, c.cx, 439); ctx.fillText(c.lettre, c.cx, 439);
-  });
-  if (attente) {
-    const n = Math.max(1, Math.ceil(VALH.odinReset));
-    rrect(ctx, 136, 432, 126, 20, 10); ctx.fillStyle = 'rgba(10,8,2,.9)'; ctx.fill(); ctx.strokeStyle = clign ? '#fff' : V.or; ctx.lineWidth = 2; ctx.stroke();
-    texte('O-D-I-N DANS ' + n + ' s', 199, 442, 12, V.or);
+  // braseros : coupe de bronze, flammes qui dansent
+  for (const b of FEUX) {
+    const f = Math.max(0, b.flash), r = b.r;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(b.x, b.y, 2, b.x, b.y, r * (2.6 + f * 2)); gg.addColorStop(0, `rgba(255,140,40,${0.45 + f})`); gg.addColorStop(1, 'rgba(255,90,0,0)'); ctx.fillStyle = gg; ctx.fillRect(b.x - r * 5, b.y - r * 5, r * 10, r * 10); ctx.restore();
+    ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(b.x + 3, b.y + 4, r + 2, 0, 7); ctx.fill();
+    const g = ctx.createRadialGradient(b.x - 4, b.y - 4, 1, b.x, b.y, r + 2); g.addColorStop(0, '#d9a066'); g.addColorStop(0.7, '#6b3a12'); g.addColorStop(1, '#2a1408'); ctx.beginPath(); ctx.arc(b.x, b.y, r + 2, 0, 7); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = V.or; ctx.lineWidth = 1.5; ctx.stroke();
+    for (let i = 0; i < 5; i++) { const a = temps * (5 + i) + i * 1.3, h = r * (0.7 + 0.35 * Math.sin(a) + f), x = b.x + (i - 2) * r * 0.28; ctx.fillStyle = i % 2 ? 'rgba(255,200,60,.9)' : 'rgba(255,110,20,.85)'; ctx.beginPath(); ctx.moveTo(x - 3.5, b.y + 3); ctx.quadraticCurveTo(x + Math.sin(a * 1.7) * 3, b.y - h, x + 3.5, b.y + 3); ctx.closePath(); ctx.fill(); }
   }
-  // pierres runiques : granit gris, rune qui s'allume (bleu glacier quand on la frappe)
-  for (const b of RUNES) {
-    const f = Math.max(0, b.flash), r = b.r * (1 + f * 0.35);
-    if (f > 0) { ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(b.x, b.y, r * 0.5, b.x, b.y, r * 2.4); gg.addColorStop(0, 'rgba(127,216,255,.65)'); gg.addColorStop(1, 'rgba(127,216,255,0)'); ctx.fillStyle = gg; ctx.fillRect(b.x - r * 2.4, b.y - r * 2.4, r * 4.8, r * 4.8); ctx.globalCompositeOperation = 'source-over'; }
-    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.arc(b.x + 3, b.y + 5, r + 3, 0, 7); ctx.fill();
-    const g = ctx.createRadialGradient(b.x - r * 0.35, b.y - r * 0.4, 1, b.x, b.y, r + 3); g.addColorStop(0, '#c9ced8'); g.addColorStop(0.6, '#6f7686'); g.addColorStop(1, '#2f3440');
-    ctx.beginPath(); ctx.arc(b.x, b.y, r + 3, 0, 7); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#d9a520'; ctx.lineWidth = b.petit ? 1.5 : 2.5; ctx.stroke();
-    ctx.font = `900 ${b.petit ? 9 : 20}px Georgia,serif`; const lum = f > 0 ? '#ffffff' : `rgba(127,216,255,${0.65 + 0.3 * Math.sin(temps * 3 + b.x)})`;
-    ctx.save(); ctx.shadowColor = '#7fd8ff'; ctx.shadowBlur = (f > 0 ? 14 : 6) * S * DPR; ctx.fillStyle = lum; ctx.fillText(b.rune, b.x, b.y + 1); ctx.restore();
+  // boucliers (à la place des slingshots) : bois peint rouge sang, cerclage d'or
+  for (const b of BOUCLIERS) { bouclierViking(ctx, b.x, b.y, b.r + 2, b.flash > 0 ? '#ff4a3a' : V.sang); ctx.strokeStyle = b.flash > 0 ? '#ffffff' : V.or; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 2, 0, 7); ctx.stroke(); }
+  // Yggdrasil : la couronne de feuilles, le tronc, et le fil d'or des Nornes
+  { const y = YGG, f = Math.max(0, y.flash);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(y.x, y.y, 10, y.x, y.y, 46 + f * 30); gg.addColorStop(0, `rgba(155,227,122,${0.3 + f})`); gg.addColorStop(1, 'rgba(155,227,122,0)'); ctx.fillStyle = gg; ctx.fillRect(y.x - 80, y.y - 80, 160, 160); ctx.restore();
+    for (let i = 0; i < 14; i++) { const a = i * Math.PI / 7 + Math.sin(temps * 0.8 + i) * 0.05, rr = 34 + (i % 3) * 3; ctx.fillStyle = i % 2 ? 'rgba(90,150,60,.75)' : 'rgba(155,200,90,.7)'; ctx.beginPath(); ctx.ellipse(y.x + Math.cos(a) * rr, y.y + Math.sin(a) * rr, 9, 5, a, 0, 7); ctx.fill(); }
+    ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(y.x + 3, y.y + 5, y.r + 1, 0, 7); ctx.fill();
+    const g = ctx.createRadialGradient(y.x - 6, y.y - 7, 2, y.x, y.y, y.r + 1); g.addColorStop(0, '#a77b4a'); g.addColorStop(0.6, '#5c3a1a'); g.addColorStop(1, '#2a1408'); ctx.beginPath(); ctx.arc(y.x, y.y, y.r + 1, 0, 7); ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = 'rgba(30,15,5,.7)'; ctx.lineWidth = 1.2; for (const rr of [7, 13, 19]) { ctx.beginPath(); ctx.arc(y.x, y.y, rr, 0, 7); ctx.stroke(); }
+    ctx.strokeStyle = f > 0 ? '#ffffff' : V.feuille; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(y.x, y.y, y.r + 1, 0, 7); ctx.stroke();
+    ctx.font = '900 13px Georgia,serif'; ctx.save(); ctx.shadowColor = V.feuille; ctx.shadowBlur = 8 * S * DPR; ctx.fillStyle = f > 0 ? '#fff' : '#d6ffb8'; ctx.fillText('ᛉ', y.x, y.y + 1); ctx.restore();
+    ctx.strokeStyle = 'rgba(255,207,74,.55)'; ctx.lineWidth = 1.2; ctx.setLineDash([3, 4]); ctx.lineDashOffset = -temps * 20; ctx.beginPath(); ctx.arc(y.x, y.y, R_NORNES, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+  // les 3 Nornes : rouets d'or (elles filent le destin), initiale gravée
+  for (const n of NORNES) {
+    const f = Math.max(0, n.flash), r = n.r * (1 + f * 0.4);
+    if (f > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(n.x, n.y, 2, n.x, n.y, r * 2.6); gg.addColorStop(0, 'rgba(255,236,170,.8)'); gg.addColorStop(1, 'rgba(255,236,170,0)'); ctx.fillStyle = gg; ctx.fillRect(n.x - r * 3, n.y - r * 3, r * 6, r * 6); ctx.restore(); }
+    ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.beginPath(); ctx.arc(n.x + 2, n.y + 4, r + 1, 0, 7); ctx.fill();
+    const g = ctx.createRadialGradient(n.x - 3, n.y - 4, 1, n.x, n.y, r + 1); g.addColorStop(0, '#fff6d0'); g.addColorStop(0.6, '#d9a520'); g.addColorStop(1, '#6b4a00'); ctx.beginPath(); ctx.arc(n.x, n.y, r + 1, 0, 7); ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = '#3a2208'; ctx.lineWidth = 1.2; for (let i = 0; i < 6; i++) { const a = temps * 4 + i * Math.PI / 3; ctx.beginPath(); ctx.moveTo(n.x + Math.cos(a) * 3, n.y + Math.sin(a) * 3); ctx.lineTo(n.x + Math.cos(a) * r, n.y + Math.sin(a) * r); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(n.x, n.y, r + 1, 0, 7); ctx.strokeStyle = f > 0 ? '#fff' : '#ffe9a8'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.font = '900 9px Georgia,serif'; ctx.fillStyle = '#2a1408'; ctx.fillText(n.nom[0], n.x, n.y + 1);
   }
-  // Mjöllnir : le marteau est posé à côté ; bille dedans : il frappe la soucoupe (éclairs)
-  const dedans = balles.some(b => b.lieu === 'mjol');
-  ctx.save();
-  if (dedans) { ctx.translate(MJOL.x, MJOL.y - 4); ctx.rotate(-0.4 + 0.8 * Math.abs(Math.sin(temps * 9))); }
-  else { ctx.translate(MJOL.x + 26, MJOL.y - 10); ctx.rotate(0.6); }
-  ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(-2, -2, 6, 28);
-  ctx.fillStyle = '#6b4423'; ctx.fillRect(-2.5, -4, 5, 26); ctx.strokeStyle = '#c9a25a'; ctx.lineWidth = 1; for (let y = 2; y < 20; y += 4) { ctx.beginPath(); ctx.moveTo(-2.5, y); ctx.lineTo(2.5, y + 2); ctx.stroke(); }
-  const gm = ctx.createLinearGradient(-12, -16, 12, -4); gm.addColorStop(0, '#f4f6fa'); gm.addColorStop(1, '#6f7a8c'); rrect(ctx, -12, -17, 24, 14, 3); ctx.fillStyle = gm; ctx.fill(); ctx.strokeStyle = '#30343e'; ctx.lineWidth = 1.2; ctx.stroke();
-  ctx.font = '900 8px Georgia,serif'; ctx.fillStyle = '#1d5bd8'; ctx.fillText('ᚦ', 0, -9.5);
-  ctx.restore();
-  if (dedans || VALH.eclairs.length) { ctx.globalCompositeOperation = 'lighter'; for (let i = 0; i < 3; i++) { ctx.strokeStyle = `rgba(191,239,255,${0.5 + 0.5 * Math.random()})`; ctx.lineWidth = 1.5; ctx.beginPath(); let x = MJOL.x, y = MJOL.y; ctx.moveTo(x, y); for (let j = 0; j < 4; j++) { x += rnd(-12, 12); y -= rnd(6, 14); ctx.lineTo(x, y); } ctx.stroke(); } ctx.globalCompositeOperation = 'source-over'; }
-  for (const e of VALH.eclairs) eclairTrace(ctx, e.x, -10, e.x + rnd(-10, 10), MJOL.y, 2.5 + 3 * e.t, '#bfefff');
-  for (const c of CORBEAUX) dessinerCorbeau(c);
+  // Mjöllnir : le manche tourne autour de son anneau, la tête frappe (éclairs quand il touche)
+  { const m = MJOL, f = Math.max(0, m.flash), a = m.a;
+    ctx.strokeStyle = 'rgba(255,207,74,.25)'; ctx.lineWidth = 1; ctx.setLineDash([2, 5]); ctx.beginPath(); ctx.arc(m.px, m.py, m.L, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.save(); ctx.translate(m.px, m.py); ctx.rotate(a);
+    ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fillRect(2, 2, m.L, 6);
+    ctx.fillStyle = '#6b4423'; ctx.fillRect(0, -2.5, m.L - 6, 5); ctx.strokeStyle = '#c9a25a'; ctx.lineWidth = 1; for (let x = 4; x < m.L - 8; x += 4) { ctx.beginPath(); ctx.moveTo(x, -2.5); ctx.lineTo(x + 2, 2.5); ctx.stroke(); }
+    ctx.translate(m.L, 0); const gm = ctx.createLinearGradient(-8, -14, 8, 14); gm.addColorStop(0, f > 0 ? '#ffffff' : '#f4f6fa'); gm.addColorStop(1, '#6f7a8c'); rrect(ctx, -8, -14, 16, 28, 3); ctx.fillStyle = gm; ctx.fill(); ctx.strokeStyle = '#30343e'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.rotate(-a - m.px * 0); ctx.font = '900 9px Georgia,serif'; ctx.fillStyle = '#2a4a9a'; ctx.fillText('ᚦ', 0, 1);
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(m.px, m.py, 6, 0, 7); ctx.fillStyle = '#3a2208'; ctx.fill(); ctx.strokeStyle = V.or; ctx.lineWidth = 2; ctx.stroke();
+    if (f > 0) eclairTrace(ctx, m.x + rnd(-30, 30), m.y - 60, m.x, m.y, 1.5 + 3 * f, '#dff4ff');
+    for (const e of VALH.eclairs) eclairTrace(ctx, e.x + rnd(-20, 20), -10, e.x, e.y, 2.5 + 4 * e.t, '#dff4ff'); }
+  // tourniquet du Bifröst (il tourne quand la bille passe)
+  { const E = ENTREE_B, sc = Math.cos(VALH.spin); ctx.save(); ctx.translate(E.x, E.y + 44); ctx.scale(1, Math.max(0.12, Math.abs(sc))); rrect(ctx, -16, -5, 32, 10, 3); ctx.fillStyle = sc > 0 ? '#ffe9a8' : '#b8862b'; ctx.fill(); ctx.strokeStyle = '#3a2208'; ctx.lineWidth = 1.2; ctx.stroke(); ctx.restore(); }
+  flipperDore(FL_THOR, FL[1].gele, 0);
 }
 function eclairTrace(c, x0, y0, x1, y1, w, coul) { // éclair en zigzag (avec halo)
   const n = Math.max(4, Math.round(Math.hypot(x1 - x0, y1 - y0) / 26)), pts = [[x0, y0]];
@@ -3146,33 +3184,49 @@ function eclairTrace(c, x0, y0, x1, y1, w, coul) { // éclair en zigzag (avec ha
   c.globalAlpha = 1; trace(); c.strokeStyle = coul; c.lineWidth = w; c.stroke(); trace(); c.strokeStyle = '#ffffff'; c.lineWidth = Math.max(1, w * 0.35); c.stroke(); c.restore();
 }
 let dessusValh = null;
-function dessinerDessusValh() { // pont Bifröst (ruban arc-en-ciel surélevé) + looping doré, au-dessus des billes
+function bordRail(c, P, off, dx = 0, dy = 0) { // trace un bord (décalé de off) d'un chemin de rail
+  c.beginPath(); P.forEach((p, i) => { const q = P[Math.min(P.length - 1, i + 1)], o = P[Math.max(0, i - 1)], tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1, x = p[0] - ty / l * off + dx, y = p[1] + tx / l * off + dy; i ? c.lineTo(x, y) : c.moveTo(x, y); });
+}
+function dessinerDessusValh() { // les 2 rampes surélevées qui se croisent : le serpent (dessous) puis le pont Bifröst (dessus)
   dessusValh = document.createElement('canvas'); dessusValh.width = cv.width; dessusValh.height = cv.height;
-  const c = dessusValh.getContext('2d'), k = S * DPR, P = BIFROST.pts;
+  const c = dessusValh.getContext('2d'), k = S * DPR, V = VAL2;
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.lineCap = 'round'; c.lineJoin = 'round';
-  const fil = (off, dx, dy) => { c.beginPath(); P.forEach((p, i) => { const q = P[Math.min(P.length - 1, i + 1)], o = P[Math.max(0, i - 1)], tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1, x = p[0] - ty / l * off + dx, y = p[1] + tx / l * off + dy; i ? c.lineTo(x, y) : c.moveTo(x, y); }); };
-  fil(0, 7, 11); c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 20; c.stroke(); // ombre du pont
-  const arc7 = ['#ff3b3b', '#ff8c1a', '#ffe600', '#2ec27e', '#3a86ff', '#6a3dff', '#b26bff'];
-  arc7.forEach((col, i) => { fil(-7.5 + i * 2.5, 0, 0); c.strokeStyle = col; c.globalAlpha = 0.82; c.lineWidth = 2.8; c.stroke(); }); c.globalAlpha = 1;
-  for (const off of [-9.5, 9.5]) { fil(off, 0, 0); c.strokeStyle = '#3a2a08'; c.lineWidth = 3; c.stroke(); fil(off, 0, 0); c.strokeStyle = '#ffe9a8'; c.lineWidth = 1.3; c.stroke(); }
-  dessinerLooping(c, 'valh', k);
+  // Jörmungandr : corps écailleux vert sombre, ventre plus clair, il s'amincit vers la queue
+  const P = SERPENT.pts, n = P.length;
+  bordRail(c, P, 0, 7, 11); c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 20; c.stroke();
+  for (let i = 0; i < n - 1; i++) { const t = i / n, w = 22 - 12 * t; c.beginPath(); c.moveTo(P[i][0], P[i][1]); c.lineTo(P[i + 1][0], P[i + 1][1]); c.strokeStyle = '#0a1608'; c.lineWidth = w + 3; c.stroke(); }
+  for (let i = 0; i < n - 1; i++) { const t = i / n, w = 22 - 12 * t; c.beginPath(); c.moveTo(P[i][0], P[i][1]); c.lineTo(P[i + 1][0], P[i + 1][1]); c.strokeStyle = V.serpent; c.lineWidth = w; c.stroke(); }
+  for (let i = 0; i < n - 1; i++) { const t = i / n, w = 22 - 12 * t; c.beginPath(); c.moveTo(P[i][0], P[i][1]); c.lineTo(P[i + 1][0], P[i + 1][1]); c.strokeStyle = 'rgba(120,170,80,.45)'; c.lineWidth = w * 0.35; c.stroke(); }
+  for (let i = 3; i < n - 1; i += 3) { const t = i / n, w = 22 - 12 * t, [x, y] = P[i]; c.fillStyle = i % 2 ? 'rgba(255,207,74,.55)' : 'rgba(155,227,122,.5)'; c.beginPath(); c.arc(x, y, w * 0.18, 0, 7); c.fill(); } // écailles
+  { const [x0, y0] = P[0], [x1, y1] = P[3], a = Math.atan2(y0 - y1, x0 - x1); // la tête, gueule ouverte sur l'entrée
+    c.save(); c.translate(x0, y0); c.rotate(a);
+    c.fillStyle = '#0a1608'; c.beginPath(); c.ellipse(-6, 0, 17, 14, 0, 0, 7); c.fill(); c.fillStyle = V.serpent; c.beginPath(); c.ellipse(-6, 0, 15, 12, 0, 0, 7); c.fill();
+    c.fillStyle = '#ff3b1a'; for (const s of [-1, 1]) { c.beginPath(); c.ellipse(-8, s * 7, 3, 2, 0, 0, 7); c.fill(); }
+    c.fillStyle = '#f4ecd8'; for (const s of [-1, 1]) { c.beginPath(); c.moveTo(6, s * 8); c.lineTo(11, s * 3); c.lineTo(4, s * 4); c.closePath(); c.fill(); }
+    c.restore(); }
+  // Bifröst : pont de cristal (presque blanc, reflets d'or), rambardes d'or, posé par-dessus le serpent
+  const B = BIFROST.pts;
+  bordRail(c, B, 0, 7, 11); c.strokeStyle = 'rgba(0,0,0,.3)'; c.lineWidth = 20; c.stroke();
+  bordRail(c, B, 0); c.strokeStyle = 'rgba(235,245,255,.42)'; c.lineWidth = 17; c.stroke();
+  bordRail(c, B, -3); c.strokeStyle = 'rgba(255,230,160,.25)'; c.lineWidth = 3; c.stroke(); bordRail(c, B, 3); c.strokeStyle = 'rgba(190,220,255,.25)'; c.lineWidth = 3; c.stroke();
+  for (const off of [-9.5, 9.5]) { bordRail(c, B, off); c.strokeStyle = '#3a2208'; c.lineWidth = 3.2; c.stroke(); bordRail(c, B, off); c.strokeStyle = V.or; c.lineWidth = 1.5; c.stroke(); }
+  for (let i = 4; i < B.length - 2; i += 6) { const [x, y] = B[i]; c.fillStyle = V.or; c.beginPath(); c.arc(x, y, 1.4, 0, 7); c.fill(); }
 }
 function renduValhDessus(sx, sy) {
   if (!dessusValh) dessinerDessusValh();
   ctx.save(); ctx.setTransform(1, 0, 0, 1, sx * DPR, sy * DPR); ctx.drawImage(dessusValh, 0, 0); ctx.restore();
   const tb = 2 * R + 4, to = 2 * R + 14;
   for (const b of balles) {
-    if (b.pont) { // sur le pont : un peu plus grosse, traînée arc-en-ciel
+    if (!b.pont) continue;
+    if (b.pont.rail === SERPENT) { // dans le ventre du serpent : une bosse qui brille
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(b.x, b.y, 2, b.x, b.y, 22); gg.addColorStop(0, 'rgba(155,227,122,.8)'); gg.addColorStop(1, 'rgba(155,227,122,0)'); ctx.fillStyle = gg; ctx.fillRect(b.x - 22, b.y - 22, 44, 44); ctx.restore();
+      ctx.globalAlpha = 0.55; ctx.drawImage(SPR.balle, b.x - tb * 0.5, b.y - tb * 0.5, tb, tb); ctx.globalAlpha = 1;
+    } else { // sur le pont : un peu plus grosse
       ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(SPR.haloV, b.x - 26, b.y - 26, 52, 52); ctx.globalCompositeOperation = 'source-over';
       ctx.drawImage(SPR.ombre, b.x + 7 - to / 2, b.y + 11 - to / 2, to, to); ctx.drawImage(SPR.balle, b.x - tb * 0.575, b.y - tb * 0.575, tb * 1.15, tb * 1.15);
-    } else if (b.boucle) {
-      const h = hauteurLoop(b.boucle.d), z = 1.15 + 0.3 * h;
-      ctx.globalAlpha = 0.8 - 0.4 * h; ctx.drawImage(SPR.ombre, b.x + 7 + 10 * h - to / 2, b.y + 11 + 16 * h - to / 2, to, to); ctx.globalAlpha = 1;
-      ctx.drawImage(SPR.balle, b.x - tb * z / 2, b.y - tb * z / 2, tb * z, tb * z);
     }
   }
 }
-
 // ---------------------------------------------------------------- L'arène du DUEL DES DIEUX : au-dessus des nuages, la porte d'Asgard en haut
 function dessinerFondDieu() {
   fondDieu = document.createElement('canvas'); fondDieu.width = cv.width; fondDieu.height = cv.height;
@@ -3231,9 +3285,10 @@ function renduDieu() {
   ctx.save(); ctx.globalCompositeOperation = 'lighter'; const p = 0.5 + 0.2 * Math.sin(temps * 3) + (C && C.coup > 0 ? 0.5 : 0);
   const gg = ctx.createRadialGradient(185, 90, 6, 185, 90, 110); gg.addColorStop(0, `rgba(255,233,168,${0.35 * p})`); gg.addColorStop(1, 'rgba(255,210,63,0)'); ctx.fillStyle = gg; ctx.fillRect(75, -20, 220, 220); ctx.restore();
   // le dieu (derrière ses flippers, dans sa porte)
-  if (C && C.phase !== 'alerte') dessinerCombat();
   SLD.forEach(s => { const f = s.flash > 0; ctx.beginPath(); ctx.moveTo(s.ax, s.ay); ctx.lineTo(s.bx, s.by); ctx.strokeStyle = f ? '#fff6b0' : '#ffd23f'; ctx.lineWidth = 6; ctx.stroke(); ctx.strokeStyle = '#7a5a00'; ctx.lineWidth = 1.5; ctx.stroke(); });
   for (const f of FLD) flipperDore(f, 0, 0);
+  if (C && C.phase !== 'alerte') dessinerCombat(); // lui et sa bulle par-dessus ses flippers (Kevin : le texte était caché)
+  if (C && C.phase === 'combat') dessinerEgide(C); // son bouclier, devant lui sur la ligne de but
   if (C && C.phase === 'combat') { // plaque : buts à marquer (orbes d'or) et tes cœurs
     const B = C.boss, titre = '⚡ ' + titreBoss(-1, B.genre).toUpperCase() + ' · ' + B.nom;
     ctx.save(); ctx.globalAlpha = 0.85; rrect(ctx, 105, 228, 160, 44, 12); ctx.fillStyle = 'rgba(10,20,60,.82)'; ctx.fill(); ctx.strokeStyle = '#7fd8ff'; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
@@ -3616,7 +3671,7 @@ function dessinerCombat() { // le boss (au-dessus des billes), sa plaque (titre 
     if (nargue) { // bulle (une ou deux lignes)
       ctx.font = '900 13px system-ui,-apple-system,sans-serif'; const lignes = nargue.split('\n'), lw = Math.max(...lignes.map(l => ctx.measureText(l).width)) + 18, hb = 10 + 16 * lignes.length;
       const dessous = C.phase === 'parole' || C.phase === 'adieu' || (C.dieu && C.phase !== 'elimine'); // sous lui quand il parle (il est collé en haut)
-      const bx = Math.max(16 + lw / 2, Math.min(354 - lw / 2, C.x + 30)), by = dessous ? C.y + (C.dieu ? 70 : 92) + (hb - 26) / 2 : Math.max(24, C.y - 72 * s);
+      const bx = Math.max(16 + lw / 2, Math.min(354 - lw / 2, C.x + 30)), by = dessous ? (C.dieu ? 202 : C.y + 92) + (hb - 26) / 2 : Math.max(24, C.y - 72 * s);
       rrect(ctx, bx - lw / 2, by - hb / 2, lw, hb, 12); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#101a36'; ctx.lineWidth = 2; ctx.stroke();
       ctx.beginPath(); if (dessous) { ctx.moveTo(C.x - 8, by - hb / 2 + 1); ctx.lineTo(C.x, by - hb / 2 - 12); ctx.lineTo(C.x + 8, by - hb / 2 + 1); } else { ctx.moveTo(bx - 14, by + hb / 2 - 1); ctx.lineTo(bx - 20, by + hb / 2 + 9); ctx.lineTo(bx - 4, by + hb / 2 - 1); } ctx.fillStyle = '#fff'; ctx.fill();
       ctx.fillStyle = '#101a36'; lignes.forEach((l, i) => ctx.fillText(l, bx, by + 1 + (i - (lignes.length - 1) / 2) * 16));
@@ -3909,7 +3964,7 @@ function rendu() {
     ctx.restore();
   }
   if (combat && combat.phase === 'alerte') { // alerte : le gymnase figé vire au rouge
-    ctx.fillStyle = `rgba(200,0,20,${0.18 + 0.12 * Math.sin(temps * 14)})`; cheminTable(ctx); ctx.fill();
+    ctx.fillStyle = `rgba(200,0,20,${0.18 + 0.12 * Math.sin(temps * 14)})`; (table === 'valh' ? cheminValh : cheminTable)(ctx); ctx.fill();
     ctx.strokeStyle = Math.floor(temps * 6) % 2 ? '#ff3344' : '#ffffff'; ctx.lineWidth = 8; ctx.stroke();
   }
   if (flash > 0) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(255,255,255,${flash})`; ctx.fillRect(0, 0, cv.width, cv.height); }

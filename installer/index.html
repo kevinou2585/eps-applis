@@ -78,17 +78,12 @@ a.tuile .beta{background:#fff;color:#1f5fc8}
 <div class="app-seul">
 <div class="top"><img src="icones/eps-192.png" alt=""><div><h1>EPS ultime</h1><p class="sub">Gratuites, sans compte, même sans internet.</p></div></div>
 <div class="tuiles">
-  <a class="tuile principale perso c-carnet" href="carnet/"><img src="icones/carnet-192.png" alt=""><div><b>Carnet EPS <small class="beta">bêta</small></b></div></a>
+  <a class="tuile principale c-carnet" href="carnet/"><img src="icones/carnet-192.png" alt=""><div><b>Carnet EPS <small class="beta">bêta</small></b></div></a>
   <a class="tuile c-tournoi" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><b>Tournoi</b></a>
   <a class="tuile c-koh" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b></a>
   <a class="tuile c-fist" href="le-fist/"><img src="icones/le-fist-192.png" alt=""><b>Le Fist</b></a>
   <a class="tuile c-battle" href="battle/"><img src="icones/battle-192.png" alt=""><b>Battle des profs</b></a>
 </div>
-<script>
-// Carnet : cadenas tant que le 2e code n'a pas été entré sur cet appareil (voir perso.js).
-try { if (localStorage.getItem('eps-perso-ok') !== '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5')
-  document.querySelectorAll('.tuile.perso b').forEach(b => b.insertAdjacentHTML('afterbegin', '🔒 ')); } catch (e) {}
-</script>
 <div class="pied"><button type="button" id="b-param" aria-expanded="false">⚙️ Paramètres</button></div>
 <section id="param" hidden>
   <div id="installe-bloc">

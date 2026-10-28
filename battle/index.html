@@ -2371,6 +2371,27 @@ function perdreBalle() {
 const cv = $('jeu'), ctx = cv.getContext('2d');
 let HUD_Y = 30;
 let DPR = 1, S = 1, KY = 1, OX = 0, OY = 0, fond = null, CW = 0, CH = 0, SPR = {};
+// Kevin (28/10, Pixel 5) : parfois devant un boss, plus de décor et tout laisse des traînées. Les décors sont pré-rendus dans de grandes
+// images (une par table, une par arène de boss) ; sur Android, Chrome peut vider une image quand la mémoire manque : le décor devient
+// transparent et l'image d'avant reste dessous. Donc : on n'en garde que le nécessaire, on refait tout si une image est vidée,
+// et l'écran est repeint chaque image avant le décor (au pire un fond uni, jamais de traînées).
+function toileFond() { const c = document.createElement('canvas'); c.width = cv.width; c.height = cv.height; c.addEventListener('contextrestored', refaireFonds); return c; }
+function lacher(c) { if (c) c.width = c.height = 0; return null; } // rend la mémoire tout de suite
+function refaireFonds() {
+  for (const r in fondBoss) lacher(fondBoss[r]);
+  fondNuit = lacher(fondNuit); fondGoth = lacher(fondGoth); fondBoss = {}; fondValh = lacher(fondValh); fondDieu = lacher(fondDieu); dessusValh = lacher(dessusValh);
+  dessinerFond(); sprites();
+}
+let tableAvant = null;
+function menageFonds() { // à chaque changement de table : on lâche le décor de la table quittée
+  if (table === tableAvant) return;
+  const t = tableAvant; tableAvant = table;
+  if (t === 'boss') { for (const r in fondBoss) lacher(fondBoss[r]); fondBoss = {}; }
+  else if (t === 'goth') fondGoth = lacher(fondGoth);
+  else if (t === 'valh') { fondValh = lacher(fondValh); dessusValh = lacher(dessusValh); }
+  else if (t === 'dieu') fondDieu = lacher(fondDieu);
+}
+cv.addEventListener('contextrestored', refaireFonds);
 function redim() {
   DPR = Math.min(window.devicePixelRatio || 1, 3); // jusqu'à 3 : image nette sur les téléphones récents
   CW = window.innerWidth; CH = window.innerHeight;
@@ -2383,7 +2404,7 @@ function redim() {
   const libre = dispo - (TH - 8) * S, bande = Math.min(72, Math.max(bmin, libre));
   OX = (CW - TW * S) / 2;
   OY = haut + bande + Math.max(0, (libre - bande) / 2); HUD_Y = OY - bande / 2;
-  fondNuit = null; fondGoth = null; fondBoss = {}; fondValh = null; fondDieu = null; dessusValh = null; dessinerFond(); sprites();
+  refaireFonds();
   const bt = $('tilt'); if (bt){ bt.style.left = (OX + 185 * S) + 'px'; bt.style.top = (OY + 704 * S * KY) + 'px'; } // bouton TILT à la place de « Sauvée »
 }
 const hsla = (h, a, l = 60) => `hsla(${h},100%,${l}%,${a})`;
@@ -2464,7 +2485,7 @@ function corpsBumper(c, b) {
   c.beginPath(); c.arc(0, 0, r - 0.5, 0, 7); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.2; c.stroke();
 }
 function dessinerFond() {
-  fond = document.createElement('canvas'); fond.width = cv.width; fond.height = cv.height;
+  fond = toileFond();
   const c = fond.getContext('2d'), k = S * DPR;
   const g0 = c.createLinearGradient(0, 0, 0, fond.height); g0.addColorStop(0, '#0d1530'); g0.addColorStop(1, '#070b1c'); c.fillStyle = g0; c.fillRect(0, 0, fond.width, fond.height);
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR);
@@ -2674,7 +2695,7 @@ function bumperNeon(c, b) {
   c.restore();
 }
 function dessinerFondNuit() {
-  fondNuit = document.createElement('canvas'); fondNuit.width = cv.width; fondNuit.height = cv.height;
+  fondNuit = toileFond();
   const c = fondNuit.getContext('2d'), k = S * DPR;
   c.fillStyle = '#04020c'; c.fillRect(0, 0, fondNuit.width, fondNuit.height);
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineCap = 'round'; c.lineJoin = 'round';
@@ -2724,7 +2745,7 @@ function dessinerFondNuit() {
   c.fillStyle = '#1a1433'; c.fillRect(366, 710, 18, 18); neon(() => { c.beginPath(); c.rect(366, 710, 18, 18); }, NEON.cyan, 1.5);
   dessinerTrappes(c, true); dessinerEntreeLoop(c, true);
   // rampe néon (jaune) : dessinée par-dessus les billes du plateau
-  rampeNuit = document.createElement('canvas'); rampeNuit.width = cv.width; rampeNuit.height = cv.height;
+  rampeNuit = toileFond();
   const r = rampeNuit.getContext('2d'), P = RAMPE.pts; r.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); r.lineCap = 'round'; r.lineJoin = 'round';
   const fil = off => { r.beginPath(); P.forEach((p, i) => { const q = P[Math.min(P.length - 1, i + 1)], o = P[Math.max(0, i - 1)], tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1, x = p[0] - ty / l * off, y = p[1] + tx / l * off; i ? r.lineTo(x, y) : r.moveTo(x, y); }); };
   r.strokeStyle = 'rgba(255,230,0,.35)'; r.lineWidth = 2;
@@ -2795,7 +2816,7 @@ function dessinerCasier() { // casier en haut à gauche : ouvert au repos, se re
 // rail métallique surélevé (dessiné par-dessus les balles du plateau)
 let rampeCv = null;
 function dessinerRampe() {
-  rampeCv = document.createElement('canvas'); rampeCv.width = cv.width; rampeCv.height = cv.height;
+  rampeCv = toileFond();
   const c = rampeCv.getContext('2d'), k = S * DPR, P = RAMPE.pts;
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.lineCap = 'round'; c.lineJoin = 'round';
   const fil = (off, dx, dy) => { c.beginPath(); P.forEach((p, i) => { const q = P[Math.min(P.length - 1, i + 1)], o = P[Math.max(0, i - 1)], tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1, x = p[0] - ty / l * off + dx, y = p[1] + tx / l * off + dy; i ? c.lineTo(x, y) : c.moveTo(x, y); }); };
@@ -2867,7 +2888,7 @@ function toile(c, x, y, a0, a1, L) { // toile d'araignée dans un coin
   c.restore();
 }
 function dessinerFondGoth() {
-  fondGoth = document.createElement('canvas'); fondGoth.width = cv.width; fondGoth.height = cv.height;
+  fondGoth = toileFond();
   const c = fondGoth.getContext('2d'), k = S * DPR, C = CRYPTE_C;
   c.fillStyle = '#07040d'; c.fillRect(0, 0, fondGoth.width, fondGoth.height);
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineCap = 'round'; c.lineJoin = 'round';
@@ -3044,7 +3065,7 @@ function bouclierViking(c, x, y, r, coul) { // bouclier rond : bois peint, umbo 
 const VAL2 = { or: '#ffcf4a', orF: '#8a5a00', braise: '#ff7a1a', feu: '#ffb347', sang: '#8b1e1e', ivoire: '#fff3d6', feuille: '#9be37a', serpent: '#1f3d1a' };
 function cheminValh(c) { c.beginPath(); c.moveTo(10, 740); c.lineTo(10, 300); for (const p of OGIVE) c.lineTo(p[0], p[1]); c.lineTo(390, 740); c.closePath(); }
 function dessinerFondValh() {
-  fondValh = document.createElement('canvas'); fondValh.width = cv.width; fondValh.height = cv.height;
+  fondValh = toileFond();
   const c = fondValh.getContext('2d'), k = S * DPR, V = VAL2;
   c.fillStyle = '#050302'; c.fillRect(0, 0, fondValh.width, fondValh.height);
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineCap = 'round'; c.lineJoin = 'round';
@@ -3203,7 +3224,7 @@ function bordRail(c, P, off, dx = 0, dy = 0) { // trace un bord (décalé de off
   c.beginPath(); P.forEach((p, i) => { const q = P[Math.min(P.length - 1, i + 1)], o = P[Math.max(0, i - 1)], tx = q[0] - o[0], ty = q[1] - o[1], l = Math.hypot(tx, ty) || 1, x = p[0] - ty / l * off + dx, y = p[1] + tx / l * off + dy; i ? c.lineTo(x, y) : c.moveTo(x, y); });
 }
 function dessinerDessusValh() { // les 2 rampes surélevées qui se croisent : le serpent (dessous) puis le pont Bifröst (dessus)
-  dessusValh = document.createElement('canvas'); dessusValh.width = cv.width; dessusValh.height = cv.height;
+  dessusValh = toileFond();
   const c = dessusValh.getContext('2d'), k = S * DPR, V = VAL2;
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.lineCap = 'round'; c.lineJoin = 'round';
   // Jörmungandr : corps écailleux vert sombre, ventre plus clair, il s'amincit vers la queue
@@ -3244,7 +3265,7 @@ function renduValhDessus(sx, sy) {
 }
 // ---------------------------------------------------------------- L'arène du DUEL DES DIEUX : au-dessus des nuages, la porte d'Asgard en haut
 function dessinerFondDieu() {
-  fondDieu = document.createElement('canvas'); fondDieu.width = cv.width; fondDieu.height = cv.height;
+  fondDieu = toileFond();
   const c = fondDieu.getContext('2d'), k = S * DPR, V = VALH_C;
   c.fillStyle = '#03050f'; c.fillRect(0, 0, fondDieu.width, fondDieu.height);
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineCap = 'round'; c.lineJoin = 'round';
@@ -3520,7 +3541,7 @@ function cheminPorte(c, dx = 0) { const { x, y, w, h } = PORTE; c.beginPath(); c
 // arènes pré-rendues : n°3 cour du rempart (pavés gris, créneaux), n°2 cachot (briques brunes, chaînes, torches),
 // n°1 salle du trône (dalles crème, tapis rouge, colonnes dorées) — des teintes bien différentes d'un boss à l'autre
 function dessinerFondBoss(rang) {
-  const cvF = document.createElement('canvas'); cvF.width = cv.width; cvF.height = cv.height; fondBoss[rang] = cvF;
+  const cvF = toileFond(); fondBoss[rang] = cvF;
   const c = cvF.getContext('2d'), k = S * DPR;
   c.fillStyle = '#07090f'; c.fillRect(0, 0, cvF.width, cvF.height);
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineCap = 'round'; c.lineJoin = 'round';
@@ -3744,7 +3765,8 @@ function texte(t, x, y, taille, coul, alpha = 1) {
   ctx.strokeText(t, x, y); ctx.fillStyle = coul; ctx.fillText(t, x, y); ctx.globalAlpha = 1;
 }
 function rendu() {
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  menageFonds(); ctx.fillStyle = '#07090f'; ctx.fillRect(0, 0, cv.width, cv.height); // jamais de traînées, même si un décor a été vidé
   if (nuit && !fondNuit) dessinerFondNuit();
   if (table === 'goth' && !fondGoth) dessinerFondGoth();
   if (table === 'boss' && combat && !fondBoss[combat.rang]) dessinerFondBoss(combat.rang);

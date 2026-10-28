@@ -792,6 +792,8 @@ const parseNum = v => { if (v == null) return null; v = String(v).trim().replace
    PH = { pid: photo (dataURL) }                                                                 */
 const KEY = 'carnet-eps-v1', PKEY = 'carnet-eps-photos-v1', UKEY = 'carnet-eps-ui';
 const DEF_SET = { T: 4, C: 4, se: 60, npCounts: false, X: 2 };
+/* points de tenue / d'attitude d'une période : ceux des Réglages, sauf si la période a les siens (p.T, p.C : ancien relevé repris tel quel) */
+const perPts = p => { const st = S.settings, o = p && p !== 'year' ? p : {}; return {T: o.T != null ? +o.T || 0 : +st.T || 0, C: o.C != null ? +o.C || 0 : +st.C || 0}; };
 let S = { v: 1, ts: 0, cur: null, settings: {...DEF_SET}, classes: [], deleted: [] };
 let PH = {};
 let UI = { tab: 'today', date: today(), period: {}, sort: 'name' };
@@ -874,9 +876,9 @@ function travPremier(c){
   return o;
 }
 function compute(c, p){
-  const st = S.settings, T = +st.T || 0, Cc = +st.C || 0, W = stN('W'), w1 = travPremier(c), res = {};
+  const st = S.settings, {T, C: Cc} = perPts(p), W = stN('W'), w1 = travPremier(c), res = {};
   const wOn = pid => W > 0 && !!w1[pid] && (periodOf(c, w1[pid])?.start || '') <= p.start;
-  c.pupils.forEach(pu => res[pu.id] = {t: T, c: Cc, w: wOn(pu.id) ? W : null, x: 0, abs: 0, late: 0, disp: 0, kit: 0, np: 0, d: 0, n: 0, ev: [], sfS: 0, sfM: 0, evals: []});
+  c.pupils.forEach(pu => res[pu.id] = {T, C: Cc, t: T, c: Cc, w: wOn(pu.id) ? W : null, x: 0, abs: 0, late: 0, disp: 0, kit: 0, np: 0, d: 0, n: 0, ev: [], sfS: 0, sfM: 0, evals: []});
   // points déjà retirés avant l'appli (repris de l'ancien relevé), sans report d'une colonne à l'autre
   const adj = (c.adj || {})[p.id] || {};
   c.pupils.forEach(pu => { const a = adj[pu.id], r = res[pu.id]; if (!a) return;
@@ -1041,12 +1043,13 @@ function migrate(){
   S.settings.seeds = [...(S.settings.seeds || []), MIG]; save();
   return true;
 }
-/* Type d'une nouvelle leçon : piscine seulement si la période est piscine et que ce créneau n'est pas « toujours salle » */
+/* Type d'une nouvelle leçon : piscine seulement si la période est piscine et que ce créneau n'est pas « toujours salle » (mardi) ou est coché « piscine » (autre jour) */
 function lessonType(c, date, h){
   const per = periodOf(c, date); if (!per || per.type !== 'piscine') return 'salle';
-  const wd = dOf(date).getDay();
-  if (wd !== 2) return 'salle';
-  return tt().some(t => t.d === wd && t.h === h && t.cls.includes(c.id) && t.salle) ? 'salle' : 'piscine';
+  const wd = dOf(date).getDay(), sl = tt().filter(t => t.d === wd && t.h === h && t.cls.includes(c.id));
+  // piscine le mardi par défaut ; un autre jour seulement si le cours est coché « piscine » (t.pool)
+  if (wd !== 2) return sl.some(t => t.pool) ? 'piscine' : 'salle';
+  return sl.some(t => t.salle) ? 'salle' : 'piscine';
 }
 
 /* ====== Toast ====== */
@@ -1314,7 +1317,7 @@ const MAILLOT_F = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 function maillot(c, p){ return ((c && c.sexe) || (p && p.g)) === 'F' ? MAILLOT_F : MAILLOT_G; }
 function lessonRow(c, L, p, r, pool){
   const mm = L.m[p.id] || {}, a = effA(p, L), cert = certOn(p, L.date, L.type), off = a === 'A', exempt = a === 'D';
-  const T = +S.settings.T, Cc = +S.settings.C;
+  const T = r ? r.T : +S.settings.T, Cc = r ? r.C : +S.settings.C;
   const pts = r ? `<span class="pts num"><span class="${r.t <= 1 ? 'low' : ''}">Tenue ${r.t}/${T}</span><span class="${r.c <= 1 ? 'low' : ''}">Att. ${r.c}/${Cc}</span>${r.w != null ? `<span class="${r.w <= 1 ? 'low' : ''}">Trav. ${r.w}/${stN('W')}</span>` : ''}</span>` : '';
   return `<div class="prow ${off ? 'isA' : ''}" data-pid="${p.id}" data-cid="${c.id}">
     <button class="who" type="button">${avatar(p)}<span class="nm"><b>${esc(nomCourt(p))}</b>${cert ? `<span class="pts" style="color:var(--warn);font-weight:600">🩺 Certificat · dispensé jusqu'au ${cert.to.slice(8)}/${cert.to.slice(5, 7)}</span>` : pts}</span></button>
@@ -1419,7 +1422,7 @@ const pipsH = (n, max, cls) => `<span class="pips ${cls}">${Array.from({length: 
 function renderPoints(c, m){
   let vp = viewPeriod(c); if (vp === 'year') vp = periodOf(c, today());
   if (!vp){ m.innerHTML = `<section class="sec"><div class="card empty"><p>Ajoute une période dans Réglages.</p></div></section>`; return; }
-  const {res, lessons} = compute(c, vp), T = +S.settings.T, Cc = +S.settings.C;
+  const {res, lessons} = compute(c, vp), {T, C: Cc} = perPts(vp);
   const ps = pupilsOf(c);
   const seTot = r => r.t + r.c + (r.w || 0), full = ps.filter(p => seTot(res[p.id]) === res[p.id].seMax).length, low = ps.filter(p => seTot(res[p.id]) <= res[p.id].seMax / 2).length;
   m.innerHTML = `<section class="sec">
@@ -1657,7 +1660,7 @@ const dFR = iso => iso ? `${iso.slice(8)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`
 function periodEnd(c, p){ const ps = periodsOf(c), i = ps.findIndex(x => x.id === p.id); return ps[i + 1] ? addDays(ps[i + 1].start, -1) : null; }
 /* Feuille d'une classe pour une période */
 function periodSheet(c, p){
-  const st = S.settings, T = +st.T, Cc = +st.C, seP = +st.se, sfP = 100 - seP;
+  const st = S.settings, {T, C: Cc} = perPts(p), seP = +st.se, sfP = 100 - seP;
   const {res, lessons, evals} = compute(c, p), pool = lessons.some(l => l.type === 'piscine');
   const ps = pupilsOf(c), wCol = ps.some(pu => res[pu.id].w != null);
   const cols = [{h: 'N°', w: 5}, {h: 'Élève', w: 28},
@@ -1735,7 +1738,7 @@ function openPupil(c, pid){
   const ps = pupilsOf(c), i = ps.findIndex(p => p.id === pid), p = ps[i]; if (!p) return;
   let vp = viewPeriod(c);
   const X = vp === 'year' ? computeYear(c) : compute(c, vp), r = X.res[p.id];
-  const T = +S.settings.T, Cc = +S.settings.C, seP = S.settings.se, seMax = seP, sfMax = 100 - seP;
+  const {T, C: Cc} = perPts(vp), seP = S.settings.se, seMax = seP, sfMax = 100 - seP;
   const year = vp === 'year';
   const h = `
     <div style="display:flex;align-items:center;gap:14px">
@@ -2325,7 +2328,7 @@ function openAgEdit(date, h, it){
     <span class="small" id="age-hint"></span>
     <span class="small muted" style="font-weight:600">Classe(s) qui ont cours</span>
     <div class="ag-cls">${S.classes.map(c => `<label class="ag-ck"><input type="checkbox" value="${c.id}" ${sel.has(c.id) ? 'checked' : ''}><span><b>${esc(c.name)}</b><small>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}${c.act ? ' · groupe d\'activité' : ''}</small></span></label>`).join('')}</div>
-    <label class="toggle"><input type="checkbox" id="age-salle" ${orig.salle ? 'checked' : ''}>Toujours en salle, même en période piscine</label>
+    ${d === 2 ? `<label class="toggle"><input type="checkbox" id="age-salle" ${orig.salle ? 'checked' : ''}>Toujours en salle, même en période piscine</label>` : `<label class="toggle"><input type="checkbox" id="age-pool" ${orig.pool ? 'checked' : ''}>À la piscine en période piscine</label>`}
     <button class="btn pri block" type="button" id="age-ok">${it ? 'Enregistrer l\'horaire' : 'Ajouter à l\'horaire'}</button>`);
   const why = (s, k) => { const e = s + k - 1;
     if (e > last) return d === 3 ? 'le mercredi finit à H5' : 'la journée finit à H8';
@@ -2347,7 +2350,8 @@ function openAgEdit(date, h, it){
     if (!ids.length){ toast('Coche au moins une classe'); return; }
     if (why(start, len)){ toast(why(start, len)); return; }
     const e = {...orig, id: it ? it.ids[0] : nid('t'), d, h: HOURS[start][0], h2: HOURS[start + len - 1][0], cls: S.classes.filter(c => ids.includes(c.id)).map(c => c.id)};
-    if ($('age-salle').checked) e.salle = true; else delete e.salle;
+    if ($('age-salle') && $('age-salle').checked) e.salle = true; else delete e.salle;
+    if ($('age-pool') && $('age-pool').checked) e.pool = true; else delete e.pool;
     if (it) S.settings.tt = tt().filter(s => !it.ids.includes(s.id));
     tt().push(e); save(); closeSheet(); render();
     toast(it ? 'Horaire modifié' : `Ajouté : chaque ${dn.toLowerCase()} ${slotLabel(e)}`);
@@ -3905,7 +3909,7 @@ function suRange(c, vp){
 }
 /* Données : une ligne par élève, événements datés (les plus récents d'abord) */
 function suData(c, vp){
-  const year = vp === 'year', st = S.settings, T = +st.T || 0, Cc = +st.C || 0;
+  const year = vp === 'year', st = S.settings, {T, C: Cc} = perPts(vp);
   const ls = c.lessons.filter(l => year || periodOf(c, l.date)?.id === vp.id).sort((a, b) => suKey(a) < suKey(b) ? 1 : -1);
   const pers = year ? periodsOf(c) : [vp];
   const X = year ? null : compute(c, vp), PX = year ? pers.map(pp => compute(c, pp)) : null;
@@ -3924,7 +3928,7 @@ function suData(c, vp){
     pers.forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (a){ adj.t += +a.t || 0; adj.c += +a.c || 0; } });
     let pts;
     if (!year){ const r = X.res[p.id]; pts = {t: r.t, c: r.c, w: r.w}; }
-    else pts = {lt: PX.reduce((a, x) => a + (T - x.res[p.id].t), 0), lc: PX.reduce((a, x) => a + (Cc - x.res[p.id].c), 0)};
+    else pts = {lt: PX.reduce((a, x) => a + (x.res[p.id].T - x.res[p.id].t), 0), lc: PX.reduce((a, x) => a + (x.res[p.id].C - x.res[p.id].c), 0)};
     return {p, ev, n, adj, pts, rgMax};
   });
   return {ls, rows, pool, girls, year, T, Cc};
@@ -4323,7 +4327,7 @@ function fiBulletin(c, pid, per){
   const pers = periodsOf(c);
   let vp = per === 'year' ? 'year' : pers.find(x => x.id === per) || periodOf(c, today());
   if (!vp){ toast('Ajoute une période dans Réglages'); return; }
-  const year = vp === 'year', X = year ? computeYear(c) : compute(c, vp), r = X.res[p.id], st = S.settings, seP = +st.se, T = +st.T || 0, Cc = +st.C || 0;
+  const year = vp === 'year', X = year ? computeYear(c) : compute(c, vp), r = X.res[p.id], st = S.settings, seP = +st.se, {T, C: Cc} = perPts(vp);
   const key = year ? 'year' : vp.id, mine = c.com && c.com[key] && typeof c.com[key][p.id] === 'string' ? c.com[key][p.id] : null;
   const com = mine != null ? mine : comText(c, vp, X, p), k = comCounts(c, X, p, vp);
   const row = (l, v, cls) => `<div class="fi-br ${cls || ''}"><span>${l}</span><b class="num">${v}</b></div>`;
@@ -4521,7 +4525,7 @@ function comText(c, vp, X, p){
   const r = X.res[p.id], st = S.settings, seP = +st.se, sfP = 100 - seP, n0 = v => fr(v, 0), year = vp === 'year', out = [];
   const pc = (v, sur) => sur > 0 && v != null ? n0(v / sur * 100) + ' %' : null;
   const se = pc(r.se, seP);
-  if (se != null) out.push(`Savoir-être : ${se}` + (year ? '' : ` (tenue ${r.t}/${+st.T || 0}, attitude ${r.c}/${+st.C || 0}${r.w != null ? `, travaux ${r.w}/${stN('W')}` : ''})`) + '.');
+  if (se != null) out.push(`Savoir-être : ${se}` + (year ? '' : ` (tenue ${r.t}/${r.T}, attitude ${r.c}/${r.C}${r.w != null ? `, travaux ${r.w}/${stN('W')}` : ''})`) + '.');
   const evs = year ? c.evals.filter(e => e.kind !== 'form' && (X.periods || []).some(pp => pp.id === e.periodId)).sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(e => ({e, s: e.s[p.id]})) : r.evals;
   const ev = evs.filter(o => typeof o.s === 'number' || evTag(o.s)).map(o => `${o.e.name.trim() || 'évaluation'} ${typeof o.s === 'number' ? fr(o.s, 2) + '/' + fr(+o.e.max, 2) : evTagLong(o.s)}`);
   const sf = pc(r.sf, sfP);

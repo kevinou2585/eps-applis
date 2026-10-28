@@ -183,7 +183,7 @@ function fiBulletin(c, pid, per){
   const pers = periodsOf(c);
   let vp = per === 'year' ? 'year' : pers.find(x => x.id === per) || periodOf(c, today());
   if (!vp){ toast('Ajoute une période dans Réglages'); return; }
-  const year = vp === 'year', X = year ? computeYear(c) : compute(c, vp), r = X.res[p.id], st = S.settings, seP = +st.se, T = +st.T || 0, Cc = +st.C || 0;
+  const year = vp === 'year', X = year ? computeYear(c) : compute(c, vp), r = X.res[p.id], st = S.settings, seP = +st.se, {T, C: Cc} = perPts(vp);
   const key = year ? 'year' : vp.id, mine = c.com && c.com[key] && typeof c.com[key][p.id] === 'string' ? c.com[key][p.id] : null;
   const com = mine != null ? mine : comText(c, vp, X, p), k = comCounts(c, X, p, vp);
   const row = (l, v, cls) => `<div class="fi-br ${cls || ''}"><span>${l}</span><b class="num">${v}</b></div>`;

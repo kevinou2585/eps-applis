@@ -24,7 +24,7 @@ function suRange(c, vp){
 }
 /* Données : une ligne par élève, événements datés (les plus récents d'abord) */
 function suData(c, vp){
-  const year = vp === 'year', st = S.settings, T = +st.T || 0, Cc = +st.C || 0;
+  const year = vp === 'year', st = S.settings, {T, C: Cc} = perPts(vp);
   const ls = c.lessons.filter(l => year || periodOf(c, l.date)?.id === vp.id).sort((a, b) => suKey(a) < suKey(b) ? 1 : -1);
   const pers = year ? periodsOf(c) : [vp];
   const X = year ? null : compute(c, vp), PX = year ? pers.map(pp => compute(c, pp)) : null;
@@ -43,7 +43,7 @@ function suData(c, vp){
     pers.forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (a){ adj.t += +a.t || 0; adj.c += +a.c || 0; } });
     let pts;
     if (!year){ const r = X.res[p.id]; pts = {t: r.t, c: r.c, w: r.w}; }
-    else pts = {lt: PX.reduce((a, x) => a + (T - x.res[p.id].t), 0), lc: PX.reduce((a, x) => a + (Cc - x.res[p.id].c), 0)};
+    else pts = {lt: PX.reduce((a, x) => a + (x.res[p.id].T - x.res[p.id].t), 0), lc: PX.reduce((a, x) => a + (x.res[p.id].C - x.res[p.id].c), 0)};
     return {p, ev, n, adj, pts, rgMax};
   });
   return {ls, rows, pool, girls, year, T, Cc};

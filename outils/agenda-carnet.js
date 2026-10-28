@@ -288,7 +288,7 @@ function openAgEdit(date, h, it){
     <span class="small" id="age-hint"></span>
     <span class="small muted" style="font-weight:600">Classe(s) qui ont cours</span>
     <div class="ag-cls">${S.classes.map(c => `<label class="ag-ck"><input type="checkbox" value="${c.id}" ${sel.has(c.id) ? 'checked' : ''}><span><b>${esc(c.name)}</b><small>${c.pupils.length} élève${c.pupils.length > 1 ? 's' : ''}${c.act ? ' · groupe d\'activité' : ''}</small></span></label>`).join('')}</div>
-    <label class="toggle"><input type="checkbox" id="age-salle" ${orig.salle ? 'checked' : ''}>Toujours en salle, même en période piscine</label>
+    ${d === 2 ? `<label class="toggle"><input type="checkbox" id="age-salle" ${orig.salle ? 'checked' : ''}>Toujours en salle, même en période piscine</label>` : `<label class="toggle"><input type="checkbox" id="age-pool" ${orig.pool ? 'checked' : ''}>À la piscine en période piscine</label>`}
     <button class="btn pri block" type="button" id="age-ok">${it ? 'Enregistrer l\'horaire' : 'Ajouter à l\'horaire'}</button>`);
   const why = (s, k) => { const e = s + k - 1;
     if (e > last) return d === 3 ? 'le mercredi finit à H5' : 'la journée finit à H8';
@@ -310,7 +310,8 @@ function openAgEdit(date, h, it){
     if (!ids.length){ toast('Coche au moins une classe'); return; }
     if (why(start, len)){ toast(why(start, len)); return; }
     const e = {...orig, id: it ? it.ids[0] : nid('t'), d, h: HOURS[start][0], h2: HOURS[start + len - 1][0], cls: S.classes.filter(c => ids.includes(c.id)).map(c => c.id)};
-    if ($('age-salle').checked) e.salle = true; else delete e.salle;
+    if ($('age-salle') && $('age-salle').checked) e.salle = true; else delete e.salle;
+    if ($('age-pool') && $('age-pool').checked) e.pool = true; else delete e.pool;
     if (it) S.settings.tt = tt().filter(s => !it.ids.includes(s.id));
     tt().push(e); save(); closeSheet(); render();
     toast(it ? 'Horaire modifié' : `Ajouté : chaque ${dn.toLowerCase()} ${slotLabel(e)}`);

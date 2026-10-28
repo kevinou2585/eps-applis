@@ -745,6 +745,9 @@ DRIVE_JS = r"""
     });
     // onglet « Prépas » : une ligne par leçon préparée (agenda-carnet.js)
     try { const pf = window.prepaFeuille && window.prepaFeuille(); if (pf) out.push(pf); } catch(e){}
+    // Carnet encore vide : au moins un onglet visible, sinon le script Google supprime la « Feuille 1 » de départ,
+    // qui est alors la seule visible (les copies sont cachées) et Google refuse tout l'envoi.
+    if (!out.length) out.push({nom: 'Carnet EPS', lignes: [{h: 26, c: [['Carnet EPS', 1]]}, {h: 18, c: [['Pas encore de classe : un onglet par classe apparaîtra ici.', 2]]}], fusions: [], largeurs: [60], figer: 0});
     return out;
   }
   async function appel(o, corps){

@@ -41,8 +41,8 @@ function doPost(e) {
       const err = controle(o.cle); if (err) return err;
       if (!o.copie || !o.copie.state) return {ok: false, err: 'copie vide'};
       ecrireCopie(o.annee || '', o.copie);
+      lisezMoi(o.annee || '');                   // d'abord : le tableau garde toujours un onglet visible
       ecrireOnglets(o.feuilles || []);
-      lisezMoi(o.annee || '');
       return {ok: true};
     } finally {
       verrou.releaseLock();
@@ -114,14 +114,17 @@ function ecrireOnglets(feuilles) {
     remplir(sh, f);
   });
   // Classes supprimées dans le Carnet : leur onglet disparaît aussi
-  avant.filter(n => noms.indexOf(n) < 0).forEach(n => { const sh = ss.getSheetByName(n); if (sh && ss.getSheets().length > 1) ss.deleteSheet(sh); });
+  avant.filter(n => noms.indexOf(n) < 0).forEach(n => { const sh = ss.getSheetByName(n); if (sh && visibles(ss) > 1) ss.deleteSheet(sh); });
   props.setProperty('ONGLETS', JSON.stringify(noms));
   // Ordre : Lisez-moi, puis les onglets dans l'ordre du Carnet
   const lm = ss.getSheetByName(LISEZ);
   [lm ? LISEZ : null].concat(noms).filter(Boolean).forEach((n, i) => { const sh = ss.getSheetByName(n); if (sh) { ss.setActiveSheet(sh); ss.moveActiveSheet(i + 1); } });
   // La feuille vide du départ (« Feuille 1 », « Sheet1 ») n'est plus utile
-  ss.getSheets().forEach(sh => { if (/^(Feuille|Sheet|Blad)\s?1$/i.test(sh.getName()) && sh.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(sh); });
+  ss.getSheets().forEach(sh => { if (/^(Feuille|Sheet|Blad)\s?1$/i.test(sh.getName()) && sh.getLastRow() === 0 && visibles(ss) > 1) ss.deleteSheet(sh); });
 }
+
+// Google refuse de supprimer la dernière feuille visible (les « _copie » sont cachées)
+const visibles = ss => ss.getSheets().filter(sh => !sh.isSheetHidden()).length;
 
 function nomOnglet(nom, pris) {
   let n = String(nom || 'Classe').replace(/[\[\]*?:\/\\]/g, ' ').trim().slice(0, 90) || 'Classe';
@@ -190,6 +193,7 @@ function a1(r, c) {
 /* ---------- Onglet « Lisez-moi » ---------- */
 function lisezMoi(annee) {
   const ss = SpreadsheetApp.getActive(), sh = ss.getSheetByName(LISEZ) || ss.insertSheet(LISEZ, 0);
+  if (sh.isSheetHidden()) sh.showSheet();
   const cle = PropertiesService.getScriptProperties().getProperty('CLE');
   const t = [
     ['Carnet EPS · sauvegarde automatique'],

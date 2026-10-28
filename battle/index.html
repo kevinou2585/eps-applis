@@ -1079,10 +1079,11 @@ cibleSegs = segs;
 const BUMPB = [{ x: 88, y: 392, r: 15 }, { x: 284, y: 392, r: 15 }].map(b => Object.assign(b, { flash: 0, cd: 0 }));
 const PORTE = { x: 185, y: 24, w: 62, h: 58 }; // porte en haut du plateau (le haut de l'arc est à y ≈ 11)
 // niveaux par rang : n°3 facile, n°2 moyen (esquive), n°1 dur mais faisable (esquive + bouclier + rage à mi-vie)
+// Kevin (28/10) : un cran plus durs (descendent plus vite, bougent plus, esquivent plus), sans nouveau pouvoir ; empereur et dieu inchangés
 const NIV_BOSS = {
-  3: { pv: 3, billes: 3, vit: 12, amp: 55, freq: 0.9, esquive: 0, bouclier: false, bonus: 5000, titre: { H: 'Le Garde', F: 'La Garde' }, lieu: 'LE REMPART', bord: '#c9d1de' },
-  2: { pv: 5, billes: 3, vit: 15, amp: 75, freq: 1.15, esquive: 0.35, bouclier: false, bonus: 10000, titre: { H: 'Le Bourreau', F: 'La Sorcière' }, lieu: 'LE CACHOT', bord: '#ff8c1a' },
-  1: { pv: 7, billes: 3, vit: 17, amp: 90, freq: 1.35, esquive: 0.3, bouclier: true, bonus: 25000, titre: { H: 'Le Roi', F: 'La Reine' }, lieu: 'LA SALLE DU TRÔNE', bord: '#ffd23f' },
+  3: { pv: 3, billes: 3, vit: 16, amp: 65, freq: 1.0, esquive: 0, bouclier: false, bonus: 5000, titre: { H: 'Le Garde', F: 'La Garde' }, lieu: 'LE REMPART', bord: '#c9d1de' },
+  2: { pv: 5, billes: 3, vit: 18, amp: 80, freq: 1.25, esquive: 0.5, bouclier: false, bonus: 10000, titre: { H: 'Le Bourreau', F: 'La Sorcière' }, lieu: 'LE CACHOT', bord: '#ff8c1a' },
+  1: { pv: 7, billes: 3, vit: 20, amp: 95, freq: 1.45, esquive: 0.42, bouclier: true, bonus: 25000, titre: { H: 'Le Roi', F: 'La Reine' }, lieu: 'LA SALLE DU TRÔNE', bord: '#ffd23f' },
   // Kevin (27/10) : le boss caché du château (rang 0), « LES 4 SCEAUX » : 4 cristaux nourrissent son bouclier ; les éteindre tous le fait
   // tomber 8 s, et seulement là la bille le blesse. 3 cœurs, de plus en plus dur (les cristaux bougent, puis des gardes de pierre)
   0: { pv: 3, billes: 3, vit: 0, amp: 70, freq: 0.55, esquive: 0, bouclier: false, bonus: 50000, titre: { H: 'L’Empereur', F: 'L’Impératrice' }, lieu: 'LE DONJON CACHÉ', bord: '#b26bff', ultime: true },

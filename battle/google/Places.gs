@@ -5,7 +5,7 @@
 //   dans doPost, juste après la ligne « if (o.action === 'jeu') … » :
 //     if (o.action === 'places') return sortie(placesEnvoi(o));
 //   et la ligne « if (o.action === 'jeu') … » devient : if (o.action === 'jeu') { const r = jeuScore(o); flipperRangerSur(o.jeu); return sortie(r); }
-//   dans onOpen, avant la dernière ligne : SpreadsheetApp.getUi().createMenu('Flipper').addItem('Ranger l’onglet Flipper', 'flipperRanger').addToUi();
+//   dans onOpen, avant la dernière ligne : SpreadsheetApp.getUi().createMenu('Flipper').addItem('Ranger l’onglet Flipper', 'flipperMenu').addToUi();
 // Règles (Kevin, 29/10/2026) : battre un boss = prendre sa place ; l'ancien occupant descend d'un cran, et ainsi de suite
 // jusqu'à la première place libre (sinon la Garde sort). Le Dieu se prend seulement en battant aussi son record.
 // Une place déjà à toi ne bouge pas (le Dieu qui rate son record reste Dieu). Plus de scores affichés : on garde le record du Dieu.
@@ -93,6 +93,12 @@ function flipperRangerSur(jeu) { // appelé après chaque envoi ; une erreur ici
   } catch (err) { console.error(err); }
 }
 
+function flipperMenu() { // menu Flipper › Ranger l'onglet Flipper : dit ce qui se passe
+  const ui = SpreadsheetApp.getUi();
+  try { const sh = flipperRanger(); SpreadsheetApp.getActiveSpreadsheet().setActiveSheet(sh); ui.alert('C’est rangé : tout le flipper est dans l’onglet « Flipper ».'); }
+  catch (err) { ui.alert('Erreur : ' + (err && err.message || err) + '\n\nFais une capture et envoie-la à Claude.'); }
+}
+
 function flipperRanger() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let jeu = PropertiesService.getScriptProperties().getProperty('FLIPPER_JEU');
@@ -138,7 +144,7 @@ function flipperRanger() {
     else if (t === 'note') r.merge().setFontColor('#777777').setFontStyle('italic');
     else if (t === 'section') { r.merge().setBackground(F_VERT).setFontColor('#ffffff').setFontWeight('bold').setFontSize(12); sh.setRowHeight(l, 28); }
     else if (t === 'entete') r.setBackground('#dfe8e3').setFontWeight('bold');
-    else if (t === 'place') r.setBackground(l % 2 ? '#ffffff' : F_CLAIR).setBorder(null, null, true, null, null, null, '#dddddd', null);
+    else if (t === 'place') r.setBackground(l % 2 ? '#ffffff' : F_CLAIR).setBorder(null, null, true, null, null, null);
     else if (t === 'record') { r.setBackground('#fff4c2').setFontWeight('bold'); }
     else if (t === 'partie') r.setBackground(l % 2 ? '#ffffff' : F_CLAIR);
   });

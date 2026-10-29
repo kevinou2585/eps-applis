@@ -179,9 +179,9 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .heros{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;will-change:transform}
 .heros canvas{animation:none;background:radial-gradient(circle at 50% 55%,rgba(255,240,170,.55),transparent 62%);filter:drop-shadow(0 0 14px rgba(255,220,120,.8)) drop-shadow(0 8px 10px rgba(0,0,0,.55))}
 .heros b{position:relative;margin-top:-10px;padding:3px 10px;border-radius:999px;background:#ffd23f;color:#2a0f3d;font:900 13px system-ui,-apple-system,sans-serif;box-shadow:0 3px 0 #7a5200;white-space:nowrap}
-.i-bul{position:absolute;max-width:180px;transform:translate(-50%,-100%);background:#fbf4ea;color:#2a0f3d;border:2px solid #2a0f3d;border-radius:12px;padding:5px 9px;font:900 13px/1.15 system-ui,-apple-system,sans-serif;text-align:center;box-shadow:0 4px 0 rgba(0,0,0,.4)}
-.i-bul::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-6px;border:6px solid transparent;border-top-color:#2a0f3d;border-bottom:0}
-.i-boom{position:absolute;transform:translate(-50%,-50%);font:900 30px/1 system-ui,-apple-system,sans-serif;color:#fff2a8;-webkit-text-stroke:2px #3a0a0a;text-shadow:0 4px 0 #3a0a0a,0 0 20px var(--c,#ff8a20);white-space:nowrap;letter-spacing:.02em}
+.i-bul{position:absolute;max-width:190px;transform:translate(-50%,-100%);background:linear-gradient(180deg,#fbf0d4,#efdcae);color:#3a1d08;border:2px solid #6b4416;border-radius:10px;padding:6px 10px;font:italic 800 13.5px/1.2 Georgia,"Times New Roman",serif;text-align:center;box-shadow:0 4px 0 rgba(0,0,0,.4)}
+.i-bul::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-6px;border:6px solid transparent;border-top-color:#6b4416;border-bottom:0}
+.i-boom{position:absolute;transform:translate(-50%,-50%);font:900 30px/1 Georgia,"Times New Roman",serif;color:#fff2a8;-webkit-text-stroke:2px #3a0a0a;text-shadow:0 4px 0 #3a0a0a,0 0 20px var(--c,#ff8a20);white-space:nowrap;letter-spacing:.02em}
 .i-ecl{position:absolute;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--c,#ffd23f);box-shadow:0 0 8px var(--c,#ffd23f)}
 .i-annonce{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:86%;text-align:center;font:900 26px/1.05 Georgia,"Times New Roman",serif;text-transform:uppercase;color:#ffe7b0;text-shadow:0 3px 0 #5a0f14,0 0 22px rgba(255,110,40,.8)}
 .i-annonce small{display:block;margin-top:6px;font:800 13px system-ui,-apple-system,sans-serif;letter-spacing:.14em;color:var(--jaune)}
@@ -190,7 +190,10 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .i-proj{position:absolute;font-size:30px;line-height:1;transform:translate(-50%,-50%);filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
 .i-coiffe{position:absolute;filter:drop-shadow(0 6px 6px rgba(0,0,0,.5))}
 .i-onde{position:absolute;width:60px;height:60px;border-radius:50%;border:4px solid #fff;box-shadow:0 0 14px #fff;transform:translate(-50%,-50%)}
-.i-carton{position:absolute;padding:10px 12px;border-radius:6px;background:#e10f1f;color:#fff;border:3px solid #fff;font:900 15px/1.05 system-ui,-apple-system,sans-serif;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.4);transform:translate(-50%,-50%)}
+.i-sceau{position:absolute;padding:9px 16px 9px 14px;border-radius:3px;background:linear-gradient(180deg,#f7e9c4,#e6cc92);color:#5a0f14;border:2px solid #7a5222;font:900 17px/1 Georgia,"Times New Roman",serif;letter-spacing:.12em;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.35),inset 0 0 12px rgba(122,82,34,.35);transform:translate(-50%,-50%)}
+.i-sceau::after{content:"⚔";position:absolute;right:-14px;bottom:-12px;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#d4343f,#8a0f18 70%);color:#ffd9a0;font-size:14px;line-height:28px;letter-spacing:0;box-shadow:0 2px 4px rgba(0,0,0,.5)}
+.i-taille{position:absolute;width:110px;height:110px;border-radius:50%;border-top:7px solid #fff;border-left:3px solid transparent;filter:drop-shadow(0 0 6px #bfe3ff) drop-shadow(0 0 14px #7fc4ff)}
+.i-ver{position:absolute;border-radius:50%;border:8px solid #b9803f;background:radial-gradient(circle,#120603 0 40%,transparent 41%),repeating-conic-gradient(#f4e8cc 0 7deg,#6e3514 7deg 16deg);box-shadow:0 0 0 6px #d9a55a,0 10px 24px rgba(0,0,0,.6)}
 .i-confetti{position:absolute;width:8px;height:12px;border-radius:2px}
 .chemin .b.nouveau canvas{animation:sacre 1.1s ease-in-out 3,flotte 2.4s ease-in-out 3.3s infinite}
 @keyframes sacre{50%{filter:drop-shadow(0 0 22px #ffd23f) drop-shadow(0 8px 10px rgba(0,0,0,.55));transform:scale(1.06)}}
@@ -455,7 +458,17 @@ function arrDuel(m) { // le duel des dieux : rapide et tendu ; orgue + chœur, p
   const B = m >= 4;
   return { k: 1, tim: 1, sn: 1, h: 1, b: 1, s: 1, l: B ? 1 : 0, p: 1, crash: m % 4 === 0, roll: m === 7 ? 2 : 0, toms: m === 3 || m === 7, cloche: B && m % 2 === 0, f0: B ? 4200 : 3000, f1: 4200 };
 }
+function arrCortege(m) { // le cortège du nouveau boss sur le chemin : bourdon + tambours, puis le clavecin, puis le cor et le chœur
+  return { tim: 1, b: 1, sn: m >= 2, s: m >= 2, l: m >= 4 ? 0 : null, p: m >= 4, toms: m % 4 === 3, cloche: m % 4 === 0, roll: m === 7 ? 1 : 0, f0: 2400 + (m >= 4) * 1200, f1: 3400 + (m >= 4) * 800 };
+}
 const PISTES = {
+  cortege: { // Kevin (29/10) : musique du cortège sur le chemin, ballade médiévale en ré mineur (composée pour le jeu)
+    bpm: 104, pb: 16, racine: 50, gamme: 'min', cycle: 8, section: arrCortege,
+    accords: [[0, 3, 7], [-2, 2, 5], [-4, 0, 3], [-2, 2, 5], [0, 3, 7], [-4, 0, 3], [-5, -2, 2], [-2, 2, 5]],
+    timbale: 'x.....x...x.....', caisse: '....x..x....x.xx', basse: 'r...............', basseSon: 'pedale', basseLong: 15,
+    stab: 'x..x..x.x..x..x.', stabSon: 'clavecin', stabOct: 12, padSon: 'choeur', padOct: 12,
+    leads: ['4---4-3-4---7---6---5-4-3---2---2---3-4-5---4-3-4-------0-------7---7-6-7---9---8---7-5-4-----3-2---3-4-5---4-3-2-------0-------'], leadSon: 'cuivre', double: 'cloche'
+  },
   valh: { // le Valhalla (Kevin, 27/10) : épique nordique en ré mineur, cors + chœur, tambours de guerre
     bpm: 112, pb: 16, racine: 50, gamme: 'min', cycle: 16, section: arrValh,
     accords: [[0, 3, 7], [-2, 2, 5], [-4, 0, 3], [-5, -2, 2], [0, 3, 7], [-4, 0, 3], [-2, 2, 5], [-5, -1, 2]],
@@ -605,6 +618,7 @@ function note(d, son, m, t, dur, vol) { // les instruments de la musique (oscill
   else { const g = env(vol, 0.01, dur + 0.1, d.basseF, true); osc('orgue', f, g); osc('sine', f / 2, g); } // basse d'orgue (pédalier)
 }
 function pisteVoulue() { // quelle musique pour l'écran actuel ?
+  if (introEnCours && etat === 'accueil') return 'cortege'; // le nouveau boss défile sur le chemin
   if (etat === 'dieu') return 'valh'; // la fenêtre « tu es devenu un dieu »
   if (etat !== 'jeu') return null;
   if (DECH) return DECH.phase === 'ouvre' ? 'valh' : null;
@@ -721,9 +735,37 @@ function cloche(f, dur, vol, delai = 0) { // cloche FM
   c.frequency.value = f; mo.frequency.value = f * 3.5; mg.gain.setValueAtTime(f * 2.5, t); mg.gain.exponentialRampToValueAtTime(f * 0.05, t + dur);
   mo.connect(mg); mg.connect(c.frequency); c.connect(g); sortieSfx(g, true); c.start(t); mo.start(t); c.stop(t + dur + 0.02); mo.stop(t + dur + 0.02);
 }
-function corne(vol, delai = 0, rythme = [0, 0.16, 0.32], durs = [0.12, 0.12, 0.55]) { // corne de stade (« airhorn »)
-  rythme.forEach((x, i) => { const f = P(2, -1); ton('sawtooth', f * 0.92, f, durs[i], vol, delai + x, 2800, false, 0.01); ton('sawtooth', f * 1.5 * 0.92, f * 1.5, durs[i], vol * 0.7, delai + x, 2800, false, 0.01); ton('sawtooth', f * 1.005, f * 1.005, durs[i], vol * 0.6, delai + x, 2000, false, 0.01); });
+function corne(vol, delai = 0, rythme = [0, 0.16, 0.32], durs = [0.12, 0.12, 0.55]) { // Kevin (29/10) : plus de corne de stade → cor de guerre (quinte à vide, cuivre qui enfle)
+  rythme.forEach((x, i) => { const f = P(0, -1); cuivre(f, durs[i] + 0.15, vol * 1.3, delai + x, 0.8); cuivre(f * 1.5, durs[i] + 0.15, vol * 0.8, delai + x, 0.6); });
 }
+// ---- l'arsenal médiéval (Kevin, 29/10 : « ambiance médiévale, fantastique », clins d'œil aux films de fantasy ; tout est synthétisé ici)
+function cuivre(f, dur, vol, delai = 0, eclat = 1) { // cor / trompette : deux scies désaccordées, le filtre s'ouvre à l'attaque, vibrato qui arrive
+  if (!pret() || !voix(delai, dur)) return; const t = t0(delai);
+  const a = AC.createOscillator(), b = AC.createOscillator(), lp = AC.createBiquadFilter(), g = AC.createGain(), lfo = AC.createOscillator(), lg = AC.createGain();
+  a.type = b.type = 'sawtooth'; a.frequency.value = f; b.frequency.value = f; b.detune.value = 7;
+  lfo.frequency.value = 5.2; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f * 0.008, t + Math.min(0.5, dur * 0.6)); lfo.connect(lg); lg.connect(a.frequency); lg.connect(b.frequency);
+  lp.type = 'lowpass'; lp.Q.value = 1.5; lp.frequency.setValueAtTime(f * 1.2, t); lp.frequency.exponentialRampToValueAtTime(Math.min(9000, f * (3 + 4 * eclat)), t + 0.07); lp.frequency.exponentialRampToValueAtTime(Math.min(7000, f * (2.5 + 2 * eclat)), t + 0.3);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.05); g.gain.setValueAtTime(vol, t + Math.max(0.06, dur - 0.14)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  a.connect(lp); b.connect(lp); lp.connect(g); sortieSfx(g, true); [a, b, lfo].forEach(o => { o.start(t); o.stop(t + dur + 0.02); });
+}
+function fanfareCuivre(notes, vol, delai = 0, oct = 0) { notes.forEach(([m, x, d]) => cuivre(midi(m + oct), d, vol, delai + x, 1.1)); } // [note midi, départ, durée]
+function choeurSfx(fs, dur, vol, delai = 0, F = [720, 1150, 2600]) { // chœur « aaah » : scies + 3 formants, attaque lente, léger vibrato
+  if (!pret() || !voix(delai, dur)) return; const t = t0(delai), g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.35, dur * 0.4)); g.gain.setValueAtTime(vol, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); sortieSfx(g, true);
+  const fo = F.map((fr, i) => { const b = AC.createBiquadFilter(), gg = AC.createGain(); b.type = 'bandpass'; b.frequency.value = fr; b.Q.value = 5 + i * 2; gg.gain.value = [2.6, 1.6, 0.7][i]; b.connect(gg); gg.connect(g); return b; });
+  fs.forEach(f => [0, 9, -8].forEach(dt => { const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = dt; fo.forEach(b => o.connect(b)); o.start(t); o.stop(t + dur + 0.02); }));
+}
+function epee(vol, delai = 0, aigu = 1) { // lames qui s'entrechoquent : partiels métalliques inharmoniques + éclat de bruit
+  [1870, 2630, 3910, 5270, 7020].forEach((f, i) => ton('sine', f * aigu * rnd(0.97, 1.03), f * aigu, 0.25 + 0.5 / (i + 1), vol / (1 + i * 0.5), delai, 0, i < 2, 0.001));
+  bruit(0.05, vol * 1.6, 5000, 0.8, delai, 0, 'highpass'); cogne(140, vol * 0.8, delai);
+}
+function degaine(vol, delai = 0) { bruit(0.35, vol, 1500, 6, delai, 8000, 'bandpass', 0.2); epee(vol * 0.35, delai + 0.32, 1.3); } // « shhing » : l'épée sort du fourreau
+function tambourGuerre(vol, delai = 0) { cogne(52, vol, delai); echantillon('timbale', vol * 1.4, delai, 0.75); bruit(0.25, vol * 0.4, 260, 0.8, delai, 90, 'lowpass'); }
+function chaines(dur, vol, delai = 0) { const n = Math.floor(dur / 0.07); for (let i = 0; i < n; i++) { const f = rnd(2400, 4800); ton('sine', f, f * 0.98, 0.05, vol * rnd(0.5, 1), delai + i * 0.07 + rnd(0, 0.03), 0, false, 0.001); bruit(0.02, vol * 0.6, rnd(3000, 6000), 3, delai + i * 0.07); } }
+function grince(dur, vol, delai = 0) { ton('sawtooth', 78, 58, dur, vol, delai, 420, false, 0.05); ton('sawtooth', 81, 63, dur, vol * 0.7, delai + 0.05, 520, false, 0.05); } // bois et fer qui grincent
+function harpe(fs, vol, delai = 0, pas = 0.045) { fs.forEach((f, i) => { ton('triangle', f, f, 0.9, vol, delai + i * pas, 0, true, 0.002); ton('sine', f * 2, f * 2, 0.4, vol * 0.3, delai + i * pas, 0, false, 0.002); }); } // glissando de harpe
+function glas(vol, delai = 0, m = 38) { cloche(midi(m), 3, vol, delai); cloche(midi(m + 12) * 1.01, 1.6, vol * 0.4, delai); }
+const RE_DOR = [62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84, 86]; // ré dorien (la couleur « moyen âge »)
 function accordSfx(degs, dur, vol, delai = 0) { degs.forEach(k => pluck(P(k), dur, vol, delai, 1.4)); }
 function orgueSfx(notes, dur, vol, delai = 0) { // accord d'orgue (timbre à tirettes)
   if (!pret() || !voix(delai, dur)) return; const t = t0(delai), g = AC.createGain();
@@ -776,7 +818,7 @@ const SON = {
   sauve() { [0, 2, 4, 7].forEach((k, i) => pop(P(k + 3), 0.13, i * 0.06)); etoiles(3, 0.04, 0.24, 8); },
   perdu() { musDuck(0.3, 1.4); [4, 3, 1].forEach((k, i) => pluck(P(k, -1), 0.3, 0.11, i * 0.14, 0.8)); ton('sine', 320, 50, 0.9, 0.18, 0.3); ooh(0.18, 0.15); },
   combo(n) { pluck(P(n + 3), 0.18, 0.12, 0, 1.4); pop(P(n + 8), 0.1, 0.04); if (n >= 3) hey(0.14 + 0.02 * Math.min(4, n), 0.06); if (n >= 5) etoiles(4, 0.04, 0.1, n + 5); },
-  fin() { [4, 3, 2, 0].forEach((k, i) => pluck(P(k, -1), i === 3 ? 0.7 : 0.22, 0.11, i * 0.2, 0.9)); ton('sine', 260, 45, 1.1, 0.16, 0.6); ooh(0.16, 0.6); },
+  fin() { SON.defaite(); },
   fanfare() { musDuck(0.5, 1.2); accordSfx([0, 2, 4], 0.18, 0.06); accordSfx([0, 2, 4], 0.18, 0.06, 0.18); accordSfx([2, 4, 7], 0.5, 0.07, 0.36); etoiles(6, 0.05, 0.36); hey(0.16, 0.36); },
   jackpot() { musDuck(0.3, 1.6); drop(0.45); [5, 6, 7, 8, 9, 10].forEach((k, i) => piece(P(k), 0.07, 0.12 + i * 0.07)); foule(0.26, 0.1, 0.8); echantillon('clap', 0.4, 0.1); echantillon('crash', 0.25, 0); },
   grosseFanfare() { drop(0.5, 1.12); accordSfx([0, 2, 4, 5], 0.6, 0.06, 1.12); etoiles(8, 0.05, 1.2); echantillon('crash', 0.3, 1.12); },
@@ -832,28 +874,54 @@ const SON = {
   flipMort() { cogne(45, 0.12); }, // flipper bloqué par le TILT
   depart() { pop(P(0), 0.14); pop(P(2), 0.14, 0.08); pop(P(4), 0.14, 0.16); etoiles(4, 0.05, 0.22, 7); },
   // ---- les boss
-  alerteBoss() { musDuck(0.2, 1.6); riser(1.4, 0.16); for (let i = 0; i < 6; i++) echantillon('timbale', 0.35 + i * 0.07, i * 0.22); ton('sine', 520, 780, 0.3, 0.06, 0, 0, false, 0.05); ton('sine', 520, 780, 0.3, 0.06, 0.45, 0, false, 0.05); ton('sine', 520, 780, 0.3, 0.06, 0.9, 0, false, 0.05); },
-  porte() { ton('sawtooth', 70, 130, 0.8, 0.06, 0, 500); ton('sawtooth', 75, 140, 0.8, 0.04, 0.03, 500); drop(0.4, 0.75, 110, 0.8); echantillon('crash', 0.2, 0.75); },
+  alerteBoss() { musDuck(0.2, 2); cuivre(P(0, -2), 1.3, 0.12, 0, 0.6); cuivre(P(0, -2) * 1.5, 1.3, 0.07, 0, 0.5); cuivre(P(0, -1), 0.9, 0.1, 1.1, 0.8); [0, 0.5, 0.85, 1.1, 1.3, 1.45].forEach((d, i) => tambourGuerre(0.16 + i * 0.03, d)); }, // le cor de guerre sonne, les tambours accélèrent
+  porte() { chaines(0.9, 0.05); grince(0.9, 0.07); drop(0.4, 0.85, 110, 0.8); tambourGuerre(0.25, 0.85); }, // la herse remonte : chaînes, grincement, choc
   grogne(rang) { // grognement (formants « o »), plus grave pour le n°1
     const f = [55, 70, 90, 115][rang] || 90, F = combat && combat.boss.genre === 'F' ? 1.5 : 1;
     syllabe(f * 1.4 * F, f * F, 0.75, 0.2, 0, 480 * F, 850 * F); bruit(0.6, 0.12, 300, 2, 0, 120, 'lowpass'); cogne(55, 0.2, 0.05);
   },
   tambour(k) { cogne(55 + 15 * k, 0.1 + 0.14 * k); cogne(50 + 15 * k, 0.07 + 0.1 * k, 0.16); }, // battement de cœur qui s'accélère
-  aie(rang) { const F = combat && combat.boss.genre === 'F' ? 1.6 : 1; echantillon('clap', 0.4); cogne(80, 0.2); syllabe(260 * F, 170 * F, 0.22, 0.15, 0.02, 700 * F, 1800 * F); piece(P(7), 0.07, 0.05); if (rang === 1) cloche(P(4), 0.5, 0.06, 0.05); },
-  esquive() { whoosh(0.22, 0.2, 4500, 900); hey(0.1, 0.05); },
+  aie(rang) { const F = combat && combat.boss.genre === 'F' ? 1.6 : 1; epee(0.07); syllabe(260 * F, 170 * F, 0.22, 0.15, 0.04, 700 * F, 1800 * F); if (rang === 1) cloche(P(4), 0.5, 0.06, 0.05); },
+  esquive() { whoosh(0.22, 0.2, 4500, 900); ton('sine', 1400, 2600, 0.18, 0.03, 0.05, 0, true); },
   bouclier() { cloche(P(7), 0.4, 0.08); ton('sine', 2600, 3200, 0.12, 0.04, 0.02, 0, true); },
-  pare() { cogne(110, 0.2); bruit(0.04, 0.2, 1500, 1.5); },
+  pare() { epee(0.08, 0, 0.8); },
   rire(delai = 0) { // « HA HA HA » de dessin animé (formants « a »), voix grave pour un roi, aiguë pour une reine
     const C = combat, F = C && C.boss.genre === 'F' ? 1.7 : 1, f = (C ? [85, 105, 125, 150][C.rang] : 130) * F;
     [0, 0.17, 0.34, 0.51, 0.7].forEach((x, i) => { syllabe(f * (1.3 - i * 0.06), f * (1.08 - i * 0.07), i === 4 ? 0.3 : 0.15, 0.22, delai + x, 780 * F, 1250 * F); bruit(0.04, 0.05, 2000, 1, delai + x, 0, 'highpass'); });
   },
-  elimine() { // le boss gagne : coupure de la musique, chute, « oooh » et rire
-    musCouper(); ton('sawtooth', 700, 60, 1.0, 0.08, 0, 1800); drop(0.5, 0.05, 130, 1.3); ooh(0.2, 0.15); SON.rire(0.55);
+  elimine() { musCouper(); glas(0.12, 0.05); cuivre(P(2, -1), 0.5, 0.07, 0.3); cuivre(P(1, -1), 0.5, 0.07, 0.75); cuivre(P(0, -1), 1.4, 0.08, 1.2, 0.5); choeurSfx([P(0, -2), P(2, -2) * 0.944], 2, 0.03, 1.2, [500, 800, 2400]); drop(0.4, 0.05, 130, 1.3); SON.rire(0.55); }, // le glas, le cor qui s'effondre, le chœur funèbre
+  vaincu(rang) { // l'épée frappe, les tambours, le cor de victoire et le chœur (le n°1 : toutes les cloches du royaume)
+    musDuck(0.25, 2.6); epee(0.12); tambourGuerre(0.3, 0.05); drop(0.4, 0.05);
+    [[0, 0, 0.18], [0, 0.2, 0.18], [2, 0.4, 0.18], [4, 0.6, 0.9]].forEach(([k, x, d]) => { cuivre(P(k), d, 0.08, 0.3 + x); cuivre(P(k, -1), d, 0.05, 0.3 + x, 0.6); });
+    choeurSfx([P(0, -1), P(2, -1), P(4, -1)], 1.8, 0.035, 0.9);
+    if (rang === 1) { [0, 2, 4, 7, 4, 2, 0, 7].forEach((k, i) => cloche(P(k), 1.4, 0.05, 1.1 + i * 0.18)); glas(0.08, 1.1); }
   },
-  vaincu(rang) {
-    musDuck(0.25, 2.4); drop(0.5); echantillon('crash', 0.3); foule(0.32, 0.1, 1.1); [5, 6, 7, 8, 9, 10, 12].forEach((k, i) => piece(P(k), 0.06, 0.3 + i * 0.07));
-    if (rang === 1) { corne(0.07, 0.6, [0, 0.16, 0.32, 0.64], [0.12, 0.12, 0.25, 0.7]); etoiles(10, 0.05, 1.2, 4, 0.05); }
+  // ---- Kevin (29/10) : la séquence du chemin et la fin de partie, façon films de fantasy (sons originaux)
+  heraut() { fanfareCuivre([[62, 0, 0.14], [62, 0.15, 0.14], [62, 0.3, 0.14], [69, 0.45, 0.5], [67, 0.95, 0.14], [69, 1.1, 0.8]], 0.07); tambourGuerre(0.2, 0.45); tambourGuerre(0.2, 1.1); },
+  epee() { epee(0.12); },
+  degaine() { degaine(0.12); },
+  pas() { if (limite('pas', 0.2)) { cogne(68, 0.05); ton('sine', 3200, 3100, 0.03, 0.012, 0.01); } }, // pas de bottes (et un petit cliquetis d'armure)
+  sceauVaincu() { cogne(60, 0.2); bruit(0.08, 0.1, 900, 1, 0, 200, 'lowpass'); epee(0.04, 0.05, 1.4); }, // le sceau de cire tombe sur le parchemin
+  pied() { tambourGuerre(0.28); bruit(0.4, 0.08, 400, 0.8, 0.02, 120, 'lowpass'); }, // le « marteleur » qui appelle le ver
+  ver() { // le ver des sables : le sol gronde, puis un rugissement qui monte des profondeurs
+    musDuck(0.2, 3); bruit(2.6, 0.22, 300, 0.7, 0, 60, 'lowpass', 0.6); ton('sawtooth', 38, 55, 1.6, 0.12, 0.6, 300, false, 0.3);
+    syllabe(70, 110, 1.4, 0.2, 0.9, 380, 700); syllabe(90, 60, 1, 0.16, 2.1, 350, 650); drop(0.45, 2.2, 90, 1.2);
   },
+  sortilege() { musDuck(0.3, 2.4); harpe(RE_DOR.slice(0, 12).map(midi), 0.05); [79, 83, 86].forEach((m, i) => cloche(midi(m), 1.2, 0.04, 0.55 + i * 0.1)); choeurSfx([midi(62), midi(69), midi(74)], 1.6, 0.04, 0.4); ton('sine', 900, 2400, 0.8, 0.03, 0.4, 0, true); },
+  chevre() { [0, 0.16, 0.3].forEach((d, i) => { syllabe(520 - i * 30, 480 - i * 30, 0.14, 0.13, d, 600, 1900); }); }, // « BÊÊÊ » (le sort a raté…)
+  sacre(rang) { // fanfare de couronnement : trompettes, timbales, chœur et cloches (plus grande pour le n°1)
+    musDuck(0.3, 3.4);
+    fanfareCuivre([[62, 0, 0.12], [62, 0.13, 0.12], [62, 0.26, 0.12], [67, 0.4, 0.35], [69, 0.8, 0.12], [71, 0.93, 0.12], [74, 1.06, 1.1]], 0.07);
+    fanfareCuivre([[55, 0.4, 0.35], [57, 0.8, 0.3], [62, 1.06, 1.1]], 0.05);
+    [0, 0.13, 0.26, 0.4, 1.06].forEach(d => tambourGuerre(0.18, d)); choeurSfx([midi(50), midi(57), midi(62), midi(66)], 2.2, 0.035, 1.06);
+    if (rang <= 1) { [74, 71, 69, 66, 62, 74, 69, 62].forEach((m, i) => cloche(midi(m), 1.6, 0.05, 1.2 + i * 0.2)); glas(0.07, 1.1); } else harpe([62, 66, 69, 74, 78, 81].map(midi), 0.04, 1.3, 0.06);
+  },
+  defaite() { // la ballade du vaincu : le glas, un cor solitaire qui descend, le chœur grave
+    musDuck(0.3, 3); glas(0.12, 0); glas(0.08, 1.4);
+    [[69, 0.2, 0.5], [67, 0.7, 0.5], [65, 1.2, 0.5], [64, 1.7, 1.4]].forEach(([m, x, d]) => cuivre(midi(m - 12), d, 0.07, x, 0.5));
+    choeurSfx([midi(38), midi(45), midi(50)], 2.4, 0.03, 1.6, [500, 800, 2400]);
+  },
+
   // ---- l'empereur : les 4 sceaux
   sceau(n) { cloche(P(5 + n * 2), 0.6, 0.09); ton('sine', P(9 + n), P(4 + n), 0.3, 0.06, 0.02, 0, true); bruit(0.08, 0.08, 6000, 3); }, // cristal qui s'éteint (verre)
   sceauxTombent() { musDuck(0.3, 1.6); [9, 7, 5, 2].forEach((k, i) => cloche(P(k), 0.9, 0.08, i * 0.09)); whoosh(0.7, 0.16, 5000, 300, 0.2); drop(0.35, 0.35, 120, 0.8); },
@@ -1975,9 +2043,9 @@ function combatPerdu(cause) { // Kevin : le boss passe les flippers, ou la derni
     score = Math.min(score, C.score0, avant + 1 + Math.floor((B.score - avant - 2) * pris * 0.98));
   }
   charge.src = {}; charge.actif = false; arreterCharge(); FL.forEach(f => f.appui = false);
-  C.bulle = pick(['HA HA HA !', 'Trop lent !', 'Retourne t’échauffer !', 'Même pas mal !', 'Au vestiaire !', 'Game over, collègue !']);
+  C.bulle = pick(['HA HA HA !', 'Tu ne passeras pas !', 'Mon précieux… mon score !', 'Retourne dans ta Comté !', 'La peur tue l’esprit…', 'Même pas une égratignure !', 'À genoux, écuyer !']); // Kevin (29/10) : clins d'œil fantasy
   SON.elimine(); vib([120, 60, 120, 60, 300]); flash = 0.5; secousse = 0.35;
-  annonce('ÉLIMINÉ !', (cause === 'passe' ? (F ? 'Elle est passée' : 'Il est passé') : C.dieu ? 'Plus de cœurs' : 'Plus de billes') + ' · fin de la partie', '#ff3b3b', 46, 2.6);
+  annonce('DÉFAITE !', (cause === 'passe' ? (F ? 'Elle est passée' : 'Il est passé') : C.dieu ? 'Plus de cœurs' : 'Plus de billes') + ' · fin de la partie', '#ff3b3b', 46, 2.6);
 }
 function perteBoss(n = 1) {
   if (balles.length || !combat || combat.phase !== 'combat') return;
@@ -4613,9 +4681,10 @@ window.addEventListener('online', viderAttente);
 // Kevin : un joueur qui entre dans le top 3 arrive sur le chemin de l'accueil avec sa photo, bat un par un les boss qu'il a dépassés
 // (du garde jusqu'au roi), chacun avec sa défaite, puis prend la place du dernier battu. Joué une fois, sur l'écran d'accueil.
 const INTRO = {
-  3: { c: '#c9d1de', son: 'poteau', defi: 'Halte ! On ne passe pas !', boss: 'Mon casque !!', heros: 'But ! Laisse-moi passer !' },
-  2: { c: '#ff8c1a', son: 'bloque', defi: 'Approche… si tu oses !', boss: 'Pas dans le panier…', heros: 'Pas de tête qui tombe aujourd’hui !' },
-  1: { c: '#ffd23f', son: 'record', defi: 'À genoux devant ton roi !', boss: 'Ma couronne !!', heros: 'Le trône est à moi !' }
+  // Kevin (29/10) : plus de foot ni de carton rouge : un clin d'œil à un film de fantasy par boss (le Seigneur des anneaux, Dune, Willow)
+  3: { c: '#c9d1de', defi: 'Tu ne passeras pas !', boss: 'Mon casque !!', heros: 'Ah si… je passe.' },
+  2: { c: '#e8b06a', defi: 'Approche… si tu oses !', boss: 'Pas le ver !! Pas le veeer…', heros: 'Marche sans rythme… marche sans rythme…' },
+  1: { c: '#ffd23f', defi: 'À genoux devant ton roi !', boss: 'Bêêêê !!', heros: 'Oups… mauvais sort. Bon, le trône est à moi !' }
 };
 function garderIntro(r, avant, rang, nom, genre) { // r : réponse du serveur, ou null (hors ligne : les places sont déjà mises à jour ici)
   if (r && !r.ok) return;
@@ -4671,7 +4740,7 @@ async function jouerIntro(d) {
   const peindre = t => {
     if (!h.isConnected) return;
     const dt = Math.min(0.05, (t - (tPrec || t)) / 1000); tPrec = t;
-    if (enMarche) { pasH += dt * 13; tPouf -= dt; if (tPouf <= 0) { tPouf = 0.26; const r = h.getBoundingClientRect(); pouf(r.left - cr.left + r.width / 2, r.top - cr.top + r.width * 1.22); } }
+    if (enMarche) { pasH += dt * 13; tPouf -= dt; if (tPouf <= 0) { tPouf = 0.26; son('pas'); const r = h.getBoundingClientRect(); pouf(r.left - cr.left + r.width / 2, r.top - cr.top + r.width * 1.22); } }
     else pasH += (Math.round(pasH / Math.PI) * Math.PI - pasH) * Math.min(1, dt * 10); // pieds joints à l'arrêt
     const dp = Math.min(window.devicePixelRatio || 1, 2); if (hc.width !== Math.round(hw * dp)) { hc.width = Math.round(hw * dp); hc.height = Math.round(s * dp); }
     const c = hc.getContext('2d'), kk = Math.min(hw / 100, s / 132) * dp;
@@ -4699,8 +4768,10 @@ async function jouerIntro(d) {
   const etoiles = p => { for (let i = 0; i < 3; i++) { const e = ajoute('i-proj', '⭐', p.x, p.y - 20 * k), kf = [];
       for (let j = 0; j <= 12; j++) { const a = j / 12 * 6.28 * 2 + i * 2.09; kf.push({ transform: `translate(calc(-50% + ${Math.cos(a) * 30 * k}px), calc(-50% + ${Math.sin(a) * 9 * k}px)) scale(.6)` }); }
       anim(e, kf, { duration: 1500, easing: 'linear' }).then(() => e.remove()); } };
-  const carton = b => { const e = ajoute('i-carton', 'CARTON<br>ROUGE', Math.min(W - 50, Math.max(50, b.x)), b.y); son('rate');
+  const sceau = (b, F) => { const e = ajoute('i-sceau', F ? 'VAINCUE' : 'VAINCU', Math.min(W - 50, Math.max(50, b.x)), b.y); son('sceauVaincu'); // le parchemin scellé de cire (plus de carton rouge)
     anim(e, [{ transform: 'translate(-50%,-50%) rotate(-30deg) scale(3)', opacity: 0 }, { transform: 'translate(-50%,-50%) rotate(-8deg) scale(1)', opacity: 1, offset: .25 }, { transform: 'translate(-50%,-50%) rotate(-8deg) scale(1)', opacity: 1, offset: .8 }, { transform: 'translate(-50%,-60%) rotate(-8deg) scale(.9)', opacity: 0 }], { duration: 1400, easing: 'ease-out' }).then(() => e.remove()); };
+  const taille = (p, sens) => { const e = ajoute('i-taille', '', p.x, p.y); e.style.setProperty('--d', sens + 'deg'); // le coup d'épée : un croissant de lumière
+    anim(e, [{ transform: `translate(-50%,-50%) rotate(${sens - 70}deg) scale(.5)`, opacity: 0 }, { opacity: 1, offset: .25 }, { transform: `translate(-50%,-50%) rotate(${sens + 50}deg) scale(1.25)`, opacity: 0 }], { duration: 380, easing: 'ease-out' }).then(() => e.remove()); };
   const coiffe = (r, bd, b, vers, ms, garder) => { // le couvre-chef du boss s'envole (et le boss est redessiné tête nue)
     const w = Math.round(b.w), cvh = document.createElement('canvas'); cvh.className = 'i-coiffe'; cvh.style.cssText = `width:${w}px;height:${w}px;left:${b.x - w / 2}px;top:${b.y - w / 2}px`; calque.appendChild(cvh);
     const buste = (cnv, o) => { const dp = Math.min(window.devicePixelRatio || 1, 2); cnv.width = Math.round(cnv.clientWidth * dp); cnv.height = Math.round(cnv.clientHeight * dp);
@@ -4709,13 +4780,13 @@ async function jouerIntro(d) {
     const sc = vers.sc || .8, kbw = w / 106, dx = vers.x - (b.x - 5 * kbw * sc), dy = vers.y - (b.y + .065 * w * sc); // vers = point où doit arriver la tête
     anim(cvh, [{ transform: 'none' }, { transform: `translate(${dx * .5}px,${Math.min(dy, 0) * .5 - 90 * k}px) rotate(${garder ? 200 : 300}deg) scale(${(1 + sc) / 2})`, offset: .5 }, { transform: `translate(${dx}px,${dy}px) rotate(${garder ? 360 : 720}deg) scale(${sc})`, opacity: garder ? 1 : 0 }], { duration: ms, easing: 'ease-out' })
       .then(() => garder ? anim(cvh, [{ opacity: 1 }, { opacity: 0 }], { duration: 400, delay: 900 }) : null).then(() => cvh.remove()); };
-  const youpi = async () => { son('clic'); await anim(h, [{ transform: T(pos) }, { transform: T({ x: pos.x, y: pos.y + 6 * k, sc: pos.sc * 1.06 }) + ' scaleY(.85)', offset: .15 }, { transform: T({ x: pos.x, y: pos.y - 52 * k, sc: pos.sc }) + ' rotate(-180deg)', offset: .55 }, { transform: T(pos) + ' rotate(-360deg)', offset: .9 }, { transform: T({ x: pos.x, y: pos.y + 4 * k, sc: pos.sc * 1.04 }) + ' rotate(-360deg) scaleY(.9)' }], { duration: 750, easing: 'ease-out' }); };
+  const youpi = async () => { son('pas'); await anim(h, [{ transform: T(pos) }, { transform: T({ x: pos.x, y: pos.y + 6 * k, sc: pos.sc * 1.06 }) + ' scaleY(.85)', offset: .15 }, { transform: T({ x: pos.x, y: pos.y - 52 * k, sc: pos.sc }) + ' rotate(-180deg)', offset: .55 }, { transform: T(pos) + ' rotate(-360deg)', offset: .9 }, { transform: T({ x: pos.x, y: pos.y + 4 * k, sc: pos.sc * 1.04 }) + ' rotate(-360deg) scaleY(.9)' }], { duration: 750, easing: 'ease-out' }); };
   h.style.transform = T(pos);
-  const an = ajoute('i-annonce', `Un nouveau boss arrive !<small>${esc(d.nom)}</small>`);
+  const an = ajoute('i-annonce', `Un nouveau héros approche…<small>${esc(d.nom)}</small>`);
   anim(an, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1.08)', offset: .25 }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .8 }, { opacity: 0, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 2200 }).then(() => an.remove());
-  son('lance');
+  son('heraut');
   await marche({ x: W * .62, y: H * .84 - s * .2, sc: 1 }, 1500);
-  await youpi(); await bulle(pick(['Me voilà !', 'Place, place !', 'Attention, j’arrive !']), pos.x, pos.y - s * .55);
+  await youpi(); await bulle(pick(['Un magicien n’arrive jamais en retard !', 'Un score pour les gouverner tous !', 'Que l’épée soit avec moi !', 'Il était une fois… moi !']), pos.x, pos.y - s * .55);
   for (const r of d.battus) {
     const el = ch.querySelector('.b' + r), cv = el && el.querySelector('canvas'); if (!cv || el.classList.contains('vide')) continue;
     const b = places[r], I = INTRO[r], gauche = r === 2; // le bourreau est à droite : on l'attaque par la gauche
@@ -4723,46 +4794,61 @@ async function jouerIntro(d) {
     await marche({ x: px, y: py, sc: 1 }, 950);
     const bd = (d.avant || []).find(x => x.rang === r) || { genre: '', photo: '' }, tete = { x: b.x, y: b.y - b.w * .28 };
     await bulle(I.defi, b.x, b.y - b.w * .45);
-    if (r === 3) { // LE GARDE : coup de pique (on se baisse), puis frappe de foot en pleine tête : son casque s'envole
+    if (r === 3) { // LE GARDE (« Tu ne passeras pas ! ») : coup de pique (on se baisse), on dégaine, coup d'épée : son casque s'envole
       el.style.transformOrigin = '50% 100%';
       anim(el, [{ transform: 'none' }, { transform: 'rotate(-6deg)', offset: .4 }, { transform: 'rotate(16deg) translateX(8%)', offset: .7 }, { transform: 'none' }], { duration: 650 });
-      await attendre(380); boom('ZIOU !', pos.x, pos.y - s * .45, '#c9d1de', 22);
+      await attendre(380); boom('TCHAK !', pos.x, pos.y - s * .45, '#c9d1de', 22); son('pare');
       await anim(h, [{ transform: T(pos) }, { transform: T({ x: pos.x, y: pos.y + s * .18, sc: pos.sc }) + ' scale(1.15,.55)', offset: .4 }, { transform: T(pos) }], { duration: 520 });
-      await anim(h, [{ transform: T(pos) }, { transform: T(pos) + ' rotate(14deg)', offset: .6 }, { transform: T(pos) + ' rotate(-10deg)' }, ], { duration: 260 });
-      son('cible'); await projectile('⚽', { x: pos.x, y: pos.y + s * .32 }, tete, 560, 90 * k);
-      impact('BONK !', tete, I.c, 1); son(I.son); coiffe(r, bd, b, { x: b.x - 140 * k, y: -60 * k }, 1100);
+      son('degaine'); await attendre(380); const p0 = pos;
+      await marcheVol({ x: tete.x + (px > b.x ? 1 : -1) * b.w * .45, y: tete.y + s * .25, sc: 1 }, 260);
+      taille(tete, px > b.x ? 200 : -20); son('epee');
+      impact('CLANG !', tete, I.c, 1); coiffe(r, bd, b, { x: b.x - 140 * k, y: -60 * k }, 1100);
+      await marcheVol(p0, 380);
       etoiles(tete); await bulle(I.boss, b.x, b.y - b.w * .45);
       el.style.transformOrigin = '50% 100%';
       await anim(el, [{ transform: 'none' }, { transform: 'rotate(10deg)', offset: .2 }, { transform: 'rotate(-6deg)', offset: .4 }, { transform: 'rotate(-88deg) translate(-10%,10%)', offset: .8, opacity: 1 }, { transform: 'rotate(-92deg) translate(-12%,40%)', opacity: 0, filter: 'grayscale(1)' }], { duration: 1200, easing: 'cubic-bezier(.5,0,.8,.6)' });
-    } else if (r === 2) { // LE BOURREAU : coup de hache (on saute par-dessus), puis SLAM DUNK sur sa tête : il s'enfonce dans le sol
+    } else if (r === 2) { // LE BOURREAU / LA SORCIÈRE (clin d'œil à Dune) : coup de hache (on saute), on frappe le sol en rythme… le ver des sables l'avale
       el.style.transformOrigin = '50% 100%';
       anim(el, [{ transform: 'none' }, { transform: 'rotate(18deg)', offset: .45 }, { transform: 'rotate(-24deg) translateX(-10%)', offset: .7 }, { transform: 'none' }], { duration: 700 });
-      await attendre(300); const p0 = pos;
+      await attendre(300); const p0 = pos; son('esquive');
       await anim(h, [{ transform: T(p0) }, { transform: T({ x: p0.x, y: p0.y - 85 * k, sc: p0.sc }) + ' rotate(-20deg)', offset: .5 }, { transform: T(p0) }], { duration: 620, easing: 'ease-out' });
-      boom('RATÉ !', p0.x, p0.y - s * .5, '#ff8c1a', 22); await attendre(250);
-      const ballon = ajoute('i-proj', '🏀', p0.x + 18 * k, p0.y - s * .4); anim(ballon, [{ transform: 'translate(-50%,-50%) scale(.2)' }, { transform: 'translate(-50%,-50%) scale(1)' }], { duration: 200 });
-      const haut = { x: b.x, y: b.y - b.w * .75, sc: 1.05 };
-      await Promise.all([marcheVol(haut, 520), anim(ballon, [{ left: (p0.x + 18 * k) + 'px', top: (p0.y - s * .4) + 'px' }, { left: haut.x + 'px', top: (haut.y - s * .45) + 'px' }], { duration: 520, easing: 'ease-out' })]);
-      boom('SLAM DUNK !', b.x, b.y - b.w * .7, I.c, 30);
-      await Promise.all([marcheVol({ x: b.x, y: b.y - b.w * .25, sc: 1 }, 180), anim(ballon, [{ top: (haut.y - s * .45) + 'px' }, { top: tete.y + 'px' }], { duration: 180, easing: 'ease-in' })]);
-      ballon.remove(); impact('BOUM !', tete, I.c, 2); son(I.son); coiffe(r, bd, b, { x: W + 40 * k, y: -40 * k }, 1000);
-      anim(el, [{ transform: 'none' }, { transform: 'scale(1.2,.55)' }], { duration: 160 });
-      await marcheVol({ x: px, y: py, sc: 1 }, 420);
-      etoiles(tete); await bulle(I.boss, b.x, b.y - b.w * .2);
-      eclats(b.x, b.y + b.w * .3, '#3a1020', 14);
-      await anim(el, [{ transform: 'scale(1.2,.55)' }, { transform: 'translateX(-6px) scale(1.2,.55)', offset: .15 }, { transform: 'translateX(6px) scale(1.2,.55)', offset: .3 }, { transform: 'translateY(60%) scale(.4,.05)', opacity: 0, filter: 'brightness(.2)' }], { duration: 1100 });
-    } else { // LE ROI : il rit… coup de sifflet géant, sa couronne s'envole sur ta tête, il part en toupie
+      boom('RATÉ !', p0.x, p0.y - s * .5, '#e8b06a', 22); await attendre(250);
+      const sol = { x: b.x, y: b.y + b.w * .4 };
+      for (const t of ['BOUM…', 'BOUM…', 'BOUM !']) { // on tape du pied : le « marteleur » appelle le ver
+        await anim(h, [{ transform: T(pos) }, { transform: T({ x: pos.x, y: pos.y - 14 * k, sc: pos.sc }), offset: .5 }, { transform: T(pos) + ' scale(1.08,.9)' }], { duration: 300 });
+        son('pied'); boom(t, pos.x, pos.y + s * .1, '#e8b06a', 18); onde({ x: pos.x, y: pos.y + s * .4 }, sol, 0); secouer(.4); await attendre(260);
+      }
+      son('ver'); for (let i = 0; i < 3; i++) { secouer(.6 + i * .4); eclats(sol.x, sol.y, '#e8b06a', 10); await attendre(330); }
+      const w = b.w * 1.05, ver = ajoute('i-ver', '', sol.x, sol.y); ver.style.width = ver.style.height = w + 'px';
+      eclats(sol.x, sol.y, '#d9a55a', 26); eclats(sol.x, sol.y, '#f4dfb0', 14);
+      await anim(ver, [{ transform: 'translate(-50%,-50%) scale(.1,.05)', opacity: 0 }, { transform: 'translate(-50%,-50%) scale(1.15,.5)', opacity: 1, offset: .7 }, { transform: 'translate(-50%,-50%) scale(1,.42)', opacity: 1 }], { duration: 650, easing: 'cubic-bezier(.2,1.4,.4,1)' });
+      boom('SHAI-HULUD !', b.x, b.y - b.w * .7, I.c, 28); coiffe(r, bd, b, { x: W + 40 * k, y: -40 * k }, 1000);
+      await bulle(I.boss, b.x, b.y - b.w * .45);
+      await anim(el, [{ transform: 'none' }, { transform: 'translateY(-12%) rotate(-8deg)', offset: .2 }, { transform: 'translateY(70%) scale(.5,.3)', opacity: 0, filter: 'brightness(.3)' }], { duration: 800, easing: 'cubic-bezier(.6,0,.9,.5)' });
+      son('pied'); secouer(1.2);
+      await anim(ver, [{ transform: 'translate(-50%,-50%) scale(1,.42)', opacity: 1 }, { transform: 'translate(-50%,-30%) scale(.3,.02)', opacity: 0 }], { duration: 500, easing: 'ease-in' }); ver.remove();
+      eclats(sol.x, sol.y, '#d9a55a', 14);
+    } else { // LE ROI / LA REINE (clin d'œil à Willow) : il rit… un gland magique, un sortilège : la couronne s'envole sur ta tête… et il se change en chèvre
       el.style.transformOrigin = '50% 100%';
       anim(el, [{ transform: 'none' }, { transform: 'rotate(-4deg)' }, { transform: 'rotate(4deg)' }, { transform: 'rotate(-4deg)' }, { transform: 'none' }], { duration: 700 });
-      await attendre(500); boom('FUIIIIIT !', pos.x, pos.y - s * .55, '#fff', 26); if (!saute) try { SON.bumper('sifflet'); SON.bumper('sifflet'); } catch (e) {}
-      for (let i = 0; i < 4; i++) onde({ x: pos.x - 12 * k, y: pos.y - s * .2 }, tete, i * 140);
+      if (!saute) try { SON.rire(); } catch (e) {}
+      await attendre(500); await bulle('Par le gland magique… AVALANCHUS !', pos.x, pos.y - s * .55);
+      son('sortilege'); boom('✨', pos.x + 30 * k, pos.y - s * .45, '#d9b3ff', 34);
+      for (let i = 0; i < 5; i++) onde({ x: pos.x - 12 * k, y: pos.y - s * .2 }, tete, i * 120);
       await anim(h, [{ transform: T(pos) }, { transform: T(pos) + ' scale(1.12)', offset: .3 }, { transform: T(pos) }], { duration: 700 });
-      impact('DÉTRÔNÉ !', tete, I.c, 1.5); son(I.son);
+      impact('DÉTRÔNÉ !', tete, I.c, 1.5); eclats(tete.x, tete.y, '#b26bff', 18);
       { const kkH = s / 132; coiffe(r, bd, b, { x: pos.x - 5 * kkH, y: pos.y - 2 * kkH, sc: kkH / (b.w / 106) }, 1200, true); } // pile sur ta tête
-      etoiles(tete); await bulle(I.boss, b.x, b.y - b.w * .5);
-      await anim(el, [{ transform: 'none' }, { transform: 'rotate(-14deg) scale(1.05)', offset: .2 }, { transform: 'rotate(1080deg) scale(0) translateY(-40%)', opacity: 0 }], { duration: 1400, easing: 'cubic-bezier(.6,0,.9,.5)' });
+      await attendre(700);
+      // pouf ! le sort a un peu raté : à la place du roi, une chèvre
+      eclats(b.x, b.y, '#d9b3ff', 26); eclats(b.x, b.y, '#fff', 14); boom('POUF !', b.x, b.y - b.w * .5, '#d9b3ff', 26);
+      anim(el, [{ opacity: 1 }, { opacity: 0, transform: 'scale(.4)' }], { duration: 200 });
+      const ch2 = ajoute('i-proj', '🐐', b.x, b.y + b.w * .1); ch2.style.fontSize = Math.round(b.w * .55) + 'px'; son('chevre');
+      await anim(ch2, [{ transform: 'translate(-50%,-50%) scale(.2)' }, { transform: 'translate(-50%,-50%) scale(1.15)', offset: .7 }, { transform: 'translate(-50%,-50%) scale(1)' }], { duration: 350, easing: 'ease-out' });
+      await bulle(I.boss, b.x, b.y - b.w * .2);
+      const fuite = [], n = 6; for (let i = 0; i <= n; i++) fuite.push({ transform: `translate(calc(-50% - ${i / n * (b.x + 80 * k)}px), calc(-50% - ${Math.abs(Math.sin(i * Math.PI / 2)) * 22 * k}px)) scaleX(1)` });
+      await anim(ch2, fuite, { duration: 1100, easing: 'linear' }); ch2.remove();
     }
-    carton(b);
+    sceau(b, bd.genre === 'F');
     await youpi(); await bulle(d.ultime && r === 1 ? 'Le trône ? Je vise plus haut…' : I.heros, px, py - s * .55);
   }
   if (d.ultime) await entrerChateau();
@@ -4771,10 +4857,10 @@ async function jouerIntro(d) {
   if (cv) {
     if (!d.battus.includes(d.rang)) anim(cible, [{ opacity: 1 }, { opacity: 0, transform: 'scale(.6)' }], { duration: 500 });
     const b = places[d.rang]; await marche({ x: b.x, y: b.y, sc: b.w / s }, 1100, 2);
-    await youpi(); son(d.rang === 1 ? 'fanfare' : 'sauve'); eclats(b.x, b.y, '#ffd23f', 30); eclats(b.x, b.y, '#fff', 14); secouer(1.5);
-    if (!saute) for (let i = 0; i < 46; i++) { const e = ajoute('i-confetti', '', Math.random() * W, -20), dx = (Math.random() - .5) * 120; e.style.background = pick(['#ffd23f', '#ef3e4a', '#3a86ff', '#2ec27e', '#ff8fab', '#fff', '#b26bff']);
+    await youpi(); if (!saute) try { SON.sacre(d.rang); } catch (e) {} eclats(b.x, b.y, '#ffd23f', 30); eclats(b.x, b.y, '#fff', 14); secouer(1.5);
+    if (!saute) for (let i = 0; i < 46; i++) { const e = ajoute('i-confetti', '', Math.random() * W, -20), dx = (Math.random() - .5) * 120; e.style.background = pick(COUL_BLASON);
       anim(e, [{ transform: 'translate(0,0) rotate(0)' }, { transform: `translate(${dx}px,${H + 40}px) rotate(${720 + Math.random() * 720}deg)` }], { duration: 1800 + Math.random() * 1400, delay: Math.random() * 600, easing: 'cubic-bezier(.3,.1,.6,1)' }).then(() => e.remove()); }
-    const an2 = ajoute('i-annonce', `${esc(titreBoss(d.rang, d.genre))} !<small>${esc(d.nom)} · n°${d.rang}</small>`);
+    const an2 = ajoute('i-annonce', `${d.rang === 1 ? (d.genre === 'F' ? 'Le retour de la reine' : 'Le retour du roi') : esc(titreBoss(d.rang, d.genre))} !<small>${esc(d.nom)} · n°${d.rang}</small>`);
     anim(an2, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(3) rotate(-12deg)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(.95) rotate(-4deg)', offset: .6 }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(-4deg)' }], { duration: 450, easing: 'ease-in' });
     await attendre(450); secouer(2); await attendre(2000);
   }
@@ -4785,7 +4871,7 @@ async function jouerIntro(d) {
     const door = hz ? { x: pr.left - cr.left + pr.width / 2, y: pr.bottom - cr.top } : { x: W * .8, y: H * .32 };
     await marche({ x: door.x - 30 * k, y: door.y + 70 * k, sc: .7 }, 900, 2);
     await marche({ x: door.x, y: door.y - s * .1, sc: .42 }, 1100, 3);
-    await bulle('Ouvre-toi !', door.x, door.y - s * .35);
+    await bulle('Mellon !', door.x, door.y - s * .35); // « Parlez, ami, et entrez »
     son('porte'); if (hz) await anim(hz, [{ transform: 'translateY(0)' }, { transform: 'translateY(-32px)' }], { duration: 1100, easing: 'cubic-bezier(.5,0,.3,1)' });
     await anim(h, [{ transform: T(pos), opacity: 1 }, { transform: T({ x: door.x, y: door.y - 10 * k, sc: .15 }), opacity: 0 }], { duration: 650 });
     for (const [t, m] of [['BAM !', -30], ['PAF !', 25], ['BOUM !', -5]]) { boom(t, door.x + m * k, door.y - (60 + Math.abs(m)) * k, '#b26bff'); eclats(door.x, door.y - 14 * k, '#d9b3ff', 12); son('pare'); await attendre(380); }
@@ -4799,7 +4885,7 @@ async function jouerIntro(d) {
     if (hz) anim(hz, [{ transform: 'translateY(-32px)' }, { transform: 'translateY(0)' }], { duration: 450, easing: 'cubic-bezier(.6,0,1,.6)' });
     await attendre(450);
     if (d.dieu) { await envolDieu(door); return; }
-    son('fanfare'); eclats(door.x, door.y - 20 * k, '#b26bff', 30);
+    son('sacre'); eclats(door.x, door.y - 20 * k, '#b26bff', 30);
     const an3 = ajoute('i-annonce', d.dieu ? `${d.genre === 'F' ? 'Une nouvelle déesse' : 'Un nouveau dieu'} veille sur le Valhalla…<small>Chut… c’est toi, ${esc(d.nom)}</small>` : `Un nouveau boss se cache dans le château…<small>Chut… c’est toi, ${esc(d.nom)}</small>`);
     an3.style.fontSize = '22px';
     anim(an3, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 450, easing: 'cubic-bezier(.2,1.6,.4,1)' });
@@ -4831,9 +4917,9 @@ async function jouerIntro(d) {
     v.style.transformOrigin = `${s / 2}px ${s / 2}px`; dessinerPortrait(v.querySelector('canvas'), -1, a.genre, a.photo || (a.inconnu ? '' : AVATAR), true);
     son('ejecte'); const q0 = { x: W * .3, y: -s, sc: .9 }, q1 = { x: tour.x, y: tour.y, sc: .25 };
     const chute = anim(v, [{ transform: T(q0) + ' rotate(0deg)' }, { transform: T(q1) + ' rotate(720deg)' }], { duration: 1500, easing: 'cubic-bezier(.5,0,.9,.6)' });
-    await attendre(300); await bulle('AAAAAAH !', W * .4, H * .18); await chute;
-    v.remove(); impact('PLOUF !', tour, '#7fd8ff', 1.5); son('tombe');
-    son('grosseFanfare'); eclats(tour.x, tour.y, '#ffcf4a', 30); anim(lueur, [{ opacity: .6 }, { opacity: 0 }], { duration: 800 });
+    await attendre(300); await bulle('Fuyez, pauvres fous !', W * .4, H * .18); await chute;
+    v.remove(); impact('BOUM !', tour, '#7fd8ff', 1.5); son('tombe');
+    if (!saute) try { SON.sacre(0); } catch (e) {} eclats(tour.x, tour.y, '#ffcf4a', 30); anim(lueur, [{ opacity: .6 }, { opacity: 0 }], { duration: 800 });
     const an4 = ajoute('i-annonce', `${F ? 'Une nouvelle déesse' : 'Un nouveau dieu'} veille sur le Valhalla…<small>Chut… c’est toi, ${esc(d.nom)}</small>`);
     an4.style.fontSize = '22px';
     anim(an4, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.4)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1)' }], { duration: 450, easing: 'cubic-bezier(.2,1.6,.4,1)' });
@@ -4914,7 +5000,7 @@ function cadrerPhoto(img, rang, genre) {
 }
 
 // ---------------------------------------------------------------- Fin de partie
-const NARGUE = ['Tu ne m’as pas battu ! 😜', 'Retourne à l’échauffement !', 'Même en dispense je fais mieux !', 'Allez, 10 tours de terrain !', 'C’est tout ? J’ai même pas transpiré !', 'Avis du conseil : peut mieux faire !', 'Va falloir réviser tes flippers !', 'Trop facile, je reste le boss 😎', 'Retourne en salle des profs !'];
+const NARGUE = ['Tu ne passeras pas ! 🧙', 'Retourne dans ta Comté !', 'Même un hobbit fait mieux !', 'Mon précieux… mon trône ! 💍', 'La peur tue l’esprit… et ton score.', 'Que l’épée soit avec toi… la prochaine fois.', 'Va polir ton armure, écuyer !', 'Trop facile, je reste le boss 😎', 'Les dragons rient encore de toi 🐉']; // Kevin (29/10) : clins d'œil aux films de fantasy
 function finPartie() {
   if (etat === 'fin') return;
   etat = 'fin'; $('pause').style.display = 'none'; FL.forEach(f => f.appui = false); arreterCharge(); majMusique();
@@ -5021,7 +5107,7 @@ function montrerFin() {
     $('titre-fin').textContent = nomFixe && !photoData ? (rang > 0 ? 'Touche ce que tu es, puis prends ta photo :' : rang ? 'Touche ce que tu es, puis prends ta photo divine :' : 'Touche ce que tu es, puis prends ta photo terrifiante :') : genre ? 'Tu deviens : ' + titreBoss(rang, genre) : rang > 0 ? 'Roi ou reine ? Coche ta case :' : rang ? 'Dieu ou déesse ? Coche ta case :' : 'Empereur ou impératrice ? Coche ta case :';
     document.querySelectorAll('#genre label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
   };
-  if (mode === 'top') { majPortrait(); if (rang <= 1) { SON.fanfare(); vib([60, 40, 60, 40, 200]); confettis(); } else { SON.sauve(); confettis(70); } }
+  if (mode === 'top') { majPortrait(); SON.sacre(rang); if (rang <= 1) { vib([60, 40, 60, 40, 200]); confettis(); } else confettis(70); }
   else if (mode === 'moque') { SON.fin(); vib([100, 80, 300]); if (moqueur) dessinerPortrait($('moq'), moqueur.rang, moqueur.genre, moqueur.photo || AVATAR); }
   document.querySelectorAll('#genre input').forEach(i => i.onchange = () => { genre = i.value; $('genre').classList.remove('manque-choix'); majPortrait(); });
   // Kevin : prénom connu → toucher « roi » ou « reine » ouvre tout de suite l'appareil photo (même si la case était déjà cochée)
@@ -5072,10 +5158,11 @@ function montrerFin() {
   };
 }
 
-// Confettis
+// Confettis (Kevin, 29/10 : aux couleurs des blasons : or, gueules, azur, sinople, argent, pourpre)
+const COUL_BLASON = ['#ffcf4a', '#e8b52a', '#b3122a', '#1f4fa8', '#1d7a3e', '#f4efe2', '#6b2a8a'];
 function confettis(n = 140) {
   const c = $('confettis'), x = c.getContext('2d'); c.width = CW * DPR; c.height = CH * DPR; x.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const cols = ['#ffd23f', '#ef3e4a', '#3a86ff', '#2ec27e', '#ff8fab', '#fff'];
+  const cols = COUL_BLASON;
   let ps = Array.from({ length: n }, () => ({ x: rnd(0, CW), y: rnd(-CH * 0.5, -10), vx: rnd(-60, 60), vy: rnd(120, 300), a: rnd(0, 6), va: rnd(-8, 8), c: pick(cols), w: rnd(6, 11) }));
   let t0 = performance.now(), last = t0;
   (function f(t) {

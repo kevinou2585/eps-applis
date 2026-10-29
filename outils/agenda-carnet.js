@@ -20,6 +20,65 @@ const mondayOf = iso => { const w = wdOf(iso); return addDays(iso, w === 0 ? -6 
 const agToday = () => { const t = today(), w = wdOf(t); return w === 6 ? addDays(t, 2) : w === 0 ? addDays(t, 1) : t; };
 const clsById = id => S.classes.find(c => c.id === id);
 
+/* --- Calendrier de l'école 2026-2027 (calendrier annuel de l'Institut, sans les dates Erasmus+ à définir) ---
+   Le même pour tous les profs qui ont l'appli : écrit ici, pas dans les données de chacun.
+   [du, au, quoi, pour qui, remarque, o] ; o = 1 : congé (pas cours) ; o = 2 : cours suspendus. */
+const CAL_ECOLE = [
+  ['2026-08-24', '2026-08-24', 'Rentrée scolaire', 'Tous', ''],
+  ['2026-08-28', '2026-08-28', 'Vente des livres d’occasion', 'Élèves de l’Institut', 'Porteur du projet : L. Horsmans'],
+  ['2026-09-27', '2026-09-27', 'Fête de la Communauté française', 'Tous', '', 1],
+  ['2026-09-28', '2026-09-28', 'Visite guidée du Parlement fédéral', '6e (2 classes)', 'De 14h30 à 16h00'],
+  ['2026-09-29', '2026-09-29', 'Visite guidée du Parlement fédéral', '6e (1 classe)', 'De 14h30 à 16h00'],
+  ['2026-10-02', '2026-10-02', 'Visite guidée du Parlement fédéral', '6e (2 classes)', 'De 14h30 à 16h00'],
+  ['2026-10-12', '2026-10-12', 'Conseils de classe', '1re, 2e et 3e', 'Cours selon l’horaire habituel pour les 4e, 5e et 6e. Bilan de synthèse pour les élèves ayant un Dacce en 1re'],
+  ['2026-10-13', '2026-10-13', 'Conseils de classe', '4e, 5e et 6e', 'Cours selon l’horaire habituel pour les 1re, 2e et 3e'],
+  ['2026-10-16', '2026-10-16', 'Remise du bulletin 1 aux parents', 'Parents / élèves', 'Sur rendez-vous, à partir de 13h30. Cours suspendus à 12h05 pour tous les élèves'],
+  ['2026-10-19', '2026-11-01', 'Vacances d’automne (Toussaint)', 'Tous', '', 1],
+  ['2026-11-02', '2026-11-02', 'Fête des morts', 'Tous', '', 1],
+  ['2026-11-11', '2026-11-11', 'Jour de l’Armistice', 'Tous', '', 1],
+  ['2026-11-16', '2026-11-17', 'Matinées de jeux de rôles politiques au Parlement bruxellois', '6e', 'Sous réserve : école sur liste d’attente. Si acceptée, toute la matinée'],
+  ['2026-11-19', '2026-11-19', 'Matinées de jeux de rôles politiques au Parlement bruxellois', '6e', 'Sous réserve : école sur liste d’attente. Si acceptée, toute la matinée'],
+  ['2026-11-23', '2026-11-23', 'Animation CIO', '6e', 'De 9h50 à 12h00, en classe'],
+  ['2026-12-15', '2026-12-17', 'Conseils de classe', 'Tous (dont 1res BS2 Dacce)', 'Cours suspendus pour tous les élèves', 2],
+  ['2026-12-18', '2026-12-18', 'Rencontre avec les parents et remise du bulletin 2', 'Parents / élèves', 'Sur rendez-vous entre 10h et 12h, puis 13h et 17h30/18h00'],
+  ['2026-12-21', '2027-01-03', 'Vacances d’hiver (Noël)', 'Tous', '', 1],
+  ['2027-01-06', '2027-01-08', 'Journées sportives à Butgenbach', '3e', ''],
+  ['2027-01-18', '2027-01-22', 'En-gaje et ses journalistes à l’institut', 'Tous', '14 plages de rencontres : 2 en matinée (H2-H3 ; H4-H5) et 1 l’après-midi (H6-H7 ou H7-H8)'],
+  ['2027-02-09', '2027-02-09', 'Mardi gras', 'Tous', '', 1],
+  ['2027-02-22', '2027-03-07', 'Vacances de détente (Carnaval)', 'Tous', '', 1],
+  ['2027-03-25', '2027-03-25', 'Conseils de classe', '1re, 2e et 3e', 'Cours selon l’horaire habituel pour les 4e, 5e et 6e'],
+  ['2027-03-26', '2027-03-26', 'Conseils de classe', '4e, 5e et 6e', 'Cours selon l’horaire habituel pour les 1re, 2e et 3e'],
+  ['2027-03-29', '2027-03-29', 'Lundi de Pâques', 'Tous', '', 1],
+  ['2027-03-30', '2027-03-30', 'Remise du bulletin 3', 'Tous', 'En classe'],
+  ['2027-04-09', '2027-04-09', 'Rencontre des parents', 'Parents / élèves', 'Sur convocation ou rendez-vous'],
+  ['2027-04-21', '2027-04-23', 'Voyage de 6e', '6e', '3 jours / 2 nuits'],
+  ['2027-04-26', '2027-05-09', 'Vacances de printemps (Pâques)', 'Tous', 'Décalées par rapport à la fête de Pâques', 1],
+  ['2027-05-06', '2027-05-06', 'Jeudi de l’Ascension', 'Tous', '', 1],
+  ['2027-05-10', '2027-05-10', 'Plus aucune sortie de classe à partir d’aujourd’hui', 'Tous', 'Plus aucune sortie n’est programmée jusqu’à la fin de l’année'],
+  ['2027-05-17', '2027-05-17', 'Lundi de Pentecôte', 'Tous', '', 1],
+  ['2027-06-23', '2027-06-23', 'Dernier jour des examens', '5e et 6e', ''],
+  ['2027-06-24', '2027-06-24', 'Dernier jour des examens', '1re, 2e, 3e et 4e', ''],
+  ['2027-06-24', '2027-06-24', 'Conseils de classe', '5e et 6e', ''],
+  ['2027-06-25', '2027-06-28', 'Conseils de classe', '1re, 2e, 3e et 4e', 'Le vendredi 25 et le lundi 28'],
+  ['2027-06-29', '2027-06-29', 'Remise du bulletin 4 aux parents', 'Parents / élèves', 'Sur rendez-vous à partir de 13h00'],
+  ['2027-06-29', '2027-06-29', 'Proclamation des 6e', '6e', 'En matinée, de 10h00 à 12h00'],
+  ['2027-06-30', '2027-06-30', 'Consultation des copies', 'Élèves / parents', ''],
+  ['2027-07-01', '2027-07-01', 'Rangement des classes et de la salle des profs, réunion en branches', 'Personnel', 'Organisation de l’année 2027-2028'],
+  ['2027-07-02', '2027-07-02', 'Conseils de recours · fin de l’année scolaire', 'Personnel', ''],
+  ['2027-07-03', '2027-08-29', 'Vacances d’été', 'Tous', '', 1],
+  ['2027-07-09', '2027-07-09', 'Fermeture de l’école à 13h00', 'Personnel administratif', '']
+].map(([a, b, t, p, r, o]) => ({a, b, t, p, r, o: o || 0}));
+const calJour = iso => CAL_ECOLE.filter(e => e.a <= iso && iso <= e.b);
+/* congé (ou cours suspendus) ce jour-là : l'événement, sinon null */
+const calOff = iso => calJour(iso).find(e => e.o === 1) || calJour(iso).find(e => e.o === 2) || null;
+/* semaine entièrement sans cours (lundi → vendredi) : le congé, sinon null */
+const calOffSem = mon => { const l = [0, 1, 2, 3, 4].map(k => calOff(addDays(mon, k))); return l.every(Boolean) ? (l.find(e => e.o === 1) || l[0]) : null; };
+const calQuand = e => e.a === e.b ? fmtD(e.a) : `du ${fmtD(e.a)} au ${fmtD(e.b)}`;
+function calHTML(l, jours){
+  if (!l.length) return '';
+  return `<div class="ag-cal">${l.map(e => `<div class="ag-ce${e.o ? ' off' : ''}"><span class="ag-ci">${e.o === 1 ? '🏖' : e.o === 2 ? '⛔' : '📌'}</span><span><b>${esc(e.t)}</b>${e.p && e.p !== 'Tous' ? ` <span class="ag-cp">${esc(e.p)}</span>` : ''}${jours || e.a !== e.b ? `<br><span class="small muted">${esc(calQuand(e))}</span>` : ''}${e.r ? `<br><span class="small">${esc(e.r)}</span>` : ''}</span></div>`).join('')}</div>`;
+}
+
 /* --- Sports --- */
 const sportsCustom = () => Array.isArray(S.settings.sports) ? S.settings.sports : [];
 const sameTxt = (a, b) => a.localeCompare(b, 'fr', {sensitivity: 'base'}) === 0;
@@ -163,7 +222,8 @@ function agDayHTML(date){
 function agWeekHTML(mon){
   let h = `<div class="ag-wk" style="grid-template-rows:auto repeat(${HOURS.length},minmax(52px,auto))"><div style="grid-row:1;grid-column:1"></div>`;
   for (let d = 1; d <= 5; d++){ const iso = addDays(mon, d - 1);
-    h += `<button type="button" class="ag-wd${iso === UI.agDate ? ' sel' : ''}" style="grid-row:1;grid-column:${d + 1}" data-agd="${iso}" data-agday="1" aria-label="Voir le ${esc(fmtDL(iso))}">${DAYS2[d]} ${dOf(iso).getDate()}${iso === today() ? '<i>auj.</i>' : ''}</button>`; }
+    h += `<button type="button" class="ag-wd${iso === UI.agDate ? ' sel' : ''}${calOff(iso) ? ' off' : ''}" style="grid-row:1;grid-column:${d + 1}" data-agd="${iso}" data-agday="1" aria-label="Voir le ${esc(fmtDL(iso))}${calOff(iso) ? ', ' + esc(calOff(iso).t) : ''}">${DAYS2[d]} ${dOf(iso).getDate()}${iso === today() ? '<i>auj.</i>' : ''}</button>`;
+    const off = calOff(iso); if (off) h += `<div class="ag-woff${off.o === 2 ? ' susp' : ''}" style="grid-row:2 / ${HOURS.length + 2};grid-column:${d + 1}"><span>${esc(off.o === 2 ? 'Cours suspendus' : off.t)}</span></div>`; }
   HOURS.forEach((H, i) => h += `<div class="ag-wh" style="grid-row:${i + 2}"><b>${H[0]}</b><span>${H[1]}</span></div>`);
   for (let d = 1; d <= 5; d++){
     const iso = addDays(mon, d - 1), items = agItems(d), last = hI(lastH(d)), cov = new Set();
@@ -173,7 +233,9 @@ function agWeekHTML(mon){
       h += i > last ? `<div class="ag-wx" style="grid-row:${i + 2};grid-column:${d + 1}" title="Pas de cours"></div>`
         : `<button type="button" class="ag-wempty" style="grid-row:${i + 2};grid-column:${d + 1}" data-agnew="${H[0]}" data-date="${iso}" aria-label="Ajouter un cours le ${esc(dayName(d).toLowerCase())} à ${H[0]}">+</button>`; });
   }
-  return h + '</div>';
+  h += '</div>';
+  const ev = []; for (let d = 0; d < 7; d++) calJour(addDays(mon, d)).forEach(e => { if (!ev.includes(e)) ev.push(e); });
+  return h + (ev.length ? `<h3 class="ag-calh">À l'école cette semaine</h3>${calHTML(ev, true)}` : '');
 }
 
 let AGM = null; try { AGM = localStorage.getItem('carnet-eps-agenda-vue'); } catch(e){}
@@ -194,8 +256,9 @@ function renderAgenda(m){
   if (mode === 'week') h += agWeekHTML(mon);
   else {
     h += `<div class="ag-days">${[1, 2, 3, 4, 5].map(k => { const iso = addDays(mon, k - 1), n = agItems(k).length;
-      return `<button type="button" class="ag-dchip" data-agd="${iso}" aria-pressed="${iso === UI.agDate}" aria-label="${esc(fmtDL(iso))}, ${n} cours">${iso === today() ? '<i>auj.</i>' : ''}<b>${DAYS2[k]}</b><span>${dOf(iso).getDate()}</span><small>${n ? n + ' cours' : 'libre'}</small></button>`; }).join('')}</div>
+      return `<button type="button" class="ag-dchip" data-agd="${iso}" aria-pressed="${iso === UI.agDate}" aria-label="${esc(fmtDL(iso))}, ${n} cours">${iso === today() ? '<i>auj.</i>' : ''}<b>${DAYS2[k]}</b><span>${dOf(iso).getDate()}</span><small>${calOff(iso) ? (calOff(iso).o === 2 ? 'suspendu' : 'congé') : n ? n + ' cours' : 'libre'}</small></button>`; }).join('')}</div>
       <div class="ag-dayhd"><b>${esc(fmtDL(UI.agDate))}</b>${UI.agDate === today() ? '<span class="tag" style="background:var(--accent);color:var(--accent-ink)">aujourd\'hui</span>' : ''}</div>
+      ${calHTML(calJour(UI.agDate))}
       ${agDayHTML(UI.agDate)}`;
   }
   h += `<p class="small muted" style="margin:0">Touche une heure libre pour ajouter un cours à ta semaine type (chaque semaine pareil). Touche un cours pour faire l'appel et noter le sport et ce que tu as fait ce jour-là.</p></section>`;
@@ -1003,11 +1066,11 @@ async function prepaRecueilHTML(){
   });
   if (PREPA_LIB.natdeb){ const A = PREPA_LIB.natdeb.an[1], tab = rcTab('natdeb', 'Nat.', 'débutants');
     h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Natation débutants')}<div class="rc-sph"><small>Toutes années · petite profondeur</small><h1>Natation débutants</h1><p>${esc(A.th)}</p></div>
-      <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || '')}</p><p class="rc-mat">Pour le groupe qui n'est pas encore à l'aise dans l'eau, en même temps que le groupe nageurs. L'évaluation du cycle 3 sert de test de passage vers le groupe nageurs.</p>${rcLecons(A, 'natdeb')}</article>`;
+      <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || PREPA_LIB.natdeb.mat || '')}</p><p class="rc-mat">Pour le groupe qui n'est pas encore à l'aise dans l'eau, en même temps que le groupe nageurs. L'évaluation du cycle 3 sert de test de passage vers le groupe nageurs.</p>${rcLecons(A, 'natdeb')}</article>`;
     A.l.forEach((l, i) => h += lecon('natdeb', 1, i + 1, tab).replace(/<span>1re secondaire<\/span>/, '<span>toutes années</span>')); }
   PREPA_DIVERS.filter(id => id !== 'hiver' && PREPA_LIB[id]).forEach(id => { const A = PREPA_LIB[id].an[1], tab = rcTab('divers', 'Divers', planAbbr(PREPA_LIB[id].sport));
     h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Sports divers')}<div class="rc-sph"><small>Sports divers · toutes années</small><h1>${esc(nom(id))}</h1><p>${esc(A.th)}</p></div>
-      <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || '')}</p><p class="rc-mat">Un seul cycle de 6 leçons, le même pour toutes les années : adapte les exigences à l'âge des élèves.</p>${rcLecons(A, id)}</article>`;
+      <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || PREPA_LIB[id].mat || '')}</p><p class="rc-mat">Un seul cycle de 6 leçons, le même pour toutes les années : adapte les exigences à l'âge des élèves.</p>${rcLecons(A, id)}</article>`;
     A.l.forEach((l, i) => h += lecon(id, 1, i + 1, tab).replace(/<span>1re secondaire<\/span>/, '<span>toutes années</span>')); });
   if (PREPA_LIB.hiver){ const A = PREPA_LIB.hiver.an[0], tab = rcTab('divers', 'Divers', 'une leçon');
     h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Sports divers')}<div class="rc-sph"><small>Toutes années · une leçon par sport</small><h1>Sports divers en une leçon</h1><p>Jeux pour la petite salle ou les jours sans installation, classés par mots-clés.</p></div>${rcLecons(A, 'hiver')}</article>`;
@@ -1052,7 +1115,7 @@ const PLAN_ABR = [[/basket/i, 'Basket'], [/volley/i, 'Volley'], [/hand/i, 'Hand'
 const planAbbr = s => s === 'Congé' ? 'congé' : (PLAN_ABR.find(([re]) => re.test(s)) || [0, s.replace(/[-'’ ]/g, ' ').split(' ').filter(Boolean)[0].slice(0, 6)])[1];
 function planWeeks(iso){
   const d = dOf(iso), y = d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1;
-  const out = []; let m = mondayOf(`${y}-09-01`); const end = `${y + 1}-07-03`;
+  const out = []; let m = mondayOf(`${y}-08-24`); const end = `${y + 1}-07-03`;
   while (m <= end){ out.push(m); m = addDays(m, 7); }
   return {weeks: out, sy: `${y}-${y + 1}`};
 }
@@ -1064,20 +1127,21 @@ function planHTML(weeks, forPrint){
   const t0 = mondayOf(today()), cls = S.classes;
   let h = `<div class="pl-wrap"><table class="pl-tb"><thead><tr><th class="pl-c">Classe</th>`;
   weeks.forEach((w, i) => { const d = dOf(w), nm = i === 0 || dOf(weeks[i - 1]).getMonth() !== d.getMonth();
-    h += `<th class="${w === t0 ? 'pl-now' : ''}${nm ? ' pl-m' : ''}"><small>${nm ? MOIS[d.getMonth()] : ''}</small>${d.getDate()}</th>`; });
+    h += `<th class="${w === t0 ? 'pl-now' : ''}${nm ? ' pl-m' : ''}${calOffSem(w) ? ' pl-vac' : ''}" title="${calOffSem(w) ? esc(calOffSem(w).t) : ''}"><small>${nm ? MOIS[d.getMonth()] : ''}</small>${d.getDate()}</th>`; });
   h += '</tr></thead><tbody>';
   cls.forEach(c => {
     h += `<tr><th class="pl-c">${esc(c.name)}</th>`;
     weeks.forEach(w => { const sp = (planSet()[c.id] || {})[w] || '', wk = planWeekLessons(c, w), done = wk.filter(x => x.sport).map(x => x.sport), np = wk.filter(x => x.pp).length;
-      const lab = `${c.name}, semaine du ${fmtD(w)}${sp ? ' : ' + sp : ''}${done.length ? ', fait : ' + [...new Set(done)].join(', ') : ''}${np ? ', ' + np + ' prépa' + (np > 1 ? 's' : '') : ''}`;
-      const inner = `${sp ? `<b>${esc(planAbbr(sp))}</b>` : done.length ? `<b class="pl-fait">${esc(planAbbr(done[0]))}</b>` : ''}${np ? `<i>📋${np > 1 ? np : ''}</i>` : done.length ? '<i>✓</i>' : ''}`;
-      h += forPrint ? `<td class="${sp === 'Congé' ? 'pl-off' : ''}" style="${sp && sp !== 'Congé' ? `--pc:${planColor(sp)}` : ''}">${inner}</td>`
-        : `<td class="${w === t0 ? 'pl-now' : ''}${sp === 'Congé' ? ' pl-off' : ''}" style="${sp && sp !== 'Congé' ? `--pc:${planColor(sp)}` : ''}"><button type="button" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(lab)}">${inner}</button></td>`; });
+      const lab = `${c.name}, semaine du ${fmtD(w)}${sp ? ' : ' + sp : calOffSem(w) ? ' : ' + calOffSem(w).t : ''}${done.length ? ', fait : ' + [...new Set(done)].join(', ') : ''}${np ? ', ' + np + ' prépa' + (np > 1 ? 's' : '') : ''}`;
+      const vac = !sp && !done.length && !np && calOffSem(w), off = sp === 'Congé' || vac;
+      const inner = vac ? '<b class="pl-vact">vac.</b>' : `${sp ? `<b>${esc(planAbbr(sp))}</b>` : done.length ? `<b class="pl-fait">${esc(planAbbr(done[0]))}</b>` : ''}${np ? `<i>📋${np > 1 ? np : ''}</i>` : done.length ? '<i>✓</i>' : ''}`;
+      h += forPrint ? `<td class="${off ? 'pl-off' : ''}" style="${sp && sp !== 'Congé' ? `--pc:${planColor(sp)}` : ''}">${inner}</td>`
+        : `<td class="${w === t0 ? 'pl-now' : ''}${off ? ' pl-off' : ''}" style="${sp && sp !== 'Congé' ? `--pc:${planColor(sp)}` : ''}"><button type="button" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(lab)}">${inner}</button></td>`; });
     h += '</tr>';
   });
   h += '</tbody></table></div>';
   const used = [...new Set(Object.values(planSet()).flatMap(o => Object.values(o)))];
-  if (used.length) h += `<div class="pl-leg">${used.sort((a, b) => sportsList().indexOf(a) - sportsList().indexOf(b)).map(s => `<span style="--pc:${s === 'Congé' ? '#888' : planColor(s)}"><b>${esc(planAbbr(s))}</b>${esc(s)}</span>`).join('')}<span><i>✓</i> sport noté dans un cours</span><span><i>📋</i> prépa faite (touche la case pour la voir)</span></div>`;
+  if (used.length || cls.length) h += `<div class="pl-leg"><span style="--pc:#888"><b>vac.</b>vacances de l'école</span>${used.sort((a, b) => sportsList().indexOf(a) - sportsList().indexOf(b)).map(s => `<span style="--pc:${s === 'Congé' ? '#888' : planColor(s)}"><b>${esc(planAbbr(s))}</b>${esc(s)}</span>`).join('')}<span><i>✓</i> sport noté dans un cours</span><span><i>📋</i> prépa faite (touche la case pour la voir)</span></div>`;
   return h;
 }
 /* ce qui a été fait (ou préparé) cette semaine-là par une classe : leçons + cours prévus avant l'appel */

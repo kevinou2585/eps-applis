@@ -164,7 +164,7 @@ textarea.inp{min-height:130px; resize:vertical}
 .pips{display:inline-flex; gap:3px}
 .pips i{width:11px; height:11px; border-radius:50%; border:1.5px solid currentColor; display:block}
 .pips i.f{background:currentColor}
-.pips.t{color:var(--accent)} .pips.c{color:var(--ok)}
+.pips.t{color:var(--accent)} .pips.c{color:var(--ok)} .pips.w{color:var(--warn)}
 .prow .grid2{display:grid; grid-template-columns:auto auto; gap:2px 6px; align-items:center; font-size:11px; color:var(--muted)}
 .score{font:700 22px/1 var(--display); min-width:52px; text-align:right}
 .score small{font-size:13px; color:var(--muted)}
@@ -530,6 +530,18 @@ header.top .sync{min-width:0; overflow:hidden}
   .rc-ls td:first-child{white-space:nowrap} .rc-l3 th:first-child{width:12mm} .rc-l3 th:nth-child(2){width:38%} .rc-ls tr.rc-ev td{background:#f3f3f3; -webkit-print-color-adjust:exact; print-color-adjust:exact}
   .rc-som td{font-size:10pt; padding:3px 6px}
 }
+/* calendrier de l'école (congés, conseils de classe, sorties…) */
+.ag-cal{display:grid; gap:6px}
+.ag-ce{display:flex; gap:10px; align-items:flex-start; padding:9px 12px; border-radius:12px; border:1.5px solid var(--line); background:var(--surface); font-size:14px; line-height:1.35}
+.ag-ce.off{background:repeating-linear-gradient(135deg, var(--surface2) 0 7px, transparent 7px 14px); border-style:dashed}
+.ag-ci{font-size:18px; line-height:1.1}
+.ag-cp{display:inline-block; font-size:12px; font-weight:700; padding:0 6px; border-radius:6px; background:var(--surface2); color:var(--muted)}
+.ag-calh{margin:4px 0 0; font-size:15px}
+.ag-wd.off{color:var(--muted)}
+.ag-woff{z-index:2; display:grid; place-items:center; border-radius:8px; margin:2px; pointer-events:none; background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--surface2) 92%, transparent) 0 7px, color-mix(in srgb, var(--bg, #fff) 80%, transparent) 7px 14px); border:1.5px dashed var(--line)}
+.ag-woff span{writing-mode:vertical-rl; transform:rotate(180deg); font-size:12px; font-weight:700; color:var(--muted); text-align:center; max-height:100%; overflow:hidden}
+.pl-tb th.pl-vac{color:var(--muted)}
+.pl-vact{font-weight:600; color:var(--muted)}
 /* Évaluations formatives / endurance / filles et règles (outils/evals-carnet.js) */
 .tag.ev-form{background:var(--surface); color:var(--fg); border:1.5px dashed var(--fg); letter-spacing:.07em; padding:1px 8px; font-size:11.5px; vertical-align:2px}
 .tag.ev-endu{background:var(--accent-soft); color:var(--accent); padding:1px 8px; font-size:11.5px; vertical-align:2px}
@@ -847,7 +859,7 @@ const lessonOn = (c, date, h) => c.lessons.find(l => l.date === date && (l.h || 
 // Annee scolaire choisie (bouton a cote du titre) : les dates proposees suivent l'annee.
 function decalAnnee(){ try { const a = parseInt(DEMO_LS.getItem('carnet-eps-annee'), 10); return a ? a - 2026 : 0; } catch(e){ return 0; } }
 function defaultPeriods(){
-  return [['Période 1','2026-08-31','salle'],['Période 2','2026-10-17','salle'],['Période 3','2026-12-19','salle'],['Période 4','2027-03-31','salle']]
+  return [['Période 1','2026-08-24','salle'],['Période 2','2026-10-17','salle'],['Période 3','2026-12-19','salle'],['Période 4','2027-03-31','salle']]
     .map(([name, start, type]) => ({id: nid('p'), name, start: (+start.slice(0, 4) + decalAnnee()) + start.slice(4), type}));
 }
 function newClass(name, names, periods){
@@ -864,9 +876,21 @@ const zoneTxt = x => x.zone === 'piscine' ? 'piscine seulement' : x.zone === 'sa
 function effA(p, L){ const mm = L.m[p.id] || {}; if (mm.a) return mm.a; return certOn(p, L.date, L.type) ? 'D' : 'P'; }
 
 /* ====== Calcul des points ====== */
+/* Colonne Travaux (Kevin, 26/10) : débloquée pour un élève à partir de la période où il reçoit son 1er travail (jamais sinon),
+   sur S.settings.W points (3 par défaut, Kevin 26/10), remise au maximum à chaque période. Un travail non remis (m.tz) retire en travaux,
+   puis en tenue, puis en attitude quand la colonne est vide. r.w = null : colonne pas débloquée.
+   Elle compte pour moitié dans le savoir-être (W_POIDS, Kevin 26/10) : moins d'impact, sauf quand elle est vide et retire ailleurs. */
+const W_POIDS = 0.5;
+function travPremier(c){
+  const o = {}, put = (pid, d) => { if (d && (!o[pid] || d < o[pid])) o[pid] = d; };
+  c.lessons.forEach(l => Object.entries(l.m || {}).forEach(([pid, m]) => { if (m.tr || m.tz || m.trOk) put(pid, l.date); }));
+  Object.entries(c.trav || {}).forEach(([pid, t]) => put(pid, t && t.d));
+  return o;
+}
 function compute(c, p){
-  const st = S.settings, T = +st.T || 0, Cc = +st.C || 0, res = {};
-  c.pupils.forEach(pu => res[pu.id] = {t: T, c: Cc, x: 0, abs: 0, late: 0, disp: 0, kit: 0, np: 0, d: 0, n: 0, ev: [], sfS: 0, sfM: 0, evals: []});
+  const st = S.settings, T = +st.T || 0, Cc = +st.C || 0, W = stN('W'), w1 = travPremier(c), res = {};
+  const wOn = pid => W > 0 && !!w1[pid] && (periodOf(c, w1[pid])?.start || '') <= p.start;
+  c.pupils.forEach(pu => res[pu.id] = {t: T, c: Cc, w: wOn(pu.id) ? W : null, x: 0, abs: 0, late: 0, disp: 0, kit: 0, np: 0, d: 0, n: 0, ev: [], sfS: 0, sfM: 0, evals: []});
   // points déjà retirés avant l'appli (repris de l'ancien relevé), sans report d'une colonne à l'autre
   const adj = (c.adj || {})[p.id] || {};
   c.pupils.forEach(pu => { const a = adj[pu.id], r = res[pu.id]; if (!a) return;
@@ -876,8 +900,8 @@ function compute(c, p){
     const r = res[pu.id], m = l.m[pu.id] || {};
     const a = effA(pu, l);
     const f = [];
-    // travail non remis (carnet/travail.js) : −1 tenue, même si l'élève est absent ce jour-là
-    if (m.tz){ r.tz = (r.tz || 0) + 1; f.push(['t', 'Travail non remis', 'tz']); }
+    // travail non remis (carnet/travail.js) : −1 travaux (puis tenue, puis attitude), même si l'élève est absent ce jour-là
+    if (m.tz){ r.tz = (r.tz || 0) + 1; f.push(['w', 'Travail non remis', 'tz']); }
     if (a === 'A') r.abs++;
     else { r.n++; if (a === 'R') r.late++; if (a === 'D') r.disp++; }
     if (a !== 'A' && m.k){ r.kit++; for (let i = 0; i < stN('kitPts'); i++) f.push(['t', l.type === 'piscine' ? 'Pas ses affaires de piscine' : 'Pas sa tenue', 'k']); }
@@ -887,7 +911,8 @@ function compute(c, p){
     f.forEach(([col, label, key]) => {
       let hit = col;
       const sp = stB('spill');
-      if (col === 't'){ if (r.t > 0) r.t--; else if (sp && r.c > 0){ r.c--; hit = 'c'; } else hit = '-'; }
+      if (col === 'w'){ if (r.w > 0) r.w--; else if (r.t > 0){ r.t--; hit = 't'; } else if (r.c > 0){ r.c--; hit = 'c'; } else hit = '-'; }
+      else if (col === 't'){ if (r.t > 0) r.t--; else if (sp && r.c > 0){ r.c--; hit = 'c'; } else hit = '-'; }
       else { if (r.c > 0) r.c--; else if (sp && r.t > 0){ r.t--; hit = 't'; } else hit = '-'; }
       r.ev.push({date: l.date, label, col, hit, lid: l.id, key});
     });
@@ -896,8 +921,9 @@ function compute(c, p){
   c.pupils.forEach(pu => {
     const r = res[pu.id];
     evs.forEach(e => { const s = e.s[pu.id]; r.evals.push({e, s}); if (typeof s === 'number'){ r.sfS += s; r.sfM += +e.max; } });
-    r.seMax = T + Cc;
-    r.se = r.seMax ? (r.t + r.c) / r.seMax * st.se : 0;
+    r.seMax = T + Cc + (r.w != null ? W : 0);
+    const den = T + Cc + (r.w != null ? W * W_POIDS : 0);
+    r.se = den ? (r.t + r.c + (r.w || 0) * W_POIDS) / den * st.se : 0;
     r.sf = r.sfM ? r.sfS / r.sfM * (100 - st.se) : null;
     r.total = r.sf == null ? null : r.se + r.sf;
   });
@@ -910,7 +936,7 @@ function computeYear(c){
     const rs = per.map(o => o.x.res[pu.id]);
     const avg = arr => { const v = arr.filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
     const sum = k => rs.reduce((a, r) => a + r[k], 0);
-    res[pu.id] = { se: avg(rs.map(r => r.se)), sf: avg(rs.map(r => r.sf)), total: avg(rs.map(r => r.total)), abs: sum('abs'), late: sum('late'), kit: sum('kit'), np: sum('np'), d: sum('d'), x: sum('x'), n: sum('n'), t: null, c: null, ev: [], evals: [] };
+    res[pu.id] = { se: avg(rs.map(r => r.se)), sf: avg(rs.map(r => r.sf)), total: avg(rs.map(r => r.total)), abs: sum('abs'), late: sum('late'), kit: sum('kit'), np: sum('np'), d: sum('d'), x: sum('x'), n: sum('n'), t: null, c: null, w: null, ev: [], evals: [] };
   });
   return {res, periods: per.map(o => o.p), lessons: per.flatMap(o => o.x.lessons), evals: per.flatMap(o => o.x.evals)};
 }
@@ -1303,7 +1329,7 @@ function maillot(c, p){ return ((c && c.sexe) || (p && p.g)) === 'F' ? MAILLOT_F
 function lessonRow(c, L, p, r, pool){
   const mm = L.m[p.id] || {}, a = effA(p, L), cert = certOn(p, L.date, L.type), off = a === 'A', exempt = a === 'D';
   const T = +S.settings.T, Cc = +S.settings.C;
-  const pts = r ? `<span class="pts num"><span class="${r.t <= 1 ? 'low' : ''}">Tenue ${r.t}/${T}</span><span class="${r.c <= 1 ? 'low' : ''}">Att. ${r.c}/${Cc}</span></span>` : '';
+  const pts = r ? `<span class="pts num"><span class="${r.t <= 1 ? 'low' : ''}">Tenue ${r.t}/${T}</span><span class="${r.c <= 1 ? 'low' : ''}">Att. ${r.c}/${Cc}</span>${r.w != null ? `<span class="${r.w <= 1 ? 'low' : ''}">Trav. ${r.w}/${stN('W')}</span>` : ''}</span>` : '';
   return `<div class="prow ${off ? 'isA' : ''}" data-pid="${p.id}" data-cid="${c.id}">
     <button class="who" type="button">${avatar(p)}<span class="nm"><b>${esc(nomCourt(p))}</b>${cert ? `<span class="pts" style="color:var(--warn);font-weight:600">🩺 Certificat · dispensé jusqu'au ${cert.to.slice(8)}/${cert.to.slice(5, 7)}</span>` : pts}</span></button>
     <button class="tb ${a}" type="button" data-act="pres" aria-label="Présence : ${({P:'présent',A:'absent',R:'en retard',D:'dispensé'})[a]}">${a}</button>
@@ -1409,17 +1435,17 @@ function renderPoints(c, m){
   if (!vp){ m.innerHTML = `<section class="sec"><div class="card empty"><p>Ajoute une période dans Réglages.</p></div></section>`; return; }
   const {res, lessons} = compute(c, vp), T = +S.settings.T, Cc = +S.settings.C;
   const ps = pupilsOf(c);
-  const full = ps.filter(p => res[p.id].t + res[p.id].c === T + Cc).length, low = ps.filter(p => res[p.id].t + res[p.id].c <= (T + Cc) / 2).length;
+  const seTot = r => r.t + r.c + (r.w || 0), full = ps.filter(p => seTot(res[p.id]) === res[p.id].seMax).length, low = ps.filter(p => seTot(res[p.id]) <= res[p.id].seMax / 2).length;
   m.innerHTML = `<section class="sec">
     <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><h2>Savoir-être</h2><span class="tag ${vp.type}">${vp.type === 'piscine' ? 'Piscine' : 'Salle'}</span></div>
     ${periodChips(c, false)}
     <p class="small muted" style="margin:0">${lessons.length} leçon${lessons.length > 1 ? 's' : ''} notée${lessons.length > 1 ? 's' : ''} · ${full} élève${full > 1 ? 's' : ''} avec tous les points · ${low} à la moitié ou moins. ${stB('spill') ? 'Quand une colonne est vide, la faute suivante est retirée dans l\'autre.' : 'Une colonne vide reste à 0 (rien n\'est retiré dans l\'autre).'}</p>
     <div class="list">
-      <div class="lhead"><span class="grow">Élève</span><span>Tenue · Attitude</span><span style="width:60px;text-align:right">/${T + Cc}</span></div>
-      ${ps.map(p => { const r = res[p.id], tot = r.t + r.c;
+      <div class="lhead"><span class="grow">Élève</span><span>Tenue · Attitude${ps.some(p => res[p.id].w != null) ? ' · Travaux' : ''}</span><span style="width:60px;text-align:right">/${T + Cc}</span></div>
+      ${ps.map(p => { const r = res[p.id], tot = seTot(r);
         return `<div class="prow" data-pid="${p.id}"><button class="who" type="button">${avatar(p)}<span class="nm"><b>${esc(p.n)}</b><span class="pts">${r.abs ? r.abs + ' abs. · ' : ''}${r.kit} oubli${r.kit > 1 ? 's' : ''} · ${r.d} pert.${r.x ? ` · ${r.x} excl.` : ''}</span></span></button>
-          <span class="grid2">${pipsH(r.t, T, 't')}<span>T</span>${pipsH(r.c, Cc, 'c')}<span>C</span></span>
-          <span class="score num ${tot <= (T + Cc) / 2 ? 'bad' : ''}">${tot}<small>/${T + Cc}</small></span></div>`; }).join('')}
+          <span class="grid2">${pipsH(r.t, T, 't')}<span>T</span>${pipsH(r.c, Cc, 'c')}<span>C</span>${r.w != null ? `${pipsH(r.w, stN('W'), 'w')}<span>W</span>` : ''}</span>
+          <span class="score num ${tot <= r.seMax / 2 ? 'bad' : ''}">${tot}<small>/${r.seMax}</small></span></div>`; }).join('')}
     </div>${agJournal(lessons)}</section>`;
   bindChips(c);
   m.querySelector('.list').onclick = e => { const r = e.target.closest('.prow'); if (r) openPupil(c, r.dataset.pid); };
@@ -1647,9 +1673,9 @@ function periodEnd(c, p){ const ps = periodsOf(c), i = ps.findIndex(x => x.id ==
 function periodSheet(c, p){
   const st = S.settings, T = +st.T, Cc = +st.C, seP = +st.se, sfP = 100 - seP;
   const {res, lessons, evals} = compute(c, p), pool = lessons.some(l => l.type === 'piscine');
-  const ps = pupilsOf(c);
+  const ps = pupilsOf(c), wCol = ps.some(pu => res[pu.id].w != null);
   const cols = [{h: 'N°', w: 5}, {h: 'Élève', w: 28},
-    {h: `Tenue\n/${T}`, w: 8, g: 'se'}, {h: `Attitude\n/${Cc}`, w: 9, g: 'se'}, {h: `Savoir-être\n/${seP}`, w: 11, g: 'se'},
+    {h: `Tenue\n/${T}`, w: 8, g: 'se'}, {h: `Attitude\n/${Cc}`, w: 9, g: 'se'}, ...(wCol ? [{h: `Travaux\n/${stN('W')}`, w: 9, g: 'se'}] : []), {h: `Savoir-être\n/${seP}`, w: 11, g: 'se'},
     ...evals.map(e => ({h: `${e.name}\n/${fr(+e.max, 2)}`, w: Math.min(16, Math.max(10, Math.ceil(e.name.length * 0.75))), g: 'sf', e})),
     {h: `Savoir-faire\n/${sfP}`, w: 11, g: 'sf'}, {h: 'TOTAL\n%', w: 10, g: 'tot'},
     {h: 'Abs.', w: 7, g: 'pr'}, {h: 'Retards', w: 8, g: 'pr'}, {h: 'Oublis', w: 8, g: 'pr'}, ...(pool ? [{h: 'Pas nagé', w: 8, g: 'pr'}] : []), {h: 'Pertur-\nbations', w: 9, g: 'pr'}, {h: 'Exclu-\nsions', w: 8, g: 'pr'}];
@@ -1668,19 +1694,19 @@ function periodSheet(c, p){
   ps.forEach((pu, i) => {
     const r = res[pu.id], b = i % 2 === 1;
     const cells = [{v: i + 1, s: b ? XS.INTB : XS.INT}, {v: pu.n, s: b ? XS.TXTB : XS.TXT},
-      {v: r.t, s: b ? XS.INTB : XS.INT}, {v: r.c, s: b ? XS.INTB : XS.INT}, {v: r.se, s: b ? XS.NUMB : XS.NUM},
+      {v: r.t, s: b ? XS.INTB : XS.INT}, {v: r.c, s: b ? XS.INTB : XS.INT}, ...(wCol ? [{v: r.w == null ? '' : r.w, s: b ? XS.INTB : XS.INT}] : []), {v: r.se, s: b ? XS.NUMB : XS.NUM},
       ...evals.map(e => { const s = e.s[pu.id]; return {v: evTag(s) ? evTagTxt(s) : (typeof s === 'number' ? s : ''), s: typeof s === 'number' && s < e.max / 2 ? (b ? XS.NUMLOWB : XS.NUMLOW) : (b ? XS.NUMB : XS.NUM)}; }),
       {v: r.sf, s: b ? XS.NUMB : XS.NUM}, {v: r.total, s: r.total != null && r.total < 50 ? XS.TOTLOW : XS.TOT},
       {v: r.abs, s: b ? XS.INTB : XS.INT}, {v: r.late, s: b ? XS.INTB : XS.INT}, {v: r.kit, s: b ? XS.INTB : XS.INT}, ...(pool ? [{v: r.np, s: b ? XS.INTB : XS.INT}] : []), {v: r.d, s: b ? XS.INTB : XS.INT}, {v: r.x, s: b ? XS.INTB : XS.INT}];
     rows.push({h: 20, cells});
   });
   const avg = f => { const v = ps.map(pu => f(res[pu.id])).filter(x => typeof x === 'number'); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : ''; };
-  const ar = [{v: '', s: XS.AVGL}, {v: 'Moyenne de la classe', s: XS.AVGL}, {v: avg(r => r.t), s: XS.AVGN}, {v: avg(r => r.c), s: XS.AVGN}, {v: avg(r => r.se), s: XS.AVGN},
+  const ar = [{v: '', s: XS.AVGL}, {v: 'Moyenne de la classe', s: XS.AVGL}, {v: avg(r => r.t), s: XS.AVGN}, {v: avg(r => r.c), s: XS.AVGN}, ...(wCol ? [{v: avg(r => r.w), s: XS.AVGN}] : []), {v: avg(r => r.se), s: XS.AVGN},
     ...evals.map(e => { const v = ps.map(pu => e.s[pu.id]).filter(x => typeof x === 'number'); return {v: v.length ? v.reduce((a, b) => a + b, 0) / v.length : '', s: XS.AVGN}; }),
-    {v: avg(r => r.sf), s: XS.AVGN}, {v: avg(r => r.total), s: XS.AVGN}, ...cols.slice(5 + evals.length + 2).map(() => ({v: '', s: XS.AVGL}))];
+    {v: avg(r => r.sf), s: XS.AVGN}, {v: avg(r => r.total), s: XS.AVGN}, ...cols.slice((wCol ? 6 : 5) + evals.length + 2).map(() => ({v: '', s: XS.AVGL}))];
   rows.push({h: 22, cells: ar});
   rows.push({h: 8, cells: blank()});
-  const nt = blank(); nt[0] = {v: `En rouge : total sous 50 % et évaluations sous la moitié. Tenue et attitude : ${T} et ${Cc} points par période, une colonne à 0 fait retirer dans l'autre. Exporté le ${dFR(today())} depuis le Carnet EPS.`, s: XS.NOTE}; rows.push({h: 30, cells: nt}); merges.push(`A${rows.length}:${last}${rows.length}`);
+  const nt = blank(); nt[0] = {v: `En rouge : total sous 50 % et évaluations sous la moitié. Tenue et attitude : ${T} et ${Cc} points par période, une colonne à 0 fait retirer dans l'autre.${wCol ? ` Travaux : ${stN('W')} points comptés pour moitié, seulement pour les élèves qui ont reçu un travail ; un travail non remis retire en travaux, puis en tenue, puis en attitude.` : ''} Exporté le ${dFR(today())} depuis le Carnet EPS.`, s: XS.NOTE}; rows.push({h: 30, cells: nt}); merges.push(`A${rows.length}:${last}${rows.length}`);
   return {name: `${c.name} ${p.name}`, rows, merges, cols: cols.map(c => c.w), freeze: 5, titleRows: 4, footer: `Carnet EPS · ${c.name} · ${p.name}`};
 }
 /* Feuille récapitulative de l'année */
@@ -1741,11 +1767,12 @@ function openPupil(c, pid){
     </div>
     ${year ? '' : `<div class="card" style="display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center">
       <b>Tenue</b>${pipsH(r.t, T, 't')}<span class="num">${r.t}/${T}</span>
-      <b>Attitude</b>${pipsH(r.c, Cc, 'c')}<span class="num">${r.c}/${Cc}</span></div>`}
+      <b>Attitude</b>${pipsH(r.c, Cc, 'c')}<span class="num">${r.c}/${Cc}</span>${r.w != null ? `
+      <b>Travaux</b>${pipsH(r.w, stN('W'), 'w')}<span class="num">${r.w}/${stN('W')}</span>` : ''}</div>`}
     <div class="card small">${r.abs} absence${r.abs > 1 ? 's' : ''} · ${r.late} retard${r.late > 1 ? 's' : ''} · ${r.kit} oubli${r.kit > 1 ? 's' : ''} de tenue/affaires${r.np ? ` · ${r.np} fois sans nager` : ''} · ${r.d} perturbation${r.d > 1 ? 's' : ''}${r.x ? ` · ${r.x} exclusion${r.x > 1 ? 's' : ''}` : ''}</div>
     ${fiHistHTML(c, p, vp)}
     ${year ? '' : `<h3>Évaluations</h3><div class="card">${r.evals.length ? r.evals.map(({e, s}) => `<div class="evt"><span class="d">${e.date ? esc(fmtD(e.date)) : ''}</span><span class="l">${esc(e.name)}</span><b class="num">${evTag(s) ? evTagTxt(s) : s == null ? '—' : fr(s, 2)}<span class="muted">/${fr(+e.max, 2)}</span></b></div>`).join('') : '<span class="muted small">Aucune évaluation dans cette période.</span>'}${evFormList(c, vp, p)}</div>
-    <h3>Points retirés</h3><div class="card">${r.ev.length ? r.ev.map((v, k) => `<div class="evt"><span class="d">${esc(fmtD(v.date))}</span><span class="l">${esc(v.label)}</span><span class="col ${v.hit}">${v.hit === 't' ? '−1 tenue' : v.hit === 'c' ? '−1 attitude' : 'déjà à 0'}</span><button class="ib" type="button" data-undo="${k}" aria-label="Retirer">${IC.x}</button></div>`).join('') : '<span class="muted small">Aucun point retiré. Bravo.</span>'}</div>`}
+    <h3>Points retirés</h3><div class="card">${r.ev.length ? r.ev.map((v, k) => `<div class="evt"><span class="d">${esc(fmtD(v.date))}</span><span class="l">${esc(v.label)}</span><span class="col ${v.hit}">${v.hit === 't' ? '−1 tenue' : v.hit === 'c' ? '−1 attitude' : v.hit === 'w' ? '−1 travaux' : 'déjà à 0'}</span><button class="ib" type="button" data-undo="${k}" aria-label="Retirer">${IC.x}</button></div>`).join('') : '<span class="muted small">Aucun point retiré. Bravo.</span>'}</div>`}
     <h3>Certificats médicaux</h3><div class="card">${(p.certs || []).length ? [...p.certs].sort((a, b) => a.from < b.from ? 1 : -1).map(x => { const on = x.from <= today() && today() <= x.to;
       return `<div class="evt">${PH['cert_' + x.id] ? `<button type="button" data-cview="${x.id}" style="border:0;padding:0;background:none;flex:none"><img src="${PH['cert_' + x.id]}" alt="Certificat" style="width:52px;height:52px;object-fit:cover;border-radius:8px;display:block"></button>` : `<span class="av" style="border-radius:8px;width:52px;height:52px">${IC.evals}</span>`}
         <span class="l"><b>🩺 Dispensé du ${esc(fmtD(x.from))} au ${esc(fmtD(x.to))}</b>${zoneTxt(x) ? ` <span class="tag">${zoneTxt(x)}</span>` : ''}${on ? ' <span class="tag" style="background:var(--warn-soft);color:var(--warn)">en cours</span>' : ''}${x.note ? `<br><span class="small muted">${esc(x.note)}</span>` : ''}</span>
@@ -2044,6 +2071,65 @@ const mondayOf = iso => { const w = wdOf(iso); return addDays(iso, w === 0 ? -6 
 const agToday = () => { const t = today(), w = wdOf(t); return w === 6 ? addDays(t, 2) : w === 0 ? addDays(t, 1) : t; };
 const clsById = id => S.classes.find(c => c.id === id);
 
+/* --- Calendrier de l'école 2026-2027 (calendrier annuel de l'Institut, sans les dates Erasmus+ à définir) ---
+   Le même pour tous les profs qui ont l'appli : écrit ici, pas dans les données de chacun.
+   [du, au, quoi, pour qui, remarque, o] ; o = 1 : congé (pas cours) ; o = 2 : cours suspendus. */
+const CAL_ECOLE = [
+  ['2026-08-24', '2026-08-24', 'Rentrée scolaire', 'Tous', ''],
+  ['2026-08-28', '2026-08-28', 'Vente des livres d’occasion', 'Élèves de l’Institut', 'Porteur du projet : L. Horsmans'],
+  ['2026-09-27', '2026-09-27', 'Fête de la Communauté française', 'Tous', '', 1],
+  ['2026-09-28', '2026-09-28', 'Visite guidée du Parlement fédéral', '6e (2 classes)', 'De 14h30 à 16h00'],
+  ['2026-09-29', '2026-09-29', 'Visite guidée du Parlement fédéral', '6e (1 classe)', 'De 14h30 à 16h00'],
+  ['2026-10-02', '2026-10-02', 'Visite guidée du Parlement fédéral', '6e (2 classes)', 'De 14h30 à 16h00'],
+  ['2026-10-12', '2026-10-12', 'Conseils de classe', '1re, 2e et 3e', 'Cours selon l’horaire habituel pour les 4e, 5e et 6e. Bilan de synthèse pour les élèves ayant un Dacce en 1re'],
+  ['2026-10-13', '2026-10-13', 'Conseils de classe', '4e, 5e et 6e', 'Cours selon l’horaire habituel pour les 1re, 2e et 3e'],
+  ['2026-10-16', '2026-10-16', 'Remise du bulletin 1 aux parents', 'Parents / élèves', 'Sur rendez-vous, à partir de 13h30. Cours suspendus à 12h05 pour tous les élèves'],
+  ['2026-10-19', '2026-11-01', 'Vacances d’automne (Toussaint)', 'Tous', '', 1],
+  ['2026-11-02', '2026-11-02', 'Fête des morts', 'Tous', '', 1],
+  ['2026-11-11', '2026-11-11', 'Jour de l’Armistice', 'Tous', '', 1],
+  ['2026-11-16', '2026-11-17', 'Matinées de jeux de rôles politiques au Parlement bruxellois', '6e', 'Sous réserve : école sur liste d’attente. Si acceptée, toute la matinée'],
+  ['2026-11-19', '2026-11-19', 'Matinées de jeux de rôles politiques au Parlement bruxellois', '6e', 'Sous réserve : école sur liste d’attente. Si acceptée, toute la matinée'],
+  ['2026-11-23', '2026-11-23', 'Animation CIO', '6e', 'De 9h50 à 12h00, en classe'],
+  ['2026-12-15', '2026-12-17', 'Conseils de classe', 'Tous (dont 1res BS2 Dacce)', 'Cours suspendus pour tous les élèves', 2],
+  ['2026-12-18', '2026-12-18', 'Rencontre avec les parents et remise du bulletin 2', 'Parents / élèves', 'Sur rendez-vous entre 10h et 12h, puis 13h et 17h30/18h00'],
+  ['2026-12-21', '2027-01-03', 'Vacances d’hiver (Noël)', 'Tous', '', 1],
+  ['2027-01-06', '2027-01-08', 'Journées sportives à Butgenbach', '3e', ''],
+  ['2027-01-18', '2027-01-22', 'En-gaje et ses journalistes à l’institut', 'Tous', '14 plages de rencontres : 2 en matinée (H2-H3 ; H4-H5) et 1 l’après-midi (H6-H7 ou H7-H8)'],
+  ['2027-02-09', '2027-02-09', 'Mardi gras', 'Tous', '', 1],
+  ['2027-02-22', '2027-03-07', 'Vacances de détente (Carnaval)', 'Tous', '', 1],
+  ['2027-03-25', '2027-03-25', 'Conseils de classe', '1re, 2e et 3e', 'Cours selon l’horaire habituel pour les 4e, 5e et 6e'],
+  ['2027-03-26', '2027-03-26', 'Conseils de classe', '4e, 5e et 6e', 'Cours selon l’horaire habituel pour les 1re, 2e et 3e'],
+  ['2027-03-29', '2027-03-29', 'Lundi de Pâques', 'Tous', '', 1],
+  ['2027-03-30', '2027-03-30', 'Remise du bulletin 3', 'Tous', 'En classe'],
+  ['2027-04-09', '2027-04-09', 'Rencontre des parents', 'Parents / élèves', 'Sur convocation ou rendez-vous'],
+  ['2027-04-21', '2027-04-23', 'Voyage de 6e', '6e', '3 jours / 2 nuits'],
+  ['2027-04-26', '2027-05-09', 'Vacances de printemps (Pâques)', 'Tous', 'Décalées par rapport à la fête de Pâques', 1],
+  ['2027-05-06', '2027-05-06', 'Jeudi de l’Ascension', 'Tous', '', 1],
+  ['2027-05-10', '2027-05-10', 'Plus aucune sortie de classe à partir d’aujourd’hui', 'Tous', 'Plus aucune sortie n’est programmée jusqu’à la fin de l’année'],
+  ['2027-05-17', '2027-05-17', 'Lundi de Pentecôte', 'Tous', '', 1],
+  ['2027-06-23', '2027-06-23', 'Dernier jour des examens', '5e et 6e', ''],
+  ['2027-06-24', '2027-06-24', 'Dernier jour des examens', '1re, 2e, 3e et 4e', ''],
+  ['2027-06-24', '2027-06-24', 'Conseils de classe', '5e et 6e', ''],
+  ['2027-06-25', '2027-06-28', 'Conseils de classe', '1re, 2e, 3e et 4e', 'Le vendredi 25 et le lundi 28'],
+  ['2027-06-29', '2027-06-29', 'Remise du bulletin 4 aux parents', 'Parents / élèves', 'Sur rendez-vous à partir de 13h00'],
+  ['2027-06-29', '2027-06-29', 'Proclamation des 6e', '6e', 'En matinée, de 10h00 à 12h00'],
+  ['2027-06-30', '2027-06-30', 'Consultation des copies', 'Élèves / parents', ''],
+  ['2027-07-01', '2027-07-01', 'Rangement des classes et de la salle des profs, réunion en branches', 'Personnel', 'Organisation de l’année 2027-2028'],
+  ['2027-07-02', '2027-07-02', 'Conseils de recours · fin de l’année scolaire', 'Personnel', ''],
+  ['2027-07-03', '2027-08-29', 'Vacances d’été', 'Tous', '', 1],
+  ['2027-07-09', '2027-07-09', 'Fermeture de l’école à 13h00', 'Personnel administratif', '']
+].map(([a, b, t, p, r, o]) => ({a, b, t, p, r, o: o || 0}));
+const calJour = iso => CAL_ECOLE.filter(e => e.a <= iso && iso <= e.b);
+/* congé (ou cours suspendus) ce jour-là : l'événement, sinon null */
+const calOff = iso => calJour(iso).find(e => e.o === 1) || calJour(iso).find(e => e.o === 2) || null;
+/* semaine entièrement sans cours (lundi → vendredi) : le congé, sinon null */
+const calOffSem = mon => { const l = [0, 1, 2, 3, 4].map(k => calOff(addDays(mon, k))); return l.every(Boolean) ? (l.find(e => e.o === 1) || l[0]) : null; };
+const calQuand = e => e.a === e.b ? fmtD(e.a) : `du ${fmtD(e.a)} au ${fmtD(e.b)}`;
+function calHTML(l, jours){
+  if (!l.length) return '';
+  return `<div class="ag-cal">${l.map(e => `<div class="ag-ce${e.o ? ' off' : ''}"><span class="ag-ci">${e.o === 1 ? '🏖' : e.o === 2 ? '⛔' : '📌'}</span><span><b>${esc(e.t)}</b>${e.p && e.p !== 'Tous' ? ` <span class="ag-cp">${esc(e.p)}</span>` : ''}${jours || e.a !== e.b ? `<br><span class="small muted">${esc(calQuand(e))}</span>` : ''}${e.r ? `<br><span class="small">${esc(e.r)}</span>` : ''}</span></div>`).join('')}</div>`;
+}
+
 /* --- Sports --- */
 const sportsCustom = () => Array.isArray(S.settings.sports) ? S.settings.sports : [];
 const sameTxt = (a, b) => a.localeCompare(b, 'fr', {sensitivity: 'base'}) === 0;
@@ -2187,7 +2273,8 @@ function agDayHTML(date){
 function agWeekHTML(mon){
   let h = `<div class="ag-wk" style="grid-template-rows:auto repeat(${HOURS.length},minmax(52px,auto))"><div style="grid-row:1;grid-column:1"></div>`;
   for (let d = 1; d <= 5; d++){ const iso = addDays(mon, d - 1);
-    h += `<button type="button" class="ag-wd${iso === UI.agDate ? ' sel' : ''}" style="grid-row:1;grid-column:${d + 1}" data-agd="${iso}" data-agday="1" aria-label="Voir le ${esc(fmtDL(iso))}">${DAYS2[d]} ${dOf(iso).getDate()}${iso === today() ? '<i>auj.</i>' : ''}</button>`; }
+    h += `<button type="button" class="ag-wd${iso === UI.agDate ? ' sel' : ''}${calOff(iso) ? ' off' : ''}" style="grid-row:1;grid-column:${d + 1}" data-agd="${iso}" data-agday="1" aria-label="Voir le ${esc(fmtDL(iso))}${calOff(iso) ? ', ' + esc(calOff(iso).t) : ''}">${DAYS2[d]} ${dOf(iso).getDate()}${iso === today() ? '<i>auj.</i>' : ''}</button>`;
+    const off = calOff(iso); if (off) h += `<div class="ag-woff${off.o === 2 ? ' susp' : ''}" style="grid-row:2 / ${HOURS.length + 2};grid-column:${d + 1}"><span>${esc(off.o === 2 ? 'Cours suspendus' : off.t)}</span></div>`; }
   HOURS.forEach((H, i) => h += `<div class="ag-wh" style="grid-row:${i + 2}"><b>${H[0]}</b><span>${H[1]}</span></div>`);
   for (let d = 1; d <= 5; d++){
     const iso = addDays(mon, d - 1), items = agItems(d), last = hI(lastH(d)), cov = new Set();
@@ -2197,7 +2284,9 @@ function agWeekHTML(mon){
       h += i > last ? `<div class="ag-wx" style="grid-row:${i + 2};grid-column:${d + 1}" title="Pas de cours"></div>`
         : `<button type="button" class="ag-wempty" style="grid-row:${i + 2};grid-column:${d + 1}" data-agnew="${H[0]}" data-date="${iso}" aria-label="Ajouter un cours le ${esc(dayName(d).toLowerCase())} à ${H[0]}">+</button>`; });
   }
-  return h + '</div>';
+  h += '</div>';
+  const ev = []; for (let d = 0; d < 7; d++) calJour(addDays(mon, d)).forEach(e => { if (!ev.includes(e)) ev.push(e); });
+  return h + (ev.length ? `<h3 class="ag-calh">À l'école cette semaine</h3>${calHTML(ev, true)}` : '');
 }
 
 let AGM = null; try { AGM = DEMO_LS.getItem('carnet-eps-agenda-vue'); } catch(e){}
@@ -2218,8 +2307,9 @@ function renderAgenda(m){
   if (mode === 'week') h += agWeekHTML(mon);
   else {
     h += `<div class="ag-days">${[1, 2, 3, 4, 5].map(k => { const iso = addDays(mon, k - 1), n = agItems(k).length;
-      return `<button type="button" class="ag-dchip" data-agd="${iso}" aria-pressed="${iso === UI.agDate}" aria-label="${esc(fmtDL(iso))}, ${n} cours">${iso === today() ? '<i>auj.</i>' : ''}<b>${DAYS2[k]}</b><span>${dOf(iso).getDate()}</span><small>${n ? n + ' cours' : 'libre'}</small></button>`; }).join('')}</div>
+      return `<button type="button" class="ag-dchip" data-agd="${iso}" aria-pressed="${iso === UI.agDate}" aria-label="${esc(fmtDL(iso))}, ${n} cours">${iso === today() ? '<i>auj.</i>' : ''}<b>${DAYS2[k]}</b><span>${dOf(iso).getDate()}</span><small>${calOff(iso) ? (calOff(iso).o === 2 ? 'suspendu' : 'congé') : n ? n + ' cours' : 'libre'}</small></button>`; }).join('')}</div>
       <div class="ag-dayhd"><b>${esc(fmtDL(UI.agDate))}</b>${UI.agDate === today() ? '<span class="tag" style="background:var(--accent);color:var(--accent-ink)">aujourd\'hui</span>' : ''}</div>
+      ${calHTML(calJour(UI.agDate))}
       ${agDayHTML(UI.agDate)}`;
   }
   h += `<p class="small muted" style="margin:0">Touche une heure libre pour ajouter un cours à ta semaine type (chaque semaine pareil). Touche un cours pour faire l'appel et noter le sport et ce que tu as fait ce jour-là.</p></section>`;
@@ -2611,11 +2701,16 @@ function openPrepa(date, slotId, ids, dansAppel){
   const cat0 = prepaCatOf(pp.sp || g.s || agPlanned(date, it)) || (lastPp && !g.s ? prepaCatOf(lastPp.pp.sp) : null);
   let libId = cat0 && PREPA_PRETS.includes(cat0[0]) ? cat0[0] : '', libAn = pp.an || an0;
   const title = `Prépa · ${fmtD(date)} · ${slotLabel(it)}`;
+  /* durée, salle et nombre d'élèves (prepa-moteur.js) : ceux de la prépa enregistrée, sinon le cours, la salle de ce créneau et l'effectif */
+  const PM = window.prepaMoteur, nEl = cls.reduce((a, c) => a + c.pupils.length, 0);
+  if (PM) PM.setCtx(g.pp && g.pp.ctx || {h: it.b - it.a + 1 >= 2 ? 2 : 1, n: nEl || PM.ctx().n, sl: PM.salleDe(slotId)});
+  let lastFill = g.pp && g.pp.ref ? {e: g.pp.e, c: g.pp.c, r: g.pp.r, mat: g.pp.mat} : null;
   openSheet(title, `
     <div class="card ag-sum"><b class="ag-who">${esc(clsName(ids))}</b><span class="small muted">${esc(fmtDL(date))} · ${esc(slotLabel(it))} · ${esc(slotTime(it))}${g.s ? ' · ' + esc(g.s) : ''}</span></div>
     <div class="card sec pp-lib"><h3>📚 Prépa toute faite</h3>
       <div class="row2"><label class="f" style="flex:1 1 150px">Sport<select class="inp" id="pp-lsp"><option value="">— Choisir —</option>${prepaOpts(libId === 'hiver' && /^hiver\|0\|\d+$/.test(pp.ref || '') ? 'hiver:' + pp.ref.split('|')[2] : libId)}</select></label>
       <label class="f" id="pp-lanw" style="flex:1 1 110px">Année<select class="inp" id="pp-lan">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}" ${a === libAn ? 'selected' : ''}>${AN_TXT(a)} secondaire</option>`).join('')}</select></label></div>
+      ${PM ? PM.bar('pp-x') : ''}
       <div id="pp-llist"><span class="small muted">Choisis un sport : ses leçons apparaissent ici.</span></div></div>
     <div class="card sec"><h3>En-tête</h3>
       <div class="row2"><label class="f" style="flex:2 1 180px">Sport / activité<input class="inp" id="pp-sp" value="${esc(pp.sp)}"></label>
@@ -2644,12 +2739,13 @@ function openPrepa(date, slotId, ids, dansAppel){
   const pcs = $('pp-pcs');
   pcs.onclick = e => { const b = e.target.closest('[data-pc]'); if (!b) return; const k = b.dataset.pc;
     comp = comp.includes(k) ? comp.filter(x => x !== k) : PROG_CODES.filter(x => x === k || comp.includes(x)); pcs.innerHTML = progChips(comp); };
-  const fill = (id, an, n) => {
+  const fill = (id, an, n, adapte) => {
     const o = prepaFromLib(id, an, n); if (!o) return;
-    const go = () => { const keepBil = F('bil').value; pp = {...o, bil: keepBil};
+    const go = () => { const keepBil = F('bil').value; pp = {...o, bil: keepBil}; lastFill = {e: pp.e, c: pp.c, r: pp.r, mat: pp.mat};
       ['sp', 't', 'o', 'mat', 'e', 'c', 'r'].forEach(k => F(k).value = pp[k]); F('an').value = id === 'hiver' ? (+F('an').value || an0) : an; F('n').value = pp.n || '';
       if (id === 'hiver') pp.an = +F('an').value;
       [0, 1, 2].forEach(i => $('pp-d' + i).value = pp.d[i] || ''); comp = [...pp.comp]; pcs.innerHTML = progChips(comp); drawSch(); drawList(); grow(); snap();
+      if (adapte){ toast('Prépa adaptée à la durée, à la salle et aux élèves'); return; }
       toast(`${prepaCourt(pp)} : prépa remplie, tu peux la modifier`); F('t').scrollIntoView({behavior: 'smooth', block: 'center'}); };
     const cur = read(); if (empty(cur) || cur.ref === o.ref){ go(); return; }
     $('pp-llist').insertAdjacentHTML('afterbegin', `<div class="confirm" id="pp-repl"><b>Remplacer ce qui est déjà écrit par « ${esc(o.t)} » ?</b><div class="row2"><button class="btn" type="button" id="pp-rno">Garder</button><button class="btn pri" type="button" id="pp-ryes">Remplacer</button></div></div>`);
@@ -2658,6 +2754,7 @@ function openPrepa(date, slotId, ids, dansAppel){
     const box = $('pp-llist'), L = PREPA_LIB[libId]; $('pp-lanw').hidden = PREPA_DIVERS.includes(libId);
     if (!libId){ box.innerHTML = '<span class="small muted">Choisis un sport : ses leçons apparaissent ici.</span>'; return; }
     if (!L){ box.innerHTML = '<span class="small muted">Chargement…</span>'; prepaLoad([libId]).then(() => { if (PREPA_LIB[libId]) drawList(); else box.innerHTML = '<span class="small">Pas de connexion : la bibliothèque n\'a pas pu se charger.</span>'; }); return; }
+    if (PM) PM.majBar('pp-x', {pool: /^nat/.test(libId), jeux: PM.estJeux(libId), lieu: PM.lieuDe(libId)});
     if (libId === 'hiver'){
       const J = L.an[0].l, hn = prepaVal($('pp-lsp').value)[1] || +(/^hiver\|0\|(\d+)$/.exec(pp.ref || '') || [])[1] || 0;
       if (hn && J[hn - 1]){ box.innerHTML = `<div class="pp-hl"><button type="button" class="pp-lb${pp.ref === `hiver|0|${hn}` ? ' on' : ''}" data-pl="${hn}"><b>${esc(J[hn - 1].t)}</b><span>${esc(J[hn - 1].tags || '')} · une leçon</span></button></div>`; box.querySelector('[data-pl]').onclick = () => fill('hiver', 0, hn); return; }
@@ -2681,6 +2778,9 @@ function openPrepa(date, slotId, ids, dansAppel){
   setTimeout(() => { snap(); grow(); });
   $('pp-lsp').onchange = e => { const [k, hn] = prepaVal(e.target.value); libId = k; drawList(); if (hn && PREPA_LIB.hiver) fill('hiver', 0, hn); };
   $('pp-lan').onchange = e => { libAn = +e.target.value; drawList(); };
+  // autre durée, salle ou effectif : la leçon de la bibliothèque est réécrite, sauf si le texte a été retouché
+  if (PM) PM.bind('pp-x', () => { PM.salleDe(slotId, PM.ctx().sl); const r = prepaRef(pp.ref), cur = read(); if (libId) drawList();
+    if (r && lastFill && ['e', 'c', 'r', 'mat'].every(k => cur[k] === lastFill[k])) fill(r.id, r.an, r.n, true); });
   prepaLoad(libId ? [libId] : []).then(() => { drawList(); drawSch(); });
   if (pp.ref) prepaLoad([pp.ref.split('|')[0]]).then(drawSch);
   const saveIt = given => {
@@ -3017,11 +3117,11 @@ async function prepaRecueilHTML(){
   });
   if (PREPA_LIB.natdeb){ const A = PREPA_LIB.natdeb.an[1], tab = rcTab('natdeb', 'Nat.', 'débutants');
     h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Natation débutants')}<div class="rc-sph"><small>Toutes années · petite profondeur</small><h1>Natation débutants</h1><p>${esc(A.th)}</p></div>
-      <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || '')}</p><p class="rc-mat">Pour le groupe qui n'est pas encore à l'aise dans l'eau, en même temps que le groupe nageurs. L'évaluation du cycle 3 sert de test de passage vers le groupe nageurs.</p>${rcLecons(A, 'natdeb')}</article>`;
+      <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || PREPA_LIB.natdeb.mat || '')}</p><p class="rc-mat">Pour le groupe qui n'est pas encore à l'aise dans l'eau, en même temps que le groupe nageurs. L'évaluation du cycle 3 sert de test de passage vers le groupe nageurs.</p>${rcLecons(A, 'natdeb')}</article>`;
     A.l.forEach((l, i) => h += lecon('natdeb', 1, i + 1, tab).replace(/<span>1re secondaire<\/span>/, '<span>toutes années</span>')); }
   PREPA_DIVERS.filter(id => id !== 'hiver' && PREPA_LIB[id]).forEach(id => { const A = PREPA_LIB[id].an[1], tab = rcTab('divers', 'Divers', planAbbr(PREPA_LIB[id].sport));
     h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Sports divers')}<div class="rc-sph"><small>Sports divers · toutes années</small><h1>${esc(nom(id))}</h1><p>${esc(A.th)}</p></div>
-      <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || '')}</p><p class="rc-mat">Un seul cycle de 6 leçons, le même pour toutes les années : adapte les exigences à l'âge des élèves.</p>${rcLecons(A, id)}</article>`;
+      <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || PREPA_LIB[id].mat || '')}</p><p class="rc-mat">Un seul cycle de 6 leçons, le même pour toutes les années : adapte les exigences à l'âge des élèves.</p>${rcLecons(A, id)}</article>`;
     A.l.forEach((l, i) => h += lecon(id, 1, i + 1, tab).replace(/<span>1re secondaire<\/span>/, '<span>toutes années</span>')); });
   if (PREPA_LIB.hiver){ const A = PREPA_LIB.hiver.an[0], tab = rcTab('divers', 'Divers', 'une leçon');
     h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Sports divers')}<div class="rc-sph"><small>Toutes années · une leçon par sport</small><h1>Sports divers en une leçon</h1><p>Jeux pour la petite salle ou les jours sans installation, classés par mots-clés.</p></div>${rcLecons(A, 'hiver')}</article>`;
@@ -3066,7 +3166,7 @@ const PLAN_ABR = [[/basket/i, 'Basket'], [/volley/i, 'Volley'], [/hand/i, 'Hand'
 const planAbbr = s => s === 'Congé' ? 'congé' : (PLAN_ABR.find(([re]) => re.test(s)) || [0, s.replace(/[-'’ ]/g, ' ').split(' ').filter(Boolean)[0].slice(0, 6)])[1];
 function planWeeks(iso){
   const d = dOf(iso), y = d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1;
-  const out = []; let m = mondayOf(`${y}-09-01`); const end = `${y + 1}-07-03`;
+  const out = []; let m = mondayOf(`${y}-08-24`); const end = `${y + 1}-07-03`;
   while (m <= end){ out.push(m); m = addDays(m, 7); }
   return {weeks: out, sy: `${y}-${y + 1}`};
 }
@@ -3078,20 +3178,21 @@ function planHTML(weeks, forPrint){
   const t0 = mondayOf(today()), cls = S.classes;
   let h = `<div class="pl-wrap"><table class="pl-tb"><thead><tr><th class="pl-c">Classe</th>`;
   weeks.forEach((w, i) => { const d = dOf(w), nm = i === 0 || dOf(weeks[i - 1]).getMonth() !== d.getMonth();
-    h += `<th class="${w === t0 ? 'pl-now' : ''}${nm ? ' pl-m' : ''}"><small>${nm ? MOIS[d.getMonth()] : ''}</small>${d.getDate()}</th>`; });
+    h += `<th class="${w === t0 ? 'pl-now' : ''}${nm ? ' pl-m' : ''}${calOffSem(w) ? ' pl-vac' : ''}" title="${calOffSem(w) ? esc(calOffSem(w).t) : ''}"><small>${nm ? MOIS[d.getMonth()] : ''}</small>${d.getDate()}</th>`; });
   h += '</tr></thead><tbody>';
   cls.forEach(c => {
     h += `<tr><th class="pl-c">${esc(c.name)}</th>`;
     weeks.forEach(w => { const sp = (planSet()[c.id] || {})[w] || '', wk = planWeekLessons(c, w), done = wk.filter(x => x.sport).map(x => x.sport), np = wk.filter(x => x.pp).length;
-      const lab = `${c.name}, semaine du ${fmtD(w)}${sp ? ' : ' + sp : ''}${done.length ? ', fait : ' + [...new Set(done)].join(', ') : ''}${np ? ', ' + np + ' prépa' + (np > 1 ? 's' : '') : ''}`;
-      const inner = `${sp ? `<b>${esc(planAbbr(sp))}</b>` : done.length ? `<b class="pl-fait">${esc(planAbbr(done[0]))}</b>` : ''}${np ? `<i>📋${np > 1 ? np : ''}</i>` : done.length ? '<i>✓</i>' : ''}`;
-      h += forPrint ? `<td class="${sp === 'Congé' ? 'pl-off' : ''}" style="${sp && sp !== 'Congé' ? `--pc:${planColor(sp)}` : ''}">${inner}</td>`
-        : `<td class="${w === t0 ? 'pl-now' : ''}${sp === 'Congé' ? ' pl-off' : ''}" style="${sp && sp !== 'Congé' ? `--pc:${planColor(sp)}` : ''}"><button type="button" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(lab)}">${inner}</button></td>`; });
+      const lab = `${c.name}, semaine du ${fmtD(w)}${sp ? ' : ' + sp : calOffSem(w) ? ' : ' + calOffSem(w).t : ''}${done.length ? ', fait : ' + [...new Set(done)].join(', ') : ''}${np ? ', ' + np + ' prépa' + (np > 1 ? 's' : '') : ''}`;
+      const vac = !sp && !done.length && !np && calOffSem(w), off = sp === 'Congé' || vac;
+      const inner = vac ? '<b class="pl-vact">vac.</b>' : `${sp ? `<b>${esc(planAbbr(sp))}</b>` : done.length ? `<b class="pl-fait">${esc(planAbbr(done[0]))}</b>` : ''}${np ? `<i>📋${np > 1 ? np : ''}</i>` : done.length ? '<i>✓</i>' : ''}`;
+      h += forPrint ? `<td class="${off ? 'pl-off' : ''}" style="${sp && sp !== 'Congé' ? `--pc:${planColor(sp)}` : ''}">${inner}</td>`
+        : `<td class="${w === t0 ? 'pl-now' : ''}${off ? ' pl-off' : ''}" style="${sp && sp !== 'Congé' ? `--pc:${planColor(sp)}` : ''}"><button type="button" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(lab)}">${inner}</button></td>`; });
     h += '</tr>';
   });
   h += '</tbody></table></div>';
   const used = [...new Set(Object.values(planSet()).flatMap(o => Object.values(o)))];
-  if (used.length) h += `<div class="pl-leg">${used.sort((a, b) => sportsList().indexOf(a) - sportsList().indexOf(b)).map(s => `<span style="--pc:${s === 'Congé' ? '#888' : planColor(s)}"><b>${esc(planAbbr(s))}</b>${esc(s)}</span>`).join('')}<span><i>✓</i> sport noté dans un cours</span><span><i>📋</i> prépa faite (touche la case pour la voir)</span></div>`;
+  if (used.length || cls.length) h += `<div class="pl-leg"><span style="--pc:#888"><b>vac.</b>vacances de l'école</span>${used.sort((a, b) => sportsList().indexOf(a) - sportsList().indexOf(b)).map(s => `<span style="--pc:${s === 'Congé' ? '#888' : planColor(s)}"><b>${esc(planAbbr(s))}</b>${esc(s)}</span>`).join('')}<span><i>✓</i> sport noté dans un cours</span><span><i>📋</i> prépa faite (touche la case pour la voir)</span></div>`;
   return h;
 }
 /* ce qui a été fait (ou préparé) cette semaine-là par une classe : leçons + cours prévus avant l'appel */
@@ -3900,7 +4001,7 @@ function suData(c, vp){
     const adj = {t: 0, c: 0};
     pers.forEach(pp => { const a = ((c.adj || {})[pp.id] || {})[p.id]; if (a){ adj.t += +a.t || 0; adj.c += +a.c || 0; } });
     let pts;
-    if (!year){ const r = X.res[p.id]; pts = {t: r.t, c: r.c}; }
+    if (!year){ const r = X.res[p.id]; pts = {t: r.t, c: r.c, w: r.w}; }
     else pts = {lt: PX.reduce((a, x) => a + (T - x.res[p.id].t), 0), lc: PX.reduce((a, x) => a + (Cc - x.res[p.id].c), 0)};
     return {p, ev, n, adj, pts, rgMax};
   });
@@ -3918,7 +4019,7 @@ function suVisible(D, f, sort){
 function suPtsCells(D, r){
   if (D.year) return `<td class="su-pt"><span>T ${r.pts.lt ? '−' + r.pts.lt : '0'}</span><span>C ${r.pts.lc ? '−' + r.pts.lc : '0'}</span></td>`;
   const one = (k, v, max) => `<span class="${v === 0 && max ? 'zero' : ''}">${k} ${v}<small>/${max}</small></span>`;
-  return `<td class="su-pt">${one('T', r.pts.t, D.T)}${one('C', r.pts.c, D.Cc)}</td>`;
+  return `<td class="su-pt">${one('T', r.pts.t, D.T)}${one('C', r.pts.c, D.Cc)}${r.pts.w != null ? one('W', r.pts.w, stN('W')) : ''}</td>`;
 }
 function renderSuivi(c, m){
   const vp = viewPeriod(c);
@@ -3969,7 +4070,7 @@ function openSuivi(c, vp, pid, f, order){
     <p class="small muted" style="margin:0">${esc(c.name)} · ${vp === 'year' ? 'Année' : esc(vp.name)} · ${esc(suRange(c, vp))}${f !== 'all' ? ' · filtre : ' + esc(SU_CATS.find(x => x[0] === f)[1]) : ''}</p>
     <div class="su-cnts">${cols.map(o => `<span class="su-cnt${r.n[o.k] ? ' on' : ''}"><span class="su-ic">${o.ic(c)}</span>${o.l} <b>${r.n[o.k]}</b></span>`).join('')}</div>
     ${D.year ? `<div class="card small">Points perdus sur l'année : tenue ${r.pts.lt}, attitude ${r.pts.lc}</div>`
-      : `<div class="card small">Points restants : <b>tenue ${r.pts.t}/${D.T}</b> · <b>attitude ${r.pts.c}/${D.Cc}</b></div>`}
+      : `<div class="card small">Points restants : <b>tenue ${r.pts.t}/${D.T}</b> · <b>attitude ${r.pts.c}/${D.Cc}</b>${r.pts.w != null ? ` · <b>travaux ${r.pts.w}/${stN('W')}</b>` : ''}</div>`}
     <div class="card su-list">${ev.length ? ev.map(e => { const o = SU_COLS.find(x => x.k === e.k);
       return `<div class="su-ev"><span class="su-d">${suD(e.l.date)}${suH(e.l) ? `<small>${suH(e.l)}</small>` : ''}</span><span class="su-ic">${o.ic(c)}</span><span class="su-l">${e.k === 'rg' ? (e.l.type === 'piscine' ? 'Règles (ne nage pas)' : 'Règles (ne participe pas)') : o.long}${e.k === 'rg' && e.s > 1 ? ` <span class="su-stt">⚠ ${e.s}e ${rgSuite(e.l)} de suite</span>` : ''}</span></div>`; }).join('')
       : '<span class="muted small">Aucun événement daté.</span>'}
@@ -4035,14 +4136,14 @@ async function suXlsx(c, vp, D, f){
      « Ne semaine de suite » des règles · evMax (10) « sur combien » proposé · enGuard (5) secondes entre deux tours
      comptés · enStep (0,5) arrondi des notes d'endurance · enLast (true) alerte « plus qu'une minute ».
    Tout passe par save() : appareil + Drive. La roue dentée ouvre la rubrique qui va avec l'onglet en cours. */
-const REG_DEF = {kitPts: 1, dPts: 1, npPts: 1, spill: true, rgWarn: true, evMax: 10, enGuard: 5, enStep: 0.5, enLast: true};
+const REG_DEF = {W: 3, kitPts: 1, dPts: 1, npPts: 1, spill: true, rgWarn: true, evMax: 10, enGuard: 5, enStep: 0.5, enLast: true};
 const stN = k => { const v = +S.settings[k]; return S.settings[k] == null || S.settings[k] === '' || isNaN(v) ? REG_DEF[k] : v; };
 const stB = k => S.settings[k] == null ? REG_DEF[k] : S.settings[k] !== false;
 const regPl = (n, w) => `${fr(n, 2)} ${w}${n > 1 ? 's' : ''}`;
 function regKitTxt(){
   return `−${fr(stN('kitPts'), 2)} tenue${stB('spill') ? ' ; plus de points en tenue : retiré en attitude' : ''}`;
 }
-const REG_SECS = [['tt-card', 'Horaire'], ['sp-card', 'Sports'], ['reg-bareme', 'Barème'], ['reg-pool', 'Piscine'], ['reg-evals', 'Évaluations'], ['reg-com', 'Commentaires'], ['reg-per', 'Périodes'], ['reg-save', 'Sauvegarde']];
+const REG_SECS = [['tt-card', 'Horaire'], ['sp-card', 'Sports'], ['reg-bareme', 'Barème'], ['reg-pool', 'Piscine'], ['reg-evals', 'Évaluations'], ['reg-com', 'Commentaires'], ['reg-per', 'Année & périodes'], ['reg-save', 'Sauvegarde']];
 const REG_JUMP = {today: 'reg-bareme', evals: 'reg-evals', classes: 'reg-bareme', agenda: 'tt-card'};
 function regJump(id){
   setTimeout(() => { const el = $(id); if (!el) return; el.scrollIntoView({block: 'start'}); window.scrollBy(0, -12);
@@ -4064,6 +4165,7 @@ function regCards(){
       <p class="small muted" style="margin:0">Chaque élève commence chaque période avec tous ses points, puis on retire.</p>
       <div class="row2"><label class="f" style="flex:1">Points de tenue par période<input class="inp num" id="s-T" inputmode="numeric" value="${st.T}"></label>
       <label class="f" style="flex:1">Points d'attitude par période<input class="inp num" id="s-C" inputmode="numeric" value="${st.C}"></label></div>
+      ${n('s-W', 'W', 'Points de travaux par période', 'Colonne seulement pour les élèves qui ont reçu un travail (📝 à l\'appel). Elle compte pour moitié dans le savoir-être. Travail non remis : −1 en travaux, puis en tenue, puis en attitude.')}
       <label class="f">Savoir-être en % du bulletin<input class="inp num" id="s-se" inputmode="numeric" value="${st.se}"></label>
       <p class="small" id="s-separt" style="margin:-4px 0 0">${regPart(st.se)}</p>
       <b class="small reg-sub">Points retirés</b>
@@ -4091,17 +4193,19 @@ function regPart(se){ se = Math.max(0, Math.min(100, Math.round(+se) || 0));
 function regPerCard(){
   const cl = S.classes.filter(c => !c.act);
   return `<div class="card sec reg" style="padding-block:14px" id="reg-per">
-      <h3>Périodes et dates</h3>
+      <h3>Année scolaire, périodes et dates</h3>
+      ${window.carnetAnnee ? `<div class="row2" style="align-items:center"><span style="flex:1">Année scolaire ouverte</span><button class="btn annee-reg${carnetAnnee.vieux ? ' vieux' : ''}" type="button" id="reg-annee">${esc(carnetAnnee.cur)} ▾</button></div>` : ''}
       <p class="small muted" style="margin:0">Chaque classe a ses périodes (nom, date de début, salle ou piscine). Touche une classe pour les modifier.</p>
       ${cl.length ? `<div class="row2">${cl.map(c => `<button class="chip" type="button" data-regper="${c.id}">${esc(c.name)} · ${c.periods.length} pér.</button>`).join('')}</div>` : '<span class="small muted">Pas encore de classe.</span>'}
     </div>`;
 }
 function bindReg(){
   const st = S.settings;
+  if ($('reg-annee')) $('reg-annee').onclick = () => carnetAnnee();   // Kevin (26/10) : le choix de l'année est ici, plus dans le haut de l'écran
   const num = (id, k, lo, hi, int = true) => { const el = $(id); if (!el) return; el.onchange = e => { let v = parseNum(e.target.value); if (v != null && int) v = Math.round(v);
     if (v == null || isNaN(v) || v < lo || v > hi){ e.target.value = k in REG_DEF ? fr(stN(k), 2) : st[k]; toast(`Entre ${lo} et ${hi}`); return; }
     st[k] = v; save(); toast('Enregistré'); }; };
-  num('s-T', 'T', 0, 20); num('s-X', 'X', 0, 20); num('s-C', 'C', 0, 20); num('s-se', 'se', 0, 100);
+  num('s-T', 'T', 0, 20); num('s-W', 'W', 0, 20); num('s-X', 'X', 0, 20); num('s-C', 'C', 0, 20); num('s-se', 'se', 0, 100);
   if ($('s-se')) $('s-se').oninput = e => { const v = parseNum(e.target.value); if (v != null && v >= 0 && v <= 100) $('s-separt').innerHTML = regPart(v); };
   num('s-kit', 'kitPts', 0, 10); num('s-d', 'dPts', 0, 10); num('s-npp', 'npPts', 0, 10);
   num('s-evmax', 'evMax', 1, 1000, false); num('s-eng', 'enGuard', 0, 60, false);
@@ -4310,7 +4414,7 @@ function fiBulletin(c, pid, per){
     <div class="card fi-bt">
       ${year ? (X.periods || []).map(pp => { const t = compute(c, pp).res[p.id]; return row(esc(pp.name), t.total != null ? fr(t.total) + ' %' : 'S-être ' + fr(t.se) + '/' + seP); }).join('') : ''}
       ${row('Savoir-être', `${fr(r.se)}<small>/${seP}</small>`, 'big')}
-      ${year ? '' : row('&nbsp;&nbsp;Tenue', `${r.t}<small>/${T}</small>`) + row('&nbsp;&nbsp;Attitude', `${r.c}<small>/${Cc}</small>`)}
+      ${year ? '' : row('&nbsp;&nbsp;Tenue', `${r.t}<small>/${T}</small>`) + row('&nbsp;&nbsp;Attitude', `${r.c}<small>/${Cc}</small>`) + (r.w != null ? row('&nbsp;&nbsp;Travaux', `${r.w}<small>/${stN('W')}</small>`) : '')}
       ${row('Savoir-faire', `${fr(r.sf)}<small>/${100 - seP}</small>`, 'big')}
       ${year ? '' : r.evals.map(({e, s}) => row('&nbsp;&nbsp;' + esc(e.name) + (e.date ? ` <span class="small muted">${esc(fmtD(e.date))}</span>` : ''), evTag(s) ? evTagTxt(s) : s == null ? '—' : `${fr(s, 2)}<small>/${fr(+e.max, 2)}</small>`)).join('')}
       ${row(year ? 'Moyenne de l\'année' : 'Total', `${fr(r.total)}<small> %</small>`, 'big tot')}
@@ -4495,7 +4599,7 @@ function comText(c, vp, X, p){
   const r = X.res[p.id], st = S.settings, seP = +st.se, sfP = 100 - seP, n0 = v => fr(v, 0), year = vp === 'year', out = [];
   const pc = (v, sur) => sur > 0 && v != null ? n0(v / sur * 100) + ' %' : null;
   const se = pc(r.se, seP);
-  if (se != null) out.push(`Savoir-être : ${se}` + (year ? '' : ` (tenue ${r.t}/${+st.T || 0}, attitude ${r.c}/${+st.C || 0})`) + '.');
+  if (se != null) out.push(`Savoir-être : ${se}` + (year ? '' : ` (tenue ${r.t}/${+st.T || 0}, attitude ${r.c}/${+st.C || 0}${r.w != null ? `, travaux ${r.w}/${stN('W')}` : ''})`) + '.');
   const evs = year ? c.evals.filter(e => e.kind !== 'form' && (X.periods || []).some(pp => pp.id === e.periodId)).sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(e => ({e, s: e.s[p.id]})) : r.evals;
   const ev = evs.filter(o => typeof o.s === 'number' || evTag(o.s)).map(o => `${o.e.name.trim() || 'évaluation'} ${typeof o.s === 'number' ? fr(o.s, 2) + '/' + fr(+o.e.max, 2) : evTagLong(o.s)}`);
   const sf = pc(r.sf, sfP);
@@ -4556,6 +4660,7 @@ function openComments(c, vp){
 
 <style>
 .annee-btn{border:1px solid var(--line); background:var(--surface); color:var(--fg); border-radius:99px; padding:5px 10px; font:700 .85rem var(--body); white-space:nowrap}
+.annee-reg.vieux{background:var(--warn-soft); border-color:var(--warn); color:var(--warn)}
 .annee-btn.vieux{background:var(--warn-soft); border-color:var(--warn); color:var(--warn)}
 .annees{position:fixed; inset:0; z-index:60; background:rgba(10,20,30,.45); display:flex; align-items:flex-end; justify-content:center}
 .annees>div{background:var(--surface); width:min(560px,100%); max-height:85vh; overflow:auto; border-radius:18px 18px 0 0; padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px)); display:grid; gap:8px}
@@ -4578,12 +4683,9 @@ function openComments(c, vp){
   const archives = () => { const o = {}; try { for (let i = 0; i < DEMO_LS.length; i++){ const k = DEMO_LS.key(i); if (k.startsWith(ARCH)) o[k.slice(ARCH.length)] = k; } } catch(e){} return o; };
   const nbClasses = k => { try { const o = JSON.parse(get(k)); return (o.state.classes || []).filter(c => !c.act).length; } catch(e){ return 0; } };
 
-  const brand = document.querySelector('header.top .brand');
-  const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'annee-btn'; btn.id = 'annee-btn';
-  btn.textContent = cur + ' ▾'; btn.setAttribute('aria-label', 'Année scolaire ' + cur + ', changer');
-  if (cur !== parDefaut()) btn.classList.add('vieux');
-  brand.after(btn);
-  btn.onclick = ouvrir;
+  // Kevin (26/10) : plus de bouton dans le haut de l'écran (la place est pour « Travaux ») : Réglages › Année & périodes
+  window.carnetAnnee = ouvrir; ouvrir.cur = cur; ouvrir.vieux = cur !== parDefaut();
+  try { render(); } catch(e){}
 
   function ouvrir(){
     const a = archives(), y0 = 2026, ys = new Set();
@@ -4647,6 +4749,7 @@ function openComments(c, vp){
 
 <script src="aide.js"></script>
 <script src="skore.js"></script>
+<script src="prepa-moteur.js"></script>
 <script src="prepa-guide.js"></script>
 <script src="travail.js"></script>
 <script>

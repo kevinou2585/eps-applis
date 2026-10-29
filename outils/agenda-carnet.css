@@ -293,3 +293,15 @@ header.top .sync{min-width:0; overflow:hidden}
   .rc-ls td:first-child{white-space:nowrap} .rc-l3 th:first-child{width:12mm} .rc-l3 th:nth-child(2){width:38%} .rc-ls tr.rc-ev td{background:#f3f3f3; -webkit-print-color-adjust:exact; print-color-adjust:exact}
   .rc-som td{font-size:10pt; padding:3px 6px}
 }
+/* calendrier de l'école (congés, conseils de classe, sorties…) */
+.ag-cal{display:grid; gap:6px}
+.ag-ce{display:flex; gap:10px; align-items:flex-start; padding:9px 12px; border-radius:12px; border:1.5px solid var(--line); background:var(--surface); font-size:14px; line-height:1.35}
+.ag-ce.off{background:repeating-linear-gradient(135deg, var(--surface2) 0 7px, transparent 7px 14px); border-style:dashed}
+.ag-ci{font-size:18px; line-height:1.1}
+.ag-cp{display:inline-block; font-size:12px; font-weight:700; padding:0 6px; border-radius:6px; background:var(--surface2); color:var(--muted)}
+.ag-calh{margin:4px 0 0; font-size:15px}
+.ag-wd.off{color:var(--muted)}
+.ag-woff{z-index:2; display:grid; place-items:center; border-radius:8px; margin:2px; pointer-events:none; background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--surface2) 92%, transparent) 0 7px, color-mix(in srgb, var(--bg, #fff) 80%, transparent) 7px 14px); border:1.5px dashed var(--line)}
+.ag-woff span{writing-mode:vertical-rl; transform:rotate(180deg); font-size:12px; font-weight:700; color:var(--muted); text-align:center; max-height:100%; overflow:hidden}
+.pl-tb th.pl-vac{color:var(--muted)}
+.pl-vact{font-weight:600; color:var(--muted)}

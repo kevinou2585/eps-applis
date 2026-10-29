@@ -1678,8 +1678,15 @@ function apresPerte(drain) {
     else perdreBalle();
   } else if (balles.length + aServir === 1 && multiball) { finMulti(); blague('Fin de la récré… balles en cage', 185, 300, '#fff'); }
 }
+// duel des dieux : une bille passée au-dessus des murs du dieu (derrière ses flippers, sur les côtés) roule dans le coin du haut et y reste
+const derriereDieu = b => table === 'dieu' && (b.x > 276 && b.y < 175 + (b.x - 276) * 49 / 114 || b.x < 94 && b.y < 175 + (94 - b.x) * 37 / 84);
 function debloquer(b) {
-  tilts++; b.vy = -420; b.vx = b.x < 185 ? 140 : -140; b.y -= 2; // sécurité anti-blocage
+  tilts++;
+  if (derriereDieu(b)) { // Kevin (29/10) : la relancer vers le haut la renvoyait dans le même coin ; le dieu la repose de ton côté, sous son mur
+    const d = b.x > 185; etincelles(b.x, b.y, 14, '#7fd8ff');
+    b.x = d ? 338 : 32; b.y = 236; b.vx = d ? -40 : 40; b.vy = 120; etincelles(b.x, b.y, 14, '#7fd8ff');
+    blague('Le dieu te la renvoie !', b.x + (d ? -40 : 40), b.y - 30, '#7fd8ff'); SON.ejecte(); vib(30); return;
+  } b.vy = -420; b.vx = b.x < 185 ? 140 : -140; b.y -= 2; // sécurité anti-blocage
   blague('Hop ! On repart', b.x, b.y - 36, '#ff6b6b'); SON.ejecte(); vib(30);
 }
 

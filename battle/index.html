@@ -298,7 +298,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 
 <script>
 'use strict';
-const JEU = 'flipper-2026-11c'; // changer ce nom = classement remis à zéro (Kevin, 24/10 puis 27/10/2026 ; l'ancien reste dans le tableur)
+const JEU = 'flipper-2026-11d'; // changer ce nom = classement remis à zéro (Kevin, 24/10, 27/10 puis 29/10/2026 : places en cascade ; l'ancien reste dans le tableur)
 const URL_SCRIPT = (() => { try { return localStorage.getItem('eps-script') || ''; } catch (e) { return ''; } })();
 const CODE = (() => { try { return localStorage.getItem('eps-code') || ''; } catch (e) { return ''; } })();
 const TEST = (() => { try { return new URLSearchParams(location.search).get('test') || ''; } catch (e) { return ''; } })(); // ?test=valh ou ?test=dieu : Kevin essaie le Valhalla, rien n'est envoyé au classement
@@ -1193,7 +1193,7 @@ function nouvellePartie() {
   balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps; taireParole();
   paniers = 0; besoin = 3; cagePleine = true; cageFlash = 0; filetT = 0; COLLE.balle = null;
   nuit = false; bascule = null; gelT = 0; protegeT = 0; cageAttente = 0; aServir = 0; CASIER.balle = null; CASIER.visites = 0; CASIER.ouvert = 0;
-  cibleRecord = Math.max(+lsGet('battle-record-' + JEU, 0) || 0, classement && classement.boss ? +classement.boss.score || 0 : 0); recordFait = cibleRecord <= 0;
+  cibleRecord = +lsGet('battle-record-' + JEU, 0) || 0; recordFait = cibleRecord <= 0;
   popups = []; particules = []; grandMsg = null; EPS.forEach(c => { c.bas = false; c.on = true; }); epsReset = 0; attenteBalle = 0;
   butT = 0; jaugeFlash = 0; TROUS_L.forEach(t => { t.balle = null; t.flash = 0; });
   FL.forEach(f => { f.a = A_REPOS; f.w = 0; f.appui = false; });
@@ -1799,11 +1799,18 @@ function majScene(dt) { // phases mises en scène : la table est figée, seuls l
         C.phase = 'parole'; C.t = 0; C.echelle = 1; C.bulle = 'Si tu me bats, tu deviendras le boss caché…\nHA HA HA ! Mais tu n’y arriveras pas !'; SON.rire(0.9);
         parler('Si tu me bats, tu deviendras le boss caché. Ha ha ha ! Mais tu n’y arriveras pas !', B.genre, 1.1);
       } else if (C.dieu) {
-        const F = B.genre === 'F'; C.phase = 'parole'; C.t = 0; C.bulle = 'Mortel… tu oses défier ' + (F ? 'une déesse' : 'un dieu') + ' ?\nMarque 3 buts dans ma porte… si tu peux !'; SON.tonnerre(0.5);
-        parler('Mortel… tu oses défier ' + (F ? 'une déesse' : 'un dieu') + ' ? Marque trois buts dans ma porte… si tu peux !', B.genre, 0.3);
+        // Kevin (29/10) : le dieu annonce la double victoire, par écrit (on joue souvent sans le son) et à voix haute
+        const F = B.genre === 'F', rec = +B.record || 0, moi = !B.inconnu && memeNom(B.nom, lsGetTxt('battle-nom')); C.phase = 'parole'; C.t = 0; C.longue = rec > 0; SON.tonnerre(0.5);
+        if (!rec) {
+          C.bulle = 'Mortel… tu oses défier ' + (F ? 'une déesse' : 'un dieu') + ' ?\nMarque 3 buts dans ma porte… si tu peux !';
+          parler('Mortel… tu oses défier ' + (F ? 'une déesse' : 'un dieu') + ' ? Marque trois buts dans ma porte… si tu peux !', B.genre, 0.3);
+        } else {
+          C.bulle = (moi ? 'Tu te défies toi-même ?' : 'Mortel… pour prendre ma place,') + '\nbats-moi en duel : 3 buts dans ma porte.\nPUIS bats ' + (moi ? 'ton' : 'mon') + ' record : ' + fmt(rec) + ' points !\nAlors seulement, tu seras ' + (F ? 'déesse.' : 'dieu.');
+          parler((moi ? 'Tu te défies toi-même ? ' : 'Mortel… pour prendre ma place, ') + 'bats-moi en duel, trois buts dans ma porte. Puis bats ' + (moi ? 'ton' : 'mon') + ' record : ' + fmt(rec).replace(/\s/g, ' ') + ' points. Alors seulement, tu seras ' + (F ? 'déesse.' : 'dieu.'), B.genre, 0.3);
+        }
       } else debutCombat();
     }
-  } else if (C.phase === 'parole') { C.pas += dt * 2; if (C.t >= (C.dieu ? 4.8 : 4.2)) { C.bulle = ''; debutCombat(); } } else if (C.phase === 'mort') { if (C.t >= 2.8) finCombat(); }
+  } else if (C.phase === 'parole') { C.pas += dt * 2; if (C.t >= (C.dieu ? (C.longue ? 9 : 4.8) : 4.2)) { C.bulle = ''; debutCombat(); } } else if (C.phase === 'mort') { if (C.t >= 2.8) finCombat(); }
   else if (C.phase === 'adieu') { // Kevin : l'empereur vaincu parle (écrit + haut-parleur), puis la table se déchire : les portes du Valhalla
     C.pas += dt * 2; C.coup = 0.12;
     if (!C.dit1 && C.t >= 0.7) { C.dit1 = true; C.bulle = 'Tu m’as battu !'; parler('Tu m’as battu !', B.genre); }
@@ -4016,6 +4023,8 @@ function rendu() {
   ctx.textAlign = 'center';
   const xm = mult > 1 ? ' · x' + mult : '', dieuTxt = verrou ? ' · ⚡ MONDE D’UN DIEU' : '';
   const etiq = table === 'dieu' ? '⚡ LE DUEL DES DIEUX' : table === 'boss' && combat ? (combat.rang ? '⚔ COMBAT DE BOSS · N°' + combat.rang : '💀 BOSS CACHÉ · LES 4 SCEAUX') + xm : table === 'valh' ? 'ᚱ LE VALHALLA' + xm + dieuTxt : table === 'goth' ? (verrou ? '☠ LA CRYPTE' + xm + dieuTxt : '☠ LA CRYPTE · BILLE BONUS' + xm) : verrou ? (nuit ? '🪩 LA RÉCRÉ' : '🏀 LE GYMNASE') + ' · x' + mult + dieuTxt : (multiball ? 'MULTIBALLE ' : 'MULTIPLICATEUR ') + 'x' + (mult * (multiball ? 2 : 1));
+  const rec = CLASSEMENT_OK && dieuBattu && bossD && +bossD.record > 0 && table !== 'dieu' ? +bossD.record : 0; // Kevin (29/10) : le dieu battu, il reste son record à battre
+  if (rec) texte(score > rec ? '✓ RECORD DU DIEU BATTU !' : '⚡ RECORD DU DIEU À BATTRE : ' + fmt(rec), CW / 2, hy + 23, 11, score > rec ? '#7dffa0' : '#7fd8ff'); else
   texte(etiq, CW / 2, hy + 23, 11, table === 'dieu' ? '#7fd8ff' : table === 'boss' && combat ? combat.N.bord : table === 'valh' ? '#ffd23f' : table === 'goth' ? CRYPTE_C.lilas : verrou ? '#ffe9a8' : multiball ? '#ff8fab' : (mult > 1 ? '#9ef' : '#9aa6c4'));
 }
 
@@ -4377,40 +4386,31 @@ majBoutonsSon();
 
 // ---------------------------------------------------------------- Classement
 let introAvant = null, introEnCours = false;
-// Kevin : le boss caché est le n°1 d'un 2e classement (même script, autre nom de jeu) qui n'est JAMAIS affiché ; il attend dans le château
-const JEU_CACHE = JEU + '-cache';
-let ultime = (() => { const u = lsGet('battle-ultime', null); return u && +u.score > 0 && u.jeu === JEU_CACHE ? u : null; })();
-function bossUltime() { // le boss caché de la partie, toujours au-dessus du roi ; personne encore : une ombre « ? » à 1,5 × le score du roi
-  const roi = listeBoss().find(b => b.rang === 1); if (!roi) return null;
-  const u = ultime, sc = u ? +u.score : ULTIME_DEPART;
-  return { rang: 0, nom: u ? String(u.nom || '').trim() || '???' : '???', score: Math.max(sc, roi.score + 1), genre: u && u.genre === 'F' ? 'F' : 'H', photo: u && photoOk(u.photo) ? u.photo : '', inconnu: !u };
+// Kevin (29/10) : 5 places tenues par le script (fichier battle/google/Places.gs) : 0 Dieu, 1 Empereur, 2 Roi, 3 Bourreau, 4 Garde.
+// Battre un boss = prendre sa place, l'ancien occupant descend d'un cran (cascade). Plus de scores : chaque place a son palier fixe.
+// Le Dieu se prend seulement en battant AUSSI son record (seul score qu'on garde). L'Empereur et le Dieu restent cachés de l'accueil.
+// Kevin (29/10) : garde 300 000, bourreau / sorcière 500 000, roi 600 000, empereur 700 000, dieu / déesse 900 000
+const BOSS_DEPART = [600000, 500000, 300000], ULTIME_DEPART = 700000, DIEU_DEPART = 900000;
+const PALIERS = [DIEU_DEPART, ULTIME_DEPART, ...BOSS_DEPART];
+const placeVide = () => ({ jeu: JEU, p: [null, null, null, null, null], record: 0, t: 0 });
+let places = (() => { const c = lsGet('battle-places', null); return c && c.jeu === JEU && Array.isArray(c.p) && c.p.length === 5 ? c : placeVide(); })();
+const memeNom = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+function garderPlaces(r) {
+  if (!r || !r.ok || !Array.isArray(r.places)) return;
+  const p = [0, 1, 2, 3, 4].map(i => { const x = r.places[i]; return x && String(x.nom || '').trim() ? { nom: String(x.nom).trim(), genre: x.genre === 'F' || x.genre === 'H' ? x.genre : '', photo: photoOk(x.photo) ? x.photo : '' } : null; });
+  places = { jeu: JEU, p, record: +r.record || 0, t: Date.now() }; lsSet('battle-places', places);
 }
-function garderUltime(r) {
-  if (!r || !r.ok || !Array.isArray(r.top)) return;
-  const t = r.top.filter(x => +x.score > 0).sort((a, b) => b.score - a.score)[0];
-  if (t && (!ultime || +t.score >= +ultime.score)) { ultime = { jeu: JEU_CACHE, nom: String(t.nom || '').trim(), score: +t.score, genre: t.genre === 'F' ? 'F' : 'H', photo: photoOk(t.photo) ? t.photo : '' }; lsSet('battle-ultime', ultime); }
+function prendrePlace(i, moi) { // même règle que le script (hors ligne : on se place soi-même) ; renvoie la place obtenue (-1 : rien ne bouge)
+  const P = places.p.slice(); let place = i;
+  if (i === 0) { if (score > places.record) places.record = Math.round(score); else place = P[0] && memeNom(P[0].nom, moi.nom) ? -1 : 1; }
+  if (place >= 0) {
+    if (P[place] && memeNom(P[place].nom, moi.nom)) { if (moi.photo) P[place] = Object.assign({}, P[place], { photo: moi.photo, genre: moi.genre || P[place].genre }); }
+    else { let libre = P.indexOf(null, place); if (libre < 0) libre = 4; for (let j = libre; j > place; j--) P[j] = P[j - 1]; P[place] = moi; }
+  }
+  places = Object.assign({}, places, { p: P }); lsSet('battle-places', places);
+  return place;
 }
-async function chargerUltime() {
-  try { garderUltime(await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU_CACHE)}`)); if (etat === 'accueil') afficherAccueil(); } catch (e) {}
-}
-// Kevin (27/10) : le dieu / la déesse = n°1 d'un 3e classement caché (même script, nom de jeu JEU + '-dieu'), jamais affiché ; il attend au Valhalla
-const JEU_DIEU = JEU + '-dieu';
-let dieu = (() => { const u = lsGet('battle-dieu', null); return u && +u.score > 0 && u.jeu === JEU_DIEU ? u : null; })();
-function bossDieu() { // le dieu de la partie, toujours au-dessus de l'empereur ; personne encore : une ombre « ? » (dieu ou déesse selon le joueur)
-  const u = bossUltime(); if (!u) return null;
-  const d = dieu, sc = d ? +d.score : DIEU_DEPART, g = d ? d.genre : lsGetTxt('battle-genre');
-  return { rang: -1, nom: d ? String(d.nom || '').trim() || '???' : '???', score: Math.max(sc, u.score + 1), genre: g === 'F' ? 'F' : 'H', photo: d && photoOk(d.photo) ? d.photo : '', inconnu: !d };
-}
-function garderDieu(r) {
-  if (!r || !r.ok || !Array.isArray(r.top)) return;
-  const t = r.top.filter(x => +x.score > 0).sort((a, b) => b.score - a.score)[0];
-  if (t && (!dieu || +t.score >= +dieu.score)) { dieu = { jeu: JEU_DIEU, nom: String(t.nom || '').trim(), score: +t.score, genre: t.genre === 'F' ? 'F' : 'H', photo: photoOk(t.photo) ? t.photo : '' }; lsSet('battle-dieu', dieu); }
-}
-async function chargerDieu() {
-  try { garderDieu(await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU_DIEU)}`)); if (etat === 'accueil') afficherAccueil(); } catch (e) {}
-}
-const garderReponse = (p, r) => { if (r && r.ok) { if (p.jeu === JEU_CACHE) garderUltime(r); else if (p.jeu === JEU_DIEU) garderDieu(r); else garderClassement(r); } };
-let classement = (() => { const c = lsGet('battle-classement', null); return c && c.jeu === JEU ? c : null; })();
+const garderReponse = (p, r) => { if (p.action === 'places') garderPlaces(r); };
 function avecTimeout(url, opts = {}) {
   const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 8000);
   return fetch(url, Object.assign({}, opts, { signal: ctrl.signal })).then(r => r.json()).finally(() => clearTimeout(t));
@@ -4418,39 +4418,25 @@ function avecTimeout(url, opts = {}) {
 let etatTxt = '';
 async function chargerClassement() {
   if (!CLASSEMENT_OK) { etatTxt = 'Classement indisponible sur cet appareil'; afficherAccueil(); return; }
-  etatTxt = classement ? 'Mise à jour du classement…' : 'Chargement du classement…'; afficherAccueil();
+  etatTxt = places.t ? 'Mise à jour du classement…' : 'Chargement du classement…'; afficherAccueil();
   try {
-    const r = await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=jeu&jeu=${encodeURIComponent(JEU)}`);
-    if (r && r.ok) { garderClassement(r); etatTxt = ''; chargerUltime(); chargerDieu(); } else etatTxt = 'Classement indisponible pour le moment';
-  } catch (e) { etatTxt = classement ? 'Hors ligne — dernier classement connu' : 'Hors ligne — classement indisponible'; }
-  const n = lsGet('battle-attente', []).length; if (n) etatTxt += (etatTxt ? ' · ' : '') + n + ' score' + (n > 1 ? 's' : '') + ' en attente d’envoi';
+    const r = await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=places&jeu=${encodeURIComponent(JEU)}`);
+    if (r && r.ok && Array.isArray(r.places)) { garderPlaces(r); etatTxt = ''; } else etatTxt = 'Classement indisponible pour le moment';
+  } catch (e) { etatTxt = places.t ? 'Hors ligne — dernier classement connu' : 'Hors ligne — classement indisponible'; }
+  const n = lsGet('battle-attente', []).length; if (n) etatTxt += (etatTxt ? ' · ' : '') + n + ' partie' + (n > 1 ? 's' : '') + ' en attente d’envoi';
   afficherAccueil();
 }
-function dateCourte(d) { if (/^\d\d\/\d\d$/.test(String(d))) return d; const x = new Date(d); return isNaN(x) ? '' : String(x.getDate()).padStart(2, '0') + '/' + String(x.getMonth() + 1).padStart(2, '0'); }
-function garderClassement(r) {
-  if (!r || !r.ok) return;
-  // Kevin (27/10) : le dieu voit tous les scores → on garde aussi la liste complète (sans photos)
-  const tous = Array.isArray(r.top) ? r.top.map(t => ({ nom: String(t.nom || '').trim(), score: +t.score || 0 })).filter(t => t.nom && t.score > 0).sort((a, b) => b.score - a.score) : [];
-  classement = { jeu: JEU, top: Array.isArray(r.top) ? r.top.slice(0, 3) : [], tous, boss: r.boss && typeof r.boss === 'object' ? r.boss : null, t: Date.now() };
-  // ancien script (top 5 sans photos) : seule la photo du n°1 est dans « boss » ; on ne la garde pas en double
-  if (classement.top[0] && classement.boss && classement.top[0].photo && classement.boss.photo === classement.top[0].photo) classement.boss = Object.assign({}, classement.boss, { photo: '' });
-  lsSet('battle-classement', classement);
+function bossDePlace(i) { // { rang (1 roi … 3 garde, 0 empereur, -1 dieu), nom, score = palier, genre, photo, defaut / inconnu si place libre }
+  const p = places.p[i], rang = i - 1;
+  if (!p) return { rang, nom: '???', score: PALIERS[i], genre: i === 0 ? (lsGetTxt('battle-genre') === 'F' ? 'F' : 'H') : i === 1 ? 'H' : '', photo: '', defaut: true, inconnu: true };
+  return { rang, nom: p.nom, score: PALIERS[i], genre: i < 2 ? (p.genre === 'F' ? 'F' : 'H') : p.genre, photo: photoOk(p.photo) ? p.photo : '' };
 }
-function listeBoss() { // les 3 boss à battre : { rang, nom, score, genre ('H' / 'F' / '' si inconnu), photo }
+function listeBoss() { // les 3 boss à battre (roi, bourreau, garde) : { rang, nom, score, genre ('H' / 'F' / '' si inconnu), photo }
   if (introAvant) return introAvant; // pendant l'intronisation : l'ancien classement reste affiché
-  const top = classement ? (classement.top || []).slice(0, 3) : [], boss = classement && classement.boss;
-  const reels = top.map((t, i) => ({
-    nom: String(t.nom || '').trim(), score: +t.score || 0, genre: t.genre === 'F' || t.genre === 'H' ? t.genre : '',
-    photo: photoOk(t.photo) ? t.photo : i === 0 && boss && photoOk(boss.photo) && String(boss.nom).trim().toLowerCase() === String(t.nom).trim().toLowerCase() ? boss.photo : ''
-  })).filter(b => b.nom && b.score > 0);
-  // Kevin : 3 boss de départ « ??? » (100 000 / 200 000 / 400 000) pour qu'on doive les battre dans l'ordre ; un vrai score les pousse vers le bas
-  const defauts = BOSS_DEPART.map(score => ({ nom: '???', score, genre: '', photo: '', defaut: true }));
-  return reels.concat(defauts).sort((a, b) => b.score - a.score).slice(0, 3).map((b, i) => Object.assign(b, { rang: i + 1 }));
+  return [2, 3, 4].map(bossDePlace);
 }
-// Kevin (27/10) : garde 100 000, bourreau / sorcière 200 000, roi 400 000, empereur 600 000, dieu / déesse 800 000
-const BOSS_DEPART = [400000, 200000, 100000], ULTIME_DEPART = 600000, DIEU_DEPART = 800000;
-// place de quelqu'un dans le classement affiché (vrais scores + boss de départ) ; 0 = hors du top 3
-const rangDe = (nom, sc) => { const j = listeBoss().findIndex(b => !b.defaut && b.nom.toLowerCase() === String(nom).trim().toLowerCase() && b.score === sc); return j + 1; };
+function bossUltime() { return bossDePlace(1); } // l'empereur caché, au château ; personne encore : une ombre « ? »
+function bossDieu() { return Object.assign(bossDePlace(0), { record: places.record }); } // le dieu, au Valhalla : il faut le battre ET battre son record
 function dessinerPortrait(cnv, rang, genre, src, buste) { // portrait déguisé (accueil / fin de partie) dans un <canvas> ; buste = zoom sur la tête
   const w = cnv.clientWidth || +cnv.getAttribute('width'), h = cnv.clientHeight || +cnv.getAttribute('height'), d = Math.min(window.devicePixelRatio || 1, 2);
   cnv.width = Math.round(w * d); cnv.height = Math.round(h * d);
@@ -4536,24 +4522,23 @@ function decorChemin(W, H, k) {
   </svg>`;
 }
 let accueilDessine = false;
-// Kevin (27/10) : l'empereur caché voit le top 3 et sa place d'empereur ; le dieu / la déesse voit TOUS les scores (et l'empereur)
+// Kevin (27/10, 29/10) : l'empereur caché voit sa place et le top 3 ; le dieu / la déesse voit les 5 places et son record (plus d'autres scores)
 function quiSuisJe() {
-  const n = lsGetTxt('battle-nom').trim().toLowerCase(); if (!n || !CLASSEMENT_OK) return null;
-  if (dieu && String(dieu.nom).trim().toLowerCase() === n) return 'dieu';
-  if (ultime && String(ultime.nom).trim().toLowerCase() === n) return 'empereur';
+  const n = lsGetTxt('battle-nom').trim(); if (!n || !CLASSEMENT_OK) return null;
+  if (places.p[0] && memeNom(places.p[0].nom, n)) return 'dieu';
+  if (places.p[1] && memeNom(places.p[1].nom, n)) return 'empereur';
   return null;
 }
 function secretBouton() { const q = quiSuisJe(); return q ? `<button class="secret-btn${q === 'dieu' ? ' dieu' : ''}" type="button">${q === 'dieu' ? '⚡' : '👑'} Mon classement</button>` : ''; }
 function montrerSecret(ch) {
   const q = quiSuisJe(); if (!q || ch.querySelector('.secret')) return;
-  const n = lsGetTxt('battle-nom').trim().toLowerCase(), F = (q === 'dieu' ? dieu : ultime).genre === 'F', moi = nom => String(nom).trim().toLowerCase() === n;
-  const ligne = (rang, nom, score, cls = '') => `<div class="l${moi(nom) ? ' moi' : ''}${cls}"><em>${rang}</em><b>${esc(nom)}${moi(nom) ? ' (toi)' : ''}</b><span>${esc(fmt(score))}</span></div>`;
+  const n = lsGetTxt('battle-nom').trim(), F = places.p[q === 'dieu' ? 0 : 1].genre === 'F', moi = nom => memeNom(nom, n);
+  const ligne = (rang, b) => `<div class="l${!b.defaut && moi(b.nom) ? ' moi' : ''}"><em>${rang}</em><b>${b.defaut ? 'Personne' : esc(b.nom) + (moi(b.nom) ? ' (toi)' : '')}</b><span>${esc(titreBoss(b.rang, b.genre))}</span></div>`;
   let h = `<h3>${q === 'dieu' ? (F ? '⚡ Le classement de la déesse' : '⚡ Le classement du dieu') : '👑 Le classement secret'}</h3>`;
-  if (q === 'dieu') h += ligne('⚡', dieu.nom, dieu.score) + (ultime ? ligne('👑', ultime.nom, ultime.score) : '');
-  else h += ligne('👑', ultime.nom, ultime.score);
-  const liste = q === 'dieu' ? ((classement && classement.tous && classement.tous.length ? classement.tous : listeBoss().filter(b => !b.defaut))) : listeBoss().filter(b => !b.defaut);
-  h += `<div class="sep">${q === 'dieu' ? 'Tous les scores' : 'Le top 3'}</div>` + (liste.length ? liste.map((b, i) => ligne(i + 1, b.nom, b.score)).join('') : '<small>Personne pour l’instant</small>');
-  h += `<small>${q === 'dieu' ? 'Chut… toi seul' + (F ? 'e' : '') + ' vois tout.' : 'Deviens dieu ou déesse pour voir tous les scores.'}</small><button type="button">Fermer</button>`;
+  if (q === 'dieu') h += ligne('⚡', bossDieu()) + `<div class="l"><em></em><b>Ton record</b><span>${esc(fmt(places.record))}</span></div>`;
+  h += ligne('👑', bossUltime());
+  h += `<div class="sep">Le top 3</div>` + [2, 3, 4].map(i => { const b = bossDePlace(i); return ligne(b.rang, b); }).join('');
+  h += `<small>${q === 'dieu' ? 'Chut… toi seul' + (F ? 'e' : '') + ' vois tout.' : 'Chut… personne d’autre ne sait que tu es là.'}</small><button type="button">Fermer</button>`;
   const e = document.createElement('div'); e.className = 'secret' + (q === 'dieu' ? ' dieu' : ''); e.innerHTML = h; ch.appendChild(e);
   e.querySelector('button').onclick = () => e.remove();
 }
@@ -4569,7 +4554,7 @@ function afficherAccueil() {
     const etape = r => { // un boss sur le chemin : portrait + étiquette
       const b = liste.find(x => x.rang === r), t = b ? titreBoss(r, b.genre) : (r === 1 ? 'Le trône' : 'Place libre'), px = Math.round((r === 1 ? 280 : 175) * k); // Kevin : boss en grand (le n°1 encore plus), étiquettes petites
       return `<div class="b b${r}${b ? '' : ' vide'}"><canvas data-rang="${r}"${b ? ' data-boss="1"' : ''} style="width:${px}px;height:${px}px" aria-label="${esc(t)}"></canvas>`
-        + `<div class="tag"><em>${r}</em><i>${esc(t)}</i><b>${b ? esc(b.nom) : 'Personne'}</b><span>${b ? esc(fmt(b.score)) + ' pts' : 'À prendre !'}</span></div></div>`;
+        + `<div class="tag"><em>${r}</em><i>${esc(t)}</i><b>${b ? esc(b.nom) : 'Personne'}</b>${!b || b.defaut ? '<span>À prendre !</span>' : ''}</div></div>`;
     };
     const T = [[50, 99], [10, 86], [92, 72], [54, 58], [76, 43]]; // torches au bord du chemin (% largeur, % hauteur)
     html = `<div class="chemin" style="--k:${k.toFixed(3)};height:${Math.round(H)}px">${decorChemin(W, H, k)}<div class="ttl"><b>Battle des profs</b><span>Novembre · grimpe jusqu'au trône</span></div>`
@@ -4632,30 +4617,21 @@ const INTRO = {
   2: { c: '#ff8c1a', son: 'bloque', defi: 'Approche… si tu oses !', boss: 'Pas dans le panier…', heros: 'Pas de tête qui tombe aujourd’hui !' },
   1: { c: '#ffd23f', son: 'record', defi: 'À genoux devant ton roi !', boss: 'Ma couronne !!', heros: 'Le trône est à moi !' }
 };
-function garderIntro(r, avant, rang, nom, genre) { // r : réponse du serveur, ou null (hors ligne : on se place soi-même dans le classement gardé)
-  const sc = Math.round(score), moi = { nom, score: sc, genre, photo: photoData };
-  if (r === null) {
-    const top = (classement && classement.top || []).concat(moi).sort((a, b) => b.score - a.score);
-    classement = Object.assign({ boss: null }, classement, { jeu: JEU, top: top.slice(0, 3), t: Date.now() }); lsSet('battle-classement', classement);
-  } else if (!r.ok) return;
-  rang = rangDe(nom, sc); // place parmi les vrais scores ET les boss de départ
+function garderIntro(r, avant, rang, nom, genre) { // r : réponse du serveur, ou null (hors ligne : les places sont déjà mises à jour ici)
+  if (r && !r.ok) return;
   if (!(rang >= 1 && rang <= 3)) return;
-  const battus = avant.filter(b => b.score < sc && b.rang >= rang).map(b => b.rang).sort((a, b) => b - a); // du garde vers le roi
+  const battus = avant.filter(b => b.rang >= rang).map(b => b.rang).sort((a, b) => b - a); // du garde vers le roi
   lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang, battus, avant });
 }
 function garderIntroUltime(r, avant, nom, genre, ultAvant) { // tu bats tout le monde, tu montes au château, la herse se lève, tu chasses l'ancien boss caché
   if (r && !r.ok) return;
-  const sc = Math.round(score);
-  if (!ultime || sc >= +ultime.score) { ultime = { jeu: JEU_CACHE, nom, score: sc, genre, photo: photoData }; lsSet('battle-ultime', ultime); }
-  const battus = avant.filter(b => b.score < sc).map(b => b.rang).sort((a, b) => b - a);
+  const battus = avant.map(b => b.rang).sort((a, b) => b - a);
   const ancien = ultAvant ? { nom: ultAvant.inconnu ? '???' : ultAvant.nom, genre: ultAvant.genre, photo: ultAvant.photo || '', inconnu: !!ultAvant.inconnu } : null;
   lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang: 0, ultime: true, battus, avant, ancien });
 }
 function garderIntroDieu(r, avant, nom, genre, dieuAvant, ultAvant) { // Kevin : tu entres au château en empereur, tu chasses l'ancien empereur, puis tu t'envoles au ciel : tu deviens dieu ; l'ancien dieu tombe dans le château
   if (r && !r.ok) return;
-  const sc = Math.round(score);
-  if (!dieu || sc >= +dieu.score) { dieu = { jeu: JEU_DIEU, nom, score: sc, genre, photo: photoData }; lsSet('battle-dieu', dieu); }
-  const battus = avant.filter(b => b.score < sc).map(b => b.rang).sort((a, b) => b - a);
+  const battus = avant.map(b => b.rang).sort((a, b) => b - a);
   const ancien = dieuAvant ? { nom: dieuAvant.inconnu ? '???' : dieuAvant.nom, genre: dieuAvant.genre, photo: dieuAvant.photo || '', inconnu: !!dieuAvant.inconnu } : null;
   const emp = ultAvant ? { nom: ultAvant.inconnu ? '???' : ultAvant.nom, genre: ultAvant.genre, photo: ultAvant.photo || '', inconnu: !!ultAvant.inconnu } : null;
   lsSet('battle-intro', { t: Date.now(), nom, genre, photo: photoData, rang: -1, ultime: true, dieu: true, battus, avant, ancien, emp });
@@ -4956,12 +4932,17 @@ function blocNom(label, top) { // Kevin : le prénom (demandé à la 1re ouvertu
 }
 let photoData = '';
 function montrerFin() {
-  // le nom, le roi / la reine et la photo ne sont demandés qu'ici : le score FINAL donne la place (n°1, 2 ou 3)
-  // Kevin : une même personne peut occuper plusieurs places du top 3 (chaque partie compte)
+  // le nom, le roi / la reine et la photo ne sont demandés qu'ici
+  // Kevin (29/10) : ta place = celle du dernier boss battu, quoi qu'il arrive ensuite ; son occupant descend d'un cran (cascade)
+  // Kevin : une même personne peut occuper plusieurs places (chaque partie compte)
   const liste = listeBoss(), boss1 = liste[0] || null;
-  const dieuF = CLASSEMENT_OK && dieuBattu && score > 0, dieuAvant = dieuF ? bossD : null; // tu as battu le dieu : tu prends sa place (3e classement caché)
-  const ult = CLASSEMENT_OK && ultimeBattu && !dieuF && score > 0, ultAvant = ult || dieuF ? bossUltime() || bossUlt : null;
-  const rang = dieuF ? -1 : ult ? 0 : 1 + liste.filter(b => b.score >= score).length, dansTop = CLASSEMENT_OK && score > 0 && rang <= 3;
+  const record = bossD ? +bossD.record || 0 : places.record, jeSuisDieu = !!places.p[0] && memeNom(places.p[0].nom, lsGetTxt('battle-nom'));
+  const dieuF = CLASSEMENT_OK && dieuBattu && score > record, dieuAvant = dieuF ? bossD : null; // Kevin : le dieu battu ET son record battu → tu prends sa place
+  const resteDieu = CLASSEMENT_OK && dieuBattu && !dieuF && jeSuisDieu; // Kevin : le dieu qui rate son propre record reste dieu, rien ne bouge
+  const dieuRate = CLASSEMENT_OK && dieuBattu && !dieuF && !resteDieu; // dieu battu mais pas son record : tu deviens empereur
+  const ult = CLASSEMENT_OK && ultimeBattu && !dieuF && !resteDieu, ultAvant = ult || dieuF ? bossUltime() || bossUlt : null;
+  const battus = bossFile.filter(b => b.vaincu).map(b => b.rang);
+  const rang = dieuF ? -1 : ult ? 0 : battus.length ? Math.min(...battus) : 4, dansTop = CLASSEMENT_OK && !resteDieu && rang <= 3;
   photoData = '';
   const nomFixe = !!lsGetTxt('battle-nom').trim(); // prénom connu : en fin de partie, on choisit roi / reine → photo → envoi → animation
   let html = '', mode = 'simple', genre = lsGetTxt('battle-genre'), moqueur = null;
@@ -4976,7 +4957,7 @@ function montrerFin() {
   } else if (dieuF) {
     mode = 'top';
     html = `<div class="bandeau boss-n">⚡<br>Le Valhalla<br>est à toi !</div>
-      <div class="score-fin">${esc(fmt(score))}</div>
+      <div class="manque">Nouveau record du dieu : <b>${esc(fmt(score))}</b></div>
       <div class="manque">Tu as vaincu ${dieuAvant && !dieuAvant.inconnu ? esc(dieuAvant.nom) : 'le maître d’Asgard'} ! Chut… seuls les dieux le sauront.</div>
       <canvas class="portrait-fin" id="portrait-fin" style="width:140px;height:185px"></canvas>
       <div class="aide" id="titre-fin" style="margin:0;font-weight:800;color:var(--clair)"></div>
@@ -4985,12 +4966,12 @@ function montrerFin() {
         <label${genre === 'F' ? ' class="on"' : ''}><input type="radio" name="genre" value="F"${genre === 'F' ? ' checked' : ''}>⚡ Une déesse</label>
       </div>
       <label class="btn photo-btn${nomFixe ? ' cache' : ''}" id="photo-lbl">📸 Prends une photo divine<input type="file" accept="image/*" capture="user" id="photo"></label>
-      <div class="aide${simple ? ' cache' : ''}" style="margin:0 0 10px">Ta tête attendra au Valhalla. Seuls ceux qui battent l’empereur ET atteignent ton score te verront.</div>
+      <div class="aide${simple ? ' cache' : ''}" style="margin:0 0 10px">Ta tête attendra au Valhalla. Pour te détrôner, il faudra te battre ET battre ton record.</div>
       ${blocNom('Devenir le dieu du Valhalla ⚡', true)}`;
   } else if (ult) {
     mode = 'top';
-    html = `<div class="bandeau boss-n">💀<br>Boss caché !</div>
-      <div class="score-fin">${esc(fmt(score))}</div>
+    html = `<div class="bandeau boss-n">💀<br>${dieuRate ? 'Presque dieu…' : 'Boss caché !'}</div>
+      ${dieuRate ? `<div class="manque">Tu as vaincu le dieu, mais pas son record (${esc(fmt(record))}) : tu fais ${esc(fmt(score))}. Tu deviens l’empereur caché !</div>` : ''}
       <div class="manque">Tu as vaincu ${ultAvant && !ultAvant.inconnu ? esc(ultAvant.nom) : 'l’ombre du château'} ! Chut… personne ne le saura.</div>
       <canvas class="portrait-fin" id="portrait-fin" style="width:140px;height:185px"></canvas>
       <div class="aide" id="titre-fin" style="margin:0;font-weight:800;color:var(--clair)"></div>
@@ -4999,14 +4980,18 @@ function montrerFin() {
         <label${genre === 'F' ? ' class="on"' : ''}><input type="radio" name="genre" value="F"${genre === 'F' ? ' checked' : ''}>👸 Une impératrice</label>
       </div>
       <label class="btn photo-btn${nomFixe ? ' cache' : ''}" id="photo-lbl">📸 Prends une photo terrifiante<input type="file" accept="image/*" capture="user" id="photo"></label>
-      <div class="aide${simple ? ' cache' : ''}" style="margin:0 0 10px">Ta tête attendra dans le château. Seuls ceux qui battent le roi ET atteignent ton score te verront. Le roi garde sa place au classement.</div>
+      <div class="aide${simple ? ' cache' : ''}" style="margin:0 0 10px">Ta tête attendra dans le château. Seuls ceux qui battent le roi te verront.${ultAvant && !ultAvant.inconnu ? ' ' + esc(ultAvant.nom) + ' redescend sur le trône du roi.' : ''}</div>
       ${blocNom('Devenir le boss caché 💀', true)}`;
+  } else if (resteDieu) {
+    mode = 'reste';
+    html = `<div class="bandeau boss-n">⚡<br>Tu restes ${places.p[0].genre === 'F' ? 'déesse' : 'dieu'} !</div>
+      <div class="manque">Ton record tient toujours : ${esc(fmt(record))}<br>Cette partie : ${esc(fmt(score))}</div>
+      <div class="msg">Rien ne bouge au classement.</div>`;
   } else if (dansTop) {
     mode = 'top';
-    const detrone = liste.find(b => b.rang === rang);
-    html = `<div class="bandeau${rang === 1 ? ' boss-n' : '" style="color:var(--jaune)'}">${rang === 1 ? '👑<br>Le trône<br>est à toi !' : 'Top 3 : n°' + rang + ' !'}</div>
-      <div class="score-fin">${esc(fmt(score))}</div>
-      <div class="manque">${detrone ? (rang === 1 ? 'Tu détrônes ' : 'Tu passes devant ') + esc(detrone.nom) + ' !' : 'Tu prends une place libre !'}</div>
+    const detrone = liste.find(b => b.rang === rang && !b.defaut);
+    html = `<div class="bandeau${rang === 1 ? ' boss-n' : '" style="color:var(--jaune)'}">${rang === 1 ? '👑<br>Le trône<br>est à toi !' : 'Tu deviens<br>' + esc(titreBoss(rang, '')) + ' !'}</div>
+      <div class="manque">${detrone ? 'Tu prends la place de ' + esc(detrone.nom) + (rang === 3 ? ', qui sort du top 3 !' : ', qui descend d’un cran !') : 'Tu prends une place libre !'}</div>
       <canvas class="portrait-fin" id="portrait-fin" style="width:140px;height:185px"></canvas>
       <div class="aide" id="titre-fin" style="margin:0;font-weight:800;color:var(--clair)"></div>
       <div class="genre" id="genre">
@@ -5065,30 +5050,23 @@ function montrerFin() {
     if (mode === 'top' && !genre) { $('genre').classList.add('manque-choix'); $('titre-fin').textContent = dieuF ? 'Coche d’abord : dieu ou déesse ?' : 'Coche d’abord : roi ou reine ?'; $('genre').scrollIntoView({ block: 'center' }); return; }
     lsSetTxt('battle-nom', nom); if (genre) lsSetTxt('battle-genre', genre);
     const btn = $('envoyer'); btn.disabled = true; btn.textContent = 'Envoi…';
-    const p = { code: CODE, action: 'jeu', jeu: dieuF ? JEU_DIEU : ult ? JEU_CACHE : JEU, nom, score: Math.round(score), photo: mode === 'top' && photoData.length < 48000 ? photoData : '', genre: mode === 'top' ? genre : '' };
+    // Kevin (29/10) : une place prise part au script (action « places ») qui fait la cascade ; sinon la partie est juste notée (action « jeu »)
+    const ip = mode !== 'top' ? -1 : dieuF || dieuRate ? 0 : ult ? 1 : rang + 1, ph = mode === 'top' && photoData.length < 48000 ? photoData : '';
+    const p = ip >= 0 ? { code: CODE, action: 'places', jeu: JEU, nom, score: Math.round(score), photo: ph, genre, place: ip } : { code: CODE, action: 'jeu', jeu: JEU, nom, score: Math.round(score), photo: '', genre: '' };
     const r = await envoyer(p);
-    // Kevin (25/10) : l'empereur battu redescend roi : son score entre dans le classement normal, le roi devient bourreau, le bourreau garde, la garde sort
-    if (ult && r !== false && (r === null || r.ok) && ultAvant && !ultAvant.inconnu)
-      await envoyer({ code: CODE, action: 'jeu', jeu: JEU, nom: ultAvant.nom, score: Math.round(ultAvant.score), photo: photoOk(ultAvant.photo) && ultAvant.photo.length < 48000 ? ultAvant.photo : '', genre: ultAvant.genre });
-    // Kevin (27/10) : le dieu battu descend empereur (classement caché) et l'ancien empereur descend roi : tout le monde recule d'une place
-    if (dieuF && r !== false && (r === null || r.ok)) {
-      if (dieuAvant && !dieuAvant.inconnu) await envoyer({ code: CODE, action: 'jeu', jeu: JEU_CACHE, nom: dieuAvant.nom, score: Math.round(dieuAvant.score), photo: photoOk(dieuAvant.photo) && dieuAvant.photo.length < 48000 ? dieuAvant.photo : '', genre: dieuAvant.genre });
-      if (ultAvant && !ultAvant.inconnu) await envoyer({ code: CODE, action: 'jeu', jeu: JEU, nom: ultAvant.nom, score: Math.round(ultAvant.score), photo: photoOk(ultAvant.photo) && ultAvant.photo.length < 48000 ? ultAvant.photo : '', genre: ultAvant.genre });
-    }
-    if (mode === 'top' && r !== false) { if (dieuF) garderIntroDieu(r, liste, nom, genre, dieuAvant, ultAvant); else if (ult) garderIntroUltime(r, liste, nom, genre, ultAvant); else garderIntro(r, liste, rang, nom, genre); }
+    const obtenu = ip < 0 ? -1 : r === null ? prendrePlace(ip, { nom, genre, photo: ph }) : r && r.ok ? (r.place != null ? +r.place : ip) : -1; // hors ligne : on se place soi-même
+    const soiMeme = obtenu === 0 && dieuAvant && !dieuAvant.inconnu && memeNom(dieuAvant.nom, nom); // le dieu qui bat son propre record
+    if (mode === 'top' && r !== false && !soiMeme && (obtenu === ip || dieuRate && obtenu === 1)) { if (dieuF) garderIntroDieu(r, liste, nom, genre, dieuAvant, ultAvant); else if (ult) garderIntroUltime(r, liste, nom, genre, ultAvant); else garderIntro(r, liste, rang, nom, genre); }
     const ret = $('retour') || document.createElement('div');
     if ($('rejouer')) { $('rejouer').classList.remove('cache'); $('vers-accueil').classList.remove('cache'); }
-    if (r === null) ret.innerHTML = `<div class="msg">📡 Hors ligne : ton score est gardé et sera envoyé dès que possible.</div>`;
-    else if (!r.ok) { ret.innerHTML = `<div class="msg ko">Envoi refusé${r.erreur || r.error ? ' : ' + esc(r.erreur || r.error) : ''}.</div>`; btn.disabled = false; btn.textContent = 'Réessayer'; return; }
-    else if (dieuF) ret.innerHTML = `<div class="msg ok">⚡ C’est fait : tu es ${genre === 'F' ? 'la déesse' : 'le dieu'} du Valhalla. Chut…${dieuAvant && !dieuAvant.inconnu ? `<br><small>${esc(dieuAvant.nom)} redescend au château.</small>` : ''}</div>`;
-    else if (ult) ret.innerHTML = `<div class="msg ok">💀 C’est fait : tu es ${genre === 'F' ? 'l’impératrice cachée' : 'l’empereur caché'} du château. Chut…${ultAvant && !ultAvant.inconnu ? `<br><small>${esc(ultAvant.nom)} redescend sur le trône du roi.</small>` : ''}</div>`;
-    else {
-      const i = rangDe(nom, Math.round(score)) - 1;
-      if (i === 0) ret.innerHTML = `<div class="msg ok">👑 C’est officiel : ${genre === 'F' ? 'tu es la nouvelle reine' : genre === 'H' ? 'tu es le nouveau roi' : 'tu es n°1'} !</div>`;
-      else if (i > 0) ret.innerHTML = `<div class="msg ok">⚔ C’est officiel : tu es n°${i + 1}, ${esc(titreBoss(i + 1, genre).toLowerCase())} !</div>`;
-      else if (mode === 'top') ret.innerHTML = `<div class="msg ok">Score enregistré ✔ (quelqu’un a fait mieux entre-temps !)</div>`;
-      else ret.innerHTML = `<div class="msg ok">Score enregistré ✔</div>`;
-    }
+    if (r === null) ret.innerHTML = `<div class="msg">📡 Hors ligne : ta partie est gardée et sera envoyée dès que possible.</div>`;
+    else if (!r.ok) { ret.innerHTML = `<div class="msg ko">Envoi refusé${r.err || r.erreur || r.error ? ' : ' + esc(r.err || r.erreur || r.error) : ''}.</div>`; btn.disabled = false; btn.textContent = 'Réessayer'; return; }
+    else if (obtenu === 0) ret.innerHTML = `<div class="msg ok">⚡ C’est fait : tu es ${genre === 'F' ? 'la déesse' : 'le dieu'} du Valhalla. Chut…${soiMeme ? `<br><small>Nouveau record : ${esc(fmt(score))}</small>` : dieuAvant && !dieuAvant.inconnu ? `<br><small>${esc(dieuAvant.nom)} redescend au château.</small>` : ''}</div>`;
+    else if (obtenu === 1) ret.innerHTML = `<div class="msg ok">💀 C’est fait : tu es ${genre === 'F' ? 'l’impératrice cachée' : 'l’empereur caché'} du château. Chut…${ultAvant && !ultAvant.inconnu && !dieuF ? `<br><small>${esc(ultAvant.nom)} redescend sur le trône du roi.</small>` : ''}</div>`;
+    else if (obtenu === 2) ret.innerHTML = `<div class="msg ok">👑 C’est officiel : ${genre === 'F' ? 'tu es la nouvelle reine' : 'tu es le nouveau roi'} !</div>`;
+    else if (obtenu > 2) ret.innerHTML = `<div class="msg ok">⚔ C’est officiel : tu es ${esc(titreBoss(obtenu - 1, genre).toLowerCase())} !</div>`;
+    else if (ip === 0 && obtenu === -1) ret.innerHTML = `<div class="msg ok">⚡ Tu restes ${genre === 'F' ? 'déesse' : 'dieu'} : ton record tient toujours.</div>`;
+    else ret.innerHTML = `<div class="msg ok">Partie enregistrée ✔</div>`;
     btn.classList.add('cache'); if ($('photo-lbl')) $('photo-lbl').classList.add('cache');
     if (lsGet('battle-intro', null)) setTimeout(() => { if (etat === 'fin') $('vers-accueil').onclick(); }, nomFixe ? 900 : 1500); // Kevin : la séquence part d'office, puis le top 3
   };
@@ -5142,7 +5120,7 @@ window.__battle = {
   finir(s) { score = s; balleNo = 4; balles = []; attenteBalle = 0; finPartie(); },
   // boss
   get combat() { return combat; }, get bossFile() { return bossFile; }, NIV_BOSS, BUMPB, PORTE, listeBoss, lancerCombat, calmePourBoss, finCombat, titreBoss,
-  get classement() { return classement; }, set score(v) { score = v; }, set sauveT(v) { sauveT = v; }, set mult(v) { mult = v; }, set balleNo(v) { balleNo = v; }, recreGenerale, preparerBoss
+  get places() { return places; }, set score(v) { score = v; }, set sauveT(v) { sauveT = v; }, set mult(v) { mult = v; }, set balleNo(v) { balleNo = v; }, recreGenerale, preparerBoss
 };
 
 redim(); afficherAccueil(); chargerClassement(); viderAttente();

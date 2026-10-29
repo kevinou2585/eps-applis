@@ -1195,7 +1195,7 @@ function sessChip(x, sel, date){
 function renderToday(m){
   const date = UI.date, list = sessionsOn(date), s = pickSession(list, date);
   if (s) UI.sess = {date, key: s.key, custom: s.key === 'c' ? s : null};
-  let h = `<section class="sec">${dayBar(date)}
+  let h = `<section class="sec">${dayBar(date)}${calHTML(calJour(date))}
     <div class="chips" id="sess">${list.map(x => sessChip(x, s, date)).join('')}${s && s.key === 'c' ? sessChip(s, s, date) : ''}<button class="chip sess add" type="button" id="sess-new"><span class="sh1">+ Autre</span><span class="sh2">cours</span></button></div>`;
   if (!s){
     h += `<div class="card empty"><p>${tt().length ? 'Pas de cours dans ton horaire ce jour-là.' : 'Encode ton horaire une fois : chaque jour, l\'appli ouvrira directement le bon cours à la bonne heure.'}</p>

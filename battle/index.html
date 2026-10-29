@@ -4554,7 +4554,7 @@ function afficherAccueil() {
     const etape = r => { // un boss sur le chemin : portrait + étiquette
       const b = liste.find(x => x.rang === r), t = b ? titreBoss(r, b.genre) : (r === 1 ? 'Le trône' : 'Place libre'), px = Math.round((r === 1 ? 280 : 175) * k); // Kevin : boss en grand (le n°1 encore plus), étiquettes petites
       return `<div class="b b${r}${b ? '' : ' vide'}"><canvas data-rang="${r}"${b ? ' data-boss="1"' : ''} style="width:${px}px;height:${px}px" aria-label="${esc(t)}"></canvas>`
-        + `<div class="tag"><em>${r}</em><i>${esc(t)}</i><b>${b ? esc(b.nom) : 'Personne'}</b>${!b || b.defaut ? '<span>À prendre !</span>' : ''}</div></div>`;
+        + `<div class="tag"><i>${esc(t)}</i><b>${b ? esc(b.nom) : 'Personne'}</b>${!b || b.defaut ? '<span>À prendre !</span>' : ''}</div></div>`;
     };
     const T = [[50, 99], [10, 86], [92, 72], [54, 58], [76, 43]]; // torches au bord du chemin (% largeur, % hauteur)
     html = `<div class="chemin" style="--k:${k.toFixed(3)};height:${Math.round(H)}px">${decorChemin(W, H, k)}<div class="ttl"><b>Battle des profs</b><span>Novembre · grimpe jusqu'au trône</span></div>`

@@ -487,3 +487,193 @@ an: {
 }};
 PREPA_JEUX(N);
 })();
+
+/* ===== Schémas de chaque jeu (vue de dessus du bassin de 25 m : petit bain à gauche, grand bain à droite ; ou vue de côté) ===== */
+(window.PSCH_SC = window.PSCH_SC || {}).natation = (() => {
+  const LV = ['facile', 'moyen', 'fort'], COL = {a: '#1f63d6', b: '#e8590c', p: '#8a3ffc'};
+  // bassin à 3 couloirs de niveau
+  const P3 = (g, o = {}) => { g.pool(3, o); LV.forEach((t, i) => g.label(28, +g.pool_y(i) - 24, 'couloir ' + t, {s: 8.5, a: 'start', c: '#3d6f86'})); return g; };
+  // circulation dans un couloir : aller en haut du couloir, retour en bas (on nage à droite)
+  const circ = (g, i, k = 'crawl', o = {}) => { const y = +g.pool_y(i); g.nag(o.x1 || 75, y - 13, {k, t: o.t}).swim(98, y - 13, o.e || 330, y - 13);
+    if (o.ret !== false) g.nag(o.x2 || 315, y + 14, {k: o.k2 || k, a: 180, t: o.t}).swim(292, y + 14, 70, y + 14); return g; };
+  // partenaires au bord (en bas), avec chrono ou feuille
+  const bord = (g, xs, o = {}) => { xs.forEach(x => { g.A(x, 240); if (o.chrono !== false) g.chrono(x + 18, 240); }); return g; };
+  const test = (g, nages, o = {}) => { P3(g, {marks: false}); nages.forEach((k, i) => circ(g, i, k)); bord(g, o.xs || [90, 200, 310]); if (o.P) g.P(380, 240).sheet(362, 240); return g; };
+  const epr = (g, labs, k = ['crawl', 'dos', 'brasse']) => { g.pool(3, {marks: false}); labs.forEach((t, i) => { const y = +g.pool_y(i); g.tag(200, y - 22, t, {s: 9}).nag(90, y + 8, {k: k[i] || 'crawl'}).swim(112, y + 8, 320, y + 8); }); return g.P(370, 240).sheet(350, 240).n(1, 'par vagues ; le prof observe avec la grille d\'évaluation'); };
+  const bain = (g, o) => g.pool(1, {marks: false, ...o});
+  return {
+    'Les règles du bassin': g => { bain(g); g.row('a', 9, 50, 240, 260, 240).P(330, 240); ['🚶 au bord, on ne court pas', '🔔 on entre au signal, on sort au sifflet long', '↔ on reste dans son couloir', '👥 apnée seulement en binôme'].forEach((t, i) => g.tag(200, 55 + i * 40, t, {s: 10}));
+      return g.n(1, 'comptage des élèves à l\'entrée et à la sortie de l\'eau'); },
+    requins: g => { bain(g); [[90, 70, 20], [150, 170, -30], [230, 60, 160], [300, 150, 200], [120, 120, 90], [260, 200, -10], [340, 90, 120], [200, 120, 40]].forEach(([x, y, a]) => g.nag(x, y, {a, k: 'crawl'}));
+      g.nag(185, 85, {t: 'x', a: 10, lab: 'requin'}).frite(185, 100, 0, '#1d241f').run(205, 82, 222, 66, 0).nag(320, 200, {t: 'x', a: 200, lab: 'requin'}).frite(320, 216, 0, '#1d241f').run(302, 196, 273, 198, 0);
+      g.nag(110, 205, {k: 'sous', a: 160}).bulles(104, 194).label(110, 225, 'sous l\'eau : intouchable', {s: 8.5});
+      return g.n(1, 'les requins (frite noire) touchent les sardines ; une sardine touchée devient requin').n(2, 'sous l\'eau, on ne peut pas être touché'); },
+    'Le test des 5 minutes': g => test(g, ['brasse', 'crawl', 'crawl']).n(1, '5 min sans s\'arrêter dans la nage de son choix').n(2, 'le partenaire au bord compte les longueurs ; on forme les 3 couloirs de niveau'),
+    torpille: g => { P3(g); [150, 185, 220].forEach((x, i) => { const y = +g.pool_y(i); g.nag(45, y, {}).arrow('swim', 60, y, x - 6, y, 0).frite(x, y, 90, '#f59f00'); });
+      return g.label(250, +g.pool_y(2) + 4, '← record à dépasser', {s: 9, a: 'start', b: 1}).n(1, 'pousser au mur, bras tendus, tête entre les bras, on glisse sans bouger').n(2, 'le partenaire pose une frite où on s\'arrête : on essaie de la dépasser'); },
+    peche: g => { bain(g); const T = [[COL.a, 50], [COL.b, 100], ['#16a34a', 150], [COL.p, 200]]; T.forEach(([c, y]) => { g.nag(38, y, {c, k: 'tete'}).nag(56, y, {c, k: 'tete'}); });
+      [[150, 60, '#d6336c'], [180, 150, '#d6336c'], [120, 200, '#d6336c'], [250, 90, '#f59f00'], [230, 190, '#f59f00'], [270, 140, '#f59f00'], [330, 60, '#16a34a'], [350, 170, '#16a34a'], [320, 120, '#16a34a']].forEach(([x, y, c]) => g.fond(x, y, c));
+      g.nag(140, 112, {k: 'sous', a: -20}).arrow('swim', 72, 140, 120, 118, 0).arrow('run', 175, 145, 80, 152, 18);
+      g.tag(200, 238, 'rose 1 pt · jaune 2 pts · vert 3 pts (grand bain)', {s: 9});
+      return g.n(1, 'relais : chacun plonge chercher un trésor et le ramène au bord de son équipe').n(2, 'l\'équipe qui a le plus de points gagne'); },
+    etoile: g => { bain(g); for (let i = 0; i < 8; i++){ const a = i * 45, r = 62, x = 210 + r * Math.cos(a * Math.PI / 180), y = 125 + r * .85 * Math.sin(a * Math.PI / 180); g.nag(x, y, {k: 'etoile', a: a + 180}); }
+      g.nag(70, 70, {k: 'etoile', a: 30}).nag(80, 185, {k: 'etoile', a: -40}).nag(350, 200, {k: 'etoile', a: 200}).P(390, 125).music(350, 45);
+      return g.label(210, 129, 'on se tient la main', {s: 9}).n(1, '30 s en étoile sur le dos, oreilles dans l\'eau, yeux au plafond').n(2, 'puis on se donne la main : la grande étoile de la classe ; sortie et comptage'); },
+    feux: g => { P3(g, {marks: false}); circ(g, 0, 'crawl'); circ(g, 1, 'dos'); circ(g, 2, 'brasse'); g.P(160, 240);
+      ['#16a34a', '#f59f00', '#facc15', '#e11d48', '#1f63d6'].forEach((c, i) => g.raw(`<rect x="${180 + i * 18}" y="232" width="13" height="13" rx="2" fill="${c}" stroke="#2d3530"/>`, 'top')); g.label(275, 242, 'cartons de couleur', {s: 9, a: 'start'});
+      return g.n(1, 'longueurs libres ; le prof montre une couleur : vert crawl, orange dos, jaune brasse, rouge surplace 5 s, bleu sous l\'eau 3 s').n(2, 'qui se trompe fait une longueur de battements'); },
+    montee: g => { g.coupe(); g.side(335, 78, {}).label(335, 112, 'B compte', {s: 9, b: 1, c: COL.a}).label(335, 124, 'et surveille', {s: 9, c: COL.a});
+      g.side(260, 78, {up: 1}).arrow('run', 290, 100, 290, 205, 0, 1).side(260, 218, {up: 1, k: 'sous'}).bulles(255, 150).bulles(262, 185).arrow('run', 228, 205, 228, 100, 0, 2).label(205, 160, 'A', {s: 12, b: 1, c: COL.a});
+      return g.n(1, 'A souffle tout son air et descend comme un ascenseur, aussi bas que possible').n(2, 'on remonte en regardant la surface, puis on change de rôle'); },
+    ballonfrite: g => { bain(g); [[80, 80], [70, 160], [130, 125]].forEach(([x, y]) => g.nag(x, y, {})); [[320, 70], [330, 170], [270, 130]].forEach(([x, y]) => g.nag(x, y, {t: 'b', a: 180}));
+      g.ball(200, 122, 'gros').nag(170, 122, {}).arrow('swim', 212, 118, 300, 100, -10).frite(140, 160, 20).bulles(185, 112);
+      g.label(30, 240, 'bord de l\'équipe B', {s: 9, a: 'start', b: 1, c: COL.b}).label(370, 240, 'bord de l\'équipe A', {s: 9, a: 'end', b: 1, c: COL.a});
+      return g.n(1, 'pousser le ballon jusqu\'au bord adverse sans les mains : tête, souffle ou frite'); },
+    metro: g => { g.coupe(); const H = [[150, 110], [230, 150], [320, 175]]; H.forEach(([x, y], i) => g.raw(`<ellipse cx="${x}" cy="${y}" rx="7" ry="22" fill="none" stroke="#f59f00" stroke-width="4"/>`, 'mid').label(x, y + 34, 'station ' + (i + 1), {s: 8.5}));
+      g.side(85, 80, {a: 90}).path('swim', [[95, 90], [150, 110], [230, 150], [320, 175], [375, 110]]).side(240, 72, {}).label(240, 52, 'binôme', {s: 9, b: 1});
+      return g.n(1, 'on passe dans les cerceaux sans remonter entre deux (sinon : on remonte, on respire, on continue)').n(2, 'le binôme surveille depuis la surface'); },
+    echauffe: g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); [70, 130, 190].forEach((x, j) => g.nag(x, y - 13, {k: 'crawl', t: j ? 'g' : 'a'})); g.swim(205, y - 13, 330, y - 13).nag(300, y + 14, {a: 180, k: 'crawl'}).swim(277, y + 14, 70, y + 14); });
+      g.tag(200, 240, 'chacun part 5 s après le précédent', {s: 9});
+      return g.n(1, 'chaque couloir a sa carte : 2 longueurs libres lentes, 1 de battements, 1 en coulées, 1 au choix'); },
+    'La roue du moulin': g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(110, y, {k: 'crawl'}).board(136, y + 2).swim(150, y, 320, y); }); bord(g, [130, 250], {chrono: false});
+      return g.n(1, 'un bras seul (l\'autre tient la planche devant), puis l\'autre, puis en alternant').n(2, 'le partenaire vérifie que la main touche la cuisse'); },
+    golf: g => { g.pool(2, {marks: false}); [0, 1].forEach(i => { const y = +g.pool_y(i); g.nag(60, y, {k: 'crawl'}).swim(82, y, 360, y); for (let j = 1; j <= 7; j++) g.label(70 + j * 40, y - 20, j, {s: 9, b: 1, c: '#0b6e99'}); g.A(390, y).chrono(390, y + 22); });
+      return g.tag(200, 240, 'score = mouvements de bras + secondes : le plus petit gagne', {s: 9}).n(1, 'nager vite ET glisser loin à chaque bras').n(2, 'le partenaire compte les bras et chronomètre ; on essaie de baisser son score'); },
+    garcons: g => { g.pool(4, {marks: false}); [0, 1, 2, 3].forEach(i => { const y = +g.pool_y(i), c = [COL.a, COL.b, '#16a34a', COL.p][i]; g.nag(32, y - 10, {c, k: 'tete'}).nag(32, y + 12, {c, k: 'tete'}).nag(140 + i * 25, y, {c, k: 'crawl'}).board(165 + i * 25, y).ball(165 + i * 25, y, 'mousse').swim(180 + i * 25, y, 360, y); });
+      return g.n(1, 'relais : on nage avec une planche-plateau, une balle posée dessus').n(2, 'balle tombée : on la remet et on repart de là ; en crawl, en dos (planche sur le ventre), en brasse'); },
+    bilan: g => { P3(g, {marks: false}); g.nag(150, +g.pool_y(1), {k: 'dos'}).swim(172, +g.pool_y(1), 330, +g.pool_y(1)).row('a', 8, 50, 240, 260, 240).P(300, 240).tag(200, +g.pool_y(0), '👍 une réussite · 🎯 un objectif', {s: 10});
+      return g.n(1, 'une longueur tranquille (dos ou brasse), puis chacun dit une réussite et un objectif ; sortie et comptage'); },
+    'Le coquillage': g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(140, y, {k: 'crawl'}).board(165, y).swim(178, y, 330, y); if (!i) g.bulles(128, y - 4); });
+      return g.tag(150, 238, '👂 oreille sur l\'épaule = je respire', {s: 9}).n(1, 'battements avec planche ; on tourne la tête, l\'oreille sur l\'épaule, pour respirer').n(2, 'puis on souffle dans l\'eau ; 3 bras, respiration'); },
+    de: g => { P3(g, {marks: false}); circ(g, 0, 'crawl'); circ(g, 1, 'dos'); circ(g, 2, 'brasse');
+      g.raw('<rect x="374" y="226" width="22" height="22" rx="4" fill="#fff" stroke="#2d3530" stroke-width="2"/><circle cx="380" cy="232" r="2" fill="#2d3530"/><circle cx="390" cy="242" r="2" fill="#2d3530"/><circle cx="385" cy="237" r="2" fill="#2d3530"/>', 'top');
+      return g.tag(185, 240, '🎲 1 crawl · 2 dos · 3 brasse · 4 battements · 5 sous l\'eau · 6 au choix', {s: 8.5}).n(1, 'on lance le dé au bord et on nage une longueur dans la nage tirée').n(2, 'record du binôme : nombre de longueurs dans le temps donné'); },
+    ballonchaud: g => { bain(g); const P = []; for (let i = 0; i < 7; i++){ const a = -Math.PI / 2 + i / 7 * 2 * Math.PI; P.push([270 + 60 * Math.cos(a), 125 + 60 * Math.sin(a)]); }
+      P.forEach(([x, y]) => g.nag(x, y, {k: 'tete'})); g.ball(P[0][0] + 10, P[0][1] + 8, 'gros').pass(P[0][0], P[0][1] + 12, P[1][0] - 8, P[1][1] - 4, 6).pass(P[1][0], P[1][1] + 12, P[2][0], P[2][1] - 12, 6);
+      g.nag(200, 125, {k: 'sous'}).arrow('swim', 215, 125, 330, 125, 0).P(200, 240).label(270, 225, 'grand bain : on ne touche pas le bord', {s: 9});
+      return g.n(1, 'en surplace, on se passe le ballon le plus vite possible').n(2, 'au coup de sifflet, celui qui l\'a fait une coulée sous le cercle ; puis 2 ballons'); },
+    'Le verre sur le front': g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(150, y, {k: 'dos'}).raw(`<path d="M${158} ${y - 5}h8l-1.5 10h-5Z" fill="#fff" stroke="#e11d48" stroke-width="1.5"/>`, 'top').swim(176, y, 340, y); });
+      return g.tag(200, 240, '🥤 le gobelet posé sur le front ne doit pas tomber', {s: 9}).n(1, 'dos battements, tête immobile ; puis bras tendus qui frôlent l\'oreille, épaules qui roulent'); },
+    survie: g => { bain(g); g.side(110, 236, {}).arrow('run', 110, 220, 120, 190, 10, 1).nag(130, 170, {k: 'etoile'}).label(130, 150, 'étoile : repos', {s: 9});
+      for (let i = 0; i < 5; i++){ const a = i / 5 * 2 * Math.PI; g.nag(240 + 22 * Math.cos(a), 100 + 22 * Math.sin(a), {k: 'tete'}); } g.label(240, 62, 'radeau humain', {s: 9, b: 1}).num(205, 100, 2);
+      g.nag(300, 180, {k: 'brasse', a: 90}).arrow('swim', 300, 195, 300, 222, 0, 3);
+      return g.n(1, 'habillés : on saute, puis on flotte en étoile pour se reposer').n(2, 'on se regroupe en cercle (radeau humain) pour se tenir chaud').n(3, 'on nage calmement vers le bord en brasse ou en dos'); },
+    'Épreuve 1 : 5 minutes': g => test(g, ['brasse', 'crawl', 'crawl']).n(1, '5 min sans s\'arrêter, comme au test de départ ; le partenaire compte les longueurs'),
+    'Épreuve 2 : 25 m crawl, 25 m dos, flottaison': g => { epr(g, ['25 m crawl', '25 m dos', 'flottaison']); g.nag(250, +g.pool_y(2) + 8, {k: 'etoile'}); return g; },
+    'Le saut du pirate': g => { bain(g); [['droit', 230, 'nage'], ['en boule', 280, 'boule'], ['en étoile', 330, 'etoile']].forEach(([t, x, k]) => { g.A(x, 240).arrow('run', x, 228, x, 185, 0).nag(x, 165, {k, a: -90}).label(x, 140, t, {s: 9, b: 1}); });
+      g.arrow('swim', 330, 150, 380, 70, -20).P(390, 30).label(120, 125, 'grand bain →', {s: 10, c: '#3d6f86'});
+      return g.n(1, 'sauts variés en grande profondeur : droit, en boule, en étoile, en tournant').n(2, 'on remonte, on cherche le prof des yeux et on rejoint le bord'); },
+    'Les pieds de plomb': g => { bain(g); [[230, 70], [300, 90], [250, 160], [330, 180], [180, 120]].forEach(([x, y]) => g.nag(x, y, {k: 'tete', lab: '🙌'})); g.P(390, 125).chrono(390, 150);
+      return g.tag(120, 238, '10 s → 20 s → 30 s', {s: 10}).n(1, 'surplace bras en l\'air (« au secours ! ») le plus longtemps possible, en grande profondeur'); },
+    dauphins: g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); [120, 190, 260, 330].forEach(x => g.frite(x, y, 90, '#16a34a')); g.nag(60, y, {}).path('swim', [[80, y], [120, y - 18], [190, y + 18], [260, y - 18], [330, y + 18], [365, y]]); });
+      [120, 260].forEach(x => g.label(x, 37, 'dessus', {s: 8.5})); [190, 330].forEach(x => g.label(x, 37, 'dessous', {s: 8.5}));
+      return g.n(1, 'on passe alternativement dessus et dessous les frites, comme un dauphin').n(2, 'un passage raté = on recommence l\'obstacle'); },
+    'Le crawl rattrapé': g => { test(g, ['crawl', 'crawl', 'crawl'], {xs: []}); return g.tag(200, 240, '✋ une main attend l\'autre devant (comme un témoin)', {s: 9}).n(1, 'on respire du côté du bras qui tire'); },
+    relais: g => { g.pool(4, {marks: false}); [0, 1, 2, 3].forEach(i => { const y = +g.pool_y(i), c = [COL.a, COL.b, '#16a34a', COL.p][i]; g.nag(32, y - 10, {c, k: 'tete'}).nag(32, y + 12, {c, k: 'tete'}).nag(130 + i * 30, y, {c, k: 'crawl'}).swim(152 + i * 30, y, 365, y); });
+      return g.n(1, 'équipes équilibrées ; chacun nage une longueur, le suivant part quand le précédent touche le mur').n(2, 'départ anticipé = 3 s de pénalité ; on change l\'ordre et la nage à chaque manche'); },
+    'La grenouille': g => { P3(g, {marks: false}); g.nag(45, +g.pool_y(0), {k: 'brasse', a: 180}).label(80, +g.pool_y(0) + 4, 'mains au mur', {s: 9, a: 'start', b: 1});
+      [1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(150, y, {k: 'brasse'}).board(175, y).swim(188, y, 330, y); }); bord(g, [140, 260], {chrono: false});
+      return g.n(1, 'talons aux fesses, pieds en flexion (« en canard »), on fouette en cercle et on serre').n(2, 'au mur, puis avec planche ; le partenaire regarde si les pieds sont symétriques'); },
+    radeau: g => { g.pool(3, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i), c = [COL.a, COL.b, '#16a34a'][i]; g.tapisFlot(200 - i * 25, y, 50, 30).nag(200 - i * 25, y, {c, k: 'boule'}).nag(160 - i * 25, y - 9, {c, k: 'crawl'}).nag(160 - i * 25, y + 9, {c, k: 'crawl'}).arrow('swim', 232 - i * 25, y, 360, y, 0); });
+      return g.n(1, 'l\'équipe pousse le tapis en battements jusqu\'à l\'autre bord, sans que le passager tombe').n(2, 'on change de passager à chaque longueur'); },
+    pronostic: g => { test(g, ['crawl', 'brasse', 'crawl'], {xs: [120, 280]}); return g.tag(200, 240 - 22, 'annoncé 1 min 50 · réalisé 1 min 53', {s: 9}).n(1, 'avant de nager, on annonce son temps ; le partenaire chronomètre').n(2, 'le gagnant est le plus proche de son pronostic, pas le plus rapide'); },
+    'Le 100 m des naufragés': g => test(g, ['brasse', 'dos', 'crawl'], {xs: []}).tag(200, 240, '100 m sans toucher le fond ni le bord (virages permis)', {s: 9}).n(1, 'si on est fatigué, on passe sur le dos'),
+    'Épreuve 1 : 100 m': g => test(g, ['brasse', 'crawl', 'crawl'], {P: 1}).n(1, '100 m par vagues ; le partenaire vérifie (pas d\'arrêt, pas de fond)'),
+    'Épreuve 2 : saut, surplace, crawl, brasse': g => { epr(g, ['saut + surplace', 'crawl', 'brasse'], ['tete', 'crawl', 'brasse']); return g; },
+    plongeon: g => { g.coupe(); g.side(42, 22, {a: 55}).path('run', [[58, 18], [92, 30], [108, 58]]);
+      g.raw('<ellipse cx="112" cy="63" rx="16" ry="4" fill="none" stroke="#f59f00" stroke-width="3.5"/>', 'top').label(135, 80, 'cerceau flottant à 1 m', {s: 9, a: 'start'});
+      ['1 · assis au bord', '2 · à genoux', '3 · accroupi', '4 · debout penché', '5 · debout'].forEach((t, i) => g.tag(320, 95 + i * 25, t, {s: 9}));
+      return g.n(1, 'bras tendus, tête entre les bras, on vise le cerceau flottant').n(2, 'on ne monte d\'une marche que si on n\'a pas fait de « plat »'); },
+    'La glisse de la grenouille': g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(120, y, {k: 'brasse'}).swim(142, y, 200, y).nag(225, y, {}).swim(247, y, 340, y); });
+      return g.tag(200, 240, 'tirer · respirer · pousser · glisser (2 s, bras tendus)', {s: 9}); },
+    canard: g => { g.coupe(); g.side(220, 66, {a: 90}).arrow('run', 238, 60, 262, 92, -14, 1).side(268, 115, {a: 180}).arrow('run', 268, 140, 268, 218, 0, 2);
+      g.fond(262, 230).fond(300, 232, '#f59f00').side(345, 76, {c: COL.b}).label(345, 112, 'binôme', {s: 9, b: 1, c: COL.b}).label(345, 124, 'surveille', {s: 9, c: COL.b});
+      return g.n(1, 'en surface, on plie le corps : tête en bas, jambes en l\'air, sans pousser au mur').n(2, 'on descend et on ramène un objet : 1 point, 2 au premier essai'); },
+    'Le 200 m du malin': g => test(g, ['brasse', 'dos', 'crawl'], {xs: [130, 270]}).n(1, '200 m sans arrêt : on choisit ses nages pour ne jamais devoir s\'arrêter').n(2, 'le partenaire note le temps à 100 m'),
+    'Tends-moi la frite': g => { bain(g); [70, 200, 330].forEach(x => { g.A(x, 240).perche(x, 230, x + 10, 190).nag(x + 12, 172, {k: 'tete', t: 'g', lab: 'naufragé'}).arrow('run', x - 14, 190, x - 14, 225, 0); });
+      return g.n(1, 'du bord, on tend une frite ou une perche au naufragé et on le tire au bord, sans entrer dans l\'eau').n(2, 'puis on lui lance une planche'); },
+    remorque: g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(250, y, {k: 'dos', t: 'g', a: 180}).nag(222, y, {k: 'dos', a: 180}).arrow('swim', 205, y, 70, y, 0); });
+      return g.label(250, 40, 'naufragé détendu', {s: 8.5}).n(1, 'le sauveteur nage sur le dos, jambes de brasse, en tenant le naufragé sous les aisselles').n(2, 'le visage du naufragé reste toujours hors de l\'eau'); },
+    'Épreuve 1 : plongeon, 25 m brasse, canard': g => epr(g, ['plongeon', '25 m brasse', 'canard'], ['nage', 'brasse', 'sous']),
+    'Épreuve 2 : 200 m': g => test(g, ['brasse', 'crawl', 'crawl']).n(1, 'le partenaire chronomètre et note les deux 100 m'),
+    'Le test des 100 m': g => test(g, ['brasse', 'crawl', 'crawl']).n(1, '100 m chronométré dans la nage de son choix').n(2, 'on forme les couloirs de niveau'),
+    virage: g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(300, y - 12, {k: 'crawl'}).path('swim', [[322, y - 12], [362, y - 12], [370, y], [362, y + 12], [300, y + 12]]); });
+      g.raw('<path d="M307 22V228M378 22V228" stroke="#2d3530" stroke-width="1.5" stroke-dasharray="4 3"/>', 'mid').label(307, 240, '5 m', {s: 9, b: 1}).label(250, 240, 'mur → 5 m après', {s: 9}).A(390, 240).chrono(372, 240);
+      return g.n(1, 'on ne s\'arrête jamais au mur : on touche (ou on culbute), on pivote et on repart en coulée').n(2, 'le partenaire chronomètre de 5 m avant à 5 m après le mur : record du virage'); },
+    'Épreuve 1 : 3 × 25 m': g => epr(g, ['25 m crawl', '25 m dos', '25 m brasse']),
+    'La ligne droite': g => { P3(g, {marks: false}); const y = +g.pool_y(1); g.nag(80, y, {k: 'crawl'}).path('swim', [[100, y], [200, y - 10], [300, y - 28]]).label(300, y - 40, 'respire d\'un seul côté : on dévie', {s: 9}).A(150, 240).run(170, 240, 280, 240);
+      g.nag(80, +g.pool_y(2), {k: 'crawl'}).swim(100, +g.pool_y(2), 340, +g.pool_y(2)).label(220, +g.pool_y(2) - 14, 'tous les 3 temps : tout droit', {s: 9});
+      return g.n(1, 'crawl yeux fermés ; le partenaire marche au bord et prévient avant le mur'); },
+    'La fusée dorsale': g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(45, y, {k: 'dos'}).arrow('swim', 62, y, 120 + i * 20, y, 0).frite(130 + i * 20, y, 90, '#f59f00'); });
+      return g.n(1, 'mains à la goulotte, pieds au mur : on pousse en arc et on glisse sur le dos, bras tendus').n(2, 'record de coulée (frite posée par le partenaire)'); },
+    serie: g => { test(g, ['crawl', 'crawl', 'crawl'], {xs: []}); g.raw('<circle cx="200" cy="238" r="10" fill="#fff" stroke="#2d3530" stroke-width="2"/><path d="M200 238V231M200 238h5" stroke="#e11d48" stroke-width="1.8"/>', 'top');
+      return g.label(218, 242, 'l\'horloge', {s: 9, a: 'start', b: 1}).n(1, 'séries avec un temps de départ (ex. 4 × 25 m, départ toutes les 45 s)').n(2, 'plus on va vite, plus on a de repos ; on tient la même allure'); },
+    'Épreuve 1 : brasse, crawl, dos, canard': g => epr(g, ['brasse · crawl', 'dos', 'canard'], ['brasse', 'dos', 'sous']),
+    'Épreuve 2 : 4 × 50 m': g => test(g, ['crawl', 'crawl', 'crawl']).n(1, '4 × 50 m ; le partenaire chronomètre chaque 50 m'),
+    'Le 300 m des 3 tiers': g => test(g, ['crawl', 'crawl', 'crawl']).tag(200, 218, '100 m · 100 m · 100 m : presque égaux', {s: 9}).n(1, 'le partenaire annonce le temps à chaque 100 m'),
+    'La roulade de l\'otarie': g => { P3(g, {marks: false}); g.nag(160, +g.pool_y(0), {k: 'boule'}).loop(160, +g.pool_y(0), 20, 18, 'swim').label(200, +g.pool_y(0) + 4, 'au milieu du bassin', {s: 9, a: 'start'});
+      [1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(290, y, {k: 'crawl'}).swim(312, y, 345, y).nag(358, y, {k: 'boule'}).label(300, y - 18, '1 m du mur : pieds au mur', {s: 8.5}); });
+      return g.n(1, 'roulade avant dans l\'eau en soufflant par le nez, puis près du mur, puis en arrivant en crawl'); },
+    'Les règles des naufragés': g => { bain(g); g.row('a', 9, 50, 240, 260, 240).P(330, 240); ['🌊 on ne s\'épuise pas : on flotte', '👥 on se regroupe', '🙋 on appelle à l\'aide', '🏊 on nage calmement vers le bord'].forEach((t, i) => g.tag(200, 55 + i * 40, t, {s: 10})); return g; },
+    'Le 25 m habillé': g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(60, y, {k: i === 1 ? 'dos' : 'brasse'}).raw(`<rect x="52" y="${y - 6}" width="12" height="12" rx="2" fill="#facc15" opacity=".8"/>`, 'top').swim(82, y, 350, y); });
+      return g.tag(200, 240, '👕 t-shirt et short', {s: 9}).n(1, '25 m habillé en brasse ou en dos, sans s\'arrêter'); },
+    'Le départ au signal': g => { g.pool(4, {marks: false}); [0, 1, 2, 3].forEach(i => { const y = +g.pool_y(i); g.plotDep(12, y).nag(70 + (i % 2) * 10, y, {k: 'sous'}).arrow('swim', 30, y, 60, y, 0).frite(165, y, 90, '#f59f00'); });
+      return g.label(165, 240, 'frite à 10 m', {s: 9, b: 1}).P(390, 125).n(1, '« À vos marques » : on se fige ; au sifflet, plongeon, coulée, 3 bras rapides').n(2, 'le premier à toucher la frite marque'); },
+    'Épreuve 1 : 300 m': g => test(g, ['crawl', 'crawl', 'crawl']).n(1, '300 m ; le partenaire compte les longueurs'),
+    'Épreuve 2 : départ, habillé, remorquage': g => epr(g, ['départ plongé', '25 m habillé', 'remorquage'], ['nage', 'brasse', 'dos']),
+    waterpolo: g => { bain(g); g.raw('<path d="M22 98h10v54h-10M378 98h-10v54h10" fill="#fff" fill-opacity=".6" stroke="#e11d48" stroke-width="3"/>', 'mid'); g.nag(100, 70, {k: 'tete'}).nag(150, 180, {k: 'tete'}).nag(190, 100, {k: 'tete'}); g.nag(250, 80, {k: 'tete', t: 'b'}).nag(280, 170, {k: 'tete', t: 'b'}).nag(320, 120, {k: 'tete', t: 'b'});
+      g.ball(200, 112, 'volley').pass(190, 100, 150, 172, 10);
+      return g.n(1, 'on nage tête hors de l\'eau, ballon devant soi ; passe à une main').n(2, 'pas de contact, pas d\'enfoncement ; but (bord ou cerceau flottant) = 1 point'); },
+    'Le 400 m des deux moitiés': g => test(g, ['crawl', 'crawl', 'crawl']).tag(200, 218, '200 m + 200 m : presque égaux', {s: 9}).n(1, 'le partenaire annonce le temps à 200 m'),
+    'Épreuve 1 : plongeon, canard, retour dos': g => epr(g, ['plongeon', 'canard', 'retour dos'], ['nage', 'sous', 'dos']),
+    'Épreuve 2 : 400 m': g => test(g, ['crawl', 'crawl', 'crawl']).n(1, '400 m ; le partenaire note les deux 200 m'),
+    'La sirène': g => { g.coupe(); g.path('swim', [[90, 110], [140, 95], [190, 125], [240, 100], [290, 130], [340, 105]]).side(80, 110, {a: 90}).label(220, 165, 'la vague part de la tête et va aux pieds', {s: 9, b: 1});
+      return g.n(1, 'bras le long du corps, puis devant : on ondule depuis la poitrine').n(2, 'sous l\'eau puis en surface'); },
+    'Le papillon en 3 temps': g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(90, y, {k: 'brasse'}).path('swim', [[112, y], [150, y - 8], [190, y + 8], [230, y - 8], [270, y]]); });
+      return g.tag(200, 240, 'ondulation · ondulation · 1 bras · respiration devant', {s: 9}).n(1, '15 m ; les deux bras ensemble'); },
+    'Le chrono des champions': g => test(g, ['crawl', 'crawl', 'crawl']).n(1, '25 m puis 50 m chronométrés par le partenaire ; arrivée bras tendu').n(2, 'on note son temps : il sert pour l\'évaluation'),
+    'La tactique du relais': g => { g.pool(4, {marks: false}); [0, 1, 2, 3].forEach(i => { const y = +g.pool_y(i), c = [COL.a, COL.b, '#16a34a', COL.p][i]; g.plotDep(12, y).nag(70, y, {c, a: 180, k: 'crawl'}).arrow('swim', 110, y, 50, y, 0); });
+      return g.tag(200, 240, 'le suivant plonge quand la main touche le mur', {s: 9}).n(1, 'chaque équipe choisit son ordre (le plus rapide en dernier ?) et répète les passages'); },
+    'Épreuve 1 : 50 m, virages, ondulation': g => epr(g, ['50 m', 'virages', 'ondulation'], ['crawl', 'crawl', 'sous']),
+    'Épreuve 2 : relais': g => { g.pool(4, {marks: false}); [0, 1, 2, 3].forEach(i => { const y = +g.pool_y(i), c = [COL.a, COL.b, '#16a34a', COL.p][i]; g.plotDep(12, y).nag(140 + i * 30, y, {c, k: 'crawl'}).swim(162 + i * 30, y, 360, y); }); return g.n(1, 'relais 4 × 50 m'); },
+    'Les règles de l\'apnée': g => { bain(g); g.row('a', 9, 50, 240, 260, 240).P(330, 240); ['👥 jamais seul', '🚫 on ne respire pas vite avant', '⬆️ on remonte au moindre doute', '👀 le binôme regarde toujours'].forEach((t, i) => g.tag(200, 55 + i * 40, t, {s: 10})); return g; },
+    'La victime qui panique': g => { bain(g); g.nag(220, 125, {k: 'tete', t: 'g', lab: 'victime'}).nag(120, 125, {k: 'brasse'}).arrow('swim', 140, 125, 175, 140, 10).arrow('swim', 180, 150, 225, 150, -12, 1);
+      g.nag(310, 125, {k: 'dos', t: 'g', a: 180}).nag(282, 125, {k: 'dos', a: 180}).arrow('swim', 265, 125, 360, 125, 0).num(330, 100, 2).A(390, 240);
+      return g.n(1, 'on approche par derrière, on rassure, on retourne la victime sur le dos').n(2, 'puis on remorque ; si elle s\'agrippe : on descend sous l\'eau, elle lâche'); },
+    sauvetage: g => { bain(g); g.A(40, 240).arrow('run', 40, 228, 50, 205, 0, 1).nag(60, 190, {k: 'tete'}).arrow('swim', 80, 185, 200, 140, 0, 2).fond(230, 120).num(230, 100, 3).nag(290, 90, {t: 'g', k: 'tete'}).arrow('swim', 280, 105, 120, 60, 20, 4).nag(100, 50, {k: 'dos'}).arrow('run', 70, 40, 30, 30, 0, 5).A(390, 240).chrono(372, 240);
+      return g.n(1, 'entrée sautée, tête hors de l\'eau').n(2, '15 m tête hors de l\'eau en fixant la victime').n(3, 'canard pour l\'objet au fond').n(4, 'remorquage du camarade').n(5, 'sortie de l\'eau ; le binôme chronomètre'); },
+    'Le 600 m annoncé': g => test(g, ['crawl', 'crawl', 'crawl']).tag(200, 218, '± 5 s de son allure à chaque 100 m', {s: 9}).n(1, 'le partenaire annonce les temps à chaque 100 m'),
+    'Ma séance': g => { test(g, ['crawl', 'sous', 'dos']); g.sheet(370, 240); return g.n(1, 'chacun nage la séance de son carnet pour son point faible (canard, remorquage, allure)').n(2, 'le binôme vérifie les temps ; ressentis notés au bord'); },
+    'Épreuve 1 : parcours de sauvetage': g => { bain(g); g.nag(60, 190, {k: 'tete'}).arrow('swim', 80, 185, 200, 140, 0, 1).fond(230, 120).num(230, 100, 2).nag(290, 90, {t: 'g', k: 'tete'}).arrow('swim', 280, 105, 120, 60, 20, 3).P(390, 240).sheet(370, 240);
+      return g.n(1, 'entrée, nage tête hors de l\'eau').n(2, 'canard, objet au fond').n(3, 'remorquage ; observés par le prof'); },
+    'Épreuve 2 : 600 m': g => test(g, ['crawl', 'crawl', 'crawl']).n(1, '600 m ; le partenaire note les temps à chaque 100 m'),
+    'Le dé des 4 nages': g => { P3(g, {marks: false}); circ(g, 0, 'crawl'); circ(g, 1, 'dos'); circ(g, 2, 'brasse');
+      return g.tag(200, 240, '🎲 le dé décide de la nage de chaque longueur', {s: 9}).n(1, 'il faut avoir nagé les 4 nages (papillon, dos, brasse, crawl) pour finir'); },
+    'Épreuve 1 : 100 m au choix': g => epr(g, ['100 m 4 nages', '100 m crawl', 'culbutes'], ['brasse', 'crawl', 'crawl']),
+    'Épreuve 2 : sauvetage': g => epr(g, ['canard', 'objet', 'remorquage 15 m'], ['sous', 'sous', 'dos']),
+    'La recette de la séance': g => { bain(g); g.row('a', 9, 50, 240, 260, 240).P(330, 240); ['1 · échauffement (200 m)', '2 · série principale (distances, repos)', '3 · retour au calme'].forEach((t, i) => g.tag(200, 70 + i * 45, t, {s: 10.5}));
+      return g.sheet(360, 200).n(1, 'on écrit sa séance sur une fiche plastifiée'); },
+    'La sortie de l\'eau': g => { g.coupe(); g.side(30, 22, {a: 0}).nag(85, 64, {k: 'tete', t: 'g'}).arrow('run', 70, 58, 38, 36, -10, 2).label(100, 110, 'mains de la victime posées sur le bord', {s: 9, a: 'start'});
+      return g.n(1, 'on place les mains de la victime sur le bord, puis on sort').n(2, 'on la tire en arrière en la tenant sous les aisselles'); },
+    'La PLS': g => { g.floor(); g.raw('<path d="M110 150h120" stroke="#9aa3a0" stroke-width="0"/>', 'bg'); g.side(150, 150, {a: -90, c: '#9aa3a0'}).label(150, 175, 'victime sur le côté', {s: 9}).A(150, 115).label(200, 80, 'au sec, au bord du bassin', {s: 10});
+      ['1 · conscience ? respiration ?', '2 · appeler le 112', '3 · position latérale de sécurité'].forEach((t, i) => g.tag(310, 120 + i * 30, t, {s: 9.5}));
+      return g; },
+    'Le crawl water-polo': g => { P3(g, {marks: false}); [0, 1, 2].forEach(i => { const y = +g.pool_y(i); g.nag(120, y, {k: 'tete'}).ball(140, y, 'volley').swim(150, y, 340, y); });
+      return g.n(1, 'crawl tête hors de l\'eau, le ballon devant soi entre les bras'); },
+    'Les 10 passes aquatiques': g => { bain(g); [[90, 70], [170, 180], [250, 70], [320, 170]].forEach(([x, y]) => g.nag(x, y, {k: 'tete'})); [[150, 110], [230, 140], [300, 100]].forEach(([x, y]) => g.nag(x, y, {k: 'tete', t: 'b'}));
+      g.ball(98, 80, 'volley').pass(98, 80, 165, 170, -10).pass(178, 172, 245, 80, -10).pass(255, 78, 315, 162, -10);
+      return g.n(1, '10 passes de suite à une main sans interception = 1 point'); },
+    'Le Cooper aquatique': g => test(g, ['brasse', 'crawl', 'crawl']).tag(200, 218, '12 min de nage', {s: 9}).n(1, 'le binôme compte les longueurs ; distance comparée au barème affiché'),
+    'Épreuve 1 : ma séance': g => test(g, ['crawl', 'brasse', 'dos'], {P: 1}).n(1, 'chacun nage sa séance ; le binôme note les temps'),
+    'Le test de départ': g => epr(g, ['Cooper aquatique', '50 m chrono', 'parcours de sauvetage'], ['brasse', 'crawl', 'tete']).n(2, 'chacun choisit son test, avec son binôme'),
+    'Mon carnet de projet': g => { g.floor(); g.ring('a', 6, 200, 140, 120, 70); g.sheet(200, 140).tag(200, 30, '🎯 objectif chiffré · plan des 4 séances', {s: 10}); return g; },
+    aquagym: g => { g.petitBain({deep: false}); [[90, 70], [160, 70], [230, 70], [90, 140], [160, 140], [230, 140], [300, 105]].forEach(([x, y]) => g.nag(x, y, {k: 'tete'}));
+      g.nag(170, 200, {k: 'tete', t: 'j', c: '#16a34a', lab: 'meneur'}).frite(100, 165, 0).music(350, 200);
+      return g.n(1, 'en petite profondeur, sur la musique : sauts, courses sur place, bras avec frites, gainage au mur').n(2, 'un élève mène, les autres suivent ; nouveau meneur toutes les 2 min'); },
+    'Le circuit aquatique': g => { g.petitBain({deep: false}); [['course dans l\'eau', 30, 30], ['gainage frite', 205, 30], ['jambes au mur', 30, 128], ['sauts', 205, 128]].forEach(([t, x, y], i) => g.zone(x, y, 165, 92, '', 'blue').num(x + 14, y + 14, i + 1).label(x + 26, y + 18, t, {s: 9.5, b: 1, a: 'start'}));
+      g.nag(80, 80, {k: 'tete'}).arrow('run', 95, 80, 160, 80, 0).nag(260, 80, {}).frite(260, 92, 0).nag(60, 180, {a: 180, k: 'crawl'}).nag(280, 180, {k: 'tete'}).nag(320, 180, {k: 'tete'});
+      return g.n(1, '1 min par atelier, puis on tourne'); },
+    'Le test final': g => epr(g, ['Cooper aquatique', '50 m chrono', 'parcours de sauvetage'], ['brasse', 'crawl', 'tete']).n(2, 'même test qu\'au début, avec le binôme'),
+    'L\'analyse': g => { g.floor(); g.ring('a', 6, 200, 140, 120, 70); g.sheet(200, 140).tag(200, 30, 'avant → après : qu\'est-ce qui a changé ?', {s: 10}); return g; }
+  };
+})();

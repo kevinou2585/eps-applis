@@ -79,3 +79,43 @@ J: {
 },
 an: {1: A, 2: A, 3: A, 4: A, 5: A, 6: A}});
 })();
+
+/* ===== Schémas de chaque jeu (zone de tapis vue de dessus, ou lutteurs dessinés de profil) ===== */
+(window.PSCH_SC = window.PSCH_SC || {}).lutte = (() => {
+  const EQ = ['#1f63d6', '#e8590c', '#16a34a', '#8a3ffc'];
+  const zone = g => { g.hall(); g.mat(25, 25, 350, 200, {seams: 4}); return g; };
+  const prof = g => { g.sol(205); return g; };
+  const tapis4 = (g, fn) => { g.hall(); [[20, 20], [205, 20], [20, 130], [205, 130]].forEach(([x, y], i) => { g.mat(x, y, 175, 100); if (fn) fn(x + 87, y + 50, i); }); return g; };
+  return {
+    regles: g => { zone(g); g.row('a', 9, 50, 240, 300, 240).P(340, 240); ['🙇 on salue avant et après', '🚫 pas de coups, de clés, rien au cou ni à la tête', '✋ 2 tapes ou « stop » = on lâche tout de suite', '💍 bijoux enlevés · ongles courts · pieds nus'].forEach((t, i) => g.tag(200, 55 + i * 42, t, {s: 9.5})); return g; },
+    chat4: g => { zone(g); g.scatter('a', 9, 50, 50, 350, 200, {seed: 3}); g.X(190, 120).run(202, 120, 230, 100, 0).raw('<circle cx="120" cy="170" r="11" fill="#9aa3a0"/>', 'top').label(120, 195, 'touché : tortue', {s: 9}).A(90, 150).lob(90, 150, 140, 180, -18);
+      return g.n(1, 'tout le monde à 4 pattes ; les chats touchent le dos des autres').n(2, 'un touché se met en tortue ; délivré quand un camarade passe par-dessus'); },
+    tortue: g => { prof(g); g.fig(160, 205, 'table', {s: 1.8}).fig(250, 205, 'genou', {s: 1.8, t: 'b', r: 1}).rot(200, 150, 160, 120, -20); return g.tag(200, 50, '20 s pour retourner la tortue sur le dos', {s: 10}).n(1, 'A à 4 pattes ; B la retourne sans la soulever et sans prise à la tête').n(2, 'on inverse ; nouveau partenaire toutes les 2 reprises'); },
+    chiffonniers: g => { zone(g); g.scatter('a', 9, 50, 50, 350, 200, {seed: 5}).each((x, y, i) => g.raw(`<path d="M${x + 6} ${y + 6}l8 6" stroke="${['#facc15', '#e11d48', '#16a34a'][i % 3]}" stroke-width="4" stroke-linecap="round"/>`, 'top'));
+      return g.tag(200, 238, 'à genoux · sans protéger son foulard avec les mains', {s: 9}).n(1, 'on attrape le foulard des autres (dans la ceinture)').n(2, 'sans foulard : on sort 20 s et on fait 5 abdos'); },
+    crocodile: g => { prof(g); g.fig(170, 205, 'genou', {s: 1.8, r: 1}).fig(230, 205, 'genou', {s: 1.8, t: 'b'}); return g.tag(200, 50, 'dos à dos · au signal : se retourner', {s: 10}).n(1, 'essayer de poser les deux épaules de l\'autre au sol ; 30 s par reprise'); },
+    coffre: g => { prof(g); g.fig(160, 205, 'planche', {s: 1.6}).ball(165, 196, 'gros').fig(260, 205, 'genou', {s: 1.8, t: 'b', r: 1}); return g.tag(200, 50, '20 s pour prendre le trésor', {s: 10}).n(1, 'A est couché sur le ballon ; B le fait rouler ou glisse les mains dessous (jamais par la tête)').n(2, 'on inverse'); },
+    salut: g => { g.hall(); g.ring('a', 10, 200, 145, 125, 70); g.P(200, 145); return g.tag(200, 35, '🙇 salut · position de l\'enfant · chat-vache', {s: 9.5}).n(1, 'étirements doux du dos, des épaules et de la nuque').n(2, 'un élève redit les règles ; chacun nomme un partenaire respectueux'); },
+    coqs: g => { prof(g); g.fig(170, 205, 'accroupi', {s: 1.8}).fig(232, 205, 'accroupi', {s: 1.8, t: 'b', r: 1}); return g.tag(200, 50, 'paumes contre paumes', {s: 10}).n(1, 'en poussant ou en esquivant avec les mains, faire perdre l\'équilibre à l\'autre').n(2, 'mains ou fesses au sol = 1 point ; 3 points et on change'); },
+    sumo: g => { g.hall(); for (let i = 0; i < 12; i++){ const a = i / 12 * 2 * Math.PI; g.disc(200 + 90 * Math.cos(a), 125 + 90 * Math.sin(a)); } g.A(180, 125).B(220, 125).run(232, 125, 290, 125, 0); return g.label(200, 238, 'cercle de coupelles', {s: 9.5, b: 1}).n(1, 'debout, mains sur les épaules : faire sortir l\'autre du cercle en poussant ou en tirant').n(2, 'jambes fléchies, dos droit ; 30 s puis on change'); },
+    roitapis: g => tapis4(g, (x, y, i) => g.ring('a', 4, x, y, 30, 22, {c: EQ[i]})).n(1, 'à genoux, chacun essaie de faire sortir les autres du tapis').n(2, 'le dernier sur le tapis gagne 1 point ; reprises de 45 s'),
+    planche: g => { prof(g); g.fig(160, 205, 'allonge', {s: 1.8}).fig(260, 205, 'genou', {s: 1.8, t: 'b', r: 1}).rot(200, 160, 165, 140, -20); return g.tag(200, 50, '15 s pour retourner la planche', {s: 10}).n(1, 'A allongé sur le ventre, gainé ; B le retourne sur le dos').n(2, 'puis A à 4 pattes ; on inverse'); },
+    tire: g => { g.hall(); g.line('M90 40V210M310 40V210', 3, '#e11d48'); g.A(185, 80).B(215, 80).run(175, 80, 110, 80, 0).run(225, 80, 290, 80, 0).label(200, 60, 'assis dos à dos, bras crochetés', {s: 9, b: 1}); g.A(185, 170).B(215, 170).run(175, 170, 110, 170, 0).run(225, 170, 290, 170, 0).label(200, 150, 'debout, mains tenues', {s: 9, b: 1});
+      return g.n(1, 'chacun essaie d\'entraîner l\'autre au-delà de sa ligne'); },
+    chutes: g => { g.sol(205); [['roulade avant', 60, 'accroupi'], ['roulade arrière', 150, 'accroupi'], ['chute sur le côté', 245, 'allonge'], ['chute arrière', 340, 'assis']].forEach(([t, x, p], i) => g.fig(x, 205, p, {s: 1.3}).num(x, 130, i + 1).label(x, 115, t, {s: 9, b: 1}));
+      return g.n(1, 'sur le côté, on tape le tapis avec le bras ; en arrière, menton rentré').n(2, 'puis par deux : A pousse doucement B, qui chute correctement'); },
+    renverse: g => { prof(g); g.fig(120, 205, 'table', {s: 1.5}).fig(160, 205, 'genou', {s: 1.5, t: 'b', r: 1}).num(140, 120, 1).fig(280, 205, 'table', {s: 1.5}).fig(300, 205, 'genou', {s: 1.5, t: 'b', r: 1}).num(290, 120, 2).rot(250, 160, 300, 160, -20);
+      return g.n(1, 'saisir le bras et la jambe du même côté et tirer vers soi').n(2, 'passer le bras sous le ventre et faire rouler l\'autre sur l\'épaule ; 5 essais chacun'); },
+    tresor: g => tapis4(g, (x, y) => { g.ball(x, y, 'gros').A(x - 22, y, 'G').B(x + 40, y - 25).B(x + 40, y + 25); }).n(1, 'le gardien (à genoux) défend le trésor ; deux voleurs à genoux essaient de le sortir du tapis').n(2, 'un voleur renversé revient au bord ; on tourne toutes les 45 s'),
+    immo: g => { prof(g); g.fig(180, 205, 'allonge', {s: 1.8, r: 1}).fig(185, 190, 'planche', {s: 1.4, t: 'b'}).J(320, 150, 'A').tag(320, 110, '« 1, 2, 3, 4, 5 ! »', {s: 10});
+      return g.n(1, 'en travers du partenaire, poitrine contre poitrine ; un bras entoure son bras, l\'autre sous son épaule (jamais autour du cou)').n(2, 'l\'arbitre compte 5 s à voix haute'); },
+    degage: g => { prof(g); g.fig(180, 205, 'allonge', {s: 1.8, r: 1}).fig(185, 190, 'planche', {s: 1.4, t: 'b'}).rot(150, 165, 120, 130, 20); return g.tag(200, 50, '15 s pour s\'évader : pont ou retournement', {s: 10}).n(1, 'B pousse sur les pieds et roule sur l\'épaule, ou se retourne sur le ventre').n(2, 'évasion réussie = 1 point'); },
+    enchaine: g => { prof(g); g.fig(110, 205, 'table', {s: 1.4}).fig(140, 205, 'genou', {s: 1.4, t: 'b', r: 1}).arrow('run', 170, 150, 230, 150, 0).fig(290, 205, 'allonge', {s: 1.4, r: 1}).fig(295, 193, 'planche', {s: 1.1, t: 'b'});
+      return g.tag(200, 50, 'renverser = 1 point · renverser + immobiliser 5 s = 2 points', {s: 9}).n(1, 'départ à 4 pattes / à genoux ; reprises de 45 s'); },
+    'Les règles du combat': g => { zone(g); g.A(180, 125).B(220, 125).J(200, 60, 'A'); ['sortie de la zone = 1 point à l\'autre', 'renversement = 1 point', 'immobilisation 5 s = 2 points'].forEach((t, i) => g.tag(200, 165 + i * 22, t, {s: 9.5})); return g.n(1, 'combat au sol, départ à genoux, 1 min 30 ; l\'arbitre dit « allez », « stop » et montre le score'); },
+    poules: g => tapis4(g, (x, y, i) => { g.A(x - 12, y, '', {c: EQ[i]}).A(x + 12, y, '', {c: EQ[i]}).J(x, y - 32, 'A').A(x + 55, y + 25, '', {c: '#9aa3a0'}).sheet(x + 75, y + 25); }).n(1, 'poules de 4 de gabarit proche : chacun lutte contre les 3 autres').n(2, 'ceux qui ne luttent pas arbitrent et tiennent la fiche ; salut avant et après'),
+    'Le tribunal de l\'arbitre': g => { zone(g); g.A(180, 110).B(220, 110).J(200, 70, 'A'); g.row('g', 8, 60, 240, 340, 240); return g.tag(200, 160, 'la classe vote la bonne décision', {s: 10}).n(1, 'chaque poule rejoue une situation difficile à arbitrer'); },
+    'Épreuve 1 : les gestes': g => { prof(g); g.fig(110, 205, 'table', {s: 1.4}).fig(140, 205, 'genou', {s: 1.4, t: 'b', r: 1}).fig(270, 205, 'allonge', {s: 1.4, r: 1}).fig(275, 193, 'planche', {s: 1.1, t: 'b'}).P(360, 150).sheet(360, 180); return g.n(1, 'par 3 : renversements, immobilisation, dégagements devant le prof'); },
+    'Épreuve 2 : combats arbitrés': g => tapis4(g, (x, y, i) => g.A(x - 12, y, '', {c: EQ[i]}).A(x + 12, y, '', {c: EQ[i]}).J(x, y - 32, 'A')).n(1, 'poules de gabarit proche ; chacun arbitre au moins un combat')
+  };
+})();

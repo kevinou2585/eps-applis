@@ -116,7 +116,7 @@
     const LS2 = (l.sal || {})[sl] || {}; ['m', 'f', 'ff', 'src'].forEach(k => { if (LS2[k] != null) S[k] = LS2[k]; });
     const tx = s => txt(s, ctx, S);
     const items = k => (l[k] || []).map(it => { const [key, m, d, ok, va, sch, f] = it, A0 = auto(L)[key], J = (L.J || {})[key] || JG[key] || (A0 && A0.it !== it ? A0 : null);
-      return {nom: tx(J ? J.n : key), m: +m || 0, d: J ? (d ? `${tx(J.d)}\n   → ${tx(d)}` : tx(J.d)) : tx(d), ok: tx(ok), va: tx(va), sch: sch || (J && J.s) || '', f: f || (J && J.f) || ''}; });
+      return {nom: tx(J ? J.n : key), m: +m || 0, d: J ? (d ? `${tx(J.d)}\n   → ${tx(d)}` : tx(J.d)) : tx(d), ok: tx(ok), va: tx(va), sch: '@' + L.id + '|' + key + '#' + (sch || (J && J.s) || ''), f: f || (J && J.f) || ''}; });
     const e = items('e'), c = [...items('c'), ...(ctx.h >= 2 ? items('x') : [])], r = items('r');
     // minutes : échauffement et retour au calme bougent peu, les jeux du corps de leçon prennent le reste
     const sum = a => a.reduce((s, x) => s + x.m, 0), tot = sum(e) + sum(c) + sum(r) || 1, fa = T / tot;

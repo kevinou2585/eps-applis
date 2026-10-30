@@ -291,3 +291,90 @@ an: {
    r: [['bilan', 6]]}
 ]}
 }});
+
+/* ===== Schémas de chaque jeu (gymnase avec tapis ; les figures sont dessinées de profil : porteur bleu, voltigeur orange, pareur gris en pointillés) ===== */
+(window.PSCH_SC = window.PSCH_SC || {}).acro = (() => {
+  const EQ = ['#1f63d6', '#e8590c', '#16a34a', '#8a3ffc'];
+  // figures montées (x = milieu, y = sol)
+  const FIG = {
+    banc: (g, x, y, k = 1) => g.fig(x - 6 * k, y, 'table', {s: k}).fig(x - 2 * k, y - 18 * k, 'bras', {t: 'b', s: k}),
+    avion: (g, x, y, k = 1) => g.fig(x - 6 * k, y, 'jambes', {s: k}).fig(x - 4 * k, y - 33 * k, 'allonge', {t: 'b', s: k}),
+    chaise: (g, x, y, k = 1) => g.fig(x - 4 * k, y, 'genou', {s: k}).fig(x - 18 * k, y, 'planche', {t: 'b', r: 1, s: .9 * k}),
+    trio: (g, x, y, k = 1) => g.fig(x - 28 * k, y, 'table', {s: k}).fig(x + 26 * k, y, 'table', {s: k}).fig(x, y - 18 * k, 'bras', {t: 'b', s: k}),
+    quatuor: (g, x, y, k = 1) => g.fig(x - 50 * k, y, 'table', {s: k}).fig(x, y, 'table', {s: k}).fig(x + 50 * k, y, 'table', {s: k}).fig(x - 6 * k, y - 18 * k, 'bras', {t: 'b', s: k}),
+    pyramide: (g, x, y, k = 1) => g.fig(x - 54 * k, y, 'table', {s: k}).fig(x, y, 'table', {s: k}).fig(x + 54 * k, y, 'table', {s: k}).fig(x - 28 * k, y - 18 * k, 'table', {t: 'b', s: k}).fig(x + 26 * k, y - 18 * k, 'table', {t: 'b', s: k}).fig(x - 2 * k, y - 36 * k, 'bras', {t: 'b', s: k})
+  };
+  const pareur = (g, x, y, r) => g.fig(x, y, 'pareur', {t: 'p', r});
+  // plusieurs groupes de profil sur les tapis
+  const groupes = (g, L, o = {}) => { const y = o.y || 205, s = o.s || (L.length > 1 ? 1.3 : 1.6); g.sol(y); L.forEach(([k, x]) => { FIG[k](g, x, y, s); if (o.pareur !== false) g.fig(x + (k === 'quatuor' || k === 'pyramide' ? 80 : 46) * s, y, 'pareur', {t: 'p', r: 1, s}); }); return g; };
+  const tapis = g => { g.hall(); g.mat(30, 40, 340, 170, {seams: 4}); return g; };
+  const quatreTop = (g, fn) => { tapis(g); [[115, 85], [285, 85], [115, 165], [285, 165]].forEach(([x, y], i) => { g.ring('a', 3, x, y, 26, 20, {c: EQ[i]}); if (fn) fn(x, y, i); }); return g; };
+  const calme = (g, T) => { g.hall(); g.ring('a', 8, 200, 140, 125, 70); g.sheet(200, 140); T.forEach((t, i) => g.tag(200, 28 + i * 22, t, {s: 9.5})); return g; };
+  const leg = g => g.label(268, 20, 'porteur', {s: 9.5, b: 1, a: 'end', c: EQ[0]}).label(322, 20, 'voltigeur', {s: 9.5, b: 1, a: 'end', c: EQ[1]}).label(388, 20, 'pareur', {s: 9.5, b: 1, a: 'end', c: '#7b8480'});
+  const jury = g => g.row('g', 3, 160, 238, 240, 238).sheet(262, 238);
+  return {
+    statues: g => { tapis(g); g.scatter('a', 8, 50, 55, 350, 195, {seed: 3}); g.X(200, 120).run(212, 120, 240, 100, 0); g.sol; return g.tag(200, 26, 'touché : figé en planche', {s: 9.5}).n(1, 'un touché se fige en planche (face ou côté)').n(2, 'délivré quand un camarade passe sous lui (face) ou l\'enjambe (côté) ; le chat change toutes les minutes'); },
+    miroir: g => { g.sol(205); [[70, 'avion'], [200, 'planchec'], [320, 'bras']].forEach(([x, p]) => g.fig(x - 24, 205, p, {}).fig(x + 24, 205, p, {t: 'b', r: 1})); return g.tag(200, 40, 'on tient ensemble 3 s : « 1 - 2 - 3 »', {s: 9.5}).n(1, 'face à face : l\'un fait des positions d\'équilibre, l\'autre copie en même temps').n(2, 'le meneur change au signal'); },
+    crepe: g => { g.sol(205); g.fig(110, 205, 'allonge', {lab: 'gainé !'}).fig(80, 205, 'pareur', {t: 'b'}).fig(150, 205, 'pareur', {t: 'b', r: 1}).rot(100, 170, 130, 170, -14);
+      g.fig(280, 205, 'allonge').fig(240, 205, 'pareur', {t: 'b'}).raw('<path d="M255 195L262 182" stroke="#2d3530" stroke-width="2"/>', 'top').label(290, 175, 'soulevé de 10 cm par les chevilles', {s: 9});
+      return g.n(1, 'allongé et gainé comme une planche : les deux autres le retournent (dos → ventre) sans qu\'il plie').n(2, 'puis on le soulève par les chevilles : tout le corps suit'); },
+    'Les zones solides': g => { g.sol(205); g.fig(200, 205, 'table', {s: 2.2}); g.tag(150, 130, '✅ épaules', {s: 9}).tag(205, 100, '❌ dos creux', {s: 9}).tag(265, 130, '✅ bassin', {s: 9}).tag(330, 175, '✅ cuisses (près de la hanche)', {s: 8.5}).tag(95, 175, '❌ nuque', {s: 9});
+      return g.n(1, 'on n\'appuie que sur les zones solides : épaules, bassin, cuisses près de la hanche').n(2, 'jeu : le prof touche une zone, les groupes crient « solide ! » ou « interdit ! »'); },
+    appuis: g => { g.sol(205); g.fig(80, 205, 'table').fig(120, 205, 'avion', {t: 'b'}).fig(160, 205, 'debout');
+      return g.tag(120, 120, '« 3 joueurs, 5 appuis ! »', {s: 10}).tag(300, 120, '« 4 joueurs, 6 appuis ! »', {s: 10}).fig(260, 205, 'planche').fig(310, 205, 'genou', {t: 'b'}).fig(350, 205, 'debout').n(1, 'chaque groupe tient 3 s en ne touchant le sol qu\'avec le nombre d\'appuis annoncé').n(2, 'le groupe le plus rapide gagne le point'); },
+    transport: g => { g.sol(205); g.fig(150, 168, 'allonge', {}).fig(120, 205, 'pareur', {t: 'b'}).fig(160, 205, 'pareur', {t: 'b'}).fig(200, 205, 'pareur', {t: 'b', r: 1}).arrow('run', 230, 150, 330, 150, 0).label(280, 140, '5 m', {s: 10, b: 1});
+      return g.n(1, 'par 4 : le « meuble » gainé est porté aux épaules, au bassin et aux chevilles, puis reposé doucement').n(2, 'si le meuble plie, on recommence'); },
+    massage: g => { g.sol(205); [[90], [260]].forEach(([x]) => g.fig(x, 205, 'allonge').fig(x + 10, 205, 'genou', {t: 'b', r: 1})); return g.tag(200, 100, '🍕 étaler la pâte · la sauce · les ingrédients', {s: 9.5}).n(1, 'gestes doux sur le dos du partenaire ; on change').n(2, 'puis étirements des poignets et des épaules'); },
+    cartes: g => { groupes(g, [['banc', 80], ['avion', 240]]); g.raw('<rect x="320" y="40" width="50" height="66" rx="4" fill="#fff" stroke="#2d3530" stroke-width="1.5"/>', 'mid').label(345, 66, 'B', {s: 18, b: 1, c: '#e8590c'}).label(345, 96, '2 pts', {s: 9});
+      return leg(g).n(1, 'on pioche une carte-figure : montage, tenue 3 s, démontage, avec un pareur').n(2, 'le prof valide : le groupe garde la carte ; le plus de points gagne'); },
+    photo: g => { groupes(g, [['trio', 150]]); g.raw('<rect x="290" y="40" width="80" height="60" rx="3" fill="#fff" stroke="#2d3530" stroke-width="1.5"/>', 'mid').label(330, 75, '🖼 photo', {s: 11}).label(330, 115, 'montrée 10 s, puis cachée', {s: 9});
+      return leg(g).n(1, 'on reproduit la figure de mémoire ; au « clic ! », on se fige 3 s'); },
+    musee: g => { groupes(g, [['banc', 70], ['trio', 250]]); g.A(150, 60).A(180, 60).label(165, 40, 'visiteurs', {s: 9, b: 1}).tag(330, 50, '⭐⭐⭐', {s: 10});
+      return leg(g).n(1, 'les statues tiennent leur figure ; les visiteurs donnent 1 à 3 étoiles (tenue, sécurité)').n(2, 'une statue qui bouge « fond » et remonte'); },
+    bilan: g => { g.sol(205); [40, 85, 130, 175, 220, 265, 310, 355].forEach((x, i) => g.fig(x, 205, i % 2 ? 'genou' : 'assis', {t: i % 3 ? 'a' : 'b'})); return g.tag(200, 110, '📸 la photo de classe : toute la classe en une figure basse', {s: 9.5}).n(1, 'étirements du dos, des épaules, des poignets ; chacun dit sa figure préférée et un pareur sérieux'); },
+    'Le parcours gymnique': g => { g.sol(205, 20, 380); [['roulade avant', 60, 'accroupi'], ['saut extension', 130, 'bras'], ['demi-tour sauté', 200, 'bras'], ['roulade arrière', 270, 'accroupi'], ['chandelle', 340, 'chandelle']].forEach(([t, x, p], i) => g.fig(x, 205, p).num(x, 140, i + 1).label(x, 125, t, {s: 8.5, b: 1}));
+      return g.arrow('run', 40, 225, 360, 225, 0).n(1, 'on passe par 3 et on se donne des conseils'); },
+    liaisons: g => { g.sol(205); FIG.banc(g, 80, 205, 1.4); g.arrow('run', 125, 150, 225, 150, -30).label(170, 130, 'liaison : roulade, saut, tour…', {s: 9.5, b: 1}); FIG.avion(g, 290, 205, 1.4); return leg(g).n(1, 'figure 1 → liaison → figure 2 sans s\'arrêter').n(2, 'le groupe le plus fluide gagne'); },
+    bingo: g => { g.hall(); for (let i = 0; i < 9; i++){ const x = 120 + (i % 3) * 55, y = 50 + Math.floor(i / 3) * 55; g.raw(`<rect x="${x - 25}" y="${y - 25}" width="50" height="50" fill="#fff" stroke="#2d3530" stroke-width="1.5"/>`, 'mid').label(x, y + 4, ['duo', 'trio', 'quatuor'][Math.floor(i / 3)], {s: 9}); }
+      [0, 4, 8].forEach(i => g.label(120 + (i % 3) * 55, 50 + Math.floor(i / 3) * 55 - 10, '✔', {s: 16, b: 1, c: '#16a34a'})); g.raw('<path d="M100 30L250 180" stroke="#16a34a" stroke-width="3"/>', 'top').tag(320, 105, 'BINGO !', {s: 12});
+      return g.n(1, 'une figure validée = une case cochée ; une ligne = bingo !').n(2, 'on montre ses 3 figures au prof'); },
+    machine: g => { g.sol(205); g.fig(90, 205, 'bras').fig(130, 205, 'table', {t: 'b'}).fig(185, 205, 'avion').fig(230, 205, 'planchec', {t: 'b'}).fig(290, 205, 'genou'); g.tag(110, 80, '« tchic ! »', {s: 9}).tag(200, 70, '« bzzz ! »', {s: 9}).tag(290, 90, '« pouf ! »', {s: 9});
+      return g.n(1, 'chacun entre à son tour, s\'accroche avec un appui et répète un mouvement (et un bruit)').n(2, 'au signal, la machine tombe en panne'); },
+    'Le plan de l\'enchaînement': g => quatreTop(g, (x, y) => g.sheet(x, y)).tag(200, 126, '2 duos · 2 trios · liaisons · début · fin', {s: 9}).n(1, 'chaque groupe choisit ses figures et dessine son plan'),
+    'Répétition en musique': g => { groupes(g, [['trio', 110], ['quatuor', 270]]); g.music(30, 40); return leg(g).n(1, 'on répète sur la musique ; un élève compte les 3 s de tenue').n(2, 'on corrige le point faible donné par le juge'); },
+    juge: g => { groupes(g, [['quatuor', 160]]); jury(g); g.tag(320, 60, '🔍 critère mystère', {s: 9.5}); return leg(g).n(1, 'un groupe présente, un autre juge : sécurité, tenue 3 s, gainage').n(2, 'chaque juge a aussi un critère mystère dévoilé à la fin'); },
+    'Dernière répétition': g => groupes(g, [['trio', 110], ['quatuor', 270]]).n(1, 'chaque groupe répète une fois'),
+    'Le spectacle': g => { groupes(g, [['quatuor', 160]], {y: 190}); g.row('g', 7, 80, 238, 320, 238); return leg(g).n(1, 'chaque groupe présente ; un autre groupe juge avec la fiche'); },
+    'Le quiz de sécurité': g => { g.sol(205); g.fig(150, 205, 'table').fig(150, 187, 'bras', {t: 'b'}).label(150, 120, '❓', {s: 22}).tag(290, 110, 'appui sur le dos creux ? pareur ? saut ?', {s: 9}); return g.n(1, 'le prof monte une figure avec une erreur : le premier groupe qui la trouve gagne 1 point'); },
+    'L\'horloge de l\'ATR': g => { g.sol(205); g.wall(372, 20, 18, 185).fig(352, 205, 'atr').fig(110, 205, 'atr').fig(85, 205, 'pareur', {t: 'p'}).fig(135, 205, 'pareur', {t: 'p', r: 1});
+      return g.tag(230, 80, '« 1 heure, 2 heures… »', {s: 10}).n(1, 'monter à l\'ATR contre le mur ou avec deux pareurs aux cuisses').n(2, 'on compte les secondes : record du groupe'); },
+    'La roue dans le couloir': g => { tapis(g); g.disc(60, 100).disc(340, 100).disc(60, 150).disc(340, 150); g.raw('<path d="M60 100H340M60 150H340" stroke="#2d3530" stroke-width="1.5" stroke-dasharray="5 4"/>', 'mid');
+      [100, 160, 220, 280].forEach((x, i) => g.raw(`<rect x="${x - 6}" y="${118}" width="12" height="14" rx="3" fill="${i % 2 ? '#e8590c' : '#1f63d6'}"/>`, 'top')); g.A(40, 125).arrow('run', 52, 125, 330, 125, 0);
+      return g.label(200, 175, 'mains puis pieds sur une même ligne', {s: 9.5, b: 1}).n(1, 'on fait la roue sans sortir du couloir, puis une roue enchaînée avec une figure'); },
+    pyramide: g => { g.sol(205); FIG.pyramide(g, 200, 205, 1.5); g.fig(70, 205, 'pareur', {t: 'p', s: 1.5}).fig(330, 205, 'pareur', {t: 'p', r: 1, s: 1.5}); return leg(g).tag(200, 50, 'monter dans l\'ordre · tenir 3 s · démonter à l\'envers', {s: 9}).n(1, 'deux groupes s\'associent pour une pyramide à 6 ou plus, avec pareurs').n(2, 'on monte dans l\'ordre, on tient 3 s, on démonte dans l\'ordre inverse'); },
+    'Les dés de la composition': g => quatreTop(g, (x, y) => g.raw(`<rect x="${x - 10}" y="${y - 10}" width="20" height="20" rx="3" fill="#fff" stroke="#2d3530" stroke-width="1.6"/><circle cx="${x - 4}" cy="${y - 4}" r="1.8"/><circle cx="${x + 4}" cy="${y + 4}" r="1.8"/>`, 'top')).n(1, '3 dés : nombre de figures, liaisons imposées, une contrainte (au sol, canon, figure en mouvement)'),
+    'La bourse aux figures': g => { groupes(g, [['chaise', 70], ['trio', 210]]); return leg(g).tag(320, 60, 'A = 1 · B = 2 · C = 3 points', {s: 9.5}).n(1, '10 min pour « acheter » le plus de points ; une figure ratée coûte 1 point'); },
+    'L\'atterrissage': g => { g.sol(205); g.fig(110, 205, 'table').fig(112, 187, 'debout', {t: 'b'}).arrow('run', 125, 150, 190, 180, -20).fig(210, 205, 'accroupi', {t: 'b'}).fig(240, 205, 'pareur', {t: 'p', r: 1}).fig(180, 205, 'pareur', {t: 'p'});
+      return g.tag(300, 80, 'note de l\'atterrissage : 1 à 3', {s: 9}).n(1, 'saut pieds joints, réception genoux souples, bras devant, et on se fige').n(2, 'les pareurs tiennent les bras'); },
+    'La feuille de route': g => calme(g, ['figures (A-B-C) · liaisons · éléments individuels', '2 de force · 2 de souplesse · 1 tenue 5 s']),
+    'Le jury de la compétition': g => { groupes(g, [['quatuor', 160]], {y: 190}); g.row('g', 3, 160, 238, 240, 238).label(130, 242, 'difficulté', {s: 8.5, a: 'end'}).label(270, 242, 'exécution × 2', {s: 8.5, a: 'start'}); return g.n(1, 'un juge de difficulté, deux juges d\'exécution ; on compare leurs notes'); },
+    'La compétition': g => { groupes(g, [['quatuor', 160]], {y: 190}); jury(g); g.P(330, 238); return leg(g).n(1, 'jury élève et prof'); },
+    'Le musée des émotions': g => { groupes(g, [['banc', 90], ['trio', 260]]); g.tag(90, 70, '😨 peur ?', {s: 10}).tag(260, 70, '😄 joie ?', {s: 10}); return g.n(1, 'chaque groupe montre une émotion avec sa figure (regard, bras, tête) ; les autres devinent'); },
+    'Le chapeau des thèmes': g => quatreTop(g, (x, y) => g.label(x, y + 4, '🎩', {s: 16})).n(1, 'on tire 3 thèmes, on en garde un, on trouve 3 figures qui le racontent').n(2, 'on montre en 1 min : les autres devinent le thème'),
+    'Le story-board': g => { g.hall(); ['début', 'moment fort 1', 'moment fort 2', 'fin'].forEach((t, i) => g.raw(`<rect x="${20 + i * 92}" y="60" width="84" height="110" fill="#fff" stroke="#2d3530" stroke-width="1.5"/>`, 'mid').label(62 + i * 92, 185, t, {s: 9.5, b: 1}).fig(62 + i * 92, 150, ['debout', 'table', 'bras', 'genou'][i], {s: .9})); return g.n(1, 'l\'histoire en 4 cases : chaque case = une figure'); },
+    'Le plan de scène': g => { g.stage(); g.ring('a', 4, 90, 150, 20, 14).path('run', [[110, 140], [200, 80], [300, 130]]).label(90, 185, 'début', {s: 9, b: 1}).label(310, 155, 'fin', {s: 9, b: 1}); return g.n(1, 'où commence-t-on, où va-t-on, où est le public ?'); },
+    'Le groupe-miroir': g => { groupes(g, [['quatuor', 160]], {y: 190}); g.row('a', 4, 120, 238, 240, 238); return g.tag(320, 50, '⭐⭐ deux étoiles · 🙏 un vœu', {s: 9}).n(1, 'deux groupes se regardent et se donnent 2 étoiles et 1 vœu'); },
+    'Les 4 tests': g => { g.sol(205); [['gainage face', 60, 'planche'], ['pompes 30 s', 160, 'planche'], ['souplesse assis', 250, 'assis'], ['chaise au mur', 340, 'accroupi']].forEach(([t, x, p], i) => g.fig(x, 205, p).num(x, 130, i + 1).label(x, 115, t, {s: 9, b: 1}));
+      return g.wall(372, 140, 16, 65).n(1, 'par deux, on note : temps, nombre, centimètres, temps'); },
+    'Mon contrat': g => calme(g, ['🎯 un objectif chiffré par test']),
+    'Le chrono des statues': g => { groupes(g, [['trio', 160]]); g.chrono(320, 60).label(320, 85, 'record de la classe', {s: 9, b: 1}); return leg(g).n(1, 'chaque groupe tient sa figure le plus longtemps possible, la sécurité d\'abord'); },
+    'Le circuit gainé': g => { g.sol(205); [['planche face', 50, 'planche'], ['planche côté', 130, 'planchec'], ['chaise', 210, 'accroupi'], ['superman', 280, 'allonge'], ['planche à deux', 355, 'planche']].forEach(([t, x, p], i) => g.fig(x, 205, p).num(x, 130, i + 1).label(x, 115, t, {s: 8.5, b: 1}));
+      return g.n(1, '40 s par atelier ; à deux : on se tape dans les mains en planche'); },
+    'L\'escalier de la souplesse': g => { g.sol(205); [['pince', 60, 'assis'], ['papillon', 140, 'assis'], ['fente', 220, 'genou'], ['pont', 320, 'jambes']].forEach(([t, x, p], i) => g.fig(x, 205, p).num(x, 205 - 60 - i * 15, i + 1).label(x, 190 - 60 - i * 15 - 10, t, {s: 9, b: 1}));
+      return g.n(1, 'postures tenues 30 s, de plus en plus difficiles ; chacun s\'arrête à sa marche'); },
+    'Les rôles du numéro': g => calme(g, ['chorégraphe · sécurité · régisseur · costumier']),
+    echequipe: g => quatreTop(g, (x, y) => g.J(x, y, 'M')).n(1, 'chaque groupe mène son échauffement : gainage, appuis'),
+    coach: g => quatreTop(g, (x, y) => g.sheet(x, y)).n(1, 'chaque groupe choisit un jeu du cycle pour son point faible'),
+    'La générale': g => { groupes(g, [['quatuor', 160]], {y: 190}); jury(g); g.music(40, 40).A(40, 80, 'R'); return g.n(1, 'ordre de passage, entrées, musique par le régisseur, jury en place : comme le jour J'); }
+  };
+})();

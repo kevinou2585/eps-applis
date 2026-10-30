@@ -1,176 +1,403 @@
-/* Schémas des prépas : petits dessins SVG faits par le code (presque rien à télécharger).
-   PSCH('demi:basket:2c1') → <svg>…</svg>. Nom du modèle, puis réglages séparés par « : ».
-   Joueurs : A = rond plein, B = carré, défenseur / chat = losange (pas seulement la couleur, Kevin est un peu daltonien). */
+/* Schémas des prépas : dessins SVG faits par le code (presque rien à télécharger).
+   Refaits le 30/10 (demande de Kevin : un schéma juste, détaillé et clair pour CHAQUE jeu de chaque prépa).
+   - Chaque jeu a sa propre scène, écrite à la fin du fichier de sa bibliothèque :
+       (window.PSCH_SC = window.PSCH_SC || {}).basket = {crocos: g => g.court('basket')…, …};
+     clé = clé du jeu dans le catalogue J, ou son nom pour un jeu écrit directement dans une leçon.
+   - Le moteur (prepa-moteur.js) donne au schéma la référence '@basket|crocos#voleurs' : scène du jeu,
+     sinon l'ancien modèle après « # » (PSCH('demi:basket:2c1') marche toujours).
+   - Joueurs : A = rond bleu, B = carré orange, défenseur / chat = losange noir, joker = triangle vert,
+     prof = rond violet « P » (formes différentes, pas seulement la couleur : Kevin est un peu daltonien).
+   - Repères numérotés ① ② ③ sur le dessin, expliqués sous le schéma (g.n(1, 'texte')).
+   Un clic sur un schéma l'ouvre en grand. */
 (() => {
-const W = 320, H = 190, f = n => Math.round(n * 10) / 10;
-const pl = (x, y, t = 'a', lab = '') => {
-  const L = lab ? `<text x="${f(x)}" y="${f(y + 3.3)}" class="pt">${lab}</text>` : '';
-  if (t === 'b') return `<g class="pb"><rect x="${f(x - 7)}" y="${f(y - 7)}" width="14" height="14" rx="2"/>${L}</g>`;
-  if (t === 'x') return `<g class="px"><path d="M${f(x)} ${f(y - 9)}L${f(x + 9)} ${f(y)}L${f(x)} ${f(y + 9)}L${f(x - 9)} ${f(y)}Z"/>${L}</g>`;
-  if (t === 'p') return `<g class="pp"><circle cx="${f(x)}" cy="${f(y)}" r="8"/><text x="${f(x)}" y="${f(y + 3.3)}" class="pt">P</text></g>`;
-  return `<g class="pa"><circle cx="${f(x)}" cy="${f(y)}" r="7.5"/>${L}</g>`;
-};
-const ball = (x, y, r = 3.4) => `<circle class="ball" cx="${f(x)}" cy="${f(y)}" r="${r}"/>`;
-const cone = (x, y) => `<path class="cone" d="M${f(x - 5)} ${f(y + 4)}L${f(x)} ${f(y - 6)}L${f(x + 5)} ${f(y + 4)}Z"/>`;
-const hoop = (x, y, r = 10) => `<circle class="hoop" cx="${f(x)}" cy="${f(y)}" r="${r}"/>`;
-const txt = (x, y, t, c = 'lb') => `<text x="${f(x)}" y="${f(y)}" class="${c}">${t}</text>`;
-function arr(x1, y1, x2, y2, k = 'run', bend = 0){
-  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
-  const cx = mx - dy / L * bend, cy = my + dx / L * bend;
-  const tx = x2 - cx, ty = y2 - cy, tl = Math.hypot(tx, ty) || 1, ux = tx / tl, uy = ty / tl, s = 6, ex = x2 - ux * 2, ey = y2 - uy * 2;
-  const hd = `M${f(ex)} ${f(ey)}L${f(ex - ux * s - uy * s * .6)} ${f(ey - uy * s + ux * s * .6)}L${f(ex - ux * s + uy * s * .6)} ${f(ey - uy * s - ux * s * .6)}Z`;
-  return `<g class="ar ${k}"><path class="ln" d="M${f(x1)} ${f(y1)}Q${f(cx)} ${f(cy)} ${f(ex - ux * 3)} ${f(ey - uy * 3)}"/><path class="hd" d="${hd}"/></g>`;
-}
-function zig(x1, y1, x2, y2){ // dribble / conduite de balle
-  const n = 8, dx = (x2 - x1) / n, dy = (y2 - y1) / n, L = Math.hypot(dx, dy) || 1, nx = -dy / L * 4, ny = dx / L * 4;
-  let d = `M${f(x1)} ${f(y1)}`; for (let i = 1; i < n; i++) d += `L${f(x1 + dx * i + (i % 2 ? nx : -nx))} ${f(y1 + dy * i + (i % 2 ? ny : -ny))}`;
-  return `<g class="ar run"><path class="ln" d="${d}L${f(x2 - dx * .4)} ${f(y2 - dy * .4)}"/></g>` + arr(x2 - dx * .5, y2 - dy * .5, x2, y2, 'run');
-}
-const floor = () => `<rect class="floor" x="4" y="4" width="${W - 8}" height="${H - 8}" rx="5"/>`;
-const zone = (x, y, w, h, lab) => `<rect class="zone" x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="4"/>` + (lab ? txt(x + w / 2, y + h / 2 + 4, lab, 'lb c') : '');
-const net = (x = W / 2) => `<path class="net" d="M${x} 10V${H - 10}"/><circle class="post" cx="${x}" cy="10" r="3"/><circle class="post" cx="${x}" cy="${H - 10}" r="3"/>`;
-function target(sp, x, side){ // côté -1 gauche, 1 droite ; y au milieu
-  const y = H / 2;
-  if (sp === 'basket') return `<path class="ln2" d="M${x} ${y - 9}v18"/>${hoop(x - side * 7, y, 5.5)}`;
-  if (sp === 'hand') return `<path class="ln2" d="M${x} ${y - 42}A42 42 0 0 ${side < 0 ? 1 : 0} ${x} ${y + 42}"/><rect class="goal" x="${side < 0 ? x - 6 : x}" y="${y - 14}" width="6" height="28"/>`;
-  if (sp === 'foot') return `<rect class="ln2" x="${side < 0 ? x : x - 32}" y="${y - 34}" width="32" height="68"/><rect class="goal" x="${side < 0 ? x - 6 : x}" y="${y - 14}" width="6" height="28"/>`;
-  return cone(x - side * 6, y - 14) + cone(x - side * 6, y + 14);
-}
-function court(sp){
-  let h = floor() + `<rect class="ln2" x="12" y="12" width="${W - 24}" height="${H - 24}"/>`;
-  if (sp === 'basket' || sp === 'hand' || sp === 'foot') h += `<path class="ln2" d="M${W / 2} 12V${H - 12}"/><circle class="ln2" cx="${W / 2}" cy="${H / 2}" r="18"/>`;
-  if (sp === 'basket') h += `<rect class="ln2" x="12" y="${H / 2 - 20}" width="44" height="40"/><rect class="ln2" x="${W - 56}" y="${H / 2 - 20}" width="44" height="40"/><path class="ln2" d="M12 30Q120 ${H / 2} 12 ${H - 30}M${W - 12} 30Q${W - 120} ${H / 2} ${W - 12} ${H - 30}"/>`;
-  return h;
-}
-const half = sp => { // demi-terrain, cible à droite
-  let h = floor() + `<rect class="ln2" x="12" y="12" width="${W - 24}" height="${H - 24}"/>` + target(sp, W - 12, 1);
-  if (sp === 'basket') h += `<rect class="ln2" x="${W - 66}" y="${H / 2 - 22}" width="54" height="44"/><path class="ln2" d="M${W - 12} 22Q${W - 170} ${H / 2} ${W - 12} ${H - 22}"/>`;
-  return h;
-};
-const R = (seed => () => (seed = seed * 48271 % 2147483647) / 2147483647);
-const nv = s => { const m = /^(\d)c(\d)$/.exec(s || ''); return m ? [+m[1], +m[2]] : [3, 3]; };
-const team = (n, x0, x1, y0, y1) => Array.from({length: n}, (_, i) => [x0 + (x1 - x0) * ((i % 3) + .5) / Math.min(3, n), y0 + (y1 - y0) * (Math.floor(i / 3) * 1 + (i % 2 ? .7 : .3)) / Math.ceil(n / 3)]);
+const W = 400, H = 250, f = n => Math.round(n * 10) / 10;
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const COL = {a: '#1f63d6', b: '#e8590c', x: '#1d241f', j: '#16a34a', p: '#8a3ffc', ink: '#2d3530', pass: '#1f63d6', shot: '#c2185b', run: '#2d3530', lob: '#7c3aed'};
+const FONT = 'font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif"';
+// petit générateur pseudo-aléatoire stable (mêmes positions à chaque affichage)
+const rnd = seed => () => (seed = seed * 48271 % 2147483647) / 2147483647;
 
-const T = {
-  libre(sp){ const r = R(11); let h = floor(); for (let i = 0; i < 9; i++){ const x = 36 + r() * 248, y = 30 + r() * 130; h += pl(x, y) + ball(x + 9, y + 6) + arr(x, y, x + (r() - .5) * 60, y + (r() - .5) * 50, 'run', 10); } return h; },
-  voleurs(sp){ let h = T.libre(sp); [[110, 80], [200, 120], [240, 50]].forEach(([x, y]) => h += pl(x, y, 'x') + arr(x, y, x - 28, y + 18, 'run', -8)); return h + txt(160, 182, 'losanges : voleurs sans ballon', 'lb c'); },
-  chat(sp){ const r = R(5); let h = floor(), P = []; for (let i = 0; i < 9; i++){ const x = 36 + r() * 248, y = 30 + r() * 130; P.push([x, y]); h += pl(x, y); }
-    [[150, 95], [70, 60]].forEach(([x, y], j) => { const p = P[j * 3 + 1]; h += pl(x, y, 'x') + arr(x, y, p[0] + (p[0] > x ? -10 : 10), p[1], 'run', 12) + arr(p[0], p[1], p[0] + (p[0] - x) * .5, p[1] + (p[1] - y) * .5, 'run', 6); });
-    return h + txt(160, 182, 'losanges : les chats', 'lb c'); },
-  cercle(){ let h = floor(); const n = 8, cx = 160, cy = 95, Rr = 60; for (let i = 0; i < n; i++){ const a = i / n * 2 * Math.PI, x = cx + Rr * Math.cos(a), y = cy + Rr * .8 * Math.sin(a); h += pl(x, y); if (i % 2 === 0){ const b = (i + 3) / n * 2 * Math.PI; h += arr(x, y, cx + Rr * Math.cos(b), cy + Rr * .8 * Math.sin(b), 'pass', 0); } } return h + ball(cx + Rr + 9, cy - 6); },
-  deux(sp){ let h = floor(); [44, 95, 146].forEach((y, i) => { h += pl(70, y, 'a', '1') + pl(170, y, 'a', '2') + arr(80, y - 4, 160, y - 4, 'pass', -8) + arr(160, y + 5, 80, y + 5, i === 1 ? 'run' : 'pass', -8); });
-    return h + `<path class="dim" d="M70 172H170"/>` + txt(120, 184, '3 à 6 m', 'lb c') + txt(250, 98, 'par deux', 'lb c'); },
-  trois(){ let h = floor(); [50, 100, 150].forEach(y => h += pl(60, y) + pl(160, y) + pl(260, y) + arr(152, y - 4, 70, y - 4, 'pass', -10) + arr(164, y + 8, 250, y + 8, 'run', 8)); return h; },
-  carre(sp, k){ let h = floor() + zone(90, 35, 140, 120); const C = [[90, 35], [230, 35], [230, 155], [90, 155]]; C.forEach(([x, y]) => h += cone(x, y) + pl(x + (x < 160 ? 14 : -14), y + (y < 95 ? 14 : -14)));
-    h += arr(104, 49, 216, 49, 'pass', -8) + arr(216, 49, 216, 141, 'pass', -8) + ball(110, 56);
-    if (k) for (let i = 0; i < +k; i++) h += pl(150 + i * 22, 95 + i * 10, 'x');
-    return h + txt(160, 182, k ? `${4} contre ${k} : garder le ballon dans le carré` : 'passes dans le carré, puis on suit sa passe', 'lb c'); },
-  files(){ let h = floor() + `<path class="ln3" d="M54 12V${H - 12}"/>`; [40, 80, 120, 160].forEach(y => h += pl(40, y) + pl(24, y) + cone(262, y) + arr(62, y - 5, 250, y - 5, 'run') + arr(250, y + 5, 62, y + 5, 'run')); return h + txt(54, 10, '', 'lb'); },
-  slalom(sp){ let h = floor(); for (let i = 0; i < 5; i++) h += cone(70 + i * 34, 95); h += pl(34, 95) + ball(44, 103);
-    let d = 'M46 95'; for (let i = 0; i < 5; i++) d += ` Q${70 + i * 34} ${i % 2 ? 122 : 68} ${87 + i * 34} 95`;
-    h += `<g class="ar run"><path class="ln" d="${d}"/></g>`;
-    return h + (['basket', 'hand', 'foot'].includes(sp) ? target(sp, W - 12, 1) + arr(240, 95, 290, 95, 'shot') : hoop(285, 95, 12)); },
-  tir(sp){ let h = half(sp); [[150, 45, '1'], [130, 95, '2'], [150, 145, '3']].forEach(([x, y, l]) => h += pl(x, y, 'a', l) + arr(x + 10, y, W - 22, 95 + (y - 95) * .25, 'shot', -(y - 95) * .2));
-    return h + pl(60, 95) + pl(44, 95) + arr(70, 95, 120, 95, 'run') + txt(150, 182, 'chacun son tour, on récupère son ballon', 'lb c'); },
-  demi(sp, k){ const [a, d] = nv(k); let h = half(sp); const A = team(a, 70, 210, 30, 160), D = team(d, 220, 270, 40, 150);
-    A.forEach(([x, y], i) => h += pl(x, y, 'a')); D.forEach(([x, y]) => h += pl(x, y, 'x'));
-    if (A.length > 1) h += arr(A[0][0], A[0][1], A[1][0], A[1][1], 'pass', -12) + arr(A[1][0], A[1][1], A[1][0] + 40, A[1][1] - 8, 'run', 6);
-    h += ball(A[0][0] + 8, A[0][1] + 7) + arr(A[A.length - 1][0] + 10, A[A.length - 1][1], W - 24, 95, 'shot', 8);
-    return h + txt(110, 182, `${a} attaquants (ronds) contre ${d} défenseur${d > 1 ? 's' : ''} (losanges)`, 'lb c'); },
-  match(sp, k){ const [a, b] = nv(k); let h = court(sp);
-    h += ['basket', 'hand', 'foot'].includes(sp) ? target(sp, 12, -1) + target(sp, W - 12, 1) : sp === 'volley' ? net() : cone(18, 85) + cone(18, 105) + cone(302, 85) + cone(302, 105);
-    const A = team(a, 80, 220, 30, 160), B = team(b, 110, 250, 40, 150); A.forEach(([x, y]) => h += pl(x, y)); B.forEach(([x, y]) => h += pl(x + 6, y + 8, 'b'));
-    if (A.length > 2) h += arr(A[0][0], A[0][1], A[1][0], A[1][1], 'pass', -14) + arr(A[1][0], A[1][1], A[2][0], A[2][1], 'pass', 12);
-    h += ball(A[0][0] + 8, A[0][1] - 6) + arr(A[A.length - 1][0], A[A.length - 1][1], W - 26, 95, 'shot', 6);
-    return h + txt(160, 184, `match ${a} contre ${b}`, 'lb c'); },
-  tournoi(sp){ let h = floor(); [[12, 12], [164, 12], [12, 100], [164, 100]].forEach(([x, y], i) => { h += `<rect class="ln2" x="${x}" y="${y}" width="144" height="78"/>` + txt(x + 72, y + 46, `Terrain ${i + 1}`, 'big c');
-    h += sp === 'volley' || sp === 'bad' ? `<path class="net" d="M${x + 72} ${y}V${y + 78}"/>` : ''; });
-    return h; },
-  filet(sp, k){ const [a, b] = nv(k || '3c3'); let h = floor() + `<rect class="ln2" x="20" y="20" width="${W - 40}" height="${H - 40}"/>` + net();
-    team(a, 40, 140, 30, 160).forEach(([x, y]) => h += pl(x, y)); team(b, 180, 280, 30, 160).forEach(([x, y]) => h += pl(x, y, 'b'));
-    return h + ball(118, 58) + arr(112, 80, 208, 86, 'pass', -46) + arr(250, 70, 212, 100, 'pass', -12) + txt(160, 184, `${a} contre ${b} au filet`, 'lb c'); },
-  bad(sp, k){ let h = floor() + `<rect class="ln2" x="20" y="24" width="280" height="142"/><path class="ln2" d="M20 44H300M20 146H300M110 24V166M210 24V166M20 95H110M210 95H300M36 24V166M284 24V166"/>` + net();
-    const dbl = k === '2c2'; h += dbl ? pl(70, 60) + pl(70, 130) + pl(250, 60, 'b') + pl(250, 130, 'b') : pl(80, 95) + pl(240, 95, 'b');
-    h += arr(86, 88, 270, 40, 'pass', -40) + arr(244, 104, 50, 150, 'shot', 30);
-    return h + (k === 'zones' ? zone(250, 26, 48, 30, 'cible') + zone(250, 134, 48, 30, 'cible') : '') + txt(160, 184, dbl ? 'double : 2 contre 2' : 'simple : 1 contre 1, volant haut et loin', 'lb c'); },
-  mur(){ let h = floor() + `<rect class="wall" x="4" y="4" width="${W - 8}" height="16"/>`; [70, 160, 250].forEach((x, i) => h += pl(x, 140) + (i === 1 ? pl(x + 24, 152, 'b') : '') + arr(x, 130, x + (i - 1) * 8, 28, 'pass', -14) + arr(x + (i - 1) * 8, 28, x + 10, 128, 'pass', -14));
-    return h + txt(160, 182, '3 à 4 m du mur', 'lb c'); },
-  ateliers(sp, k){ const n = +k || 4, cols = n > 4 ? 3 : 2, rows = Math.ceil(n / cols), w = (W - 16) / cols, hh = (H - 16) / rows; let h = floor();
-    for (let i = 0; i < n; i++){ const x = 8 + (i % cols) * w, y = 8 + Math.floor(i / cols) * hh; h += `<rect class="zone" x="${f(x + 3)}" y="${f(y + 3)}" width="${f(w - 6)}" height="${f(hh - 6)}" rx="6"/>` + txt(x + 18, y + 26, String(i + 1), 'big') + pl(x + w / 2, y + hh / 2 + 6) + pl(x + w / 2 + 20, y + hh / 2 + 10, 'b'); }
-    return h + txt(160, H / 2 + 4, '→ rotation au signal →', 'lb c'); },
-  prisonnier(){ let h = floor() + `<rect class="ln2" x="12" y="12" width="${W - 24}" height="${H - 24}"/><path class="ln2" d="M160 12V${H - 12}"/>` + zone(12, 12, 28, H - 24) + zone(W - 40, 12, 28, H - 24) + txt(26, 186, 'prison', 'lb c') + txt(294, 186, 'prison', 'lb c');
-    [[80, 50], [110, 100], [70, 140], [130, 60]].forEach(p => h += pl(p[0], p[1])); [[210, 50], [240, 110], [200, 140], [250, 70]].forEach(p => h += pl(p[0], p[1], 'b'));
-    return h + pl(294, 95) + pl(26, 80, 'b') + ball(118, 94) + arr(118, 94, 232, 108, 'shot', -8) + arr(286, 95, 250, 72, 'shot', 4); },
-  piscine(sp, k){ let h = `<rect class="water" x="4" y="4" width="${W - 8}" height="${H - 8}" rx="4"/>`; const n = 5, lh = (H - 8) / n;
-    for (let i = 1; i < n; i++) h += `<path class="lane" d="M4 ${f(4 + i * lh)}H${W - 4}"/>`;
-    h += `<rect class="edge" x="4" y="4" width="10" height="${H - 8}"/><rect class="edge" x="${W - 14}" y="4" width="10" height="${H - 8}"/>`;
-    for (let i = 0; i < n; i++){ const y = 4 + (i + .5) * lh;
-      if (k === 'relais') h += pl(22, y) + pl(150 + (i % 2) * 40, y, 'b') + arr(160 + (i % 2) * 40, y, 290, y, 'run');
-      else if (k === 'flotte') h += i % 2 ? `<ellipse class="swim" cx="${100 + i * 30}" cy="${f(y)}" rx="16" ry="5"/>` + pl(84 + i * 30, y) : `<rect class="board2" x="${90 + i * 20}" y="${f(y - 5)}" width="22" height="10" rx="3"/>` + pl(80 + i * 20, y) + arr(116 + i * 20, y, 170 + i * 20, y, 'run');
-      else if (k === 'plongeon') h += pl(10, y) + arr(16, y - 6, 60, y, 'shot', -10) + `<ellipse class="swim" cx="90" cy="${f(y)}" rx="16" ry="5"/>`;
-      else h += pl(30 + i * 14, y) + arr(42 + i * 14, y - 3, 280, y - 3, 'run') + (i % 2 ? arr(280, y + 5, 42 + i * 14, y + 5, 'run') : ''); }
-    return h + txt(160, 15, k === 'relais' ? 'relais par couloir' : k === 'flotte' ? 'planche, flotter, glisser' : k === 'plongeon' ? 'entrée dans l\'eau, coulée' : 'aller-retour dans son couloir', 'lb c'); },
-  piste(sp, k){ let h = floor() + `<rect class="track" x="20" y="24" width="280" height="142" rx="70"/><rect class="infield" x="48" y="50" width="224" height="90" rx="45"/>`;
-    if (k === 'plots'){ for (let i = 0; i < 10; i++){ const a = i / 10 * 2 * Math.PI, x = 160 + 125 * Math.cos(a), y = 95 + 58 * Math.sin(a); h += cone(x, y); } h += txt(160, 100, 'un plot tous les 20 à 25 m', 'lb c'); }
-    else if (k === 'groupes'){ [[110, 31, 'a'], [130, 31, 'a'], [220, 159, 'b'], [200, 159, 'b']].forEach(([x, y, t]) => h += pl(x, y, t)); h += txt(160, 100, 'groupes d\'allure', 'lb c'); }
-    else h += txt(160, 100, 'boucle de 200 à 400 m', 'lb c');
-    return h + pl(160, 159) + arr(170, 159, 230, 157, 'run') + arr(150, 31, 90, 33, 'run'); },
-  course(sp, k){ let h = floor(); for (let i = 0; i < 5; i++) h += `<path class="ln2" d="M14 ${30 + i * 30}H306"/>`;
-    h += `<path class="ln3" d="M44 26V154"/><path class="fin" d="M280 26V154"/>`;
-    [45, 75, 105, 135].forEach((y, i) => h += pl(30, y) + arr(46, y, 200 + i * 16, y, 'run'));
-    if (k === 'haies') for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) h += `<path class="hurdle" d="M${100 + j * 45} ${36 + i * 30}v18"/>`;
-    if (k === 'relais') h += zone(150, 26, 40, 128, '') + txt(170, 22, 'zone de transmission', 'lb c');
-    return h + txt(44, 172, 'départ', 'lb c') + txt(280, 172, 'arrivée', 'lb c'); },
-  saut(sp, k){ let h = floor();
-    if (k === 'hauteur'){ h += `<rect class="mat" x="200" y="60" width="96" height="70" rx="6"/><path class="bar" d="M196 58V132"/>` + pl(70, 160) + arr(80, 156, 150, 120, 'run', -20) + arr(150, 120, 190, 70, 'run', 10) + txt(110, 180, 'élan courbe, appel pied extérieur', 'lb c'); return h; }
-    h += `<rect class="sand" x="220" y="60" width="86" height="70" rx="6"/><path class="ln3" d="M200 60V130"/>` + pl(30, 95) + arr(42, 95, 150, 95, 'run');
-    [[165, 89], [185, 101], [205, 89]].forEach(([x, y]) => h += `<ellipse class="foot" cx="${x}" cy="${y}" rx="5" ry="3"/>`);
-    return h + arr(205, 90, 250, 92, 'run', -18) + txt(100, 80, 'élan', 'lb c') + txt(200, 148, 'appel', 'lb c') + txt(263, 148, 'réception', 'lb c'); },
-  lancer(){ let h = floor() + `<path class="ln2" d="M40 95L300 20M40 95L300 170"/>`;
-    [80, 135, 190, 245].forEach((d, i) => h += `<path class="ln2" d="M${f(40 + d * .92)} ${f(95 - d * .27)}Q${40 + d} 95 ${f(40 + d * .92)} ${f(95 + d * .27)}"/>` + txt(40 + d + 6, 99, (i + 1) * 5 + ' m'));
-    return h + `<circle class="zone" cx="34" cy="95" r="14"/>` + pl(34, 95) + arr(46, 90, 180, 70, 'shot', -30) + ball(180, 72) + pl(30, 160, 'b', 'J') + txt(110, 182, 'les autres attendent derrière le lanceur', 'lb c'); },
-  acro(sp, k){ let h = floor() + `<rect class="mat" x="30" y="40" width="260" height="120" rx="6"/>`;
-    const st = (x, y, s = 1, pose = 'up') => { const r = 6 * s; let p = `<circle class="fig" cx="${f(x)}" cy="${f(y - 30 * s)}" r="${f(r)}"/><path class="figl" d="M${f(x)} ${f(y - 24 * s)}V${f(y - 8 * s)}`;
-      p += pose === 'up' ? `M${f(x - 12 * s)} ${f(y - 30 * s)}L${f(x)} ${f(y - 20 * s)}L${f(x + 12 * s)} ${f(y - 30 * s)}M${f(x - 7 * s)} ${f(y + 6 * s)}L${f(x)} ${f(y - 8 * s)}L${f(x + 7 * s)} ${f(y + 6 * s)}` : `M${f(x - 12 * s)} ${f(y - 14 * s)}L${f(x)} ${f(y - 20 * s)}L${f(x + 12 * s)} ${f(y - 14 * s)}M${f(x - 10 * s)} ${f(y + 6 * s)}L${f(x - 6 * s)} ${f(y - 2 * s)}L${f(x)} ${f(y - 8 * s)}L${f(x + 6 * s)} ${f(y - 2 * s)}L${f(x + 10 * s)} ${f(y + 6 * s)}`;
-      return p + '"/>'; };
-    const quad = (x, y) => `<path class="figl" d="M${x - 16} ${y}L${x - 16} ${y - 14}L${x + 14} ${y - 16}L${x + 16} ${y}M${x - 16} ${y - 14}L${x - 24} ${y - 12}"/><circle class="fig" cx="${x - 28}" cy="${y - 13}" r="5"/>`;
-    if (k === 'trio'){ h += quad(120, 150) + quad(200, 150) + st(160, 120, .9) + txt(120, 168, 'porteur', 'lb c') + txt(200, 168, 'porteur', 'lb c') + txt(160, 50, 'voltigeur', 'lb c'); }
-    else if (k === 'pyramide'){ h += quad(100, 155) + quad(160, 155) + quad(220, 155) + quad(130, 128) + quad(190, 128) + st(160, 100, .8) + txt(160, 36, 'pyramide à 6 : porteurs, puis voltigeurs', 'lb c'); }
-    else if (k === 'quatuor'){ h += st(110, 150, 1, 'squat') + st(210, 150, 1, 'squat') + st(160, 128, .85) + st(160, 82, .7) + txt(160, 36, 'quatuor : 2 porteurs, 1 intermédiaire, 1 voltigeur', 'lb c'); }
-    else h += quad(140, 150) + st(170, 128, .9) + txt(140, 168, 'porteur', 'lb c') + txt(200, 76, 'voltigeur', 'lb c');
-    return h + pl(270, 120, 'x', 'A') + txt(270, 140, 'pareur', 'lb c'); },
-  danse(sp, k){ let h = floor() + `<rect class="stage" x="20" y="16" width="280" height="130" rx="4"/>` + txt(160, 172, '⬇ public ⬇', 'lb c');
-    if (k === 'cercle'){ for (let i = 0; i < 8; i++){ const a = i / 8 * 2 * Math.PI; h += pl(160 + 70 * Math.cos(a), 80 + 46 * Math.sin(a)); } h += arr(230, 80, 200, 118, 'run', -14); }
-    else if (k === 'canon'){ [0, 1, 2].forEach(j => { for (let i = 0; i < 3; i++) h += pl(60 + j * 100 + i * 22, 70 + (i % 2) * 30, j === 1 ? 'b' : 'a', String(j + 1)); }); h += txt(160, 34, 'groupe 1, puis 2, puis 3 : même phrase décalée', 'lb c'); }
-    else if (k === 'miroir'){ [[90, 60], [90, 110], [200, 60], [200, 110]].forEach(([x, y], i) => h += pl(x, y) + pl(x + 34, y, 'b')); h += txt(160, 34, 'face à face : l\'un mène, l\'autre copie', 'lb c'); }
-    else if (k === 'groupes'){ [[70, 70], [160, 110], [250, 70]].forEach(([x, y], j) => { h += zone(x - 34, y - 30, 68, 60); for (let i = 0; i < 4; i++) h += pl(x - 12 + (i % 2) * 24, y - 10 + Math.floor(i / 2) * 20, j % 2 ? 'b' : 'a'); }); }
-    else { for (let i = 0; i < 4; i++) h += pl(60 + i * 66, 60) + pl(93 + i * 66, 110, 'b'); h += arr(60, 60, 60, 100, 'run') + arr(93, 110, 93, 70, 'run'); }
-    return h; },
-  explication(){ let h = floor() + `<rect class="board" x="110" y="16" width="100" height="32" rx="3"/>` + txt(160, 36, 'CONSIGNES', 'lb c bw') + pl(160, 66, 'p');
-    for (let i = 0; i < 9; i++){ const a = Math.PI * (.15 + i * .0875); h += pl(160 + 82 * Math.cos(a), 66 + 82 * Math.sin(a) * .95); } return h; },
-  // corde à sauter : '' = chacun sa corde, 'grande' = grande corde tournée par deux élèves, 'deux' = à deux dans une corde
-  corde(sp, k){ let h = floor(); const rope = (x1, y1, x2, y2, b) => `<path class="bar" style="fill:none" d="M${f(x1)} ${f(y1)}Q${f((x1 + x2) / 2)} ${f(Math.max(y1, y2) + b)} ${f(x2)} ${f(y2)}"/>`;
-    if (k === 'grande'){ h += pl(50, 95, 'b', 'T') + pl(270, 95, 'b', 'T') + rope(58, 95, 262, 95, 55) + rope(58, 95, 262, 95, -55);
-      [[120, 165], [95, 165], [70, 165]].forEach(([x, y]) => h += pl(x, y)); h += pl(160, 95) + arr(120, 157, 156, 104, 'run', -6) + arr(168, 92, 230, 30, 'run', -6);
-      return h + txt(160, 14, 'T = tourneurs ; on entre, on saute, on sort', 'lb c'); }
-    if (k === 'deux'){ [[90, 60], [230, 60], [90, 140], [230, 140]].forEach(([x, y]) => h += pl(x - 9, y + 4) + pl(x + 9, y + 4) + rope(x - 24, y + 14, x + 24, y + 14, -62)); return h + txt(160, 184, 'à deux dans la même corde', 'lb c'); }
-    [[60, 55], [160, 55], [260, 55], [60, 140], [160, 140], [260, 140]].forEach(([x, y]) => h += pl(x, y) + rope(x - 14, y + 12, x + 14, y + 12, -58));
-    return h + txt(160, 184, 'chacun sa corde, 2 m d\'écart au moins', 'lb c'); },
-  // lutte : '' = duels sur 4 tapis, 'cercle' = sortir l'adversaire du cercle, 'sol' = au sol (immobiliser)
-  tapis(sp, k){ let h = floor();
-    if (k === 'cercle'){ h += `<rect class="mat" x="60" y="15" width="200" height="160" rx="6"/><circle class="ln3" style="fill:none" cx="160" cy="95" r="62"/>` + pl(148, 95) + pl(172, 95, 'b') + arr(140, 95, 104, 95, 'run') + arr(180, 95, 216, 95, 'run'); return h + txt(160, 186, 'pousser l\'autre hors du cercle', 'lb c'); }
-    [[20, 12], [170, 12], [20, 100], [170, 100]].forEach(([x, y], i) => { h += `<rect class="mat" x="${x}" y="${y}" width="130" height="78" rx="5"/>`;
-      if (k === 'sol') h += pl(x + 56, y + 46) + pl(x + 70, y + 36, 'b');
-      else h += pl(x + 50, y + 39) + pl(x + 80, y + 39, 'b') + arr(x + 58, y + 30, x + 72, y + 30, 'run', -4); });
-    return h; },
-  etirements(){ let h = floor(); for (let i = 0; i < 10; i++){ const a = i / 10 * 2 * Math.PI; h += pl(160 + 100 * Math.cos(a), 95 + 60 * Math.sin(a)); } return h + pl(160, 95, 'p') + txt(160, 182, 'en cercle, le prof ou un élève guide', 'lb c'); }
+/* ---------- le « crayon » : une scène = suite d'appels g.xxx(…) ; tout renvoie g ---------- */
+function G(sp){
+  const L = {bg: [], mid: [], ar: [], top: [], lab: []}, notes = [];
+  const g = {sp, W, H, notes, L, COL};
+  const put = (k, s) => { L[k].push(s); return g; };
+  g.raw = (s, k = 'mid') => put(k, s);
+
+  /* ===== sols et terrains ===== */
+  g.floor = (c = '#f4efe4') => put('bg', `<rect x="0" y="0" width="${W}" height="${H}" rx="8" fill="${c}"/>`);
+  g.hall = () => g.floor().raw(`<rect x="12" y="12" width="${W - 24}" height="${H - 24}" rx="3" fill="none" stroke="#cbbfa8" stroke-width="2"/>`, 'bg');
+  g.grass = () => put('bg', `<rect x="0" y="0" width="${W}" height="${H}" rx="8" fill="#d7ebc9"/><path d="M0 40H${W}M0 120H${W}M0 200H${W}" stroke="#cfe5bf" stroke-width="40" opacity=".6"/>`);
+  g.line = (d, w = 2, c = '#fff', dash = '') => put('bg', `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`);
+  const CL = '#c4b59a';   // lignes du terrain (sur parquet)
+  // grand terrain : x 20→380, y 25→225
+  g.court = (sport = sp, o = {}) => {
+    const s = sport === 'hiver' || !sport ? 'salle' : sport;
+    g.floor(); const x0 = 20, y0 = 25, w = 360, h = 200, cx = 200, cy = 125;
+    if (s === 'volley'){ g.floor('#f2e2c6');
+      g.line(`M${x0} ${y0}h${w}v${h}h${-w}Z`, 2.5, '#fff').line(`M${cx - 60} ${y0}V${y0 + h}M${cx + 60} ${y0}V${y0 + h}`, 2, '#fff');
+      return g.net(cx, y0 - 8, y0 + h + 8); }
+    if (s === 'bad') return g.badCourt(o);
+    if (s === 'prisonnier') return g.prisonCourt(o);
+    g.line(`M${x0} ${y0}h${w}v${h}h${-w}Z`, 2.5, CL).line(`M${cx} ${y0}V${y0 + h}`, 2, CL).raw(`<circle cx="${cx}" cy="${cy}" r="${s === 'basket' ? 24 : 28}" fill="none" stroke="${CL}" stroke-width="2"/>`, 'bg');
+    [-1, 1].forEach(sd => g.goal(s, sd, o));
+    return g;
+  };
+  // demi-terrain, cible à droite : x 110→380 (la gauche = bord du terrain, files d'attente)
+  g.half = (sport = sp, o = {}) => {
+    const s = sport === 'hiver' || !sport ? 'salle' : sport; g.floor();
+    g.line(`M110 25H380V225H110`, 2.5, CL).line('M110 25V225', 2, CL, '7 5');
+    if (s === 'basket') g.raw(`<path d="M110 101A24 24 0 0 1 110 149" fill="none" stroke="${CL}" stroke-width="2"/>`, 'bg');
+    if (o.label !== false) g.label(60, 238, 'milieu du terrain →', {s: 10, c: '#8a7a5c'});
+    return g.goal(s, 1, {...o, half: 1});
+  };
+  // cible d'un côté (sd = -1 gauche, 1 droite)
+  g.goal = (s, sd, o = {}) => {
+    const cy = 125, bx = sd > 0 ? 380 : 20, hf = o.half;
+    if (s === 'basket'){
+      const kd = hf ? 105 : 74, kw = 66, ar = hf ? 122 : 92;
+      g.raw(`<rect x="${sd > 0 ? bx - kd : bx}" y="${cy - kw / 2}" width="${kd}" height="${kw}" fill="#f1dfc2" stroke="${CL}" stroke-width="2"/>`, 'bg');
+      g.raw(`<path d="M${bx - sd * kd} ${cy - 22}A${hf ? 26 : 22} 22 0 0 ${sd > 0 ? 0 : 1} ${bx - sd * kd} ${cy + 22}" fill="none" stroke="${CL}" stroke-width="2"/>`, 'bg');
+      g.raw(`<path d="M${bx} ${cy - 88}H${bx - sd * 18}A${ar} 88 0 0 ${sd > 0 ? 0 : 1} ${bx - sd * 18} ${cy + 88}H${bx}" fill="none" stroke="${CL}" stroke-width="2"/>`, 'bg');
+      return g.hoopB(bx - sd * (hf ? 18 : 15), cy, sd);
+    }
+    if (s === 'hand' || s === 'foot'){
+      const r6 = hf ? 57 : 50, r9 = hf ? 85 : 80, gw = 30;
+      const D = r => `M${bx} ${cy - gw / 2 - r}A${r} ${r} 0 0 ${sd > 0 ? 0 : 1} ${bx - sd * r} ${cy - gw / 2}V${cy + gw / 2}A${r} ${r} 0 0 ${sd > 0 ? 0 : 1} ${bx} ${cy + gw / 2 + r}`;
+      g.raw(`<path d="${D(r6)}" fill="${s === 'hand' ? '#f1dfc2' : 'none'}" stroke="${CL}" stroke-width="2"/>`, 'bg');
+      if (s === 'hand') g.raw(`<path d="${D(r9)}" fill="none" stroke="${CL}" stroke-width="2" stroke-dasharray="7 5"/>`, 'bg');
+      return g.cage(bx, cy, sd, gw);
+    }
+    if (o.none) return g;
+    return g.cone(bx - sd * 10, cy - 18).cone(bx - sd * 10, cy + 18);
+  };
+  // panier vu de dessus (planche + cercle)
+  g.hoopB = (x, y, sd = 1) => put('mid', `<path d="M${x + sd * 5} ${y - 11}V${y + 11}" stroke="#2d3530" stroke-width="3"/><circle cx="${f(x - sd * 3)}" cy="${y}" r="6" fill="none" stroke="#e8590c" stroke-width="2.5"/>`);
+  // but (cage) vu de dessus
+  g.cage = (x, y, sd = 1, w = 30) => put('mid', `<rect x="${sd > 0 ? x : x - 8}" y="${y - w / 2}" width="8" height="${w}" fill="#fff" stroke="#2d3530" stroke-width="2.5"/><path d="M${x + sd * 2} ${y - w / 2 + 4}h${sd * 4}M${x + sd * 2} ${y - w / 2 + 10}h${sd * 4}M${x + sd * 2} ${y}h${sd * 4}M${x + sd * 2} ${y + w / 2 - 10}h${sd * 4}M${x + sd * 2} ${y + w / 2 - 4}h${sd * 4}" stroke="#9aa" stroke-width="1"/>`);
+  // petit but (2 cônes ou 2 plots) n'importe où
+  g.minigoal = (x, y, vert = true, w = 26) => vert ? g.cone(x, y - w / 2).cone(x, y + w / 2) : g.cone(x - w / 2, y).cone(x + w / 2, y);
+  // filet (vertical, vu de dessus)
+  g.net = (x = 200, y1 = 17, y2 = 233) => put('mid', `<path d="M${x} ${y1}V${y2}" stroke="#2d3530" stroke-width="3.5"/><path d="M${x} ${y1}V${y2}" stroke="#fff" stroke-width="1" stroke-dasharray="2 3"/><circle cx="${x}" cy="${y1}" r="4" fill="#2d3530"/><circle cx="${x}" cy="${y2}" r="4" fill="#2d3530"/>`);
+  g.netH = (y = 125, x1 = 17, x2 = 383) => put('mid', `<path d="M${x1} ${y}H${x2}" stroke="#2d3530" stroke-width="3.5"/><path d="M${x1} ${y}H${x2}" stroke="#fff" stroke-width="1" stroke-dasharray="2 3"/><circle cx="${x1}" cy="${y}" r="4" fill="#2d3530"/><circle cx="${x2}" cy="${y}" r="4" fill="#2d3530"/>`);
+  // terrain de badminton (13,4 m × 6,1 m) : x 20→380, y 43→207 ; o.half = un seul côté en grand
+  g.badCourt = (o = {}) => {
+    g.floor('#e9eef0'); const x0 = 20, y0 = 43, w = 360, h = 164, m = w / 13.4, cx = 200, c = '#2f9e6b';
+    g.raw(`<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#cfe3d6"/>`, 'bg');
+    const L = (d, wd = 2) => g.line(d, wd, c);
+    L(`M${x0} ${y0}h${w}v${h}h${-w}Z`, 2.5); L(`M${x0} ${f(y0 + .46 * m)}H${x0 + w}M${x0} ${f(y0 + h - .46 * m)}H${x0 + w}`);
+    L(`M${f(cx - 1.98 * m)} ${y0}V${y0 + h}M${f(cx + 1.98 * m)} ${y0}V${y0 + h}`); L(`M${f(x0 + .76 * m)} ${y0}V${y0 + h}M${f(x0 + w - .76 * m)} ${y0}V${y0 + h}`);
+    L(`M${x0} ${y0 + h / 2}H${f(cx - 1.98 * m)}M${f(cx + 1.98 * m)} ${y0 + h / 2}H${x0 + w}`);
+    return g.net(cx, y0 - 9, y0 + h + 9);
+  };
+  // balle aux prisonniers : 2 camps + une prison derrière chaque camp adverse
+  g.prisonCourt = (o = {}) => {
+    g.floor(); g.raw(`<rect x="62" y="25" width="276" height="200" fill="#f4efe4" stroke="${CL}" stroke-width="2.5"/>`, 'bg').line('M200 25V225', 2.5, CL);
+    g.zone(14, 25, 44, 200, '', 'red').zone(342, 25, 44, 200, '', 'red');
+    g.label(36, 20, 'prison B', {s: 10, b: 1}).label(364, 20, 'prison A', {s: 10, b: 1});
+    if (o.camps !== false) g.label(131, 240, 'camp A', {s: 11, b: 1, c: COL.a}).label(269, 240, 'camp B', {s: 11, b: 1, c: COL.b});
+    return g;
+  };
+  // bassin de 25 m vu de dessus, n couloirs ; o.deep : 'droite' (grand bain à droite), o.small : petit bain seul
+  g.pool = (n = 5, o = {}) => {
+    put('bg', `<rect x="0" y="0" width="${W}" height="${H}" rx="8" fill="#e6e0d4"/>`);
+    const x0 = 22, x1 = 378, y0 = 22, y1 = 228, lh = (y1 - y0) / n;
+    put('bg', `<defs><linearGradient id="dp" x1="0" x2="1"><stop offset="0" stop-color="#bfe6f6"/><stop offset="1" stop-color="${o.small ? '#bfe6f6' : '#7cc3e6'}"/></linearGradient></defs><rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" fill="url(#dp)" stroke="#9fb7c2" stroke-width="3"/>`);
+    for (let i = 1; i < n; i++) put('bg', `<path d="M${x0} ${f(y0 + i * lh)}H${x1}" stroke="#d6336c" stroke-width="3" stroke-dasharray="8 8"/><path d="M${x0 + 8} ${f(y0 + i * lh)}H${x1}" stroke="#fff" stroke-width="3" stroke-dasharray="8 8"/>`);
+    if (o.marks !== false){ [5, 12.5, 20].forEach(m => put('bg', `<path d="M${f(x0 + m / 25 * (x1 - x0))} ${y0}v6M${f(x0 + m / 25 * (x1 - x0))} ${y1}v-6" stroke="#2d3530" stroke-width="1.5"/>`));
+      g.label(f(x0 + 5 / 25 * (x1 - x0)), y1 + 13, '5 m', {s: 9, c: '#6b6455'}).label(200, y1 + 13, '12,5 m', {s: 9, c: '#6b6455'}).label(f(x0 + 20 / 25 * (x1 - x0)), y1 + 13, '20 m', {s: 9, c: '#6b6455'}); }
+    if (o.small) g.label(200, 14, 'petit bain : on a pied partout', {s: 10, c: '#3d6f86'});
+    else if (o.deep !== false) g.label(70, 14, '← petit bain', {s: 10, c: '#3d6f86'}).label(330, 14, 'grand bain →', {s: 10, c: '#3d6f86'});
+    g.pool_lh = lh; g.pool_y = i => f(y0 + (i + .5) * lh);
+    return g;
+  };
+  // piste d'athlétisme (ovale) ; g.track_pt(t) = point sur la corde (t de 0 à 1, départ en bas au milieu, sens inverse des aiguilles)
+  g.track = (o = {}) => {
+    g.grass(); const cx = 200, cy = 125, rx = 175, ry = 105, r = 105, L = rx - r;
+    const ov = (d, fill, st, sw, dash) => put('bg', `<path d="M${cx - L} ${cy - d}H${cx + L}A${d} ${d} 0 0 1 ${cx + L} ${cy + d}H${cx - L}A${d} ${d} 0 0 1 ${cx - L} ${cy - d}Z" fill="${fill}" stroke="${st}" stroke-width="${sw}"${dash ? ` stroke-dasharray="${dash}"` : ''}/>`);
+    ov(r, '#d9876a', 'none', 0); for (let i = 0; i <= 4; i++) ov(r - 7 - i * 8, 'none', '#fff', 1.2); ov(r - 48, '#cfe6bf', '#fff', 2);
+    if (o.finish !== false) put('bg', `<path d="M${cx + L - 10} ${cy + r - 48}V${cy + r}" stroke="#fff" stroke-width="3"/><path d="M${cx + L - 10} ${cy + r - 48}V${cy + r}" stroke="#2d3530" stroke-width="3" stroke-dasharray="3 3"/>`);
+    g.track_pt = (t, k = 0) => { const P = 2 * L + Math.PI * (r - 20), per = 2 * P, d = ((t % 1) + 1) % 1 * per, rr = r - 20 - k;
+      // départ en bas, au milieu, puis vers la droite (sens inverse des aiguilles d'une montre vu de dessus)
+      const seg = [[L, 'b'], [Math.PI * rr, 'R'], [2 * L, 't'], [Math.PI * rr, 'Lft'], [L, 'b2']]; let s = d;
+      if (s < L) return [cx + s, cy + rr]; s -= L;
+      if (s < Math.PI * rr){ const a = Math.PI / 2 - s / rr; return [cx + L + rr * Math.cos(a), cy + rr * Math.sin(a)]; } s -= Math.PI * rr;
+      if (s < 2 * L) return [cx + L - s, cy - rr]; s -= 2 * L;
+      if (s < Math.PI * rr){ const a = -Math.PI / 2 - s / rr; return [cx - L + rr * Math.cos(a), cy + rr * Math.sin(a)]; } s -= Math.PI * rr;
+      return [cx - L + s, cy + rr]; };
+    return g;
+  };
+  // ligne droite de piste : n couloirs horizontaux, départ à gauche, arrivée à droite
+  g.straight = (n = 4, o = {}) => {
+    put('bg', `<rect x="0" y="0" width="${W}" height="${H}" rx="8" fill="#d7ebc9"/><rect x="0" y="${o.y0 || 35}" width="${W}" height="${(o.lh || 40) * n}" fill="#d9876a"/>`);
+    const y0 = o.y0 || 35, lh = o.lh || 40;
+    for (let i = 0; i <= n; i++) g.line(`M0 ${y0 + i * lh}H${W}`, 1.5, '#fff');
+    if (o.start !== false) g.line(`M${o.sx || 40} ${y0}V${y0 + n * lh}`, 3, '#fff');
+    if (o.finish !== false) put('bg', `<path d="M${o.fx || 360} ${y0}V${y0 + n * lh}" stroke="#fff" stroke-width="4"/><path d="M${o.fx || 360} ${y0}V${y0 + n * lh}" stroke="#2d3530" stroke-width="4" stroke-dasharray="4 4"/>`);
+    g.lane_y = i => y0 + (i + .5) * lh;
+    return g;
+  };
+  // tapis, gros tapis, scène, zone colorée
+  g.mat = (x, y, w, h, o = {}) => put(o.k || 'bg', `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.rx ?? 5}" fill="${o.c || '#9fc2ea'}" stroke="${o.st || '#5b87bd'}" stroke-width="1.5"/>` + (o.seams ? Array.from({length: o.seams - 1}, (_, i) => `<path d="M${f(x + w / o.seams * (i + 1))} ${y}v${h}" stroke="#5b87bd" stroke-width="1"/>`).join('') : '') + (o.t ? txt(x + w / 2, y + h / 2 + 4, o.t, {s: o.ts || 10, c: '#2d4a6e', b: 1}) : ''));
+  g.stage = (o = {}) => { g.floor(); put('bg', `<rect x="20" y="14" width="360" height="190" rx="4" fill="#efe7f8" stroke="#b9a6d6" stroke-width="2"/>`);
+    if (o.public !== false) g.label(200, 226, 'P U B L I C', {s: 12, b: 1, c: '#7a6a96'}).raw('<path d="M60 236H340" stroke="#b9a6d6" stroke-width="2" stroke-dasharray="3 5"/>', 'bg');
+    return g; };
+  const TONES = {blue: ['rgba(31,99,214,.10)', '#7ea5e0'], green: ['rgba(22,163,74,.14)', '#5fb784'], red: ['rgba(214,51,108,.12)', '#d98aa8'], grey: ['rgba(60,60,60,.08)', '#aaa'], yellow: ['rgba(250,204,21,.22)', '#d4b23a'], orange: ['rgba(232,89,12,.12)', '#e8a06c']};
+  g.zone = (x, y, w, h, lab = '', tone = 'blue', o = {}) => { const [fi, st] = TONES[tone] || TONES.blue;
+    put(o.k || 'bg', `<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="${o.rx ?? 6}" fill="${fi}" stroke="${st}" stroke-width="1.5"${o.dash !== false ? ' stroke-dasharray="5 4"' : ''}/>`);
+    return lab ? g.label(x + w / 2, o.ly != null ? o.ly : y + (o.top ? 14 : h / 2 + 4), lab, {s: o.s || 10, b: 1, c: o.c || '#4a5550'}) : g; };
+  g.czone = (x, y, r, lab = '', tone = 'blue', o = {}) => { const [fi, st] = TONES[tone] || TONES.blue;
+    put('bg', `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="${fi}" stroke="${st}" stroke-width="1.5" stroke-dasharray="5 4"/>`);
+    return lab ? g.label(x, o.ly != null ? o.ly : y + 4, lab, {s: o.s || 10, b: 1}) : g; };
+
+  /* ===== joueurs ===== */
+  const pTxt = (x, y, lab, c = '#fff', s) => lab === '' || lab == null ? '' : `<text x="${f(x)}" y="${f(y + (s || 10) * .36)}" font-size="${s || (String(lab).length > 1 ? 8.5 : 10)}" font-weight="700" fill="${c}" text-anchor="middle">${esc(lab)}</text>`;
+  const withBall = (x, y, o) => o.ball ? g.ball(x + (o.bx ?? 8), y + (o.by ?? 7), o.ball === true ? null : o.ball) : g;
+  g.A = (x, y, lab = '', o = {}) => { put('top', `<circle cx="${f(x)}" cy="${f(y)}" r="9" fill="${o.c || COL.a}" stroke="#fff" stroke-width="2"/>${pTxt(x, y, lab)}`); return withBall(x, y, o); };
+  g.B = (x, y, lab = '', o = {}) => { put('top', `<rect x="${f(x - 8.5)}" y="${f(y - 8.5)}" width="17" height="17" rx="3" fill="${o.c || COL.b}" stroke="#fff" stroke-width="2"/>${pTxt(x, y, lab)}`); return withBall(x, y, o); };
+  g.X = (x, y, lab = '', o = {}) => { put('top', `<path d="M${f(x)} ${f(y - 11)}L${f(x + 11)} ${f(y)}L${f(x)} ${f(y + 11)}L${f(x - 11)} ${f(y)}Z" fill="${o.c || COL.x}" stroke="#fff" stroke-width="2"/>${pTxt(x, y, lab)}`); return withBall(x, y, o); };
+  g.J = (x, y, lab = 'J', o = {}) => { put('top', `<path d="M${f(x)} ${f(y - 11)}L${f(x + 10.5)} ${f(y + 8)}L${f(x - 10.5)} ${f(y + 8)}Z" fill="${COL.j}" stroke="#fff" stroke-width="2"/>${pTxt(x, y + 2, lab, '#fff', 9)}`); return withBall(x, y, o); };
+  g.P = (x, y, o = {}) => { put('top', `<circle cx="${f(x)}" cy="${f(y)}" r="10" fill="${COL.p}" stroke="#fff" stroke-width="2"/>${pTxt(x, y, 'P')}`); return withBall(x, y, o); };
+  // joueur selon un code : 'a' 'b' 'x' 'j' 'p'
+  g.pl = (t, x, y, lab = '', o = {}) => t === 'g' ? g.A(x, y, lab, {...o, c: '#9aa3a0'}) : t === 'b' ? g.B(x, y, lab, o) : t === 'x' ? g.X(x, y, lab, o) : t === 'j' ? g.J(x, y, lab || 'J', o) : t === 'p' ? g.P(x, y, o) : g.A(x, y, lab, o);
+  // plusieurs joueurs : liste de [x, y, lab?, opts?]
+  g.pls = (t, P, o = {}) => { P.forEach(p => g.pl(t, p[0], p[1], p[2] ?? '', {...o, ...(p[3] || {})})); return g; };
+  // n joueurs répartis sans se chevaucher dans un rectangle (graine = seed)
+  g.scatter = (t, n, x0, y0, x1, y1, o = {}) => { const r = rnd(o.seed || 7), cols = Math.ceil(Math.sqrt(n * (x1 - x0) / Math.max(1, y1 - y0))), rows = Math.ceil(n / cols), cw = (x1 - x0) / cols, rh = (y1 - y0) / rows, P = [];
+    const cells = Array.from({length: cols * rows}, (_, i) => i).sort(() => r() - .5).slice(0, n);
+    cells.forEach(c => { const x = x0 + (c % cols + .5) * cw + (r() - .5) * cw * .5, y = y0 + (Math.floor(c / cols) + .5) * rh + (r() - .5) * rh * .5; P.push([f(x), f(y)]); g.pl(t, x, y, o.lab || '', o); });
+    g.last = P; return g; };
+  // n joueurs en ligne de (x1,y1) à (x2,y2)
+  g.row = (t, n, x1, y1, x2, y2, o = {}) => { const P = []; for (let i = 0; i < n; i++){ const k = n === 1 ? .5 : i / (n - 1), x = x1 + (x2 - x1) * k, y = y1 + (y2 - y1) * k; P.push([f(x), f(y)]); g.pl(t, x, y, o.labs ? o.labs[i] ?? '' : o.lab || '', {...o, ball: o.balls ? o.balls.includes(i) : o.ball}); } g.last = P; return g; };
+  // n joueurs en cercle (ellipse) de centre (cx, cy)
+  g.ring = (t, n, cx, cy, rx, ry = rx, o = {}) => { const P = []; for (let i = 0; i < n; i++){ const a = (o.a0 ?? -Math.PI / 2) + i / n * 2 * Math.PI, x = cx + rx * Math.cos(a), y = cy + ry * Math.sin(a); P.push([f(x), f(y)]); g.pl(t, x, y, o.labs ? o.labs[i] ?? '' : o.lab || '', {...o, ball: o.balls ? o.balls.includes(i) : o.ball}); } g.last = P; return g; };
+  // file (colonne) de n joueurs qui attendent, tête en (x, y), file vers (dx, dy)
+  g.file = (t, n, x, y, dx = -20, dy = 0, o = {}) => g.row(t, n, x, y, x + dx * (n - 1), y + dy * (n - 1), o);
+  // pour chaque joueur du dernier groupe posé (scatter, row, ring, file)
+  g.each = fn => { (g.last || []).forEach((p, i) => fn(p[0], p[1], i)); return g; };
+
+  /* ===== scènes toutes faites (communes à plusieurs sports) ===== */
+  // retour au calme : cercle d'élèves autour du prof, texte au centre
+  g.calme = (t = '', o = {}) => { g.hall(); g.ring('a', o.n || 12, 200, 125, 150, 85, {ball: o.ball}); g.P(200, 125); if (t) g.tag(200, 100, t, {s: 10}); return g; };
+  // équipes au bord (arbitres, remplaçants) le long d'un côté
+  g.bord = (x, y, n = 3, lab = 'équipe au bord : arbitre', t = 'b', o = {}) => { g.row(t, n, x, y, x + (o.dx ?? 22) * (n - 1), y + (o.dy ?? 0) * (n - 1)); return lab ? g.label(x + (o.dx ?? 22) * (n - 1) / 2, y + (o.ly ?? -14), lab, {s: 9.5, b: 1, c: '#6b6455'}) : g; };
+  // n terrains réduits côte à côte (tournoi, roi du terrain) ; renvoie les cadres dans g.T
+  g.terrains = (n = 4, o = {}) => { g.floor(); const cols = n > 2 ? 2 : n, rows = Math.ceil(n / cols), w = (380 - (cols - 1) * 10) / cols, h = (o.h || 230 - (rows - 1) * 10) / rows; g.T = [];
+    for (let i = 0; i < n; i++){ const x = 10 + (i % cols) * (w + 10), y = (o.y0 || 10) + Math.floor(i / cols) * (h + 10); g.T.push([x, y, w, h]);
+      put('bg', `<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(h)}" rx="4" fill="#f9f5ec" stroke="${CL}" stroke-width="2"/>`);
+      if (o.net) g.net(x + w / 2, y - 2, y + h + 2); else if (o.mid !== false) g.line(`M${f(x + w / 2)} ${y}v${h}`, 1.5, CL);
+      if (o.goals) { g.goalMini(o.goals, x + 4, y + h / 2, -1); g.goalMini(o.goals, x + w - 4, y + h / 2, 1); }
+      if (o.labs) g.tag(x + w / 2, y + 14, o.labs[i], {s: 9.5}); }
+    return g; };
+  // petite cible au bout d'un terrain réduit : 'basket' (panier), 'hand'/'foot' (but), 'cones'
+  g.goalMini = (k, x, y, sd) => k === 'basket' ? g.hoopB(x - sd * 4, y, sd) : k === 'hand' || k === 'foot' ? g.cage(x, y, sd, 22) : g.minigoal(x - sd * 4, y, true, 22);
+
+  /* ===== matériel ===== */
+  const BALLS = {basket: ['#e8772e', '#7a3a10'], volley: ['#fff6d6', '#2f5fa8'], hand: ['#f6e05e', '#8a6d00'], foot: ['#ffffff', '#1d241f'], mousse: ['#ff8fab', '#a23b5c'], gros: ['#5fb784', '#226b40'], medecine: ['#6b4f3a', '#2d1f14'], lest: ['#d6336c', '#7a1d40']};
+  g.ball = (x, y, k) => { const s = k || (g.sp === 'hiver' || g.sp === 'prisonnier' || g.sp === 'danse' ? 'mousse' : g.sp);
+    if (s === 'volant') return g.volant(x, y);
+    const [c, l] = BALLS[s] || ['#ffd23f', '#6b5800'], big = s === 'gros' ? 9 : s === 'medecine' ? 6.5 : 5;
+    let d = '';
+    if (s === 'basket') d = `<path d="M${f(x - big)} ${y}H${f(x + big)}M${x} ${f(y - big)}V${f(y + big)}" stroke="${l}" stroke-width=".9"/>`;
+    else if (s === 'volley') d = `<path d="M${f(x - big * .7)} ${f(y - big * .7)}Q${x} ${y} ${f(x - big * .2)} ${f(y + big)}M${f(x + big)} ${f(y - big * .2)}Q${x} ${y} ${f(x - big)} ${f(y + big * .1)}" stroke="${l}" stroke-width=".9" fill="none"/>`;
+    else if (s === 'foot') d = `<circle cx="${x}" cy="${y}" r="${f(big * .38)}" fill="${l}"/>`;
+    return put('top', `<circle cx="${f(x)}" cy="${f(y)}" r="${big}" fill="${c}" stroke="${l}" stroke-width="1.2"/>${d}`); };
+  g.volant = (x, y, a = -30) => put('top', `<g transform="translate(${f(x)} ${f(y)}) rotate(${a})"><path d="M0 -3L9 -6V6L0 3Z" fill="#fff" stroke="#555" stroke-width="1"/><circle cx="0" cy="0" r="3" fill="#2d3530"/></g>`);
+  g.balls = (x, y, n = 6, k) => { for (let i = 0; i < n; i++) g.ball(x + (i % 3) * 9 - 9 + (Math.floor(i / 3) % 2) * 4, y + Math.floor(i / 3) * 8 - 4, k); return g; };
+  g.bac = (x, y, lab = 'ballons', k) => { put('mid', `<rect x="${x - 18}" y="${y - 12}" width="36" height="24" rx="4" fill="#cdb79e" stroke="#7a6a52" stroke-width="1.5"/>`); g.balls(x, y, 6, k); return lab ? g.label(x, y + 24, lab, {s: 9}) : g; };
+  g.cone = (x, y, c = '#f06400') => put('mid', `<path d="M${f(x - 6)} ${f(y + 5)}L${f(x)} ${f(y - 8)}L${f(x + 6)} ${f(y + 5)}Z" fill="${c}" stroke="#fff" stroke-width="1"/>`);
+  g.disc = (x, y, c = '#facc15') => put('mid', `<ellipse cx="${f(x)}" cy="${f(y)}" rx="6" ry="4" fill="${c}" stroke="#a37f00" stroke-width="1.2"/><circle cx="${f(x)}" cy="${f(y)}" r="1.5" fill="#a37f00"/>`);
+  g.plot = (x, y, c = '#e11d48') => put('mid', `<circle cx="${f(x)}" cy="${f(y)}" r="4" fill="${c}" stroke="#fff" stroke-width="1"/>`);
+  g.hoop = (x, y, r = 11, c = '#d6336c') => put('mid', `<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="none" stroke="${c}" stroke-width="3"/>`);
+  g.bench = (x1, y1, x2, y2) => { const a = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI, l = Math.hypot(x2 - x1, y2 - y1);
+    return put('mid', `<g transform="translate(${f(x1)} ${f(y1)}) rotate(${f(a)})"><rect x="0" y="-5" width="${f(l)}" height="10" rx="2" fill="#c08a4f" stroke="#7a5228" stroke-width="1.5"/><path d="M6 -5v10M${f(l - 6)} -5v10" stroke="#7a5228" stroke-width="2"/></g>`); };
+  g.plinth = (x, y, w = 40, h = 22, lab = 'plinth') => put('mid', `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="4" fill="#d8b98a" stroke="#7a5228" stroke-width="1.5"/><path d="M${x - w / 2} ${y - h / 6}h${w}M${x - w / 2} ${y + h / 6}h${w}" stroke="#7a5228" stroke-width=".8"/>` + (lab ? txt(x, y + h / 2 + 10, lab, {s: 9}) : ''));
+  g.step = (x, y) => put('mid', `<rect x="${x - 12}" y="${y - 7}" width="24" height="14" rx="3" fill="#7c8a99" stroke="#3e4a56" stroke-width="1.2"/>`);
+  g.tramp = (x, y, lab = 'mini-trampoline') => put('mid', `<rect x="${x - 15}" y="${y - 15}" width="30" height="30" rx="5" fill="#2d3530"/><rect x="${x - 10}" y="${y - 10}" width="20" height="20" rx="2" fill="#5a6672"/>` + (lab ? txt(x, y + 26, lab, {s: 9}) : ''));
+  g.board = (x, y, a = 0) => put('mid', `<rect x="${f(x - 11)}" y="${f(y - 6)}" width="22" height="12" rx="4" fill="#f59f00" stroke="#9a5b00" stroke-width="1.2" transform="rotate(${a} ${f(x)} ${f(y)})"/>`);
+  g.frite = (x, y, a = 0, c = '#16a34a') => put('mid', `<rect x="${f(x - 22)}" y="${f(y - 3.5)}" width="44" height="7" rx="3.5" fill="${c}" stroke="#fff" stroke-width="1" transform="rotate(${a} ${f(x)} ${f(y)})"/>`);
+  g.ring = g.ring; // (gardé : g.ring = joueurs en cercle)
+  g.anneau = (x, y, c = '#d6336c') => put('mid', `<circle cx="${f(x)}" cy="${f(y)}" r="5" fill="none" stroke="${c}" stroke-width="3"/>`);
+  g.tapisFlot = (x, y, w = 60, h = 34) => put('mid', `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="6" fill="#fde68a" stroke="#b78a00" stroke-width="1.5"/>`);
+  g.sheet = (x, y, lab = '') => put('mid', `<rect x="${x - 9}" y="${y - 11}" width="18" height="22" rx="1.5" fill="#fff" stroke="#6b7280" stroke-width="1.2"/><path d="M${x - 5} ${y - 5}h10M${x - 5} ${y}h10M${x - 5} ${y + 5}h7" stroke="#9ca3af" stroke-width="1.2"/>` + (lab ? txt(x, y + 22, lab, {s: 9}) : ''));
+  g.music = (x, y) => put('mid', `<rect x="${x - 10}" y="${y - 13}" width="20" height="26" rx="3" fill="#2d3530"/><circle cx="${x}" cy="${y + 4}" r="6" fill="#5a6672"/><circle cx="${x}" cy="${y - 7}" r="3" fill="#5a6672"/>`).label(x, y + 24, 'musique', {s: 9});
+  g.chrono = (x, y) => put('mid', `<circle cx="${x}" cy="${y}" r="9" fill="#fff" stroke="#2d3530" stroke-width="2"/><path d="M${x} ${y}V${y - 6}M${x} ${y}h4" stroke="#2d3530" stroke-width="1.6"/><rect x="${x - 2.5}" y="${y - 13}" width="5" height="3" fill="#2d3530"/>`);
+  g.rope = (x1, y1, x2, y2, sag = 0, c = '#c2185b') => put('mid', `<path d="M${f(x1)} ${f(y1)}Q${f((x1 + x2) / 2)} ${f((y1 + y2) / 2 + sag)} ${f(x2)} ${f(y2)}" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`);
+  g.ladder = (x, y, n = 6, w = 22, h = 120) => { let s = `<path d="M${x} ${y}V${y + h}M${x + w} ${y}V${y + h}" stroke="#e8a000" stroke-width="2.5"/>`; for (let i = 0; i <= n; i++) s += `<path d="M${x} ${f(y + i * h / n)}h${w}" stroke="#e8a000" stroke-width="2"/>`; return put('mid', s); };
+  g.hurdle = (x, y, l = 22, vert = true) => put('mid', vert ? `<path d="M${x} ${y - l / 2}V${y + l / 2}" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/>` : `<path d="M${x - l / 2} ${y}H${x + l / 2}" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/>`);
+  g.sand = (x, y, w, h) => put('bg', `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="#efd9a6" stroke="#c9ad6a" stroke-width="1.5"/>`);
+  g.wall = (x, y, w, h) => put('bg', `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#8a958c"/><path d="M${x} ${y + h}h${w}" stroke="#5d6a60" stroke-width="2"/>`);
+  g.flag = (x, y, c = '#e11d48') => put('mid', `<path d="M${x} ${y + 8}V${y - 12}" stroke="#2d3530" stroke-width="1.8"/><path d="M${x} ${y - 12}l12 4l-12 4Z" fill="${c}"/>`);
+  g.chasuble = (x, y, c = '#facc15') => put('mid', `<path d="M${x - 7} ${y - 8}l4 -2l3 3l3 -3l4 2l-1 16h-12Z" fill="${c}" stroke="#8a6d00" stroke-width="1"/>`);
+  g.tresor = (x, y, lab = '') => put('mid', `<rect x="${x - 10}" y="${y - 7}" width="20" height="14" rx="2" fill="#f59f00" stroke="#7a4b00" stroke-width="1.5"/><path d="M${x - 10} ${y - 2}h20" stroke="#7a4b00" stroke-width="1.2"/>`).label(x, y + 20, lab, {s: 9});
+
+  /* ===== flèches ===== */
+  const head = (x2, y2, ux, uy, c, s = 7) => `<path d="M${f(x2)} ${f(y2)}L${f(x2 - ux * s - uy * s * .55)} ${f(y2 - uy * s + ux * s * .55)}L${f(x2 - ux * s + uy * s * .55)} ${f(y2 - uy * s - ux * s * .55)}Z" fill="${c}"/>`;
+  const STY = {run: [COL.run, 2, ''], pass: [COL.pass, 2, '6 4'], shot: [COL.shot, 2.6, '2 4'], lob: [COL.lob, 2, '6 4'], drib: [COL.run, 1.8, ''], swim: ['#0b6e99', 2, ''], rot: ['#6b7280', 1.8, '4 3']};
+  // flèche courbe de (x1,y1) à (x2,y2) ; bend > 0 = courbe vers la gauche ; n = repère numéroté
+  g.arrow = (k, x1, y1, x2, y2, bend = 0, n) => {
+    const [c, w, da] = STY[k] || STY.run, mx = (x1 + x2) / 2, my = (y1 + y2) / 2, dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
+    const cx = mx - dy / L * bend, cy = my + dx / L * bend, tx = x2 - cx, ty = y2 - cy, tl = Math.hypot(tx, ty) || 1, ux = tx / tl, uy = ty / tl;
+    const ex = x2 - ux * 3, ey = y2 - uy * 3;
+    let ln;
+    if (k === 'drib' || k === 'swim'){ // ligne ondulée le long de la courbe
+      const N = Math.max(6, Math.round(L / (k === 'swim' ? 14 : 9))); let d = `M${f(x1)} ${f(y1)}`;
+      for (let i = 1; i <= N; i++){ const t = i / N * .92, qx = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * cx + t * t * ex, qy = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * cy + t * t * ey,
+        gx = 2 * (1 - t) * (cx - x1) + 2 * t * (ex - cx), gy = 2 * (1 - t) * (cy - y1) + 2 * t * (ey - cy), gl = Math.hypot(gx, gy) || 1, a = i === N ? 0 : (i % 2 ? 4 : -4);
+        d += `${k === 'swim' ? 'L' : 'L'}${f(qx - gy / gl * a)} ${f(qy + gx / gl * a)}`; }
+      ln = `<path d="${d}L${f(ex - ux * 4)} ${f(ey - uy * 4)}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linejoin="round"/>`;
+    } else ln = `<path d="M${f(x1)} ${f(y1)}Q${f(cx)} ${f(cy)} ${f(ex - ux * 4)} ${f(ey - uy * 4)}" fill="none" stroke="${c}" stroke-width="${w}"${da ? ` stroke-dasharray="${da}"` : ''} stroke-linecap="round"/>`;
+    put('ar', ln + head(ex, ey, ux, uy, c));
+    if (n != null) g.num(f(.25 * x1 + .5 * cx + .25 * x2 - dy / L * 9), f(.25 * y1 + .5 * cy + .25 * y2 + dx / L * 9), n);
+    return g;
+  };
+  g.run = (x1, y1, x2, y2, b = 0, n) => g.arrow('run', x1, y1, x2, y2, b, n);
+  g.pass = (x1, y1, x2, y2, b = 0, n) => g.arrow('pass', x1, y1, x2, y2, b, n);
+  g.shot = (x1, y1, x2, y2, b = 0, n) => g.arrow('shot', x1, y1, x2, y2, b, n);
+  g.lob = (x1, y1, x2, y2, b = 30, n) => g.arrow('lob', x1, y1, x2, y2, b, n);
+  g.drib = (x1, y1, x2, y2, b = 0, n) => g.arrow('drib', x1, y1, x2, y2, b, n);
+  g.swim = (x1, y1, x2, y2, b = 0, n) => g.arrow('swim', x1, y1, x2, y2, b, n);
+  g.rot = (x1, y1, x2, y2, b = 0, n) => g.arrow('rot', x1, y1, x2, y2, b, n);
+  // trajet passant par plusieurs points (lissé), flèche au bout
+  g.path = (k, P, n) => { const [c, w, da] = STY[k] || STY.run; let d = `M${P[0][0]} ${P[0][1]}`;
+    for (let i = 1; i < P.length - 1; i++){ const mx = (P[i][0] + P[i + 1][0]) / 2, my = (P[i][1] + P[i + 1][1]) / 2; d += `Q${P[i][0]} ${P[i][1]} ${i === P.length - 2 ? '' : ''}${f(mx)} ${f(my)}`; }
+    const a = P[P.length - 2], b = P[P.length - 1], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l;
+    d += `L${f(b[0] - ux * 7)} ${f(b[1] - uy * 7)}`;
+    put('ar', `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}"${da ? ` stroke-dasharray="${da}"` : ''} stroke-linejoin="round" stroke-linecap="round"/>` + head(b[0] - ux * 2, b[1] - uy * 2, ux, uy, c));
+    if (n != null) g.num(P[1][0] + 10, P[1][1] - 10, n);
+    return g; };
+  // boucle fermée (tour, rotation), sens des aiguilles d'une montre si cw
+  g.loop = (cx, cy, rx, ry, k = 'run', cw = true) => { const [c, w, da] = STY[k] || STY.run;
+    put('ar', `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="${c}" stroke-width="${w}"${da ? ` stroke-dasharray="${da}"` : ''}/>`);
+    const ux = cw ? 1 : -1; return put('ar', head(cx + 4 * ux, cy - ry, ux, 0, c)) && put('ar', head(cx - 4 * ux, cy + ry, -ux, 0, c)); };
+
+  /* ===== textes ===== */
+  g.label = (x, y, t, o = {}) => put('lab', txt(x, y, t, o));
+  // bulle de texte avec fond blanc
+  g.tag = (x, y, t, o = {}) => { const s = o.s || 10.5, w = String(t).length * s * .53 + 10;
+    return put('lab', `<rect x="${f(x - w / 2)}" y="${f(y - s * .9)}" width="${f(w)}" height="${f(s * 1.55)}" rx="${f(s * .7)}" fill="${o.bg || '#fff'}" stroke="${o.st || '#cfc6b4'}" stroke-width="1"/>` + txt(x, y + s * .02, t, {s, b: o.b ?? 1, c: o.c || COL.ink, halo: false})); };
+  g.num = (x, y, n) => put('lab', `<circle cx="${f(x)}" cy="${f(y)}" r="8" fill="#2d3530" stroke="#fff" stroke-width="1.5"/><text x="${f(x)}" y="${f(y + 3.6)}" font-size="10" font-weight="700" fill="#fff" text-anchor="middle">${esc(n)}</text>`);
+  // repère numéroté expliqué sous le schéma
+  g.n = (k, t) => { notes.push([k, t]); return g; };
+  g.cap = t => { g.caption = t; return g; };
+  return g;
+}
+function txt(x, y, t, o = {}){
+  const s = o.s || 11, c = o.c || COL.ink, a = o.a || 'middle';
+  return `<text x="${f(x)}" y="${f(y)}" font-size="${s}" font-weight="${o.b ? 700 : 500}" fill="${c}" text-anchor="${a}"${o.halo === false ? '' : ' stroke="#fff" stroke-width="3" stroke-linejoin="round" paint-order="stroke"'}${o.it ? ' font-style="italic"' : ''}>${esc(t)}</text>`;
+}
+
+/* ---------- anciens modèles (gardés pour les prépas écrites à la main et les jeux sans scène) ---------- */
+const nv = s => { const m = /^(\d)c(\d)$/.exec(s || ''); return m ? [+m[1], +m[2]] : [3, 3]; };
+const OLD = {
+  libre: (g, sp) => g.hall().scatter('a', 10, 40, 40, 360, 210, {ball: true, seed: 11}),
+  voleurs: (g, sp) => g.hall().scatter('a', 9, 40, 40, 360, 210, {ball: true, seed: 11}).scatter('x', 3, 80, 60, 320, 190, {seed: 3}).label(200, 243, 'losanges : voleurs sans ballon', {s: 10}),
+  chat: g => g.hall().scatter('a', 10, 40, 40, 360, 210, {seed: 5}).scatter('x', 2, 120, 80, 280, 170, {seed: 9}).label(200, 243, 'losanges : les chats', {s: 10}),
+  cercle: g => g.hall().ring('a', 8, 200, 125, 90, 80).ball(290, 120),
+  deux: g => { g.hall(); [60, 125, 190].forEach(y => g.A(110, y, '1', {ball: true}).A(260, y, '2').pass(122, y - 5, 248, y - 5, -10)); return g.label(185, 243, 'par deux, 3 à 6 m', {s: 10}); },
+  trois: g => { g.hall(); [60, 125, 190].forEach(y => g.A(80, y).A(200, y).A(320, y).pass(190, y - 4, 92, y - 4, -12)); return g; },
+  carre: (g, sp, k) => { g.hall().zone(110, 45, 180, 160); [[110, 45], [290, 45], [290, 205], [110, 205]].forEach(([x, y]) => g.cone(x, y).A(x + (x < 200 ? 16 : -16), y + (y < 125 ? 16 : -16))); for (let i = 0; i < (+k || 0); i++) g.X(180 + i * 30, 125); return g.pass(126, 61, 274, 61, -8); },
+  files: g => { g.hall(); [50, 100, 150, 200].forEach(y => g.A(50, y).A(30, y).cone(340, y).run(62, y - 5, 328, y - 5)); return g; },
+  slalom: (g, sp) => { g.hall(); for (let i = 0; i < 5; i++) g.cone(100 + i * 40, 125); g.A(50, 125, '', {ball: true}); return g.path('drib', [[60, 125], [100, 100], [140, 150], [180, 100], [220, 150], [260, 100], [300, 125], [340, 125]]); },
+  tir: (g, sp) => { g.half(['basket', 'hand', 'foot'].includes(sp) ? sp : 'basket'); [[230, 60, '1'], [210, 125, '2'], [230, 190, '3']].forEach(([x, y, l]) => g.A(x, y, l, {ball: true}).shot(x + 10, y, 355, 125 + (y - 125) * .1)); return g; },
+  demi: (g, sp, k) => { const [a, d] = nv(k); g.half(['basket', 'hand', 'foot'].includes(sp) ? sp : 'basket'); g.row('a', a, 170, 50, 170, 200, {balls: [0]}).row('x', d, 300, 70, 300, 180); return g.label(240, 243, `${a} attaquants contre ${d} défenseur${d > 1 ? 's' : ''}`, {s: 10}); },
+  match: (g, sp, k) => { const [a, b] = nv(k); g.court(sp); g.scatter('a', a, 60, 50, 190, 200, {seed: 3}).scatter('b', b, 210, 50, 340, 200, {seed: 8}); return g.label(200, 243, `match ${a} contre ${b}`, {s: 10}); },
+  tournoi: (g, sp) => { g.hall(); [[20, 20], [205, 20], [20, 130], [205, 130]].forEach(([x, y], i) => g.zone(x, y, 175, 100, `Terrain ${i + 1}`, 'grey', {s: 13})); return g; },
+  filet: (g, sp, k) => { const [a, b] = nv(k || '3c3'); g.court('volley').scatter('a', a, 40, 40, 170, 210, {seed: 3}).scatter('b', b, 230, 40, 360, 210, {seed: 4}); return g.lob(150, 100, 280, 120, -50); },
+  bad: (g, sp, k) => g.badCourt().A(90, 125).B(310, 125).lob(100, 120, 330, 70, -40),
+  mur: g => { g.floor().wall(10, 10, 380, 18); [100, 200, 300].forEach(x => g.A(x, 190).pass(x, 178, x, 34, -14)); return g.label(200, 243, '3 à 4 m du mur', {s: 10}); },
+  ateliers: (g, sp, k) => { const n = +k || 4, cols = n > 4 ? 3 : 2, rows = Math.ceil(n / cols), w = 380 / cols, hh = 230 / rows; g.floor();
+    for (let i = 0; i < n; i++){ const x = 10 + (i % cols) * w, y = 10 + Math.floor(i / cols) * hh; g.zone(x + 4, y + 4, w - 8, hh - 8, '', 'blue').num(x + 20, y + 22, i + 1); } return g; },
+  prisonnier: g => g.court('prisonnier').scatter('a', 5, 80, 45, 185, 205, {seed: 2}).scatter('b', 5, 215, 45, 320, 205, {seed: 6}),
+  piscine: (g, sp, k) => { g.pool(5); for (let i = 0; i < 5; i++) g.A(40, g.pool_y(i)).swim(52, g.pool_y(i), 360, g.pool_y(i)); return g; },
+  piste: g => g.track(),
+  course: g => { g.straight(4); [0, 1, 2, 3].forEach(i => g.A(25, g.lane_y(i)).run(36, g.lane_y(i), 340, g.lane_y(i))); return g; },
+  saut: g => g.floor('#d7ebc9').sand(270, 80, 110, 90).A(40, 125).run(52, 125, 240, 125),
+  lancer: g => g.grass().A(40, 125).shot(52, 120, 300, 110, -30),
+  acro: g => g.floor().mat(30, 40, 340, 170, {seams: 4}),
+  danse: g => g.stage().scatter('a', 8, 50, 40, 350, 180, {seed: 4}),
+  explication: g => g.hall().ring('a', 12, 200, 135, 120, 70, {a0: 0.3}).P(200, 70),
+  etirements: g => g.hall().ring('a', 12, 200, 125, 140, 85).P(200, 125),
+  corde: g => g.hall(),
+  tapis: g => g.floor().mat(30, 30, 160, 90).mat(210, 30, 160, 90).mat(30, 130, 160, 90).mat(210, 130, 160, 90)
 };
 const NOMS = {libre: 'Chacun son ballon', voleurs: 'Dribble et voleurs', chat: 'Jeu de poursuite', cercle: 'Passes en cercle', deux: 'Par deux', trois: 'Par trois', carre: 'Carré de passes', files: 'En colonnes', slalom: 'Parcours', tir: 'Tirs', demi: 'Demi-terrain', match: 'Match', tournoi: 'Tournoi sur 4 terrains', filet: 'Jeu au filet', bad: 'Terrain de badminton', mur: 'Contre le mur', ateliers: 'Ateliers tournants', prisonnier: 'Balle aux prisonniers', piscine: 'Bassin', piste: 'Boucle de course', course: 'Couloirs', saut: 'Saut', lancer: 'Lancer', acro: 'Figure acrobatique', danse: 'Espace scénique', explication: 'Regroupement', etirements: 'Retour au calme', corde: 'Corde à sauter', tapis: 'Tapis de lutte'};
+const SPORT_LIB = {acro: 'acro', athle: 'athle', bad: 'bad', basket: 'basket', corde: 'corde', danse: 'danse', endurance: 'endurance', foot: 'foot', hand: 'hand', hiver: 'hiver', lutte: 'lutte', natation: 'natation', natdeb: 'natation', prisonnier: 'prisonnier', volley: 'volley'};
+
+/* ---------- jeux communs à tous les sports (projet d'équipe : draft, contrat, échauffement d'équipe, coach, journaliste) ---------- */
+const SPC = sp => ({basket: 'basket', hand: 'hand', foot: 'foot', volley: 'volley', bad: 'bad', prisonnier: 'prisonnier'})[sp] || 'salle';
+const COMMUN = {
+  draft: g => g.hall().pls('a', [[80, 60, 'C1'], [160, 60, 'C2'], [240, 60, 'C3'], [320, 60, 'C4']]).sheet(80, 95).sheet(160, 95).sheet(240, 95).sheet(320, 95).scatter('g', 10, 50, 140, 350, 215, {seed: 2})
+    .label(200, 30, 'ordre de choix 1-2-3-4, puis 4-3-2-1', {s: 10, b: 1}).n(1, 'les capitaines choisissent sur une feuille : personne n\'est choisi en dernier à voix haute').n(2, 'chaque équipe se donne un nom, une couleur et un cri'),
+  contrat: g => { g.hall(); [[105, 70], [295, 70], [105, 180], [295, 180]].forEach(([x, y]) => g.ring('a', 4, x, y, 34, 26).sheet(x, y)); return g.n(1, 'chaque équipe écrit son contrat : une force, un point faible, une règle de fair-play, un objectif chiffré').n(2, 'le contrat est relu avant chaque match'); },
+  echequipe: g => { g.hall(); [[105, 70], [295, 70], [105, 180], [295, 180]].forEach(([x, y]) => g.zone(x - 85, y - 50, 170, 100, '', 'grey').ring('a', 4, x, y, 30, 25).X(x, y, 'C')); return g.P(200, 125).n(1, 'le capitaine (C) mène : jeu de mise en train, articulations, puis gestes du sport ; le prof passe et valide'); },
+  coach: g => { g.floor(); ['équipe 1', 'équipe 2', 'équipe 3', 'équipe 4'].forEach((t, i) => { const x = 10 + (i % 2) * 192, y = 10 + Math.floor(i / 2) * 117; g.zone(x + 3, y + 3, 184, 110, t, 'blue', {top: 1}).ring('a', 4, x + 95, y + 65, 34, 24).X(x + 95, y + 65, 'C'); });
+    return g.P(200, 125).n(1, 'chaque équipe choisit un jeu de la saison pour son point faible ; un élève est coach').n(2, 'à la fin, chaque coach dit ce que l\'équipe a amélioré'); },
+  journaliste: g => g.calme('📰 résultats · joueur fair-play · action du jour').A(200, 155, 'J').sheet(222, 155).n(1, 'le journaliste de chaque équipe annonce les résultats, le joueur fair-play et l\'action du jour')
+};
+const NUMS = '①②③④⑤⑥⑦⑧⑨';
+function render(spec){
+  spec = String(spec || '');
+  let lib = '', key = '', old = spec;
+  if (spec[0] === '@'){ const i = spec.indexOf('#'); [lib, key] = (i < 0 ? spec.slice(1) : spec.slice(1, i)).split('|'); old = i < 0 ? '' : spec.slice(i + 1); }
+  const SC = window.PSCH_SC || {}, fn = lib && ((SC[lib] && SC[lib][key]) || COMMUN[key]);
+  let g, name;
+  try {
+    if (fn){ g = G(SPORT_LIB[lib] || lib); fn(g); name = key; }
+    else { const [n, sp, k] = old.split(':'); if (!OLD[n]) return null; g = G(sp || SPORT_LIB[lib] || ''); OLD[n](g, sp || SPORT_LIB[lib] || '', k || ''); name = NOMS[n] || n; }
+  } catch (e){ console.warn('schéma', spec, e); return null; }
+  const L = g.L, svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Schéma : ${esc(name)}" ${FONT}>${L.bg.join('')}${L.mid.join('')}${L.ar.join('')}${L.top.join('')}${L.lab.join('')}</svg>`;
+  return {svg, notes: g.notes, caption: g.caption};
+}
 window.PSCH = (spec, cap) => {
   if (!spec) return '';
-  const [n, sp, k] = String(spec).split(':'); if (!T[n]) return '';
-  let inner; try { inner = T[n](sp || '', k || ''); } catch (e) { return ''; }
-  return `<figure class="psch"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Schéma : ${NOMS[n] || n}">${inner}</svg>${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`;
+  const r = render(spec); if (!r) return '';
+  const nt = r.notes.length ? `<ol class="psch-n">${r.notes.map(([k, t]) => `<li><b>${typeof k === 'number' ? NUMS[k - 1] || k : esc(k)}</b> ${esc(t)}</li>`).join('')}</ol>` : '';
+  return `<figure class="psch" tabindex="0" title="Toucher pour agrandir">${r.svg}${cap || r.caption || nt ? `<figcaption>${cap ? `<b>${cap}</b>` : ''}${r.caption ? `<span class="psch-c">${esc(r.caption)}</span>` : ''}${nt}</figcaption>` : ''}</figure>`;
 };
-window.PSCH_LEGENDE = `<div class="psch-leg"><span><svg viewBox="0 0 20 20"><g class="pa"><circle cx="10" cy="10" r="7.5"/></g></svg>équipe A</span><span><svg viewBox="0 0 20 20"><g class="pb"><rect x="3" y="3" width="14" height="14" rx="2"/></g></svg>équipe B</span><span><svg viewBox="0 0 20 20"><g class="px"><path d="M10 1L19 10L10 19L1 10Z"/></g></svg>défenseur, chat</span><span><svg viewBox="0 0 30 12"><g class="ar run"><path class="ln" d="M2 6H22"/><path class="hd" d="M28 6L21 2V10Z"/></g></svg>déplacement</span><span><svg viewBox="0 0 30 12"><g class="ar pass"><path class="ln" d="M2 6H22"/><path class="hd" d="M28 6L21 2V10Z"/></g></svg>passe</span><span><svg viewBox="0 0 30 12"><g class="ar shot"><path class="ln" d="M2 6H22"/><path class="hd" d="M28 6L21 2V10Z"/></g></svg>tir, lancer</span></div>`;
+// schéma « décor » (regroupement, étirements) : pas imprimé, pour que la prépa tienne sur une page
+window.PSCH_DECOR = spec => { spec = String(spec || ''); const i = spec.indexOf('#'), old = spec[0] === '@' ? (i < 0 ? '' : spec.slice(i + 1)) : spec;
+  if (spec[0] === '@'){ const [lib, key] = (i < 0 ? spec.slice(1) : spec.slice(1, i)).split('|'), D = (window.PSCH_SC || {})._decor || {}; if (D[lib + '|' + key] != null) return D[lib + '|' + key]; }
+  return /^(explication|etirements)/.test(old); };
+const sw = (k, inner, w = 30) => `<svg viewBox="0 0 ${w} 22" ${FONT}>${inner}</svg>`;
+const G0 = G('');
+window.PSCH_LEGENDE = `<div class="psch-leg">
+<span>${sw(0, '<circle cx="11" cy="11" r="8" fill="#1f63d6" stroke="#fff" stroke-width="2"/>', 22)}équipe A / élève</span>
+<span>${sw(0, '<rect x="3" y="3" width="16" height="16" rx="3" fill="#e8590c" stroke="#fff" stroke-width="2"/>', 22)}équipe B</span>
+<span>${sw(0, '<path d="M11 1L21 11L11 21L1 11Z" fill="#1d241f" stroke="#fff" stroke-width="2"/>', 22)}défenseur, chat</span>
+<span>${sw(0, '<path d="M11 1L21 19H1Z" fill="#16a34a" stroke="#fff" stroke-width="2"/>', 22)}joker</span>
+<span>${sw(0, '<circle cx="11" cy="11" r="9" fill="#8a3ffc"/><text x="11" y="15" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">P</text>', 22)}prof</span>
+<span>${sw(0, '<path d="M2 11H22" stroke="#2d3530" stroke-width="2"/><path d="M29 11L21 6V16Z" fill="#2d3530"/>')}course</span>
+<span>${sw(0, '<path d="M2 11L6 7L10 15L14 7L18 15L21 11" fill="none" stroke="#2d3530" stroke-width="1.8"/><path d="M29 11L21 6V16Z" fill="#2d3530"/>')}dribble, conduite</span>
+<span>${sw(0, '<path d="M2 11H22" stroke="#1f63d6" stroke-width="2" stroke-dasharray="6 4"/><path d="M29 11L21 6V16Z" fill="#1f63d6"/>')}passe</span>
+<span>${sw(0, '<path d="M2 11H22" stroke="#c2185b" stroke-width="2.6" stroke-dasharray="2 4" stroke-linecap="round"/><path d="M29 11L21 6V16Z" fill="#c2185b"/>')}tir, lancer</span>
+<span>${sw(0, '<path d="M2 11H22" stroke="#7c3aed" stroke-width="2" stroke-dasharray="6 4"/><path d="M29 11L21 6V16Z" fill="#7c3aed"/>')}balle haute</span>
+<span>${sw(0, '<path d="M5 17L11 4L17 17Z" fill="#f06400"/>', 22)}cône</span>
+<span>${sw(0, '<ellipse cx="11" cy="11" rx="7" ry="5" fill="#facc15" stroke="#a37f00"/>', 22)}coupelle</span>
+<span>${sw(0, '<circle cx="11" cy="11" r="8" fill="none" stroke="#d6336c" stroke-width="3"/>', 22)}cerceau</span>
+</div>`;
+
+/* ---------- style des schémas (une seule fois) + agrandir au toucher ---------- */
+if (typeof document !== 'undefined' && !document.getElementById('psch-css')){
+  const st = document.createElement('style'); st.id = 'psch-css';
+  st.textContent = `.psch{margin:0;background:#fff;border:1px solid var(--line,#ddd);border-radius:10px;padding:6px;cursor:zoom-in}
+.psch svg{width:100%;height:auto;display:block;border-radius:6px}
+.psch figcaption{font-size:12.5px;color:var(--muted,#555);margin:4px 2px 0;text-align:left;line-height:1.35}
+.psch figcaption>b{display:block;color:var(--ink,#222);font-size:13px;text-align:center}
+.psch .psch-c{display:block;text-align:center;font-style:italic}
+.psch-n{list-style:none;margin:3px 0 0;padding:0}.psch-n li{margin:1px 0}.psch-n li b{color:#2d3530;font-size:14px;margin-right:2px}
+.pp-schs,.plg-schs{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))!important}
+.psch-leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:#3d4a40;margin-top:8px}.psch-leg span{display:inline-flex;align-items:center;gap:5px}.psch-leg svg{height:15px;width:auto}
+#psch-zoom{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
+#psch-zoom .psch{max-width:min(980px,100%);max-height:100%;overflow:auto;cursor:zoom-out;padding:10px}#psch-zoom figcaption{font-size:15px}#psch-zoom figcaption>b{font-size:17px}
+@media print{.psch{break-inside:avoid;cursor:auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}.pr-sch .psch{width:calc(33.3% - 5px)!important}.pr-sch .psch-n{font-size:7.5pt}}`;
+  (document.head || document.documentElement).appendChild(st);
+  document.addEventListener('click', e => {
+    const z = document.getElementById('psch-zoom'); if (z){ z.remove(); return; }
+    const fg = e.target.closest && e.target.closest('figure.psch'); if (!fg || fg.closest('#psch-zoom')) return;
+    const o = document.createElement('div'); o.id = 'psch-zoom'; o.innerHTML = fg.outerHTML; document.body.appendChild(o);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape'){ const z = document.getElementById('psch-zoom'); if (z){ z.remove(); e.stopPropagation(); } } }, true);
+}
+window.PSCH_KIT = G;   // pour les tests
 })();

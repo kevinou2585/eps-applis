@@ -300,3 +300,95 @@ an: {
    r: [['bilan', 6]]}
 ]}
 }});
+
+/* ===== Schémas de chaque jeu (dessinés par carnet/prepas/schemas.js) ===== */
+(window.PSCH_SC = window.PSCH_SC || {}).volley = {
+  nettoyage: g => g.court().scatter('a', 6, 40, 40, 180, 210, {seed: 2}).scatter('b', 6, 220, 40, 360, 210, {seed: 5}).balls(90, 120, 3, 'mousse').balls(300, 80, 3, 'volley').balls(290, 190, 3, 'mousse').lob(110, 70, 300, 120, -40, 1).lob(290, 170, 100, 170, -40)
+    .n(1, 'pendant 1 min, on lance par-dessus le filet le plus de balles possible').n(2, 'au sifflet, on s\'assoit : le camp qui a le moins de balles gagne').num(200, 238, 2),
+  chatvolley: g => g.hall().scatter('a', 9, 40, 40, 360, 215, {seed: 5}).each((x, y, i) => i % 3 === 0 && g.ball(x, y - 13, 'volley')).X(200, 125, 'C').X(300, 70, 'C').run(210, 125, g.last[4][0] - 12, g.last[4][1], 10, 1)
+    .tag(200, 243, 'ballon tenu au-dessus du front = protégé', {s: 9.5}).n(1, 'les chats touchent les fuyards ; on lance le ballon à celui qui est en danger').n(2, 'touché = on devient chat'),
+  ceintures: g => g.hall().scatter('a', 12, 40, 50, 360, 215, {seed: 4}).each((x, y) => g.ball(x, y - 15, 'volley')).tag(80, 30, '⬜ 5', {s: 10}).tag(135, 30, '🟨 10', {s: 10}).tag(195, 30, '🟧 15 + 1 rebond', {s: 10}).tag(275, 30, '🟩 10 alternés', {s: 10}).tag(350, 30, '⬛ 20', {s: 10})
+    .n(1, 'chacun jongle en passes hautes au-dessus du front et annonce sa ceinture'),
+  toquinho: g => g.hall().ring('a', 5, 200, 125, 70, 70).lob(200, 55, 266, 103, 20, 1).lob(266, 112, 242, 182, 20).ball(225, 70, 'volley').tag(200, 125, '1, 2, 3…', {s: 11}).n(1, 'on garde le ballon en l\'air en comptant à voix haute ; 2 touches de suite maximum'),
+  brulante: g => g.court().A(90, 80).A(110, 170, '', {ball: 'volley'}).B(290, 80).B(310, 170).lob(120, 165, 290, 110, -40, 1).tag(110, 205, 'moins de 3 s !', {s: 9.5}).zone(230, 40, 140, 170, '', 'yellow')
+    .n(1, 'on attrape et on renvoie en moins de 3 s, à 2 mains au-dessus du front').n(2, 'ballon qui tombe dans le camp adverse = 1 point').num(300, 135, 2),
+  coopfilet: g => g.court().row('a', 2, 80, 80, 80, 170).A(160, 125).row('b', 2, 320, 80, 320, 170).B(240, 125).lob(80, 170, 160, 132, 20, 1).lob(160, 118, 240, 118, -40, 2).lob(240, 132, 320, 170, -20).tag(200, 13, 'record des deux camps : 1, 2, 3…', {s: 10})
+    .n(1, '2 touches obligatoires dans chaque camp').n(2, 'on compte les passages au-dessus du filet sans faire tomber'),
+  toqassis: g => g.hall().ring('a', 6, 200, 125, 70, 60).lob(200, 65, 260, 105, 20).ball(240, 75, 'volley').label(200, 130, 'assis', {s: 11, b: 1}).n(1, 'assis en cercle, passes hautes sans se lever ; record du groupe, puis étirements'),
+  dessous: g => g.hall().A(120, 125, 'L', {ball: 'volley'}).lob(130, 120, 220, 125, 50, 1).ball(220, 125, 'volley').run(220, 60, 225, 190, -16, 2).A(220, 50).file('a', 4, 290, 50, 20, 0).label(120, 150, 'lanceur', {s: 9})
+    .n(1, 'le lanceur envoie le ballon très haut').n(2, 'à chaque rebond, un joueur passe dessous sans le toucher'),
+  chiffres: g => { g.hall().P(200, 125, {ball: 'volley'}); [[70, 60], [330, 60], [70, 190], [330, 190], [200, 40], [200, 210]].forEach(([x, y]) => g.A(x - 18, y).B(x + 18, y)); return g.tag(200, 98, '« 1 », « 2 », « 3 »… « Balle ! »', {s: 10}).n(1, 'par deux face à face, en position ; on fait l\'action annoncée').n(2, 'au mot « Balle ! », le prof lâche un ballon : le premier qui le touche gagne'); },
+  vies: g => g.court().X(300, 125, 'D').label(300, 150, '3 vies', {s: 10, b: 1}).row('a', 3, 90, 60, 90, 190, {balls: [0]}).lob(100, 60, 330, 80, -40, 1).lob(100, 190, 270, 190, 30).run(300, 113, 325, 88, 0, 2)
+    .n(1, 'les attaquants envoient chacun leur tour un ballon dans le camp du défenseur').n(2, 'ballon pas touché = 1 vie perdue ; plus de vie = on tourne'),
+  tennis: g => g.court().row('a', 3, 90, 60, 90, 190).row('b', 3, 310, 60, 310, 190).lob(100, 60, 280, 100, -40, 1).ball(280, 100, 'volley').label(280, 122, 'rebond', {s: 9}).lob(295, 110, 310, 180, -10, 2)
+    .n(1, 'le ballon peut rebondir 1 fois au sol avant chaque touche').n(2, '3 touches maximum par camp'),
+  zones: g => { g.court(); [[0, 'g'], [1, 'd']].forEach(([k]) => { const x0 = k ? 200 : 20, sg = k ? 1 : -1; g.zone(k ? 320 : 20, 25, 60, 200, '3', 'green', {s: 13, dash: false, rx: 0}).zone(k ? 200 : 140, 25, 60, 200, '1', 'yellow', {s: 13, dash: false, rx: 0}).zone(k ? 260 : 80, 25, 60, 60, '2', 'blue', {s: 13, dash: false, rx: 0}).zone(k ? 260 : 80, 165, 60, 60, '2', 'blue', {s: 13, dash: false, rx: 0}); });
+    return g.net().A(110, 125, '', {ball: 'volley'}).A(160, 160).B(290, 125).B(240, 90).lob(120, 120, 350, 110, -40, 1).n(1, 'le ballon qui tombe dans une zone rapporte ses points à l\'équipe qui l\'a envoyé'); },
+  silence: g => g.hall().scatter('a', 12, 40, 50, 360, 215, {seed: 4}).each((x, y) => g.ball(x, y - 15, 'volley')).tag(200, 30, '🤫 silence : debout → assis → allongé', {s: 10}).n(1, 'qui fait tomber s\'assoit ; puis étirements et un mot sur la leçon'),
+  'Le chat-service': g => g.hall().scatter('a', 9, 40, 40, 360, 215, {seed: 5}).X(170, 120, 'C', {ball: 'mousse'}).shot(180, 118, g.last[6][0] - 10, g.last[6][1], -10, 1).X(290, 190, 'C').tag(110, 243, 'balle peau de pêche, geste de service', {s: 9.5})
+    .n(1, 'le chat touche un fuyard en lui envoyant la balle avec un geste de service'),
+  servbowl: g => g.court().A(30, 80, '', {ball: 'volley'}).A(120, 170, '', {ball: 'volley'}).cone(260, 70).cone(300, 110).cone(280, 160).cone(340, 190).cone(330, 60).lob(40, 80, 300, 105, -40, 1).lob(130, 170, 278, 158, -30)
+    .label(30, 105, '2 points', {s: 9, b: 1}).label(120, 195, '1 point', {s: 9, b: 1}).n(1, 'chacun sert à son tour : 1 point par cône renversé, 2 points depuis la ligne de fond'),
+  sauveteur: g => g.court().scatter('a', 4, 50, 50, 180, 200, {seed: 2}).scatter('b', 4, 220, 50, 350, 200, {seed: 6}).A(392, 90, 'S').B(8, 160, 'S').lob(100, 80, 388, 90, -50, 1).run(392, 100, 392, 150, 0)
+    .n(1, 'on sert vers son sauveteur derrière le camp adverse : s\'il attrape, le serveur le rejoint').n(2, 'première équipe entièrement sauvée = gagné').num(380, 175, 2),
+  montante: g => { g.terrains(4, {net: 1, labs: ['terrain 1 👑', 'terrain 2', 'terrain 3', 'terrain 4']}); g.T.forEach(([x, y, w, h]) => g.row('a', 2, x + w * .25, y + h * .45, x + w * .25, y + h * .8).row('b', 2, x + w * .75, y + h * .45, x + w * .75, y + h * .8));
+    return g.run(150, 150, 150, 98, 0, 1).run(245, 98, 245, 150, 0, 2).n(1, 'les gagnants montent vers le terrain 1').n(2, 'les perdants descendent'); },
+  bilan: g => g.calme('👍 j\'ai appris · j\'ai aimé').n(1, 'étirements guidés, pouce levé, puis un geste fair-play vu chez l\'adversaire'),
+  rondsoleil: g => g.hall().ring('a', 7, 200, 125, 100, 90).X(200, 125).lob(200, 35, 290, 95, 20, 1).lob(290, 160, 120, 180, 20).ball(240, 50, 'volley')
+    .n(1, 'on frappe en passe haute ou manchette vers un autre joueur').n(2, 'qui laisse tomber un ballon facile va au centre ; il en sort en attrapant une passe trop basse').num(200, 150, 2),
+  'La passe et le renvoi': g => g.court().B(300, 125, 'L', {ball: 'volley'}).lob(290, 120, 150, 100, 30, 1).A(150, 100).A(170, 170).lob(150, 90, 170, 160, 30, 2).lob(178, 160, 290, 150, -40, 3)
+    .n(1, 'le lanceur envoie le ballon').n(2, 'passe haute vers le partenaire').n(3, 'il renvoie de l\'autre côté ; on change de rôle tous les 5 ballons'),
+  zeroscore: g => g.court().A(90, 80).A(110, 170).B(290, 80).B(310, 170).lob(110, 160, 260, 150, -40).ball(260, 150, 'volley').tag(300, 205, '0 ! remis à zéro', {s: 9.5, c: '#c2185b'})
+    .n(1, 'ballon qui tombe chez soi sans avoir été touché = score de l\'équipe remis à zéro : on défend tout'),
+  filethumain: g => g.court('salle', {none: 1}).row('j', 5, 200, 45, 200, 205).rope(200, 45, 200, 205, 0, '#16a34a').label(200, 236, 'le filet humain (bras levés)', {s: 9.5, b: 1}).row('a', 3, 90, 60, 90, 190).row('b', 3, 310, 60, 310, 190)
+    .lob(100, 120, 300, 120, -60, 1).n(1, 'le 3e contact renvoie par-dessus le filet humain').n(2, 'ballon intercepté par le filet = 1 point pour lui ; on tourne toutes les 3 min').num(215, 110, 2),
+  fairplay: g => g.court().row('a', 4, 70, 50, 150, 200).row('b', 4, 330, 50, 250, 200).ball(150, 190, 'volley').A(200, 238, 'A', {c: '#9aa3a0'}).label(240, 241, 'arbitre', {s: 9})
+    .tag(200, 13, 'arbitre : +1 fair-play (annonce sa faute, passe le ballon sous le filet, félicite)', {s: 9}).n(1, 'score final = points + points fair-play'),
+  roi: g => g.court().row('b', 2, 300, 80, 300, 170, {labs: ['R', 'R']}).label(340, 125, 'roi 👑', {s: 10, b: 1}).row('a', 2, 100, 80, 100, 170).file('g', 4, 40, 125, -16, 0, {}).lob(110, 170, 290, 150, -40, 1).rot(110, 200, 280, 205, 20, 2)
+    .n(1, 'les challengers servent chacun leur tour').n(2, 'le challenger qui gagne l\'échange passe côté roi ; le roi qui perd va au bout de la file'),
+  aveugle: g => g.court().raw('<rect x="193" y="20" width="14" height="210" fill="#475569" opacity=".85"/>').label(200, 13, 'filet couvert d\'une bâche', {s: 9.5, b: 1}).row('a', 3, 90, 60, 90, 190).row('b', 3, 310, 60, 310, 190).lob(100, 120, 300, 70, -60, 1)
+    .n(1, 'on ne voit pas le ballon avant qu\'il passe au-dessus : il faut être prêt partout'),
+  'Épreuve 1 : les gestes': g => { g.hall(); [[110, 70], [290, 70], [110, 185], [290, 185]].forEach(([x, y]) => g.A(x - 50, y, 'L', {ball: 'volley'}).A(x + 30, y, 'J').A(x + 30, y + 35, 'Ju', {c: '#9aa3a0'}).lob(x - 40, y - 4, x + 20, y - 6, 18)); return g.n(1, 'lanceur, joueur, juge : 5 passes hautes, 5 manchettes, 5 services, puis on change de rôle'); },
+  'Épreuve 2 : match 2 contre 2 observé': g => g.court().A(90, 80).A(110, 170).B(290, 80).B(310, 170).lob(110, 160, 290, 100, -40).P(200, 238).label(240, 241, 'arbitres au bord', {s: 9}).n(1, 'matchs de 4 min en 2 touches'),
+  'La passe en triangle': g => { g.hall(); [[120, 125], [290, 125]].forEach(([cx, cy]) => { g.A(cx, cy - 55).A(cx - 55, cy + 40).A(cx + 55, cy + 40).lob(cx, cy - 45, cx + 48, cy + 30, -16).lob(cx + 45, cy + 40, cx - 45, cy + 40, -20).lob(cx - 48, cy + 30, cx, cy - 45, -16); g.ball(cx + 20, cy - 30, 'volley'); });
+    return g.n(1, 'passe haute à un partenaire, on se tourne vers la cible AVANT le ballon').n(2, 'au sifflet, on change de sens'); },
+  'La cible du passeur': g => g.court().bench(150, 50, 190, 50).A(170, 50, 'C').hoop(170, 35, 11).B(320, 125, 'L', {ball: 'volley'}).lob(310, 120, 130, 140, 30, 1).A(130, 140).lob(130, 130, 168, 40, 30, 2)
+    .label(110, 50, 'cerceau tenu en l\'air', {s: 9}).n(1, 'le lanceur envoie le ballon').n(2, 'passe haute dans le cerceau : 1 point s\'il le touche, 3 s\'il passe dedans'),
+  touches3: g => g.court().A(80, 125, '1').A(150, 70, '2').A(160, 180, '3').row('b', 3, 310, 60, 310, 190).lob(90, 120, 145, 80, 20, 1).lob(155, 80, 160, 170, 25, 2).shot(170, 170, 300, 120, -20, 3)
+    .n(1, 'réception').n(2, 'passe').n(3, 'renvoi : 3 touches de 3 joueurs différents = 2 points'),
+  'La réception vers le passeur': g => g.court().B(370, 125, 'S', {ball: 'volley'}).lob(360, 125, 70, 150, 40, 1).A(70, 150, 'R').hoop(170, 110, 13).A(170, 110, 'P').lob(80, 145, 165, 115, 20, 2)
+    .n(1, 'le serveur sert').n(2, 'le réceptionneur renvoie en manchette vers le passeur, qui attrape sans sortir de son cerceau'),
+  cartes: g => g.court().row('a', 4, 70, 50, 150, 200).row('b', 4, 330, 50, 250, 200).ball(150, 190, 'volley').sheet(200, 238).label(250, 241, 'cartes', {s: 9}).n(1, 'l\'équipe menée de 4 points choisit une carte « coup de pouce » ou impose une carte « défi »'),
+  'Le service aux cerceaux': g => g.court().A(30, 125, '', {ball: 'volley'}).hoop(240, 60, 13).hoop(260, 170, 13).hoop(320, 90, 13).hoop(350, 190, 13).hoop(300, 130, 13).label(240, 64, '1', {s: 10, b: 1}).label(260, 174, '2', {s: 10, b: 1}).label(320, 94, '3', {s: 10, b: 1}).label(350, 194, '5', {s: 10, b: 1}).label(300, 134, '4', {s: 10, b: 1})
+    .lob(40, 120, 315, 92, -40, 1).n(1, 'chacun sert 5 fois : on additionne les points des cerceaux touchés'),
+  'Épreuve 1 : service et réception': g => g.court().B(370, 125, 'S', {ball: 'volley'}).lob(360, 125, 70, 150, 40).A(70, 150, 'R').A(170, 110, 'P').lob(80, 145, 165, 115, 20).A(100, 230, 'J', {c: '#9aa3a0'}).n(1, 'chacun sert 5 fois, puis réceptionne 5 services vers le passeur ; le 3e est juge'),
+  'Épreuve 2 : match 3 contre 3 observé': g => g.court().row('a', 3, 90, 60, 90, 190).row('b', 3, 310, 60, 310, 190).lob(100, 120, 300, 70, -50).P(200, 238).sheet(225, 238).n(1, 'matchs de 5 min, 3 touches ; le prof observe, les élèves au bord arbitrent'),
+  'Passe et smash au lancer': g => g.court().A(80, 170, 'L', {ball: 'volley'}).lob(90, 165, 170, 120, 20, 1).A(175, 125, 'P').lob(175, 115, 180, 70, 25, 2).A(150, 70, 'At').shot(180, 65, 290, 110, 0, 3)
+    .n(1, 'on lance au passeur').n(2, 'passe haute près du filet').n(3, 'l\'attaquant saute et lance (puis frappe) vers le bas dans le camp adverse'),
+  'Le smash au mur': g => { g.floor().wall(10, 10, 380, 18); [90, 200, 310].forEach(x => g.A(x, 190).shot(x, 178, x - 10, 110, 0, x === 90 ? 1 : null).ball(x - 10, 105, 'volley').arrow('lob', x - 10, 100, x - 5, 30, 10).arrow('lob', x, 30, x + 10, 175, 20)); return g.n(1, 'on frappe le ballon au sol, il rebondit sur le mur, on le reprend et on refrappe : record d\'enchaînements'); },
+  'La couverture': g => g.court().A(175, 110, 'At').A(125, 140).A(125, 80).row('b', 3, 290, 60, 290, 190).X(215, 110, 'C').shot(185, 106, 205, 108, 0, 1).lob(210, 120, 135, 150, -30, 2).run(80, 60, 118, 75, 0).run(80, 170, 118, 135, 0)
+    .n(1, 'quand son équipe attaque, les 2 autres se rapprochent derrière l\'attaquant').n(2, 'ballon contré récupéré = 1 point bonus'),
+  m4: g => g.court().pls('a', [[70, 70], [70, 180], [160, 70], [160, 180]]).pls('b', [[330, 70], [330, 180], [240, 70], [240, 180]]).A(30, 125, 'S', {ball: 'volley'}).lob(40, 120, 300, 125, -40, 1).loop(115, 125, 50, 60, 'rot')
+    .n(1, 'service, 3 touches maximum').n(2, 'rotation à chaque reprise de service').num(115, 125, 2),
+  'Le mur': g => g.court().bench(220, 110, 220, 150).B(225, 130, 'At', {ball: 'volley'}).X(180, 130, 'C').shot(215, 125, 150, 140, 0, 1).run(180, 140, 180, 165, 0).label(150, 200, 'saut, bras tendus, mains ouvertes', {s: 9.5})
+    .n(1, 'l\'attaquant (debout sur un banc) envoie le ballon vers le bas ; le contreur saute en face').n(2, 'contre réussi = 1 point ; on change toutes les 5 attaques'),
+  'Épreuve 1 : réception, passe, attaque': g => g.court().B(370, 125, 'L', {ball: 'volley'}).lob(360, 125, 70, 150, 40, 1).A(70, 150, 'R').A(175, 125, 'P').lob(80, 145, 170, 130, 20, 2).A(150, 70, 'At').lob(175, 115, 158, 75, 20).shot(160, 65, 290, 110, 0, 3)
+    .n(1, 'réception').n(2, 'passe').n(3, 'attaque ; chacun passe dans les 3 rôles, 5 ballons chacun'),
+  'Épreuve 2 : match 4 contre 4 observé': g => g.court().pls('a', [[70, 70], [70, 180], [160, 70], [160, 180]]).pls('b', [[330, 70], [330, 180], [240, 70], [240, 180]]).P(200, 238).sheet(225, 238).n(1, 'matchs de 5 min arbitrés par les élèves'),
+  'Le W mystère': g => g.court().pls('a', [[140, 60], [140, 125], [140, 190], [70, 90], [70, 160], [185, 150, 'P']]).B(370, 125, 'S', {ball: 'volley'}).lob(360, 120, 75, 95, 50, 1).lob(80, 95, 180, 145, 20, 2).label(105, 220, 'réception en W', {s: 9.5, b: 1})
+    .n(1, 'le serveur vise qui il veut').n(2, 'réception qui arrive au passeur = 1 point ; passe attaquable ensuite = 2 points'),
+  m6: g => g.court().pls('a', [[170, 60, '4'], [170, 125, '3'], [170, 190, '2'], [80, 60, '5'], [80, 125, '6'], [80, 190, '1']]).pls('b', [[230, 60], [230, 125], [230, 190], [320, 60], [320, 125], [320, 190]])
+    .loop(125, 125, 70, 80, 'rot').A(30, 190, 'S', {ball: 'volley'}).n(1, 'rotation dans le sens des aiguilles d\'une montre à chaque reprise de service ; 3 touches'),
+  'Le miroir du filet': g => { g.court(); [60, 125, 190].forEach(y => g.A(170, y).B(230, y).run(170, y - 12, 170, y - 34, 0).run(230, y - 12, 230, y - 34, 0)); return g.n(1, 'l\'un se déplace en pas chassés et saute, l\'autre saute en face en même temps ; au sifflet, on inverse'); },
+  'Épreuve 1 : le service': g => g.court().A(30, 125, '', {ball: 'volley'}).lob(40, 120, 300, 110, -40).P(110, 225).sheet(135, 225).n(1, '5 services observés ; les autres jouent au roi du filet'),
+  'Épreuve 2 : match observé': g => g.court().pls('a', [[170, 60], [170, 125], [170, 190], [80, 60], [80, 125], [80, 190]]).pls('b', [[230, 60], [230, 125], [230, 190], [320, 60], [320, 125], [320, 190]]).P(200, 238).sheet(225, 238).n(1, 'matchs à 6 (ou à 4) de 6 min, arbitrés par les élèves'),
+  'La pénétration': g => g.court().pls('a', [[170, 60], [170, 190], [80, 60], [80, 125], [140, 125]]).A(80, 190, 'P').run(90, 185, 175, 135, -10, 1).B(370, 125, 'S', {ball: 'volley'}).lob(360, 120, 85, 125, 50).lob(90, 120, 175, 130, 20, 2)
+    .n(1, 'au service adverse, le passeur file de l\'arrière au filet').n(2, 'la réception doit lui arriver : passe attaquable = point'),
+  'Le beach à 2': g => g.badCourt().A(90, 85).A(110, 165).B(290, 85).B(310, 165).tag(90, 60, '« j\'ai ! »', {s: 9.5}).lob(110, 160, 300, 110, -40).tag(330, 200, '✌ 2 doigts = je défends', {s: 9})
+    .n(1, '2 contre 2 sur un terrain de badminton, 3 touches, on se parle ; le serveur annonce sa tactique avec les doigts dans le dos'),
+  'Épreuve : tournoi observé': g => { g.terrains(2, {net: 1, labs: ['terrain 1', 'terrain 2'], h: 200, y0: 15}); g.T.forEach(([x, y, w, h]) => g.row('a', 3, x + w * .25, y + 45, x + w * .25, y + h - 25).row('b', 3, x + w * .75, y + 45, x + w * .75, y + h - 25)); return g.P(200, 238).sheet(225, 238).n(1, 'chaque équipe annonce son système, matchs de 6 min ; le prof observe avec la grille'); },
+  'Le circuit du volleyeur': g => { g.floor(); const T = ['sauts de contre', 'pas chassés', 'gainage + passes', 'jongles assis-debout', 'ballon lesté au mur', 'corde à sauter']; T.forEach((t, i) => { const x = 10 + (i % 3) * 127, y = 10 + Math.floor(i / 3) * 117; g.zone(x + 3, y + 3, 120, 110, '', 'blue').num(x + 18, y + 20, i + 1).label(x + 30, y + 24, t, {s: 9.5, b: 1, a: 'start'}); });
+    g.net(75, 45, 110).A(55, 80).A(95, 80).cone(160, 80).cone(230, 80).A(195, 80).run(185, 92, 225, 92, 0).A(300, 70).A(350, 70).pass(310, 70, 340, 70, 0).A(70, 190, '', {ball: 'volley'}).wall(140, 151, 112, 8).A(196, 200, '', {ball: 'medecine'}).A(320, 190).rope(305, 200, 335, 200, 12);
+    return g.n(1, '45 s par atelier, par équipe ; l\'équipe additionne ses scores'); },
+  "Le tournoi d'évaluation": g => { g.terrains(2, {net: 1, labs: ['terrain 1', 'terrain 2'], h: 200, y0: 15}); g.T.forEach(([x, y, w, h]) => g.row('a', 3, x + w * .25, y + 45, x + w * .25, y + h - 25).row('b', 3, x + w * .75, y + 45, x + w * .75, y + h - 25)); return g.P(200, 238).sheet(225, 238).n(1, 'matchs de 6 min, rôles tournants ; chacun arbitre au moins un set'); }
+};

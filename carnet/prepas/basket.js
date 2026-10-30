@@ -306,3 +306,157 @@ an: {
    r: [['bilan', 6]]}
 ]}
 }});
+
+/* ===== Schémas de chaque jeu (dessinés par carnet/prepas/schemas.js) ===== */
+(window.PSCH_SC = window.PSCH_SC || {}).basket = {
+  voleurs: g => g.half().scatter('a', 8, 130, 40, 360, 215, {ball: true, seed: 4}).each((x, y, i) => g.drib(x, y, x + (i % 2 ? 26 : -24), y + (i % 3 ? 18 : -16), 6))
+    .X(215, 95, 'V').X(300, 170, 'V').run(226, 98, 250, 115, -6, 1).run(290, 165, 268, 150, 6).tag(55, 70, 'voleurs =', {s: 9.5}).X(55, 95, 'V').label(55, 120, 'sans ballon', {s: 9})
+    .n(1, 'le voleur chipe ou fait sortir un ballon, sans toucher le joueur').n(2, 'qui perd son ballon devient voleur, le voleur repart en dribble'),
+  chef: g => g.hall().P(200, 38).tag(200, 62, 'signaux muets du prof', {s: 9.5}).scatter('a', 12, 50, 90, 350, 215, {ball: true, seed: 3})
+    .label(60, 30, 'bras levé = dribble haut', {s: 9, a: 'start'}).label(60, 44, 'bras bas = dribble bas', {s: 9, a: 'start'}).label(340, 30, 'doigt à gauche = main gauche', {s: 9, a: 'end'}).label(340, 44, 'poing fermé = arrêt 2 pieds', {s: 9, a: 'end'})
+    .n(1, 'tout le monde regarde le prof, pas le ballon'),
+  crocos: g => g.court().zone(150, 30, 100, 190, 'rivière', 'blue', {top: 1}).X(185, 80, 'C').X(215, 150, 'C').X(195, 200, 'C')
+    .row('a', 5, 45, 45, 45, 205, {ball: true}).each((x, y, i) => g.drib(x + 10, y, 345, y + (i - 2) * 6, 0, i === 0 ? 1 : null)).tag(200, 243, '« Marée haute ! » : on traverse en dribble', {s: 10})
+    .n(1, 'au signal, on traverse d\'une ligne de fond à l\'autre en dribble').n(2, 'touché par un crocodile = on devient crocodile (en gardant son ballon)').run(208, 152, 300, 175, 10, 2),
+  roi: g => g.hall().zone(90, 40, 220, 170, 'carré de cônes', 'blue', {top: 1}).cone(90, 40).cone(310, 40).cone(310, 210).cone(90, 210)
+    .scatter('a', 8, 110, 60, 290, 195, {ball: true, seed: 8}).X(250, 120, '', {}).run(245, 128, 225, 150, 6, 1).zone(320, 70, 70, 110, 'défi', 'yellow').A(355, 140, '', {ball: true})
+    .zone(130, 70, 140, 110, '', 'grey').label(200, 230, 'toutes les 2 min, le carré rétrécit', {s: 9.5, it: 1})
+    .n(1, 'on fait sortir le ballon des autres en protégeant le sien').n(2, 'ballon perdu : défi au bord (3 paniers ou 10 dribbles main faible), puis on revient').num(355, 115, 2),
+  relaislom: g => { g.hall(); [70, 180].forEach((y, k) => { g.file('a', 3, 50, y, -16, 0).A(70, y, '', {ball: true}); for (let i = 0; i < 5; i++) g.cone(120 + i * 45, y); g.cone(345, y);
+      g.path('drib', [[82, y], [120, y - 18], [165, y + 18], [210, y - 18], [255, y + 18], [300, y - 18], [345, y - 18], [360, y], [345, y + 20]]).drib(330, y + 22, 85, y + 16, -6); });
+    return g.n(1, 'aller en slalom main droite, tour du dernier cône').n(2, 'retour en sprint-dribble main gauche, on tape la main du suivant').num(220, 45, 1).num(220, 110, 2); },
+  demenage: g => { g.court(); g.balls(200, 125, 9, 'basket'); [[45, 48, 'a'], [355, 48, 'b'], [45, 202, 'x'], [355, 202, 'j']].forEach(([x, y, t], i) => { g.zone(x - 24, y - 20, 48, 40, '', 'grey'); g.pl(t, x, y, ''); });
+    return g.run(60, 55, 185, 115, -10, 1).drib(185, 135, 62, 195, 12, 2).drib(340, 60, 218, 118, 0).tag(200, 160, 'ballons au rond central', {s: 9.5})
+      .n(1, 'on va chercher UN ballon à la fois').n(2, 'retour en dribble dans son coin ; centre vide = on prend dans les autres coins'); },
+  aveugle: g => g.hall().ring('a', 10, 200, 125, 140, 80, {ball: true}).P(200, 125).tag(200, 98, 'yeux fermés', {s: 10}).label(200, 155, 'main droite → main gauche → changement au signal', {s: 9}),
+  atomes: g => { g.hall().scatter('a', 9, 40, 40, 220, 215, {ball: true, seed: 6}); g.ring('a', 4, 300, 90, 22, 22, {}).balls(300, 90, 3, 'basket').ring('a', 3, 300, 175, 20, 20);
+    return g.P(200, 30).tag(200, 54, '« Par 4 ! »', {s: 10}).run(210, 120, 270, 95, -8, 1).zone(255, 145, 90, 65, '', 'red').label(300, 220, 'dernier groupe : 5 passes', {s: 9})
+      .n(1, 'au nombre crié, on forme vite un groupe, ballons collés au centre').n(2, 'le dernier groupe formé fait une mission éclair').num(345, 160, 2); },
+  roue: g => { g.hall(); [[120, 125], [290, 125]].forEach(([cx, cy], k) => { g.ring('a', 5, cx, cy, 55, 55, {ball: true, bx: 0, by: -14}); g.each((x, y, i) => { const a = -Math.PI / 2 + (i + 1) / 5 * 2 * Math.PI; if (k === 0 || i % 2 === 0) g.pass(x, y, cx + 55 * Math.cos(a), cy + 55 * Math.sin(a), 8); }); });
+    return g.tag(200, 30, '« Hop ! » : tout le monde passe en même temps', {s: 10}).n(1, 'on passe au voisin de droite et on reçoit celui de gauche').n(2, 'au sifflet, on change de sens'); },
+  taureau: g => g.hall().ring('a', 6, 200, 125, 95, 80, {balls: [0]}).X(190, 120, 'T').X(215, 145, 'T').pass(200, 52, 285, 105, -10, 1).pass(282, 165, 125, 165, 20).tag(200, 243, 'passe au voisin direct interdite', {s: 9.5})
+    .n(1, 'le cercle se passe le ballon').n(2, 'le taureau touche le ballon = il prend la place du passeur').num(170, 105, 2),
+  dixpasses: g => g.half().scatter('a', 4, 140, 45, 360, 210, {seed: 2}).each((x, y, i) => i < 3 && g.pass(x, y, ...g.last[i + 1], 12, i ? null : 1)).scatter('b', 4, 150, 60, 350, 200, {seed: 9}).ball(g.last[0][0] - 4, g.last[0][1] - 10)
+    .tag(240, 243, '10 passes de suite = 1 point', {s: 10}).n(1, 'on compte les passes à voix haute ; ballon perdu = on repart à 0'),
+  capitaine: g => g.court().scatter('a', 4, 60, 45, 190, 205, {seed: 3}).scatter('b', 4, 210, 45, 340, 205, {seed: 5}).hoop(368, 125, 13).A(368, 125, 'C').hoop(32, 125, 13).B(32, 125, 'C')
+    .pass(185, 110, 355, 122, -12, 1).drib(100, 80, 170, 100, 6).label(368, 152, 'capitaine A', {s: 9}).label(32, 152, 'capitaine B', {s: 9})
+    .n(1, 'passe attrapée par son capitaine (dans un cerceau derrière la ligne de fond) = 1 point').n(2, 'le passeur devient capitaine ; dribble limité à 3 rebonds'),
+  cartes: g => g.half().pls('a', [[200, 70, '', {ball: true}], [180, 170], [300, 200]]).pls('b', [[255, 85], [240, 155], [325, 180]]).pass(206, 80, 186, 160, 12)
+    .sheet(50, 70, 'coup de pouce').sheet(50, 150, 'défi').tag(55, 200, 'écart de 3 paniers', {s: 9}).n(1, 'l\'équipe menée de 3 paniers pioche une carte « coup de pouce » ou impose une carte « défi »').num(50, 40, 1),
+  passenom: g => g.hall().ring('a', 7, 200, 125, 100, 85, {balls: [0, 3]}).pass(200, 52, 278, 172, 10, 1).pass(128, 182, 118, 100, -10).tag(290, 60, '« Léa ! »', {s: 10}).n(1, 'on dit le prénom de celui qui reçoit ; puis 2, puis 3 ballons'),
+  tourmonde: g => { g.half(); const P = [[350, 52], [300, 70], [282, 125], [300, 180], [350, 198]]; P.forEach(([x, y], i) => g.disc(x, y).label(x - (i === 2 ? 14 : 0), y + (i < 2 ? -8 : i > 2 ? 18 : -10), String(i + 1), {s: 10, b: 1}));
+    return g.A(330, 52, '', {ball: true}).shot(334, 60, 357, 118, -6, 1).file('a', 4, 190, 60, -20, 0).run(212, 60, 318, 52, -8).label(170, 85, 'les autres attendent', {s: 9})
+      .n(1, 'panier = on avance à la coupelle suivante, raté = on reste').n(2, 'le premier qui fait le tour gagne').run(300, 75, 285, 110, -10, 2); },
+  knock: g => g.half().file('a', 5, 255, 125, -22, 0).pl('a', 278, 125, '1', {ball: true}).A(255, 125, '2', {ball: true}).shot(288, 122, 356, 124, 0, 1).shot(262, 115, 356, 118, -18, 2)
+    .tag(190, 200, '2e marque avant le 1er → 1er « knock-out »', {s: 9.5}).n(1, 'le 1er tire').n(2, 'le 2e tire dès que le 1er a lâché ; s\'il marque avant, le 1er sort (3 paniers au panier voisin puis revient)'),
+  morpion: g => { g.hall(); for (let i = 0; i < 9; i++) g.hoop(170 + (i % 3) * 30, 95 + Math.floor(i / 3) * 30, 12); g.chasuble(170, 95, '#1f63d6').chasuble(200, 125, '#1f63d6').chasuble(230, 95, '#e8590c');
+    g.hoopB(370, 70, 1).hoopB(370, 180, 1).file('a', 3, 310, 70, -18, 0).file('b', 3, 310, 180, -18, 0).shot(318, 66, 360, 70, 0, 1).run(300, 80, 235, 125, 10, 2);
+    return g.label(200, 190, 'grille de 9 cerceaux', {s: 9.5}).n(1, 'panier = on court poser une chasuble dans un cerceau').n(2, '3 chasubles alignées = manche gagnée ; raté = on tape la main du suivant'); },
+  minute: g => g.half().zone(275, 92, 105, 66, '1 pt', 'green', {s: 10}).label(250, 75, '2 pts', {s: 10, b: 1}).label(200, 55, '3 pts', {s: 10, b: 1}).A(290, 135, '', {ball: true}).A(240, 95, '').A(195, 160).shot(298, 132, 356, 125, 0, 1).pass(350, 140, 205, 160, 18, 2).chrono(150, 40)
+    .label(150, 63, '1 minute', {s: 9}).n(1, 'proche = 1, mi-distance = 2, hors raquette = 3 points').n(2, 'on prend son rebond et on rend le ballon au suivant'),
+  m3: g => g.half().pls('a', [[230, 60, '', {ball: true}], [210, 180], [320, 205]]).pls('x', [[265, 80], [250, 170], [330, 175]]).pass(236, 70, 214, 168, 14, 1).run(320, 196, 345, 150, -10, 2).bord(55, 100, 3, 'au bord : arbitre, marqueur', 'g', {dx: 0, dy: 22, ly: -16})
+    .n(1, '3 contre 3 sur un demi-terrain').n(2, 'ballon gagné en défense : on ressort derrière la ligne des 3 points avant d\'attaquer'),
+  silence: g => g.half().ring('a', 9, 300, 125, 95, 95, {a0: Math.PI / 2}).A(275, 125, '', {ball: true}).shot(286, 125, 356, 125, 0).tag(180, 30, 'silence : on compte à voix basse', {s: 10}).label(275, 145, 'lancer franc', {s: 9}),
+  pegobol: g => g.hall().scatter('a', 9, 40, 40, 360, 215, {seed: 5}).X(170, 110, '', {ball: true}).X(260, 90).X(220, 170).pass(181, 112, 250, 94, -10, 1).run(268, 98, 300, 120, -6, 2).tag(110, 243, 'le porteur ne court pas', {s: 9.5})
+    .n(1, 'les chasseurs se font des passes pour coincer un fuyard').n(2, 'on touche un fuyard avec le ballon en main ; touché = chasseur'),
+  miroir: g => { g.hall(); [[110, 70], [290, 70], [110, 180], [290, 180]].forEach(([x, y], i) => g.A(x - 30, y, 'M', {ball: true}).A(x + 30, y, 'O', {ball: true, c: '#5b8de0'}).drib(x - 30, y + 12, x - 30, y + 38, -10).drib(x + 30, y + 12, x + 30, y + 38, 10));
+    return g.label(200, 125, 'M = meneur · O = ombre qui copie tout', {s: 10, b: 1}).n(1, 'le meneur invente, l\'ombre copie ; au sifflet, on inverse'); },
+  chateau: g => g.hall().czone(200, 125, 70, '', 'red').cone(200, 125).label(200, 145, 'château', {s: 9}).X(160, 100).X(240, 150).ring('a', 7, 200, 125, 105, 95, {balls: [0]})
+    .pass(200, 42, 290, 95, -12, 1).shot(290, 105, 205, 122, 0, 2).label(200, 243, 'les défenseurs ne rentrent pas dans le cercle', {s: 9.5})
+    .n(1, 'passes rapides pour trouver le côté libre').n(2, 'tir à hauteur de poitrine : château tombé = le tireur devient défenseur'),
+  roiterrain: g => { g.terrains(4, {labs: ['terrain du roi 👑', 'terrain 2', 'terrain 3', 'terrain 4'], goals: 'basket'}); g.T.forEach(([x, y, w, h], i) => g.row('a', 2, x + w * .3, y + h * .4, x + w * .3, y + h * .8).row('b', 2, x + w * .7, y + h * .4, x + w * .7, y + h * .8));
+    return g.run(150, 150, 150, 98, 0, 1).run(245, 98, 245, 150, 0, 2).n(1, 'l\'équipe qui gagne monte vers le terrain du roi').n(2, 'celle qui perd descend'); },
+  bilan: g => g.calme('👍 j\'ai appris · j\'ai pris du plaisir').n(1, 'étirements guidés, puis chacun montre son pouce et chaque équipe cite un geste fair-play'),
+  fairplay: g => g.court().scatter('a', 4, 60, 50, 190, 200, {seed: 3}).scatter('b', 4, 210, 50, 340, 200, {seed: 8}).ball(118, 70).bord(178, 238, 3, '', 'g').tag(200, 13, 'équipe au bord : +1 fair-play (faute reconnue, aide, félicitations)', {s: 9.5})
+    .n(1, 'score final = paniers + points fair-play'),
+  chat3: g => g.half().A(250, 70, '1', {ball: true}).shot(258, 75, 355, 120, -10, 1).file('a', 4, 220, 175, -20, 0).run(232, 168, 248, 85, 10).tag(180, 30, 'C - H - A - T', {s: 12})
+    .n(1, 'le 1er invente un tir : s\'il marque, les suivants doivent le réussir, sinon ils prennent une lettre').n(2, '4 lettres = un tour de terrain en dribble').num(150, 175, 2),
+  'Épreuve 1 : le défi du dribbleur': g => { g.half(); for (let i = 0; i < 5; i++) g.cone(140 + i * 30, 90); g.A(115, 90, '', {ball: true});
+    return g.path('drib', [[125, 90], [140, 72], [170, 108], [200, 72], [230, 108], [260, 72], [285, 90]]).drib(285, 100, 150, 160, 10, 2).drib(150, 170, 250, 165, -6).shot(260, 160, 356, 130, 6, 3)
+      .num(200, 50, 1).n(1, 'slalom main droite à l\'aller').n(2, 'retour main gauche').n(3, 'puis tir ; 2 essais, le meilleur compte'); },
+  'Épreuve 2 : le concours de tirs': g => g.half().A(280, 70, '', {ball: true}).A(260, 180, '', {ball: true}).shot(288, 75, 355, 120, -6, 1).shot(270, 175, 355, 130, 6).A(275, 125, '', {ball: true}).shot(286, 125, 355, 125, 0, 2).A(150, 50, '').sheet(170, 50).label(150, 75, 'il compte et note', {s: 9})
+    .n(1, '5 tirs à 2 points autour de la raquette').n(2, 'puis 3 lancers francs'),
+  'Épreuve 3 : le match observé': g => g.half().pls('a', [[230, 60, '', {ball: true}], [210, 180], [320, 205]]).pls('x', [[265, 80], [250, 170], [330, 175]]).pass(236, 70, 214, 168, 14).P(60, 60).sheet(85, 60).label(70, 85, 'prof : grille', {s: 9}).bord(30, 160, 3, 'au bord : arbitres')
+    .n(1, '3 contre 3, panier après 3 passes'),
+  'Le chemin des cerceaux': g => g.half().A(170, 165, '', {ball: true}).drib(180, 160, 240, 140, 0, 1).hoop(262, 135, 11).hoop(292, 120, 11).label(262, 155, 'pied D', {s: 9}).label(292, 140, 'pied G', {s: 9}).run(300, 115, 345, 118, -8, 2)
+    .file('a', 3, 150, 165, -20, 0).n(1, 'en dribble, on prend le ballon à 2 mains, pied droit dans le 1er cerceau').n(2, 'pied gauche dans le 2e, on saute et on dépose le ballon (double pas)'),
+  'Le relais du double pas': g => g.court().file('a', 4, 215, 70, 0, -14).A(215, 84, '', {ball: true}).drib(225, 88, 320, 112, -8, 1).run(322, 114, 352, 122, 0).pass(345, 140, 225, 92, -30, 2)
+    .file('b', 4, 185, 180, 0, 14).B(185, 166, '', {ball: true}).drib(175, 162, 80, 138, -8).run(78, 136, 48, 128, 0).pass(55, 110, 175, 160, -30).label(200, 243, 'une équipe par panier', {s: 9.5}).n(1, 'du milieu en dribble, double pas').n(2, 'rebond et passe au suivant ; panier = 1 point'),
+  'Le passe et va du facteur': g => g.half().A(190, 160, '', {ball: true}).A(260, 70, 'F').pass(200, 155, 255, 80, -10, 1).run(198, 168, 320, 150, 12, 2).pass(268, 80, 318, 140, -8, 3).shot(325, 140, 355, 128, 0).file('a', 2, 165, 175, -20, 0)
+    .n(1, 'je passe au facteur (camarade fixe)').n(2, 'je cours vers le panier').n(3, 'le facteur me rend le ballon, je marque'),
+  deuxun: g => g.half().A(150, 80, '', {ball: true}).A(150, 175).X(300, 125).drib(160, 85, 270, 115, -6, 1).run(160, 175, 320, 170, -6).pass(275, 125, 318, 162, 10, 2).shot(325, 160, 356, 132, 0)
+    .tag(230, 30, 'le porteur attire le défenseur, puis passe ou tire', {s: 9.5}).n(1, 'le porteur fonce sur le défenseur pour l\'attirer').n(2, 'passe au partenaire libre (ou tir) ; le défenseur repart en attaque avec le passeur'),
+  'Le chat aux appels': g => g.hall().scatter('a', 9, 40, 40, 360, 215, {seed: 2, balls: []}).ball(g.last[1][0] + 8, g.last[1][1] + 7).ball(g.last[5][0] + 8, g.last[5][1] + 7).X(250, 140).run(240, 140, g.last[4][0] + 12, g.last[4][1], 8, 1)
+    .pass(g.last[5][0], g.last[5][1], g.last[4][0], g.last[4][1], 10, 2).tag(g.last[4][0], g.last[4][1] - 20, '« ici ! »', {s: 9.5})
+    .n(1, 'le chat poursuit un fuyard').n(2, 'un fuyard qui tient un ballon est protégé : on lui passe vite le ballon quand il appelle'),
+  "L'horloge du démarquage": g => g.half().A(250, 125, 'P', {ball: true}).A(200, 60).A(310, 200).X(230, 85).X(285, 175).run(200, 60, 270, 45, -10, 1).pass(260, 115, 268, 52, -6, 2).run(310, 200, 340, 165, 10)
+    .tag(240, 243, 'le porteur ne bouge pas (pivot seulement)', {s: 9.5}).n(1, 'les 2 autres attaquants se démarquent').n(2, 'passe réussie = 1 point ; 5 points = on va marquer au panier'),
+  'La toupie': g => { g.hall(); [[110, 80], [290, 80], [110, 180], [290, 180]].forEach(([x, y]) => g.A(x, y, '', {ball: true}).B(x + 34, y - 10).loop(x, y, 36, 28, 'run')); return g.label(200, 130, 'pied fixe : on pivote pour protéger le ballon', {s: 10, b: 1}).n(1, 'l\'autre tourne autour pour toucher le ballon ; 20 s puis on change'); },
+  m4: g => g.court().scatter('a', 4, 70, 50, 190, 200, {seed: 3}).scatter('b', 4, 210, 50, 330, 200, {seed: 8}).ball(g.last[0][0] - 50, g.last[0][1]).bord(178, 238, 3, '', 'g').tag(200, 13, 'au bord : arbitres (marcher, reprise de dribble, contact)', {s: 9.5}),
+  'Épreuve 1 : parcours et double pas': g => { g.half(); for (let i = 0; i < 4; i++) g.cone(140 + i * 30, 190); g.A(115, 190, '', {ball: true}).A(260, 60, 'F');
+    return g.path('drib', [[125, 190], [140, 172], [170, 208], [200, 172], [230, 208], [250, 190]]).pass(255, 182, 258, 72, -8, 2).run(255, 192, 315, 140, 10, 3).pass(268, 66, 312, 132, -6).shot(320, 132, 356, 126, 0)
+      .num(170, 225, 1).n(1, 'slalom en dribble').n(2, 'passe au facteur').n(3, 'appel en course, réception et double pas'); },
+  'Épreuve 2 : match 3 contre 3 observé': g => g.half().pls('a', [[230, 60, '', {ball: true}], [210, 180], [320, 205]]).pls('x', [[265, 80], [250, 170], [330, 175]]).run(320, 196, 345, 145, -10).pass(236, 70, 214, 168, 14).P(60, 60).sheet(85, 60).bord(30, 160, 3, 'au bord : arbitres')
+    .n(1, 'double pas = 2 points ; le prof observe démarquage et passe et va'),
+  'Concours de lancers francs': g => g.half().ring('a', 8, 300, 125, 95, 95, {a0: Math.PI / 2}).A(275, 125, '', {ball: true}).shot(286, 125, 356, 125, 0).tag(180, 30, 'record de la classe : un essai chacun', {s: 10}),
+  'Les relais de la passe': g => { g.court(); [70, 180].forEach((y, k) => { g.file('a', 3, 60, y, -16, 0); g.A(110, y - 22).A(160, y + 22).A(210, y - 22); g.pass(70, y - 8, 104, y - 20, 0).pass(116, y - 18, 154, y + 18, 0).pass(166, y + 18, 204, y - 18, 0); g.run(220, y - 20, 350, 125 + (k ? 12 : -12), k ? 10 : -10); });
+    return g.chrono(30, 125).n(1, 'passes en avançant jusqu\'au panier, double pas').n(2, 'retour en sprint ; on chronomètre toute l\'équipe').num(290, 80, 1); },
+  'Course contre le ballon': g => g.court().A(40, 125, 'C').run(50, 125, 330, 125, 0, 1).A(60, 60, '', {ball: true}).A(120, 200).pass(70, 65, 115, 190, 0, 2).A(200, 60).pass(125, 190, 195, 70, 0).A(280, 195).pass(205, 70, 275, 185, 0).pass(285, 185, 330, 135, 0).shot(345, 125, 360, 125, 0)
+    .n(1, 'le coureur sprinte d\'un panier à l\'autre').n(2, 'les 2 coéquipiers se passent le ballon : il doit arriver avant le coureur, qui reçoit et marque'),
+  'La danse du défenseur': g => { g.hall(); [[100, 70], [280, 70], [100, 180], [280, 180]].forEach(([x, y]) => g.A(x, y - 16).X(x, y + 16).run(x + 12, y - 16, x + 50, y - 16, 0).run(x + 14, y + 16, x + 50, y + 16, 0).run(x - 12, y - 16, x - 50, y - 16, 0)); return g.label(200, 128, 'pas chassés, face à face, sans croiser les pieds', {s: 10, b: 1}).n(1, 'l\'attaquant se déplace, le défenseur le suit en restant devant lui, bras écartés'); },
+  duel: g => g.half().A(220, 125, 'R', {ball: true}).X(300, 125).drib(230, 118, 290, 92, -6, 1).shot(300, 90, 355, 120, -6).file('a', 4, 170, 200, -20, 0).label(140, 225, 'challengers', {s: 9})
+    .n(1, 'le roi attaque avec 3 dribbles maximum').n(2, 'panier = il reste roi ; défense réussie = le défenseur devient roi').num(300, 150, 2),
+  'La garde du corps': g => g.court().pls('a', [[90, 70], [150, 120], [110, 190], [180, 60, '', {ball: true}]]).pls('x', [[100, 85], [162, 132], [122, 200], [192, 72]]).pass(186, 72, 150, 108, 0)
+    .rope(90, 70, 100, 85, 0, '#9aa').tag(280, 200, 'chaque défenseur colle SON attaquant', {s: 10}).n(1, 'passe à 10 : la défense marque si son protégé ne reçoit aucune passe pendant 20 s'),
+  'La chasse au ballon': g => g.half().A(200, 110, '').A(200, 140, '').P(250, 40).ball(290, 120).run(255, 50, 285, 110, 0, 1).run(210, 110, 282, 118, -10, 2).shot(298, 120, 356, 124, 0)
+    .label(170, 125, 'dos à dos', {s: 9.5}).n(1, 'le prof lance le ballon au sol').n(2, 'le 1er qui l\'attrape tire, l\'autre devient défenseur'),
+  'Le roi du rebond': g => g.half().P(250, 125, {ball: true}).shot(262, 125, 356, 125, 0, 1).A(330, 90).A(320, 165).A(300, 125).run(330, 100, 345, 115, 0, 2).label(330, 205, 'sans faute !', {s: 9.5})
+    .n(1, 'le prof tire').n(2, 'les 3 se battent pour le rebond ; celui qui l\'attrape marque, les 2 autres le gênent'),
+  'Les vagues': g => g.court().pls('a', [[250, 70], [280, 125, '', {ball: true}], [250, 180]]).pls('b', [[300, 85], [335, 165], [300, 175]]).pls('j', [[70, 80, 'C'], [60, 125, 'C'], [70, 170, 'C']])
+    .shot(290, 125, 356, 125, 0, 1).drib(310, 150, 120, 140, 10, 2).label(65, 205, 'équipe C attend', {s: 9}).n(1, 'A attaque contre B').n(2, 'B récupère et contre-attaque vers l\'autre panier où C l\'attend ; qui marque reste'),
+  "Épreuve 1 : les vagues du 2 contre 1": g => g.half().A(150, 80, '', {ball: true}).A(150, 175).X(300, 125).drib(160, 85, 270, 115, -6).run(160, 175, 320, 170, -6).pass(275, 125, 318, 162, 10).P(60, 60).sheet(85, 60).label(70, 85, 'prof : grille', {s: 9})
+    .n(1, 'chaque élève : 2 fois en attaque, 1 fois en défense ; on note décision, réussite, défense'),
+  'Épreuve 2 : match observé': g => g.court().pls('a', [[90, 70, '', {ball: true}], [160, 130], [110, 190]]).pls('x', [[120, 80], [185, 135], [130, 180]]).pls('b', [[260, 70], [300, 140], [250, 190]]).P(200, 238).sheet(225, 238)
+    .n(1, '3 contre 3 tout terrain ; le prof observe défense, rebond et fair-play'),
+  'Le 3 contre 2 en vagues': g => g.court().pls('a', [[210, 60], [200, 125, '', {ball: true}], [210, 190]]).pls('x', [[310, 95], [310, 155]]).pass(210, 120, 215, 75, 8, 1).shot(220, 62, 355, 115, -10)
+    .drib(300, 160, 120, 150, 10, 2).run(300, 100, 100, 100, -10).label(150, 230, 'retour : les 2 défenseurs + 1 attaquant en 2 c 1', {s: 9}).n(1, '3 attaquants contre 2 défenseurs').n(2, 'après le tir, 2 c 1 vers l\'autre panier, sans pause'),
+  'Le jeu du surnombre': g => g.court().scatter('a', 4, 70, 50, 190, 200, {seed: 3}).scatter('b', 4, 210, 50, 330, 200, {seed: 8}).J(190, 125, 'J').run(190, 112, 250, 90, -10, 1).ball(g.last[0][0] - 50, g.last[0][1])
+    .n(1, 'le joker joue avec l\'équipe qui vient de récupérer le ballon, jusqu\'au tir'),
+  'La statue': g => g.hall().A(200, 125, 'S').label(200, 148, 'statue (bras croisés)', {s: 9}).A(150, 110).run(160, 110, 225, 100, -16, 1).X(120, 140).run(130, 140, 190, 140, 0).scatter('a', 6, 40, 40, 360, 215, {seed: 4})
+    .n(1, 'le fuyard frôle la statue : le chat doit la contourner (c\'est l\'écran)').n(2, 'variante : la statue pivote et sprinte vers le panier (le « roll »)').run(212, 125, 290, 140, -8, 2),
+  'Le 2 c 2 de l\'écran': g => g.half().A(210, 120, 'P', {ball: true}).X(232, 120).A(240, 70, 'E').X(255, 60).run(245, 80, 240, 108, 8, 1).drib(220, 128, 290, 150, 12, 2).shot(300, 148, 356, 128, 0)
+    .n(1, 'le non-porteur pose un écran sur le défenseur du porteur (immobile, bras croisés)').n(2, 'le porteur dribble en frôlant l\'écran et tire : panier après écran = 3 points'),
+  'Le mur qui parle': g => g.half().pls('a', [[230, 60, '', {ball: true}], [210, 180], [320, 205]]).pls('x', [[265, 80], [250, 170], [330, 175]]).tag(285, 40, '« j\'ai le porteur ! »', {s: 9}).tag(200, 140, '« écran ! »', {s: 9})
+    .n(1, '3 contre 3 : les défenseurs parlent ; un défenseur muet donne 1 point à l\'attaque'),
+  'Le système secret': g => g.half().pls('a', [[210, 125, '', {ball: true}], [250, 60], [250, 195]]).pls('x', [[235, 125], [275, 70], [275, 185]]).run(255, 72, 238, 108, 6, 1).pass(212, 135, 248, 185, 10, 2).run(220, 120, 320, 140, -10, 3).sheet(60, 70, 'code « Éclair »')
+    .n(1, 'écran').n(2, 'passe').n(3, 'et va : la combinaison annoncée qui marque = 3 points'),
+  tir5: g => { g.half(); [[345, 50], [280, 70], [255, 125], [280, 180], [345, 200]].forEach(([x, y]) => g.label(x, y + 5, '★', {s: 18, c: '#e0a800'}));
+    return g.A(270, 70, 'T', {ball: true}).shot(275, 76, 356, 120, -6, 1).A(330, 140, 'R').pass(330, 150, 262, 172, 10, 2).A(260, 190).n(1, 'on tire d\'une étoile').n(2, 'le suivant prend le rebond et passe au tireur ; 5 étoiles allumées = gagné'); },
+  'Épreuve 1 : vagues 3 contre 2': g => g.court().pls('a', [[210, 60], [200, 125, '', {ball: true}], [210, 190]]).pls('x', [[310, 95], [310, 155]]).pass(210, 120, 215, 75, 8).P(100, 40).sheet(125, 40).n(1, 'chaque élève : 2 fois en attaque, 1 fois en défense'),
+  'Épreuve 2 : match observé 4 contre 4': g => g.court().scatter('a', 4, 70, 50, 190, 200, {seed: 3}).scatter('b', 4, 210, 50, 330, 200, {seed: 8}).P(200, 238).sheet(225, 238).n(1, 'matchs de 6 min ; le prof observe écran, défense et contribution'),
+  'Le 2 c 2 pick and roll': g => g.half().A(200, 125, 'P', {ball: true}).X(222, 125).A(240, 75, 'E').X(258, 64).run(244, 85, 232, 110, 8, 1).drib(210, 135, 270, 160, 10, 2).run(240, 115, 330, 105, -10, 3).pass(272, 155, 326, 112, -6)
+    .n(1, 'l\'écraneur pose l\'écran').n(2, 'le porteur sort en dribble : tir s\'il est libre').n(3, 'l\'écraneur pivote et file au panier (roll) : passe s\'il est doublé'),
+  'Les tirs du meneur': g => g.half().A(190, 125, 'M', {ball: true}).A(230, 100, 'E').drib(200, 132, 270, 150, 10, 1).shot(276, 146, 356, 128, 0, 2).run(236, 92, 320, 100, -8).label(330, 85, 'rouleur', {s: 9})
+    .n(1, 'le meneur sort de l\'écran en dribble').n(2, 'tir à mi-distance, ou passe au rouleur qui finit en double pas'),
+  'La zone des pirates': g => g.half().zone(290, 28, 88, 62, 'coin 1', 'grey', {top: 1}).zone(290, 160, 88, 62, 'coin 2', 'grey', {ly: 216}).zone(205, 95, 70, 60, 'coin 3', 'grey', {top: 1}).X(325, 65).X(325, 185).X(240, 130)
+    .pls('a', [[180, 60], [170, 125, '', {ball: true}], [180, 190], [270, 230]]).pass(180, 120, 180, 72, -8, 1).pass(185, 62, 180, 180, 30).shot(190, 185, 355, 132, -6, 2)
+    .n(1, 'on fait tourner vite le ballon').n(2, 'on tire dans l\'espace libre ; chaque défenseur reste dans son coin'),
+  'Le jeu des trois couleurs': g => g.half().pls('a', [[230, 60, '', {ball: true}], [210, 180], [320, 205]]).pls('x', [[265, 80], [250, 170], [330, 175]]).A(60, 125, 'S').cone(80, 95, '#e11d48').cone(95, 95, '#1f63d6').cone(110, 95, '#facc15')
+    .label(60, 160, 'rouge : tir < 5 s', {s: 9}).label(60, 174, 'bleu : 3 passes', {s: 9}).label(60, 188, 'jaune : pick and roll', {s: 9}).n(1, 'l\'élève au bord lève un plot ; code respecté + panier = 2 points'),
+  'Le match du conseiller': g => g.half().pls('a', [[230, 60, '', {ball: true}], [210, 180], [320, 205]]).pls('x', [[265, 80], [250, 170], [330, 175]]).A(60, 125, 'C').tag(60, 100, '« écran ! »', {s: 9.5}).n(1, 'le conseiller crie un conseil d\'un mot par attaque ; panier sur conseil = 3 points'),
+  'Le tableau du coach': g => g.court().scatter('a', 4, 70, 50, 190, 200, {seed: 3}).scatter('b', 4, 210, 50, 330, 200, {seed: 8}).sheet(200, 238).label(240, 241, 'plan dessiné', {s: 9}).B(130, 238, 'O').label(90, 241, 'observateur', {s: 9})
+    .n(1, '3 min pour dessiner attaque et défense, 2 matchs, 1 min de réglage entre les deux'),
+  'Épreuve 1 : pick and roll observé': g => g.half().A(200, 125, 'P', {ball: true}).X(222, 125).A(240, 75, 'E').X(258, 64).run(244, 85, 232, 110, 8).drib(210, 135, 270, 160, 10).run(240, 115, 330, 105, -10).P(60, 60).sheet(85, 60).n(1, 'chaque duo passe 3 fois en attaque ; les autres font le défi minute sur l\'autre panier'),
+  'Épreuve 2 : match 4 contre 4 observé': g => g.court().scatter('a', 4, 70, 50, 190, 200, {seed: 3}).pls('x', [[260, 90], [260, 160], [320, 90], [320, 160]]).zone(240, 60, 130, 130, 'zone', 'grey', {top: 1}).P(200, 238).sheet(225, 238)
+    .n(1, 'une mi-temps contre une zone, une contre l\'homme à homme'),
+  'La draft': g => g.hall().pls('a', [[80, 60, 'C1'], [160, 60, 'C2'], [240, 60, 'C3'], [320, 60, 'C4']]).sheet(80, 95).sheet(160, 95).sheet(240, 95).sheet(320, 95).scatter('a', 10, 50, 140, 350, 215, {seed: 2, c: '#9aa'})
+    .label(200, 30, 'ordre 1-2-3-4 puis 4-3-2-1', {s: 10, b: 1}).n(1, 'les capitaines choisissent sur une feuille (personne n\'est choisi en dernier à voix haute)'),
+  "Le contrat d'équipe": g => g.half().sheet(60, 80, 'contrat').pls('a', [[230, 60, '', {ball: true}], [210, 180], [320, 205]]).pls('x', [[265, 80], [250, 170], [330, 175]]).n(1, 'chaque équipe écrit son contrat puis le teste en 3 c 3'),
+  "Échauffement d'équipe": g => { g.hall(); [[105, 70], [295, 70], [105, 180], [295, 180]].forEach(([x, y], i) => g.zone(x - 85, y - 50, 170, 100, '', 'grey').ring('a', 4, x, y, 30, 25, {balls: [0]}).A(x, y, 'C', {c: '#1d241f'})); return g.n(1, 'le capitaine (C) mène : un jeu de mise en train, puis des tirs'); },
+  "L'atelier du coach": g => { g.floor(); ['passes', 'tir', 'défense', 'dribble', 'rebond', 'match'].forEach((t, i) => { const x = 10 + (i % 3) * 127, y = 10 + Math.floor(i / 3) * 117; g.zone(x + 3, y + 3, 120, 110, t, 'blue', {top: 1}).ring('a', 3, x + 63, y + 65, 22, 18, {balls: [0]}); });
+    return g.P(200, 125).n(1, 'chaque équipe choisit un jeu de la saison pour son point faible ; le prof passe et conseille'); },
+  'Le 3x3 olympique': g => g.half().pls('a', [[230, 60, '', {ball: true}], [210, 180], [320, 205]]).pls('x', [[265, 80], [250, 170], [330, 175]]).tag(190, 30, '12 s pour tirer · match à 21 points', {s: 9.5}).run(330, 168, 220, 125, 10, 1)
+    .n(1, 'après un panier, l\'adversaire ressort le ballon derrière l\'arc ; loin = 2 points'),
+  "Le tournoi d'évaluation": g => { g.terrains(2, {goals: 'basket', labs: ['terrain 1', 'terrain 2'], h: 200, y0: 15}); g.T.forEach(([x, y, w, h]) => g.scatter('a', 4, x + 15, y + 30, x + w / 2 - 10, y + h - 15, {seed: 3}).scatter('b', 4, x + w / 2 + 10, y + 30, x + w - 15, y + h - 15, {seed: 5}));
+    return g.P(200, 238).sheet(225, 238).n(1, 'matchs de 6 min, rôles tournants ; le prof observe avec la grille'); }
+};

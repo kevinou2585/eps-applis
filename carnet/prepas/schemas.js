@@ -218,6 +218,65 @@ function G(sp){
   g.frite = (x, y, a = 0, c = '#16a34a') => put('mid', `<rect x="${f(x - 22)}" y="${f(y - 3.5)}" width="44" height="7" rx="3.5" fill="${c}" stroke="#fff" stroke-width="1" transform="rotate(${a} ${f(x)} ${f(y)})"/>`);
   g.ring = g.ring; // (gardé : g.ring = joueurs en cercle)
   g.anneau = (x, y, c = '#d6336c') => put('mid', `<circle cx="${f(x)}" cy="${f(y)}" r="5" fill="none" stroke="${c}" stroke-width="3"/>`);
+  // nageur vu de dessus : o.a = direction en degrés (0 = vers la droite), o.k = 'nage' (bras devant), 'crawl', 'dos', 'brasse',
+  // 'etoile', 'boule', 'sous' (sous l'eau : en pointillés), 'tete' (tête hors de l'eau : surplace, debout), o.t = 'a' | 'b' | 'x' (couleur d'équipe)
+  g.nag = (x, y, o = {}) => { const a = o.a || 0, c = o.c || (o.t === 'b' ? COL.b : o.t === 'x' ? COL.x : o.t === 'g' ? '#9aa3a0' : COL.a), k = o.k || 'nage', sd = k === 'sous' ? ' stroke-dasharray="3 2" fill-opacity=".35"' : '';
+    let b;
+    if (k === 'tete') b = `<circle cx="0" cy="0" r="12" fill="none" stroke="#fff" stroke-width="1.5" opacity=".9"/><circle cx="0" cy="0" r="7.5" fill="${c}" stroke="#fff" stroke-width="1.5"/>`;
+    else if (k === 'etoile') b = `<path d="M0 0L-12 -12M0 0L-12 12M0 0L14 -10M0 0L14 10" stroke="${c}" stroke-width="4" stroke-linecap="round"/><ellipse cx="0" cy="0" rx="9" ry="6" fill="${c}"/><circle cx="12" cy="0" r="5" fill="${c}" stroke="#fff" stroke-width="1.2"/>`;
+    else if (k === 'boule') b = `<circle cx="0" cy="0" r="10" fill="${c}" stroke="#fff" stroke-width="1.5"/><path d="M-5 -3a5 5 0 0 1 10 0" stroke="#fff" stroke-width="1.5" fill="none"/>`;
+    else { const arms = k === 'crawl' ? `<path d="M8 -4L22 -5M2 4L-8 8" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>` : k === 'dos' ? `<path d="M8 -4L22 -6M8 4L-4 10" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>` : k === 'brasse' ? `<path d="M8 -4Q16 -14 22 -5M8 4Q16 14 22 5" stroke="${c}" stroke-width="3.5" fill="none" stroke-linecap="round"/>` : `<path d="M8 -4L21 -4M8 4L21 4" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>`;
+      b = `${arms}<path d="M-8 -3L-20 -6M-8 3L-20 6" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="0" cy="0" rx="11" ry="6.5" fill="${c}"${sd}/><circle cx="12" cy="0" r="5" fill="${k === 'dos' ? '#fff' : c}" stroke="${c}" stroke-width="2"/>`; }
+    put('top', `<g transform="translate(${f(x)} ${f(y)}) rotate(${a})"${k === 'sous' ? ' opacity=".55"' : ''}>${b}</g>` + (o.lab ? txt(x, y - 14, o.lab, {s: 9, b: 1}) : ''));
+    return g; };
+  // échelle de piscine, plot de départ, perche, ligne d'eau (bouchons) verticale, cerceau flottant, objet au fond
+  g.echelle = (x, y) => put('mid', `<rect x="${x - 7}" y="${y - 10}" width="14" height="20" fill="none" stroke="#9ca3af" stroke-width="2"/><path d="M${x - 7} ${y - 3}h14M${x - 7} ${y + 4}h14" stroke="#9ca3af" stroke-width="1.6"/>`).label(x, y + 22, 'échelle', {s: 8.5});
+  g.plotDep = (x, y) => put('mid', `<rect x="${x - 9}" y="${y - 8}" width="18" height="16" rx="2" fill="#e5e7eb" stroke="#475569" stroke-width="1.5"/>`);
+  g.perche = (x1, y1, x2, y2) => put('mid', `<path d="M${x1} ${y1}L${x2} ${y2}" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/><path d="M${x2} ${y2 - 8}v16" stroke="#94a3b8" stroke-width="4"/>`);
+  g.ligneEau = (x, y1 = 22, y2 = 228) => put('mid', `<path d="M${x} ${y1}V${y2}" stroke="#d6336c" stroke-width="3.5" stroke-dasharray="7 7"/><path d="M${x} ${y1 + 7}V${y2}" stroke="#fff" stroke-width="3.5" stroke-dasharray="7 7"/>`);
+  g.fond = (x, y, c = '#d6336c') => put('mid', `<circle cx="${f(x)}" cy="${f(y)}" r="5.5" fill="none" stroke="${c}" stroke-width="3.2"/><circle cx="${f(x)}" cy="${f(y)}" r="9" fill="none" stroke="#0b6e99" stroke-width=".8" stroke-dasharray="2 2"/>`);
+  g.cerceauFlot = (x, y, r = 13) => put('mid', `<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="none" stroke="#f59f00" stroke-width="3.5"/>`);
+  g.bulles = (x, y) => put('top', `<circle cx="${x}" cy="${y}" r="2.5" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="${x + 5}" cy="${y - 5}" r="2" fill="none" stroke="#fff" stroke-width="1.3"/><circle cx="${x - 3}" cy="${y - 8}" r="1.6" fill="none" stroke="#fff" stroke-width="1.3"/>`);
+  // bassin de petite profondeur seul (débutants) : zone fermée par une ligne d'eau à droite
+  g.petitBain = (o = {}) => { put('bg', `<rect x="0" y="0" width="${W}" height="${H}" rx="8" fill="#e6e0d4"/><rect x="22" y="22" width="356" height="206" fill="#c4e8f7" stroke="#9fb7c2" stroke-width="3"/>`);
+    if (o.deep !== false) put('bg', `<rect x="300" y="22" width="78" height="206" fill="#7cc3e6"/>`).label(339, 14, 'on n\'a plus pied', {s: 9.5, c: '#3d6f86'});
+    g.ligneEau(o.deep !== false ? 300 : 378); return g.label(160, 14, 'petite profondeur (zone du groupe)', {s: 9.5, c: '#3d6f86'}); };
+  // bassin vu de côté (coupe) : bord à gauche, surface à y = 62, fond qui descend vers la droite ; o.small : petit bain seul ; g.fond_y(x) = hauteur du fond
+  g.coupe = (o = {}) => { put('bg', `<rect x="0" y="0" width="${W}" height="${H}" rx="8" fill="#f4f1ea"/>`);
+    const yb = x => o.small ? 175 : x < 170 ? 150 : x > 250 ? 236 : 150 + (x - 170) / 80 * 86;
+    put('bg', `<path d="${o.small ? 'M60 62H400V200H60Z' : o.deep ? 'M60 62H400V236H60Z' : 'M60 62H400V236H250L170 150H60Z'}" fill="#9fd6ef"/><rect x="0" y="40" width="60" height="${o.small ? 160 : o.deep ? 200 : 115}" fill="#d9d3c4"/><path d="${o.small ? 'M60 62V200H400' : o.deep ? 'M60 62V236H400' : 'M60 62V150H170L250 236H400'}" fill="none" stroke="#8a958c" stroke-width="3"/><path d="M60 62H400" stroke="#0b6e99" stroke-width="2" stroke-dasharray="10 4"/>`);
+    g.fond_y = yb; g.label(30, 58, 'bord', {s: 9.5, c: '#6b6455'}).label(388, 56, 'surface', {s: 9, c: '#0b6e99', a: 'end'});
+    if (o.deep) g.label(330, 247, 'grande profondeur : on n\'a pas pied', {s: 9, c: '#3d6f86'});
+    else if (!o.small) g.label(110, 168, 'petit bain', {s: 9, c: '#3d6f86'}).label(330, 247, 'grand bain', {s: 9, c: '#3d6f86'});
+    return g; };
+  // personnage vu de côté (bonhomme) : o.a = rotation, o.c = couleur
+  g.side = (x, y, o = {}) => { const c = o.c || (o.t === 'b' ? COL.b : o.t === 'x' ? COL.x : COL.a);
+    return put('top', `<g transform="translate(${f(x)} ${f(y)}) rotate(${o.a || 0})"${o.k === 'sous' ? ' opacity=".6"' : ''}><circle cx="0" cy="-17" r="5.5" fill="${c}"/><path d="M0 -11V5M0 5L-5 17M0 5L5 17M0 -7L${o.up ? '-6 -22M0 -7L6 -22' : '-8 2M0 -7L8 2'}" stroke="${c}" stroke-width="3.2" stroke-linecap="round" fill="none"/></g>`); };
+  // gymnaste vu de côté (acrosport) : pose = 'debout' | 'bras' | 'table' (à 4 pattes) | 'planche' | 'planchec' | 'allonge' | 'jambes' (sur le dos, jambes en l'air)
+  // | 'chandelle' | 'atr' | 'pareur' | 'genou' (à genoux, buste droit) | 'avion' (sur un pied) | 'assis' | 'accroupi' ; (x, y) = point au sol ; o.r = regarde à gauche ; o.t = 'a' porteur, 'b' voltigeur, 'p' pareur
+  const POSES = {
+    debout: {H: [0, -37], N: [0, -31], P: [0, -16], M: [[-7, -17], [7, -17]], F: [[-5, 0], [5, 0]]},
+    bras: {H: [0, -37], N: [0, -31], P: [0, -16], M: [[-7, -46], [7, -46]], F: [[-5, 0], [5, 0]]},
+    pareur: {H: [-1, -37], N: [0, -31], P: [-2, -16], M: [[12, -28], [14, -22]], F: [[-9, 0], [5, 0]]},
+    table: {H: [19, -22], N: [13, -18], P: [-11, -18], M: [[13, 0], [11, 0]], K: [[-11, 0], [-11, 0]], F: [[-25, 0], [-25, 0]]},
+    genou: {H: [0, -32], N: [0, -26], P: [0, -12], M: [[8, -14], [9, -16]], K: [[2, 0], [2, 0]], F: [[-12, 0], [-12, 0]]},
+    planche: {H: [21, -18], N: [14, -14], P: [-6, -8], M: [[14, 0], [12, 0]], F: [[-25, 0], [-25, 0]]},
+    planchec: {H: [21, -24], N: [14, -19], P: [-6, -11], M: [[14, 0], [10, -32]], F: [[-25, 0], [-25, 0]]},
+    allonge: {H: [21, -4], N: [14, -4], P: [-6, -4], M: [[24, -6], [4, -4]], F: [[-25, -3], [-25, -3]]},
+    jambes: {H: [21, -4], N: [14, -4], P: [-4, -4], M: [[14, -22], [12, -22]], F: [[-4, -32], [-2, -32]]},
+    chandelle: {H: [-7, -3], N: [0, -3], P: [0, -20], M: [[8, -3], [-12, -3]], F: [[0, -44], [2, -44]]},
+    atr: {H: [0, -7], N: [0, -12], P: [0, -27], M: [[-5, 0], [5, 0]], F: [[-2, -47], [2, -47]]},
+    avion: {H: [17, -24], N: [11, -22], P: [-4, -17], M: [[-6, -29], [26, -26]], F: [[-1, 0], [-24, -14]]},
+    assis: {H: [-6, -28], N: [-5, -22], P: [-6, -4], M: [[4, -12], [6, -10]], F: [[18, 0], [18, 0]]},
+    accroupi: {H: [5, -27], N: [3, -21], P: [-6, -9], M: [[12, -14], [11, -12]], K: [[6, -11], [6, -11]], F: [[1, 0], [1, 0]]}
+  };
+  g.fig = (x, y, pose = 'debout', o = {}) => { const S = POSES[pose] || POSES.debout, sx = o.r ? -1 : 1, k = o.s || 1, c = o.c || (o.t === 'b' ? COL.b : o.t === 'p' ? '#9aa3a0' : o.t === 'j' ? COL.j : COL.a);
+    const T = ([a, b]) => `${f(x + a * sx * k)} ${f(y + b * k)}`; let d = `M${T(S.N)}L${T(S.P)}`;
+    S.M.forEach(m => { d += `M${T(S.N)}L${T(m)}`; }); S.F.forEach((ft, i) => { d += S.K ? `M${T(S.P)}L${T(S.K[i])}L${T(ft)}` : `M${T(S.P)}L${T(ft)}`; });
+    put('top', `<path d="${d}" fill="none" stroke="${c}" stroke-width="${f(4 * k)}" stroke-linecap="round" stroke-linejoin="round"${o.t === 'p' ? ' stroke-dasharray="5 3"' : ''}/><circle cx="${f(x + S.H[0] * sx * k)}" cy="${f(y + S.H[1] * k)}" r="${f(5.5 * k)}" fill="${c}"/>`);
+    return o.lab ? g.label(x, y + 13, o.lab, {s: 8.5, b: 1}) : g; };
+  // côté gymnase avec tapis vu de côté : sol à y, tapis de x1 à x2
+  g.sol = (y = 200, x1 = 20, x2 = 380) => { g.floor(); return put('bg', `<rect x="${x1}" y="${y}" width="${x2 - x1}" height="8" rx="2" fill="#9fc2ea" stroke="#5b87bd" stroke-width="1.2"/><path d="M0 ${y + 8}H${W}" stroke="#cbbfa8" stroke-width="2"/>`); };
   g.tapisFlot = (x, y, w = 60, h = 34) => put('mid', `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="6" fill="#fde68a" stroke="#b78a00" stroke-width="1.5"/>`);
   g.sheet = (x, y, lab = '') => put('mid', `<rect x="${x - 9}" y="${y - 11}" width="18" height="22" rx="1.5" fill="#fff" stroke="#6b7280" stroke-width="1.2"/><path d="M${x - 5} ${y - 5}h10M${x - 5} ${y}h10M${x - 5} ${y + 5}h7" stroke="#9ca3af" stroke-width="1.2"/>` + (lab ? txt(x, y + 22, lab, {s: 9}) : ''));
   g.music = (x, y) => put('mid', `<rect x="${x - 10}" y="${y - 13}" width="20" height="26" rx="3" fill="#2d3530"/><circle cx="${x}" cy="${y + 4}" r="6" fill="#5a6672"/><circle cx="${x}" cy="${y - 7}" r="3" fill="#5a6672"/>`).label(x, y + 24, 'musique', {s: 9});

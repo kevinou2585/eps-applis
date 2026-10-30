@@ -2981,7 +2981,7 @@ const schoolYear = iso => { const d = dOf(iso), y = d.getMonth() >= 7 ? d.getFul
 function prepaPage(x, en){
   const pp = x.pp, r = prepaRef(pp.ref), comp = (x.prog && x.prog.length ? x.prog : pp.comp) || [];
   /* à l'impression : pas les schémas « décor » (regroupement, étirements), pour tenir sur une page */
-  const sch = k => r && window.PSCH ? (r.l[k] || []).map(it => { const z = it[k === 'c' ? 5 : 3]; return z && !/^(explication|etirements)/.test(z) ? PSCH(z, esc(it[0])) : ''; }).join('') : '';
+  const sch = k => r && window.PSCH ? (r.l[k] || []).map(it => { const z = it[k === 'c' ? 5 : 3]; return z && !(window.PSCH_DECOR ? PSCH_DECOR(z) : /^(explication|etirements)/.test(z)) ? PSCH(z, esc(it[0])) : ''; }).join('') : '';
   const lab = k => { for (const g of PROG) { const f = g.l.find(z => z[0] === k); if (f) return f[1]; } return ''; };
   const tot = (pp.d || []).reduce((a, b) => a + (+b || 0), 0);
   const ph = (n, i, k) => `<section class="pr-ph"><h3><span>${n}</span>${pp.d && pp.d[i] ? `<em>${pp.d[i]} min</em>` : ''}</h3><div class="pr-tx">${esc(pp[k] || '—')}</div>${sch(k) ? `<div class="pr-sch">${sch(k)}</div>` : ''}</section>`;

@@ -294,3 +294,88 @@ an: {
    r: [['bilan', 6]]}
 ]}
 }});
+
+/* ===== Schémas de chaque jeu (salle vue de dessus ; la scène est délimitée par des coupelles, le public assis devant) ===== */
+(window.PSCH_SC = window.PSCH_SC || {}).danse = (() => {
+  const EQ = ['#1f63d6', '#e8590c', '#16a34a', '#8a3ffc', '#d6336c'];
+  const salle = (g, o = {}) => { g.hall(); if (o.music !== false) g.music(372, 36); return g; };
+  // scène délimitée par des coupelles, public devant (en bas)
+  const scene = (g, o = {}) => { g.stage(); [[20, 14], [380, 14], [20, 204], [380, 204], [200, 204], [200, 14]].forEach(([x, y]) => g.disc(x, y)); if (o.pub !== false) g.row('g', 9, 70, 242, 330, 242); if (o.music !== false) g.music(360, 40); return g; };
+  // 4 groupes de 4 dans les 4 coins de la salle ; fn(x, y, i) dessine en plus dans chaque groupe
+  const quatre = (g, fn, o = {}) => { salle(g, o); [[105, 72], [295, 72], [105, 180], [295, 180]].forEach(([x, y], i) => { g.zone(x - 88, y - 55, 176, 104, '', 'grey', {rx: 8}); if (o.ring !== false) g.ring('a', o.n || 4, x, y, 46, 30, {c: EQ[i]}); if (fn) fn(x, y, i); }); return g; };
+  const cercle = (g, n = 10, o = {}) => { salle(g); g.ring('a', n, 200, 128, o.rx || 120, o.ry || 82); return g; };
+  const duos = (g, fn) => { salle(g); [[95, 70], [210, 70], [95, 180], [210, 180], [315, 125]].forEach(([x, y], i) => { g.A(x - 18, y).B(x + 18, y); if (fn) fn(x, y, i); }); return g; };
+  const lignes = (g, o = {}) => { salle(g); for (let r = 0; r < 3; r++) g.row('a', 6, 70, 70 + r * 50, 330, 70 + r * 50); if (o.P !== false) g.P(200, 228); return g; };
+  const calme = (g, T) => { g.hall(); g.ring('a', 8, 200, 140, 125, 70); g.sheet(200, 140); T.forEach((t, i) => g.tag(200, 28 + i * 22, t, {s: 9.5})); return g; };
+  return {
+    statues: g => { salle(g); g.scatter('a', 12, 40, 40, 360, 200, {seed: 3}); g.P(200, 228).tag(200, 20, '🔇 musique coupée = statue !', {s: 9.5}).X(330, 200, '', {}).label(330, 222, 'juge', {s: 9, b: 1});
+      return g.n(1, 'on danse librement ; quand la musique s\'arrête, on se fige en statue').n(2, 'qui bouge devient juge ; statue imposée : triste, à 3 appuis, haut-moyen-bas…'); },
+    huit: g => { lignes(g); [0, 1, 2].forEach(r => g.run(340, 70 + r * 50, 372, 70 + r * 50, 0)); return g.tag(200, 30, '1 2 3 4 5 6 7 8 → sur le 8 : on change de direction', {s: 9.5})
+      .n(1, 'on marche en comptant à voix haute sur le temps de la musique').n(2, 'sur le 8 : changement (direction, frappe, saut, niveau, regard) ; puis on compte dans sa tête'); },
+    prenom: g => { cercle(g, 10); g.A(200, 46, '', {}).label(200, 30, '« Ma - ri - on » = 3 gestes', {s: 9.5, b: 1}).rot(170, 60, 120, 85, 10);
+      return g.n(1, 'chacun danse son prénom (un geste par syllabe), puis tout le cercle le répète').n(2, 'on fait le tour, de plus en plus vite ; puis 3 prénoms d\'affilée'); },
+    'Les tapeurs de 8': g => quatre(g, (x, y) => g.tag(x, y + 2, '1 👏 · 5 🦶', {s: 8.5})).n(1, 'on frappe le 1 dans les mains, on tape du pied le 5').n(2, 'puis chaque groupe invente sa façon de marquer le 1 et le 5'),
+    magneto: g => { salle(g); g.scatter('a', 12, 40, 40, 330, 200, {seed: 5}); g.J(350, 200, 'T'); g.tag(190, 228, '⏸ pause · 🐢 ralenti · ⏩ avance rapide · ⏪ retour arrière · ▶ lecture', {s: 8.5});
+      return g.n(1, 'le prof (puis un élève, la télécommande T) annonce les commandes').n(2, 'le dernier à réagir devient la télécommande'); },
+    ligne: g => { lignes(g); g.tag(200, 26, 'pas de côté · vigne · avancer · reculer · quart de tour', {s: 9}); return g.n(1, 'une danse en ligne de 32 temps (4 × 8), apprise par le meneur').n(2, 'on la répète jusqu\'à la danser sans meneur'); },
+    bilan: g => { cercle(g, 12); g.P(200, 128).tag(200, 100, 'étirements lents · « le danseur qui m\'a impressionné »', {s: 9}); return g.n(1, 'étirements sur une musique douce ; chacun cite un danseur et dit pourquoi').n(2, 'grande révérence de toute la classe'); },
+    miroir: g => duos(g, (x, y) => g.raw(`<path d="M${x} ${y - 18}V${y + 18}" stroke="#8a3ffc" stroke-width="2" stroke-dasharray="3 3"/>`, 'mid')).n(1, 'face à face : l\'un mène lentement, l\'autre copie en même temps').n(2, 'au signal, on change de meneur sans s\'arrêter : le spectateur ne doit plus savoir qui mène'),
+    chef: g => { cercle(g, 10, {rx: 100, ry: 72}); g.J(200, 56, 'C').X(370, 200).label(370, 178, 'enquêteur', {s: 9, b: 1}).arrow('run', 360, 190, 300, 160, 0);
+      return g.n(1, 'le chef d\'orchestre (C) change de geste toutes les 8 temps ; tout le cercle copie').n(2, 'l\'enquêteur revient et a 3 essais pour trouver le chef'); },
+    question: g => duos(g, (x, y) => g.label(x, y - 20, 'A ? · B !', {s: 8.5, b: 1})).n(1, 'A pose une question (8 temps), B répond en reprenant un geste de A et en le transformant').n(2, '4 questions-réponses à la suite, comme une conversation'),
+    telephone: g => { salle(g); g.row('a', 6, 60, 125, 310, 125, {labs: [1, 2, 3, 4, 5, 6]}); g.arrow('pass', 70, 110, 100, 110, -8).label(80, 92, 'montre au 2e seulement', {s: 8.5}).label(240, 160, 'les autres sont dos au premier', {s: 9});
+      return g.n(1, 'le 1er invente 8 temps et les montre au 2e, qui les montre au 3e…').n(2, 'le dernier danse avec le premier devant tout le monde : qu\'est-ce qui a changé ?'); },
+    vague: g => { cercle(g, 12); g.loop(200, 128, 95, 62, 'rot'); return g.label(200, 132, 'la vague passe, se transforme', {s: 9.5}).n(1, 'très lentement, chacun reçoit le mouvement, le transforme un peu et le passe').n(2, 'on finit assis, yeux fermés, à respirer sur la musique'); },
+    verbes: g => quatre(g, (x, y, i) => g.tag(x, y + 2, ['tourner', 'glisser', 'tomber', 's\'étirer'][i], {s: 8.5})).n(1, 'chaque groupe tire 4 cartes-verbes et invente un geste par verbe sur 8 temps').n(2, 'il enchaîne les 4 (4 × 8 temps) ; les autres devinent les verbes'),
+    'Le trajet dessiné': g => { scene(g); g.ring('a', 4, 90, 110, 18, 14).path('run', [[120, 80], [160, 150], [200, 70], [240, 150], [280, 80], [330, 140]]).label(230, 180, 'zigzag tiré au sort', {s: 9.5, b: 1}); return g.n(1, 'chaque groupe tire un trajet (cercle, zigzag, spirale, croix) et le danse sur la scène'); },
+    defile: g => { salle(g); g.zone(150, 25, 100, 180, 'couloir de 10 m', 'yellow', {top: 1}); g.file('a', 4, 200, 60, 0, 30).arrow('run', 230, 60, 230, 170, 0).row('g', 4, 40, 70, 40, 170).row('g', 4, 360, 70, 360, 170);
+      return g.label(200, 232, '📸 photo de groupe au bout', {s: 9.5, b: 1}).n(1, 'chaque groupe défile avec une démarche imposée (robot, pingouin, super-héros…)').n(2, 'le public applaudit la plus originale'); },
+    accumulation: g => { cercle(g, 5, {rx: 90, ry: 65}); ['1', '1+2', '1+2+3'].forEach((t, i) => g.tag(200, 110 + i * 22, t, {s: 9.5})); return g.n(1, 'le 1er fait un geste sur 8 temps, tous le refont ; le 2e en ajoute un, on refait les 2…').n(2, 'jusqu\'à une phrase de 5 gestes dansée ensemble'); },
+    canon: g => { scene(g); g.row('a', 4, 90, 70, 320, 70, {labs: ['0', '+2', '+4', '+6']}).label(205, 46, 'canon : chacun part 2 temps après l\'autre', {s: 9.5, b: 1}).row('a', 4, 90, 150, 320, 150).label(205, 126, 'unisson : tous ensemble', {s: 9.5, b: 1});
+      return g.n(1, 'une phrase de 4 × 8 temps en unisson, puis en canon, puis en cascade').n(2, 'le public dit lequel est le plus beau'); },
+    'La recette de la danse': g => quatre(g, (x, y) => g.sheet(x, y)).tag(200, 126, 'début figé · unisson · canon · niveau · fin figée', {s: 9}).n(1, 'ingrédients obligatoires, 6 × 8 temps'),
+    'Répétition': g => quatre(g, (x, y, i) => i === 0 && g.J(x + 60, y - 30, '5')).n(1, 'on répète avec la musique ; un élève dit « 5, 6, 7, 8 » pour lancer'),
+    spectacle: g => { scene(g); g.ring('a', 4, 200, 105, 50, 35, {c: EQ[1]}); return g.tag(200, 172, '⭐ une étoile · 🙏 un vœu', {s: 10}).n(1, 'chaque groupe présente sa danse ; le public assis, en silence').n(2, 'après chaque passage : une étoile (réussi) et un vœu (conseil), puis on applaudit'); },
+    'Dernière répétition': g => quatre(g).n(1, 'une répétition avec la musique, puis chaque groupe se met en place pour son passage'),
+    'Le flash-mob': g => { salle(g); g.scatter('a', 14, 40, 40, 340, 210, {seed: 9}); g.tag(200, 228, '🎵 musique lancée : on démarre en moins de 8 temps, où qu\'on soit', {s: 9}); return g; },
+    qualites: g => quatre(g, (x, y, i) => g.tag(x, y + 2, ['☀️ léger', '⛈ saccadé', '🌫 lent', '🌪 tournant'][i], {s: 8.5})).n(1, 'le même geste dansé selon la météo : soleil, orage, brouillard, tornade, neige'),
+    'Le chef d\'orchestre': g => quatre(g, (x, y) => g.J(x, y, 'C'), {n: 5}).n(1, 'le chef dirige avec les mains : haut = fort, bas = doux, vite = rapide').n(2, 'le groupe danse sa phrase en le suivant'),
+    'Le contrepoids': g => duos(g, (x, y) => g.raw(`<path d="M${x - 10} ${y}H${x + 10}" stroke="#2d3530" stroke-width="3"/>`, 'top').run(x - 20, y + 14, x - 34, y + 14, 0).run(x + 20, y + 14, x + 34, y + 14, 0)).n(1, 'mains tenues, on penche en arrière en équilibre ; puis dos à dos, puis épaule contre épaule').n(2, 'on se relève ensemble sans lâcher'),
+    'La balle de contact': g => duos(g, (x, y) => g.raw(`<circle cx="${x}" cy="${y}" r="4" fill="#f59f00"/>`, 'top')).n(1, 'par deux, un point de contact (main, épaule, dos) ne se perd jamais ; on le fait voyager'),
+    'Le dé de la composition': g => quatre(g, (x, y) => g.raw(`<rect x="${x - 10}" y="${y - 10}" width="20" height="20" rx="3" fill="#fff" stroke="#2d3530" stroke-width="1.6"/><circle cx="${x - 4}" cy="${y - 4}" r="1.8"/><circle cx="${x + 4}" cy="${y + 4}" r="1.8"/>`, 'top')).n(1, '2 dés : un procédé imposé (canon, cascade, unisson…) et une qualité imposée').n(2, 'danse d\'1 minute'),
+    'La boîte à pas': g => { lignes(g); g.tag(200, 26, 'running man · step touch · box step', {s: 10}); return g.n(1, 'chaque pas sur 8 temps, en bounce, puis on les enchaîne et on finit en freeze'); },
+    cypher: g => { cercle(g, 12, {rx: 110, ry: 78}); g.B(200, 128).rot(185, 115, 215, 115, -12).label(200, 155, 'au centre : 8 à 16 temps', {s: 9.5, b: 1}).arrow('run', 215, 135, 300, 180, 0);
+      return g.n(1, 'en cercle, tout le monde fait le bounce ; un danseur entre au centre, puis tape la main du suivant').n(2, 'règle d\'or : on encourage, on ne se moque jamais'); },
+    'Le freeze-photo': g => { salle(g); [[100, 80], [260, 80], [100, 180], [260, 180]].forEach(([x, y]) => g.A(x - 18, y).A(x + 18, y).J(x, y - 32, '📸')); return g.n(1, 'le photographe crie « clic ! » au hasard : les danseurs se figent dans un freeze original'); },
+    battle: g => { salle(g); g.row('a', 5, 60, 60, 60, 190).row('b', 5, 340, 60, 340, 190); g.A(150, 125).rot(140, 110, 160, 110, -12).label(150, 155, '16 temps', {s: 9.5, b: 1}).arrow('pass', 170, 125, 240, 125, 0).label(250, 145, 'l\'autre répond', {s: 9});
+      g.row('g', 3, 170, 228, 230, 228).label(200, 210, 'juges', {s: 9, b: 1}); return g.n(1, 'chaque équipe envoie un danseur (ou un duo) pour 16 temps ; l\'autre répond').n(2, 'les 3 juges lèvent la main : énergie, originalité, respect ; on se salue'); },
+    'Le jury des B-boys': g => calme(g, ['énergie · originalité · respect · musicalité', 'les juges expliquent leur choix avec un mot']),
+    'Les isolations': g => { lignes(g); g.tag(200, 26, 'tête · épaules · poitrine · bassin', {s: 10}); return g.n(1, 'le prof annonce la partie : on ne bouge qu\'elle, sur 8 temps, comme un robot'); },
+    'La recette hip-hop': g => quatre(g, (x, y) => g.sheet(x, y), {n: 5}).tag(200, 126, 'entrée · 2 pas · isolation · canon · formation · freeze', {s: 8.5}).n(1, 'changement de formation : ligne → V → cercle'),
+    'Le groupe-miroir': g => { scene(g); g.ring('a', 4, 200, 105, 50, 35, {c: EQ[0]}); return g.tag(200, 172, '⭐⭐ deux étoiles · 🙏 un vœu', {s: 10}).n(1, 'deux groupes se regardent et se donnent 2 étoiles et 1 vœu'); },
+    'La machine à transformer': g => quatre(g, (x, y, i) => g.tag(x, y + 2, ['plus grand', 'au ralenti', '× 4', 'au sol'][i], {s: 8.5})).n(1, '4 gestes du quotidien transformés : plus grand, ralenti, répété, au sol, autre partie du corps'),
+    'Les 9 cases': g => { scene(g); for (let i = 0; i < 4; i++){ g.raw(`<path d="M${20 + i * 120} 14V204" stroke="#b9a6d6" stroke-width="1.5" stroke-dasharray="4 4"/>`, 'mid'); g.raw(`<path d="M20 ${14 + i * 63.3}H380" stroke="#b9a6d6" stroke-width="1.5" stroke-dasharray="4 4"/>`, 'mid'); }
+      for (let i = 0; i < 9; i++) g.label(80 + (i % 3) * 120, 50 + Math.floor(i / 3) * 63, i + 1, {s: 13, b: 1, c: '#b9a6d6'}); g.ring('a', 4, 80, 165, 16, 12).path('run', [[95, 150], [200, 110], [320, 50]]);
+      return g.n(1, 'le prof annonce un trajet de cases ; puis chaque groupe crée son trajet secret que le public retrouve'); },
+    'Le regard qui parle': g => { scene(g); g.row('a', 4, 120, 110, 280, 110); return g.tag(200, 160, '👀 public → sol → partenaire', {s: 10}).n(1, 'même phrase 3 fois avec un regard différent ; les spectateurs disent ce que chaque regard raconte'); },
+    'Le musée imaginaire': g => quatre(g, (x, y, i) => g.tag(x, y + 2, ['la foule', 'l\'attente', 'la tempête', 'la rencontre'][i], {s: 8.5})).n(1, 'chaque groupe tire une carte-thème et crée 3 tableaux vivants qui la racontent'),
+    'Le titre': g => calme(g, ['qu\'avez-vous ressenti ?', 'puis le groupe donne le titre de sa danse']),
+    rock: g => duos(g, (x, y) => g.raw(`<path d="M${x - 9} ${y}H${x + 9}" stroke="#2d3530" stroke-width="3"/>`, 'top')).P(370, 228).tag(200, 228, '« 1-2, 3-4, 5-6 » · « on change ! »', {s: 9}).n(1, 'pas de base du rock, une main tenue').n(2, 'toutes les 30 s, chacun va vers un nouveau partenaire'),
+    'Le rock des chaises': g => duos(g).tag(200, 228, '🔇 musique coupée : face à face et on se salue', {s: 9}).n(1, 'le dernier couple fait la démonstration suivante'),
+    'Les cartes-passes': g => duos(g, (x, y) => g.sheet(x, y - 30)).n(1, 'chaque couple pioche une carte-passe et l\'apprend avec la fiche').n(2, 'le prof valide et il pioche la suivante'),
+    'Le guide aveugle': g => { duos(g, (x, y) => g.path('run', [[x + 20, y + 14], [x + 40, y + 30], [x + 10, y + 40]])); return g.n(1, 'celui qui suit ferme les yeux : le guide le conduit rien qu\'avec la main'); },
+    'Le tour du monde': g => { salle(g); [['valse 1-2-3', 75], ['salsa', 200], ['bachata', 325]].forEach(([t, x], i) => { g.zone(x - 60, 30, 120, 180, t, ['blue', 'orange', 'green'][i], {top: 1}); g.A(x - 16, 100).B(x + 16, 100).A(x - 16, 160).B(x + 16, 160); });
+      return g.arrow('run', 140, 220, 260, 220, 0).n(1, '3 stations de 4 min ; on change de partenaire à chaque station'); },
+    'Le plan du couple': g => duos(g, (x, y) => g.sheet(x, y - 30)).n(1, 'début, 3 passes au moins, un moment original (pose, contrepoids), une fin, écrits sur la fiche'),
+    'L\'improvisation': g => { scene(g); g.A(180, 105).B(220, 105); return g.tag(200, 160, 'couple tiré au sort · 1 min', {s: 10}); },
+    'Le marché des styles': g => quatre(g, (x, y, i) => g.tag(x, y + 2, ['danse en ligne', 'hip-hop', 'contemporain', 'rock'][i], {s: 8.5}), {n: 5}).n(1, '30 s de chaque style ; chaque groupe choisit son style et son thème'),
+    'Les rôles du spectacle': g => calme(g, ['chorégraphe · régisseur son · costumier · présentateur']),
+    echequipe: g => quatre(g, (x, y) => g.J(x, y, 'M'), {n: 5}).n(1, 'chaque groupe mène son échauffement dansé avec son meneur'),
+    'Le story-board': g => calme(g, ['début → partie 1 → partie 2 → partie 3 → fin', 'un procédé par partie']),
+    coach: g => quatre(g, (x, y) => g.sheet(x, y), {n: 5}).n(1, 'chaque groupe choisit un jeu de création du cycle pour enrichir sa danse'),
+    'Le test du chef absent': g => { scene(g); g.ring('a', 5, 200, 105, 55, 38); g.J(370, 120, 'C').label(370, 96, 'le chorégraphe sort', {s: 9, a: 'end'}); return g.n(1, 'le groupe danse sans son chorégraphe, puis chaque danseur à son tour'); },
+    'La générale': g => { scene(g); g.ring('a', 5, 200, 105, 55, 38); g.A(40, 160, 'R').music(60, 160).A(40, 60, 'Pr').arrow('run', 380, 120, 300, 110, 0); return g.n(1, 'ordre de passage, présentateurs, régie son, entrées et sorties : comme le jour J'); },
+    'Le débriefing': g => calme(g, ['chaque rôle dit ce qui a coincé', 'et comment on le corrige']),
+    'Le spectacle': g => { scene(g); g.ring('a', 5, 200, 105, 55, 38); g.P(370, 242).sheet(350, 242); return g.n(1, 'spectacle présenté et réglé par les élèves ; le prof observe avec la grille'); }
+  };
+})();

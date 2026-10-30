@@ -300,3 +300,158 @@ an: {
    r: [['bilan', 6]]}
 ]}
 }});
+
+/* ===== Schémas de chaque jeu (stade : ligne droite à couloirs, sautoir en longueur, aire de poids) ===== */
+(window.PSCH_SC = window.PSCH_SC || {}).athle = (() => {
+  const COL = {a: '#1f63d6', b: '#e8590c', p: '#8a3ffc'}, EQ = ['#1f63d6', '#e8590c', '#16a34a', '#8a3ffc'];
+  // ligne droite : n couloirs de 45 px à partir de y = 35 ; g.lane_y(i) = centre du couloir i
+  const droite = (g, n = 4, o = {}) => g.straight(n, {y0: o.y0 || 25, lh: o.lh || Math.min(50, 200 / n), ...o});
+  // sautoir en longueur vu de dessus : piste d'élan, zone d'appel (1 m), bac à sable ; o.zones = lignes de points dans le sable
+  const sautoir = (g, o = {}) => { g.grass(); g.raw('<rect x="10" y="108" width="250" height="34" fill="#d9876a"/>', 'bg').sand(258, 80, 132, 90).raw('<rect x="226" y="108" width="20" height="34" fill="#fff" fill-opacity=".45" stroke="#fff" stroke-width="2" stroke-dasharray="4 3"/>', 'bg');
+    g.label(236, 102, 'zone d\'appel', {s: 8.5, b: 1}).label(80, 160, 'piste d\'élan', {s: 9, c: '#6b4a3a'}).label(324, 186, 'bac à sable', {s: 9, c: '#8a6d2a'});
+    if (o.zones) [1, 2, 3, 4].forEach(i => { const x = 268 + i * 26; g.raw(`<path d="M${x} 82V168" stroke="#b08a3a" stroke-width="1.5" stroke-dasharray="4 3"/>`, 'mid').disc(x, 76).label(x - 13, 128, i, {s: 11, b: 1, c: '#8a6d2a'}); });
+    return g; };
+  // aire de lancer : cercle (ou ligne) à gauche, secteur vers la droite, arcs de distance
+  const secteur = (g, o = {}) => { g.grass(); const cx = 45, cy = 125;
+    g.raw(`<path d="M${cx} ${cy}L392 ${cy - 112}M${cx} ${cy}L392 ${cy + 112}" stroke="#fff" stroke-width="2.5"/>`, 'bg');
+    (o.arcs || [5, 10, 15, 20]).forEach((m, i) => { const r = 70 + i * 80 / 1.1 * .9; g.raw(`<path d="M${cx + r * .95} ${cy - r * .31}A${r} ${r} 0 0 1 ${cx + r * .95} ${cy + r * .31}" fill="none" stroke="#fff" stroke-width="1.5" stroke-dasharray="5 4"/>`, 'bg').label(cx + r * .95 + 4, cy - r * .31 - 4, m + ' m', {s: 9, b: 1, c: '#4b6b3c'}); });
+    if (o.ligne) g.raw(`<path d="M${cx - 5} ${cy - 40}V${cy + 40}" stroke="#fff" stroke-width="4"/>`, 'bg'); else g.raw(`<circle cx="${cx}" cy="${cy}" r="16" fill="#cfcac0" stroke="#fff" stroke-width="3"/>`, 'bg');
+    return g; };
+  // 4 ateliers en carrés (course, saut, lancer, 4e)
+  const ateliers = (g, T, o = {}) => { g.grass(); const n = T.length, cols = n > 4 ? 3 : 2, rows = Math.ceil(n / cols), w = (380 - (cols - 1) * 8) / cols, h = (230 - (rows - 1) * 8) / rows;
+    T.forEach(([t, fn], i) => { const x = 10 + (i % cols) * (w + 8), y = 10 + Math.floor(i / cols) * (h + 8); g.zone(x, y, w, h, '', 'grey', {rx: 6}).num(x + 13, y + 13, i + 1).label(x + 25, y + 17, t, {s: 9.5, b: 1, a: 'start'}); if (fn) fn(x, y, w, h); });
+    return g; };
+  const AT = { // dessins d'atelier
+    sprint: (x, y, w, h) => { g0.A(x + 18, y + h / 2 + 8).run(x + 30, y + h / 2 + 8, x + w - 20, y + h / 2 + 8).raw(`<path d="M${x + w - 14} ${y + 28}V${y + h - 8}" stroke="#2d3530" stroke-width="2.5" stroke-dasharray="3 3"/>`, 'mid'); },
+    saut: (x, y, w, h) => { g0.sand(x + w - 50, y + 28, 42, h - 38).A(x + 20, y + h / 2 + 8).run(x + 32, y + h / 2 + 8, x + w - 60, y + h / 2 + 8).lob(x + w - 60, y + h / 2 + 8, x + w - 28, y + h / 2 + 8, -16); },
+    lancer: (x, y, w, h) => { g0.A(x + 20, y + h / 2 + 8).ball(x + 30, y + h / 2 + 2, 'medecine').lob(x + 34, y + h / 2 + 4, x + w - 20, y + h / 2 + 8, -22); for (let i = 1; i < 4; i++) g0.disc(x + 30 + i * (w - 50) / 3, y + h - 12); },
+    defi: (x, y, w, h) => { g0.ring('a', 4, x + w / 2, y + h / 2 + 8, 22, 16); },
+    endu: (x, y, w, h) => { g0.loop(x + w / 2, y + h / 2 + 8, w / 2 - 18, h / 2 - 22, 'run').A(x + w / 2, y + 30); },
+    juge: (x, y, w, h) => { g0.B(x + w - 18, y + h - 16).sheet(x + w - 36, y + h - 16); }
+  };
+  let g0; const at = (g, T, o) => { g0 = g; return ateliers(g, T.map(([t, k, k2]) => [t, (...a) => { if (AT[k]) AT[k](...a); if (k2 && AT[k2]) AT[k2](...a); }]), o); };
+  const quatre = [['sprint', 'sprint', 'juge'], ['saut en longueur', 'saut', 'juge'], ['lancer', 'lancer', 'juge'], ['défi d\'équipe', 'defi']];
+  const calme = (g, T) => { g.grass(); g.ring('a', 8, 200, 140, 130, 72); g.sheet(200, 140); T.forEach((t, i) => g.tag(200, 26 + i * 22, t, {s: 9.5})); return g; };
+  const vagues = (g, n = 4, o = {}) => { droite(g, n); for (let i = 0; i < n; i++){ const y = g.lane_y(i); g.pl(o.t || 'a', 25, y).run(38, y, o.e || 340, y, 0); } return g; };
+  return {
+    millepattes: g => { droite(g, 4, {finish: false}); for (let i = 0; i < 4; i++){ const y = g.lane_y(i), c = EQ[i]; g.file('a', 3, 70, y, -16, 0, {c}).cone(330, y); }
+      const y = g.lane_y(0); g.A(250, y - 8, '', {c: EQ[0]}).A(268, y - 8, '', {c: EQ[0]}).raw(`<path d="M250 ${y - 8}H268" stroke="${EQ[0]}" stroke-width="3"/>`, 'mid').path('run', [[280, y - 8], [325, y - 14], [325, y + 10], [240, y + 12]]);
+      return g.label(330, 18, 'cône à 20 m', {s: 9, b: 1}).n(1, 'le 1er fait l\'aller-retour, puis repart avec le 2e main dans la main, puis le 3e…').n(2, 'si la chaîne casse, on revient au départ'); },
+    cone: g => { g.grass(); [[100, 70], [300, 70], [100, 180], [300, 180]].forEach(([x, y]) => g.A(x - 30, y).cone(x, y).B(x + 30, y)); g.P(200, 125).tag(200, 100, '« assis ! … saute ! … CÔNE ! »', {s: 9.5});
+      return g.n(1, 'le premier qui attrape le cône gagne le point ; le perdant change de partenaire'); },
+    ballon: g => { droite(g, 4, {finish: false}); g.ball(60, g.lane_y(0), 'gros').A(30, g.lane_y(0) - 14, 'R').arrow('pass', 72, g.lane_y(0), 320, g.lane_y(0), 0); [1, 2, 3].forEach(i => g.A(25, g.lane_y(i)).run(38, g.lane_y(i), 320, g.lane_y(i), 0));
+      [0, 1, 2, 3].forEach(i => g.cone(335, g.lane_y(i))); return g.label(335, 18, 'arrivée à 20-30 m', {s: 9, b: 1}).n(1, 'les coureurs partent en même temps que le ballon roulé : arriver au cône avant lui').n(2, 'on roule plus fort à chaque réussite'); },
+    touchecours: g => { g.grass(); g.line('M330 20V230', 3, '#fff'); [60, 125, 190].forEach(y => { g.A(150, y, 'F').B(122, y, 'C').run(162, y, 320, y, 0).arrow('run', 134, y + 8, 300, y + 8, 0); });
+      return g.label(330, 14, 'ligne à 10 m', {s: 9, b: 1}).n(1, 'le fuyard tape dans les mains du chasseur puis sprinte vers la ligne').n(2, 'le chasseur réagit et essaie de le toucher avant la ligne ; on change'); },
+    'Les départs rigolos': g => { droite(g, 4); [['assis', 'A'], ['couché', 'A'], ['dos à la course', 'A'], ['à genoux', 'A']].forEach(([t], i) => { const y = g.lane_y(i); g.A(28, y).label(56, y - 13, t, {s: 8.5, a: 'start', b: 1}).run(42, y, 200, y, 0); });
+      return g.label(200, 238, '20 m · par vagues de 4 : le gagnant marque 1 point', {s: 9}).n(1, 'sprints depuis des positions différentes, puis « à vos marques - prêts - partez »'); },
+    handicap: g => { droite(g, 4); [0, 30, 55, 80].forEach((d, i) => { const y = g.lane_y(i); g.A(130 - d, y).run(142 - d, y, 350, y, 0).raw(`<path d="M${130 - d} ${y - 18}v36" stroke="#fff" stroke-width="2"/>`, 'mid'); });
+      return g.label(90, 240, 'les plus rapides partent plus loin derrière', {s: 9}).n(1, 'par 4, sur 40 m : le but est d\'arriver tous en même temps').n(2, 'un coureur qui gagne de loin recule d\'un plot'); },
+    bilan: g => { g.grass(); g.ring('a', 9, 200, 140, 130, 75); g.bench(150, 125, 250, 125).A(170, 115, '2').A(200, 110, '1').A(230, 115, '3');
+      return g.label(200, 92, 'podium : le plus de progrès · le plus d\'encouragements · un juge sérieux', {s: 9}).n(1, 'étirements des mollets, des cuisses et des épaules ; chacun note sa meilleure performance'); },
+    chatlignes: g => { droite(g, 5, {start: false, finish: false}); [[60, 0], [150, 1], [260, 2], [90, 3], [320, 4], [210, 4]].forEach(([x, i]) => g.A(x, g.lane_y(i)).run(x + 12, g.lane_y(i), x + 40, g.lane_y(i), 0));
+      g.X(200, g.lane_y(1)).run(212, g.lane_y(1), 250, g.lane_y(1), 0).X(140, g.lane_y(3)); return g.n(1, 'on ne court que dans les couloirs, sans couper').n(2, 'un touché fait 5 squats puis devient chat'); },
+    'Le témoin à l\'arrêt': g => { g.grass(); [70, 160].forEach(y => { g.row('a', 4, 90, y, 300, y); g.raw(`<rect x="${110}" y="${y - 3}" width="14" height="5" rx="2" fill="#e11d48"/>`, 'top').pass(124, y + 4, 150, y + 4, 0); });
+      return g.tag(200, 220, 'main droite → main gauche du suivant · « hop ! »', {s: 9.5}).n(1, 'en colonne de 4, en marchant puis en trottinant : le suivant tend la main en arrière sans se retourner'); },
+    navette: g => { droite(g, 4, {start: false, finish: false}); for (let i = 0; i < 4; i++){ const y = g.lane_y(i), c = EQ[i]; g.file('a', 2, 60, y, -18, 0, {c}).file('a', 2, 320, y, 18, 0, {c}); }
+      g.run(75, g.lane_y(0), 305, g.lane_y(0), 0); return g.label(190, 240, '20 à 30 m', {s: 9, b: 1}).n(1, 'on sprinte jusqu\'à l\'autre moitié de l\'équipe et on tape la main du suivant').n(2, 'départ anticipé = on refait son trajet'); },
+    temoin: g => { droite(g, 4, {start: false}); for (let i = 0; i < 4; i++){ const y = g.lane_y(i); g.disc(150, y - 15).disc(230, y - 15).disc(150, y + 15).disc(230, y + 15); }
+      const y = g.lane_y(1); g.A(110, y).raw(`<rect x="118" y="${y - 2}" width="12" height="5" rx="2" fill="#e11d48"/>`, 'top').run(122, y, 175, y, 0).A(195, y).run(207, y, 300, y, 0).disc(100, y + 15, '#e11d48');
+      return g.label(190, 18, 'zone de passage', {s: 9, b: 1}).n(1, 'le receveur part quand le porteur touche la marque ; il tend la main en arrière, le porteur crie « hop ! »').n(2, 'témoin tombé ou passé hors zone = 3 s de pénalité'); },
+    formule1: g => { g.grass(); g.A(30, 200).run(42, 200, 90, 200, 0, 1); for (let i = 0; i < 4; i++) g.cone(110 + i * 25, 200 + (i % 2 ? -10 : 10)); g.path('run', [[100, 200], [122, 185], [147, 215], [172, 185], [197, 210]]).num(150, 228, 2);
+      [230, 260, 290].forEach(x => g.hurdle(x, 200, 22, true)); g.arrow('run', 215, 200, 310, 200, 0, 3).mat(320, 165, 50, 30, {t: 'roulade'}).num(345, 150, 4).path('run', [[345, 160], [340, 70], [60, 60], [40, 180]]).num(200, 50, 5).label(200, 80, 'sprint jusqu\'au suivant', {s: 9});
+      return g.n(1, 'sprint 15 m').n(2, 'slalom entre 4 cônes').n(3, 'obstacles bas (lattes)').n(4, 'roulade ou 3 sauts de grenouille').n(5, 'sprint ; le témoin passe de main en main'); },
+    record: g => { calme(g, ['mètres sautés + mètres lancés + secondes de relais', '🏆 record de la classe : 412 → ?']); return g.n(1, 'on additionne les performances de toute la classe ; à chaque leçon, on essaie de battre le record'); },
+    marche: g => { g.track(); [[.1], [.35], [.6], [.85]].forEach(([t]) => { const [x, y] = g.track_pt(t), [x2, y2] = g.track_pt(t, 10); g.A(x, y).B(x2, y2); }); return g.label(200, 125, '🤫 un tour en marchant, par deux, en silence', {s: 10, b: 1}).n(1, 'on respire profondément, puis étirements ; chacun dit ce qu\'il a mieux réussi'); },
+    vague: g => { g.grass(); g.row('a', 9, 60, 150, 340, 150); g.P(200, 40).hoop(200, 80, 13, '#f59f00').arrow('run', 200, 95, 200, 132, 0).label(250, 80, 'cerceau qu\'on fait rouler', {s: 9, a: 'start'});
+      return g.n(1, 'on saute par-dessus le cerceau (ou la corde au ras du sol) sans se faire toucher les pieds').n(2, 'touché = 3 sauts de grenouille et on revient'); },
+    cerceaux: g => { g.grass(); [60, 125, 190].forEach((y, r) => { g.A(30, y); for (let i = 0; i < 6; i++) g.hoop(80 + i * (40 + r * 6), y, 11); g.path('run', [[42, y], [80, y - 3], [120 + r * 6, y + 3], [160 + r * 12, y - 3]]); });
+      return g.label(200, 238, 'un appui par cerceau → cloche-pied → même-même-autre', {s: 9}).n(1, 'on écarte les cerceaux à chaque passage réussi'); },
+    obstacles: g => { droite(g, 4); for (let i = 0; i < 4; i++){ const y = g.lane_y(i), d = i < 2 ? 50 : 62; for (let j = 0; j < 5; j++) g.hurdle(100 + j * d, y, 26, true); g.A(28, y).run(40, y, 92, y, 0); }
+      return g.label(150, 18, 'couloirs « courts »', {s: 9, b: 1}).label(150, 240, 'couloirs « longs »', {s: 9, b: 1}).n(1, 'lattes sur cônes : on franchit sans s\'arrêter, en gardant le même rythme entre les obstacles'); },
+    riviere: g => { g.grass(); g.raw('<path d="M150 30L130 220H260L200 30Z" fill="#7cc3e6"/>', 'bg').rope(200, 30, 260, 220, 0, '#2d3530').rope(150, 30, 130, 220, 0, '#2d3530').label(180, 125, '🐊', {s: 22});
+      [60, 125, 190].forEach(y => g.A(40, y).run(52, y, 120, y, 0)); g.lob(120, 60, 225, 60, -20);
+      return g.label(160, 18, 'étroit', {s: 9, b: 1}).label(195, 238, 'large', {s: 9, b: 1}).n(1, 'élan, appel sur un pied, réception à deux pieds : pied dans l\'eau = mangé !').n(2, 'on s\'arrête à la largeur réussie 2 fois sur 3'); },
+    longueur: g => { sautoir(g, {zones: 1}); g.A(30, 125).run(42, 125, 225, 125, 0).lob(240, 125, 330, 125, -30); return g.n(1, 'appel dans la zone d\'appel (1 m), pas de planche à mordre').n(2, 'zones à 1, 2, 3, 4 points : 3 sauts, on additionne pour son équipe'); },
+    'Le chat saute-mouton': g => { g.grass(); g.scatter('a', 7, 50, 40, 350, 210, {seed: 6}); g.X(200, 120).run(212, 120, 240, 105, 0).raw('<circle cx="120" cy="170" r="11" fill="#9aa3a0"/>', 'top').label(120, 195, 'touché : accroupi', {s: 9}).A(95, 160).lob(95, 160, 145, 175, -20);
+      return g.n(1, 'un touché s\'accroupit, tête rentrée').n(2, 'un camarade le délivre en sautant par-dessus (mains sur le dos)'); },
+    gammes: g => { droite(g, 4, {finish: false}); ['montées de genoux', 'talons-fesses', 'pas chassés', 'foulées bondissantes'].forEach((t, i) => { const y = g.lane_y(i); g.file('a', 3, 50, y, -14, 0).J(300, y, 'C').run(64, y, 280, y, 0).label(170, y - 12, t, {s: 8.5, b: 1}); });
+      return g.n(1, 'en colonnes sur 20 m, puis une accélération').n(2, 'le coach (triangle vert) montre le geste et dit « top » quand c\'est bien fait'); },
+    grenouille: g => { g.grass(); g.line('M40 40V210', 3, '#fff'); [70, 160].forEach((y, k) => { const c = EQ[k]; [0, 1, 2, 3].forEach(i => g.lob(40 + i * 60, y, 100 + i * 60, y, -18)); [1, 2, 3, 4].forEach(i => g.A(40 + i * 60, y + 18, i, {c})); });
+      return g.n(1, 'le 2e part de l\'endroit où sont tombés les talons du 1er, et ainsi de suite').n(2, 'on mesure la distance totale de l\'équipe'); },
+    genoux: g => { secteur(g, {ligne: 1}); g.A(30, 125).ball(42, 112, 'medecine').lob(45, 115, 175, 100, -30); [[120, 140, EQ[0]], [180, 100, EQ[1]], [210, 150, EQ[2]]].forEach(([x, y, c]) => g.disc(x, y, c));
+      return g.n(1, 'à genoux derrière la ligne, médecine-ball à deux mains derrière la tête : on lance en se redressant').n(2, 'chaque lancer est marqué par une coupelle de la couleur du lanceur'); },
+    poids: g => { secteur(g, {arcs: [3, 5, 7, 9]}); g.A(45, 125).ball(53, 118, 'medecine').lob(55, 120, 195, 110, -25); return g.label(45, 160, 'cercle', {s: 9, b: 1}).n(1, 'poids calé contre le cou, coude haut : on pousse, on ne lance pas').n(2, 'sans sortir du cercle ; zones à points dans le secteur'); },
+    rotation: g => { secteur(g, {ligne: 1}); g.A(35, 125).rot(30, 108, 52, 108, -14).hoop(60, 120, 7, '#f59f00').lob(60, 118, 210, 105, -25); return g.n(1, 'anneau ou frisbee : de profil, bras long en arrière, rotation des hanches ; puis dos à la zone avec un demi-tour').n(2, 'l\'engin doit tomber dans le secteur, sinon 0'); },
+    javelot: g => { secteur(g, {ligne: 1}); g.A(25, 125).run(10, 140, 25, 135, 0).lob(40, 120, 245, 125, -30).hoop(260, 125, 18, '#e11d48').label(260, 95, '🐉 le dragon', {s: 10, b: 1}); return g.n(1, 'vortex ou javelot en mousse : viser le dragon à 10-15 m, puis lancer le plus loin après 3 pas d\'élan').n(2, 'au-dessus de l\'épaule, sans franchir la ligne'); },
+    cibles: g => { secteur(g, {ligne: 1}); [[110, 1], [180, 2], [250, 3], [320, 4]].forEach(([x, p]) => g.hoop(x, 125, 16, '#e11d48').label(x, 129, p, {s: 11, b: 1})); g.A(25, 125).lob(35, 118, 180, 115, -25); return g.n(1, 'cerceaux à 5, 10, 15 et 20 m : 1, 2, 3, 4 points').n(2, 'chacun lance 3 fois (balle, anneau, vortex) ; les points vont à l\'équipe'); },
+    decathlon: g => at(g, quatre).n(1, 'chaque équipe fait chaque atelier et marque des points avec le barème affiché').n(2, 'un élève qui progresse rapporte autant qu\'un champion'),
+    'Épreuve 1 : sprint ou obstacles': g => { droite(g, 4); [0, 1].forEach(i => g.A(28, g.lane_y(i)).run(40, g.lane_y(i), 340, g.lane_y(i), 0)); [2, 3].forEach(i => { const y = g.lane_y(i); g.A(28, y).run(40, y, 340, y, 0); for (let j = 0; j < 4; j++) g.hurdle(110 + j * 60, y, 26, true); });
+      return g.B(375, 15).chrono(375, 240).n(1, '30 m plat ou 30 m avec obstacles bas : 2 essais chronométrés par des camarades'); },
+    'Épreuve 2 : saut en longueur': g => { sautoir(g); g.A(30, 125).run(42, 125, 225, 125, 0).lob(240, 125, 320, 125, -30).B(330, 200).sheet(350, 200); return g.n(1, '3 essais, appel dans la zone d\'appel ; on garde le meilleur'); },
+    'Épreuve 3 : lancer au choix': g => { secteur(g); g.A(45, 125).lob(55, 118, 200, 110, -25).B(220, 200).sheet(240, 200); return g.n(1, 'poids, anneau ou javelot : 3 essais mesurés, on garde le meilleur'); },
+    baton: g => { g.grass(); [[90, 70], [250, 70], [90, 175], [250, 175]].forEach(([x, y]) => { g.A(x, y, 'A').raw(`<rect x="${x + 14}" y="${y - 18}" width="5" height="22" rx="2" fill="#e11d48"/>`, 'top').B(x + 40, y, 'B').run(x + 52, y, x + 110, y, 0); });
+      return g.n(1, 'A lâche le bâton sans prévenir ; B le rattrape avant qu\'il touche le sol').n(2, 'puis B part en sprint 10 m'); },
+    'Le duel des starters': g => { droite(g, 2, {lh: 60, y0: 60}); [0, 1].forEach(i => g.A(55, g.lane_y(i)).run(67, g.lane_y(i), 330, g.lane_y(i), 0)); g.J(30, 40, 'S').B(375, 40, 'J').tag(150, 30, '« à vos marques… prêts… partez ! »', {s: 9});
+      return g.n(1, 'par 4 : un starter, 2 coureurs, un juge d\'arrivée ; départs accroupis').n(2, 'le starter varie le temps ; faux départ = on recule d\'un mètre'); },
+    pronostic: g => { droite(g, 4); [0, 1, 2, 3].forEach(i => g.A(28, g.lane_y(i)).run(40, g.lane_y(i), 340, g.lane_y(i), 0)); g.B(375, 15).chrono(375, 240).tag(200, 240 - 0, 'annoncé 6,2 s · réalisé 6,3 s', {s: 9});
+      return g.n(1, 'avant de courir (ou sauter, lancer), chacun annonce son temps ou sa distance').n(2, 'le gagnant est le plus proche de son pronostic'); },
+    'La poursuite des obstacles': g => { droite(g, 2, {lh: 60, y0: 60}); [0, 1].forEach(i => { const y = g.lane_y(i); for (let j = 0; j < 5; j++) g.hurdle(110 + j * 50, y, 30, true); });
+      g.A(60, g.lane_y(0), 'F').run(72, g.lane_y(0), 100, g.lane_y(0), 0).X(40, g.lane_y(1)).run(52, g.lane_y(1), 100, g.lane_y(1), 0).label(40, g.lane_y(1) + 24, '2 m derrière', {s: 9});
+      return g.n(1, 'le chasseur part 2 m derrière et doit toucher le fuyard avant la fin ; on change'); },
+    'L\'élan étalonné': g => { sautoir(g); g.A(236, 125).arrow('run', 222, 125, 70, 125, 0, 1).disc(60, 125, '#e11d48').label(60, 102, 'ma marque', {s: 9, b: 1}).B(60, 160);
+      return g.n(1, 'depuis la zone d\'appel, on court à l\'envers 8 à 12 foulées ; le partenaire pose une coupelle').n(2, 'on essaie l\'élan depuis la coupelle et on l\'ajuste'); },
+    'L\'américaine': g => { g.track(); const [x, y] = g.track_pt(.0), [x2, y2] = g.track_pt(.25); g.A(x, y, '1').A(x - 20, y - 18, '2', {c: EQ[0]}).A(x2, y2, '', {c: EQ[1]}).run(x2, y2, ...g.track_pt(.3), 0);
+      return g.label(200, 125, 'un tour de 100 m chacun, sans arrêt, 6 min', {s: 9.5, b: 1}).n(1, 'deux coureurs par équipe se relaient ; le témoin passe dans la zone').n(2, 'combien de passages en 6 min ?'); },
+    'Épreuve 1 : 40 m ou 40 m obstacles': g => { droite(g, 4); [0, 1].forEach(i => g.A(28, g.lane_y(i)).run(40, g.lane_y(i), 340, g.lane_y(i), 0)); [2, 3].forEach(i => { const y = g.lane_y(i); g.A(28, y).run(40, y, 340, y, 0); for (let j = 0; j < 5; j++) g.hurdle(100 + j * 50, y, 26, true); });
+      return g.B(375, 15).chrono(375, 240).n(1, '40 m plat ou 40 m obstacles : 2 essais chronométrés'); },
+    'Épreuve 2 : longueur': g => { sautoir(g); g.disc(70, 125, '#e11d48').A(50, 125).run(62, 125, 225, 125, 0).lob(240, 125, 330, 125, -30).B(330, 200).sheet(350, 200); return g.n(1, 'élan étalonné, 3 essais'); },
+    'Épreuve 3 : poids': g => { secteur(g, {arcs: [3, 5, 7, 9]}); g.A(45, 125).ball(53, 118, 'medecine').lob(55, 120, 200, 110, -25).B(220, 200).sheet(240, 200); return g.n(1, '3 essais mesurés, on garde le meilleur'); },
+    'Le pentabond': g => { g.grass(); g.line('M50 70V180', 3, '#fff'); ['D', 'G', 'D', 'G', '2 pieds'].forEach((t, i) => { g.lob(50 + i * 60, 125, 110 + i * 60, 125, -22).label(110 + i * 60, 150, t, {s: 9.5, b: 1}); });
+      return g.A(35, 125).B(330, 190).sheet(350, 190).n(1, '5 bonds enchaînés depuis un départ arrêté, puis après 4 pas d\'élan').n(2, 'le partenaire mesure'); },
+    'Le moins de bonds': g => { g.grass(); g.line('M40 40V210M360 40V210', 3, '#fff'); [80, 170].forEach(y => { g.A(25, y); for (let i = 0; i < 6; i++) g.lob(40 + i * 53, y, 93 + i * 53, y, -16).label(66 + i * 53, y - 18, i + 1, {s: 9, b: 1}); });
+      return g.label(200, 238, '20 m', {s: 9, b: 1}).n(1, 'qui fait le moins de bonds ? on compte à voix haute').n(2, 'on note son score et on essaie de faire 1 bond de moins'); },
+    'Les 3 cerceaux': g => { sautoir(g); g.hoop(130, 125, 12).hoop(170, 125, 12).hoop(210, 125, 12); g.A(40, 125).run(52, 125, 120, 125, 0).lob(130, 125, 170, 125, -16).lob(170, 125, 210, 125, -16).lob(210, 125, 300, 125, -26);
+      return g.label(130, 176, 'cloche-pied', {s: 8.5}).label(172, 190, 'foulée', {s: 8.5}).label(212, 176, 'saut', {s: 8.5}).n(1, 'on écarte les cerceaux à chaque réussite'); },
+    'Le triple saut au bac': g => { sautoir(g); g.zone(130, 108, 40, 34, '', 'yellow').label(150, 98, 'appel à 5-7 m', {s: 8.5, b: 1}).A(40, 125).run(52, 125, 135, 125, 0).lob(155, 125, 195, 125, -14).lob(195, 125, 235, 125, -14).lob(235, 125, 300, 125, -22);
+      return g.n(1, 'élan court, appel dans la zone, puis cloche-pied, foulée, saut ; mesure par l\'équipe'); },
+    'Le pas croisé': g => { secteur(g, {ligne: 1}); g.tag(110, 215, '« 1 - 2 - croisé - lance ! »', {s: 10});
+      return g.A(30, 125).lob(40, 118, 220, 110, -30).n(1, 'sans engin puis avec : 3 pas d\'élan, puis la jambe arrière passe devant, et on lance'); },
+    'Le tour de l\'horloge': g => { g.track(); for (let i = 0; i < 8; i++) g.disc(...g.track_pt(i / 8)); [.06, .3, .55].forEach(t => g.A(...g.track_pt(t)).run(...g.track_pt(t), ...g.track_pt(t + .06), 0)); g.P(200, 125).label(200, 105, 'sifflet toutes les 15 s', {s: 9});
+      return g.n(1, 'une coupelle tous les 50 m : à chaque coup de sifflet, on doit être à une coupelle').n(2, 'chacun choisit son groupe d\'allure'); },
+    minutes: g => { g.track(); [[.1, '#e11d48'], [.2, '#f59f00'], [.35, '#16a34a'], [.5, '#1f63d6'], [.62, '#f59f00'], [.75, '#16a34a'], [.88, '#e11d48']].forEach(([t, c]) => g.cone(...g.track_pt(t, -12), c)); g.zone(160, 95, 80, 60, 'camp', 'yellow', {top: 1});
+      g.A(...g.track_pt(.04)).run(...g.track_pt(.04), ...g.track_pt(.09), 0); return g.n(1, 'en équipe, chaque coureur rapporte un cône à la fois au camp').n(2, 'plus le cône est loin, plus il rapporte ; pas de marche'); },
+    'Le 1 000 m pronostic': g => { g.track(); [.1, .3].forEach(t => g.A(...g.track_pt(t)).run(...g.track_pt(t), ...g.track_pt(t + .05), 0)); g.B(200, 125).sheet(222, 125).chrono(178, 125).label(200, 100, '1 000 m = 2 tours et demi', {s: 9.5, b: 1});
+      return g.n(1, 'chacun annonce son temps avant de courir ; le partenaire chronomètre et annonce les temps de passage'); },
+    'Le lanceur de précision': g => { secteur(g, {ligne: 1}); [[150, 100, 1], [200, 150, 2], [260, 115, 3], [320, 140, 4]].forEach(([x, y, p]) => g.hoop(x, y, 15, '#e11d48').label(x, y + 4, p, {s: 10, b: 1})); g.A(30, 125).rot(25, 108, 47, 108, -14).lob(40, 118, 255, 115, -30);
+      return g.n(1, 'des cerceaux dans le secteur : 3 lancers en rotation, points selon le cerceau'); },
+    'Le pentathlon': g => at(g, [['sprint', 'sprint', 'juge'], ['saut', 'saut', 'juge'], ['lancer', 'lancer', 'juge'], ['barème affiché', 'defi']]).n(1, 'ateliers sprint, saut, lancer, avec juges de l\'équipe'),
+    'Le 1 000 m': g => { g.track(); [.1, .3, .55].forEach(t => g.A(...g.track_pt(t)).run(...g.track_pt(t), ...g.track_pt(t + .05), 0)); g.P(200, 125).chrono(222, 125).label(200, 100, '2 tours et demi', {s: 9.5, b: 1}); return g.n(1, 'par vagues, temps annoncés'); },
+    'Mon trio': g => calme(g, ['ma course · mon saut · mon lancer', '🎯 un objectif chiffré pour chacun']),
+    'Les trois couloirs': g => at(g, [['départs', 'sprint'], ['obstacles (3 appuis)', 'sprint'], ['demi-fond (horloge)', 'endu']]).P(330, 200).n(1, 'chacun choisit son atelier ; le prof tourne'),
+    'Le coach vidéo': g => { sautoir(g); g.A(30, 125).run(42, 125, 225, 125, 0).lob(240, 125, 320, 125, -30).B(236, 165, 'J').J(180, 80, 'C').raw('<rect x="192" y="70" width="12" height="18" rx="2" fill="#2d3530"/>', 'top');
+      return g.n(1, 'par 3 : un sauteur, un juge d\'appel, un coach qui filme ou observe un seul point').n(2, 'le coach donne un conseil (au lancer : le transfert du poids)'); },
+    'La rencontre d\'essai': g => at(g, quatre).P(390, 238).n(1, 'chacun concourt et tient un rôle d\'officiel : starter, chronos, juge d\'appel, mesureur, secrétaire').n(2, 'on tourne à chaque épreuve'),
+    'Le quiz des juges': g => { g.grass(); g.P(200, 70).tag(200, 40, 'mime : appel mordu, faux départ, sortie du cercle…', {s: 9}); [70, 160, 250, 340].forEach((x, i) => { g.ring('a', 3, x, 175, 20, 16, {c: EQ[i]}); g.flag(x - 10, 140, '#fff').flag(x + 10, 140, '#e11d48'); });
+      return g.n(1, 'chaque équipe lève drapeau blanc (valable) ou rouge (faute)'); },
+    'La rencontre': g => at(g, quatre).P(390, 238).n(1, 'épreuves, officiels élèves, résultats affichés, cérémonie'),
+    'Les 4 tests': g => at(g, [['30 m lancé', 'sprint', 'juge'], ['pentabond', 'saut'], ['médecine-ball à genoux', 'lancer'], ['6 min de course', 'endu']]).n(1, 'chacun note ses 4 résultats'),
+    'Mon contrat d\'athlète': g => calme(g, ['🎯 un objectif chiffré par test', '« pour progresser, je vais… »']),
+    'L\'échelle de vitesse': g => { droite(g, 2, {lh: 70, y0: 50, finish: false}); [0, 1].forEach(i => { const y = g.lane_y(i), d = i ? 30 : 20; for (let j = 0; j < 9; j++) g.disc(80 + j * d, y + 22).disc(80 + j * d, y - 22); g.A(40, y).path('run', Array.from({length: 9}, (_, j) => [80 + j * d + d / 2, y + (j % 2 ? 6 : -6)])); });
+      return g.label(200, 36, 'cases serrées : fréquence', {s: 9, b: 1}).label(200, 215, 'cases écartées : amplitude', {s: 9, b: 1}).n(1, 'un appui par case, le plus vite possible ; par équipe, au chrono'); },
+    'Le circuit des kangourous': g => { ateliers(g, [['pieds joints', (x, y, w, h) => { [0, 1, 2].forEach(i => g.hurdle(x + 40 + i * 30, y + h / 2 + 8, 22, true)); g.A(x + 18, y + h / 2 + 8); }], ['cloche-pied', (x, y, w, h) => { [0, 1, 2].forEach(i => g.hoop(x + 45 + i * 28, y + h / 2 + 8, 10)); g.A(x + 18, y + h / 2 + 8); }],
+      ['montées de step', (x, y, w, h) => { g.step(x + w / 2, y + h / 2 + 8).A(x + w / 2 - 28, y + h / 2 + 8); }], ['pentabond', (x, y, w, h) => { [0, 1, 2].forEach(i => g.lob(x + 20 + i * 30, y + h / 2 + 12, x + 50 + i * 30, y + h / 2 + 12, -12)); }],
+      ['réception', (x, y, w, h) => { g.mat(x + 30, y + 35, w - 60, h - 50, {t: 'tapis'}); }], ['sauts sans élan', (x, y, w, h) => { g.sand(x + w - 50, y + 30, 40, h - 40).A(x + 25, y + h / 2 + 8).lob(x + 35, y + h / 2 + 8, x + w - 30, y + h / 2 + 8, -16); }]]); return g.n(1, '40 s par atelier ; réception genoux souples'); },
+    'Le circuit des costauds': g => { ateliers(g, [['squats'], ['gainage'], ['pompes (genoux)'], ['médecine-ball', (x, y, w, h) => { g.A(x + 30, y + h / 2 + 8).B(x + w - 30, y + h / 2 + 8).ball(x + w / 2, y + h / 2 + 2, 'medecine').pass(x + 42, y + h / 2 + 8, x + w - 42, y + h / 2 + 8, -8); }], ['fentes'], ['abdominaux']].map(([t, fn]) => [t, fn || ((x, y, w, h) => g.A(x + w / 2 - 12, y + h / 2 + 8).B(x + w / 2 + 12, y + h / 2 + 8))])); return g.n(1, 'par deux, 40 s par atelier, 20 s de pause, on tourne'); },
+    'Le journal de l\'athlète': g => calme(g, ['pourquoi j\'ai progressé (ou pas) ?', 'sommeil · travail · échauffement · récupération']),
+    'Le triathlon d\'évaluation': g => at(g, [['50 m', 'sprint', 'juge'], ['saut', 'saut', 'juge'], ['poids', 'lancer', 'juge']]).P(330, 200).n(1, 'ateliers 50 m, saut, poids ; le prof pose 2 questions à chacun entre les essais'),
+    'Les commissions': g => { g.grass(); ['épreuves et barèmes', 'officiels', 'horaires et rotations', 'affiche et cérémonie', 'matériel'].forEach((t, i) => { const x = 70 + (i % 3) * 130, y = 60 + Math.floor(i / 3) * 110; g.ring('a', 4, x, y + 20, 24, 18).sheet(x, y + 20).label(x, y - 12, t, {s: 9.5, b: 1}); });
+      return g.n(1, 'chaque commission prépare la rencontre et rend une fiche'); },
+    echequipe: g => { droite(g, 4, {finish: false}); for (let i = 0; i < 4; i++){ const y = g.lane_y(i); g.file('a', 4, 120, y, -20, 0, {c: EQ[i]}).J(150, y, 'M').run(165, y, 300, y, 0); } return g.n(1, 'chaque équipe mène son échauffement (gammes, accélérations) avec son meneur'); },
+    coach: g => at(g, quatre).n(1, 'chaque équipe choisit et anime un atelier du cycle'),
+    'Le débriefing': g => calme(g, ['qu\'est-ce qui a coincé ?', 'comment on le corrige ?']),
+    journaliste: g => calme(g, ['📰 résultats · records · action du jour']).A(200, 180, 'J'),
+    'Le relais final': g => { g.track(); [.0, .25, .5, .75].forEach((t, i) => g.A(...g.track_pt(t), '', {c: EQ[i]})); g.run(...g.track_pt(.02), ...g.track_pt(.1), 0); return g.label(200, 125, '📣 toute la classe encourage', {s: 10, b: 1}).n(1, 'grand relais de toute la classe, équipes mélangées'); },
+    'La rencontre d\'évaluation': g => at(g, quatre).P(390, 238).n(1, 'chacun fait ses épreuves avec les officiels élèves ; le prof observe et valide')
+  };
+})();

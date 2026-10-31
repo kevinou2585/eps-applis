@@ -211,6 +211,8 @@ function G(sp){
   g.hoop = (x, y, r = 11, c = '#d6336c') => put('mid', `<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="none" stroke="${c}" stroke-width="3"/>`);
   g.bench = (x1, y1, x2, y2) => { const a = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI, l = Math.hypot(x2 - x1, y2 - y1);
     return put('mid', `<g transform="translate(${f(x1)} ${f(y1)}) rotate(${f(a)})"><rect x="0" y="-5" width="${f(l)}" height="10" rx="2" fill="#c08a4f" stroke="#7a5228" stroke-width="1.5"/><path d="M6 -5v10M${f(l - 6)} -5v10" stroke="#7a5228" stroke-width="2"/></g>`); };
+  // « panier vivant » : un élève debout sur un banc tient un cerceau à bout de bras (cible de tir sans vrai panier)
+  g.vivant = (x, y, lab = 'panier vivant') => { g.bench(x - 4, y - 24, x - 4, y + 24).A(x - 4, y, '').hoop(x + 12, y, 9, '#d6336c'); return lab ? g.label(x, y + 36, lab, {s: 8.5}) : g; };
   g.plinth = (x, y, w = 40, h = 22, lab = 'plinth') => put('mid', `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="4" fill="#d8b98a" stroke="#7a5228" stroke-width="1.5"/><path d="M${x - w / 2} ${y - h / 6}h${w}M${x - w / 2} ${y + h / 6}h${w}" stroke="#7a5228" stroke-width=".8"/>` + (lab ? txt(x, y + h / 2 + 10, lab, {s: 9}) : ''));
   g.step = (x, y) => put('mid', `<rect x="${x - 12}" y="${y - 7}" width="24" height="14" rx="3" fill="#7c8a99" stroke="#3e4a56" stroke-width="1.2"/>`);
   g.tramp = (x, y, lab = 'mini-trampoline') => put('mid', `<rect x="${x - 15}" y="${y - 15}" width="30" height="30" rx="5" fill="#2d3530"/><rect x="${x - 10}" y="${y - 10}" width="20" height="20" rx="2" fill="#5a6672"/>` + (lab ? txt(x, y + 26, lab, {s: 9}) : ''));
@@ -392,6 +394,18 @@ const COMMUN = {
   echequipe: g => { g.hall(); [[105, 70], [295, 70], [105, 180], [295, 180]].forEach(([x, y]) => g.zone(x - 85, y - 50, 170, 100, '', 'grey').ring('a', 4, x, y, 30, 25).X(x, y, 'C')); return g.P(200, 125).n(1, 'le capitaine (C) mène : jeu de mise en train, articulations, puis gestes du sport ; le prof passe et valide'); },
   coach: g => { g.floor(); ['équipe 1', 'équipe 2', 'équipe 3', 'équipe 4'].forEach((t, i) => { const x = 10 + (i % 2) * 192, y = 10 + Math.floor(i / 2) * 117; g.zone(x + 3, y + 3, 184, 110, t, 'blue', {top: 1}).ring('a', 4, x + 95, y + 65, 34, 24).X(x + 95, y + 65, 'C'); });
     return g.P(200, 125).n(1, 'chaque équipe choisit un jeu de la saison pour son point faible ; un élève est coach').n(2, 'à la fin, chaque coach dit ce que l\'équipe a amélioré'); },
+  meteo: g => { g.calme('☀ j\'ai aimé · ☁ moyen · ⚡ c\'était dur'); return g.n(1, 'étirements guidés, puis chacun montre sa météo avec les bras').n(2, 'deux ou trois élèves l\'expliquent en une phrase'); },
+  ralenti: g => { g.hall(); [[105, 75], [295, 75], [105, 180], [295, 180]].forEach(([x, y], i) => g.zone(x - 80, y - 45, 160, 90, '', i ? 'grey' : 'yellow'));
+    g.A(85, 70).A(125, 85).run(97, 72, 115, 80, -8).B(110, 100); [[295, 75], [105, 180], [295, 180]].forEach(([x, y]) => g.ring('a', 4, x, y, 30, 22));
+    return g.tag(105, 38, '⏪ au ralenti', {s: 10}).tag(200, 128, 'les autres équipes regardent', {s: 9}).n(1, 'chaque équipe rejoue au ralenti sa plus belle action').n(2, 'les autres disent ce qui l\'a rendue réussie, puis étirements'); },
+  parole: g => { g.hall().ring('a', 10, 200, 125, 140, 80); const P = g.last; g.ball(P[0][0] + 10, P[0][1] + 8, g.sp === 'bad' ? 'volant' : undefined).pass(P[0][0] + 6, P[0][1] + 10, P[2][0] - 12, P[2][1] - 4, 12, 1);
+    return g.tag(200, 125, 'seul celui qui tient l\'objet parle', {s: 10}).n(1, 'je dis ce que j\'ai appris ou réussi, puis je passe l\'objet à quelqu\'un qui n\'a pas parlé'); },
+  mercis: g => { g.calme('« merci pour ta passe quand j\'étais seul »'); const [a, b] = [[60, 110], [340, 140]]; return g.arrow('lob', 62, 140, 336, 150, 60, 1).n(1, 'qui le veut remercie un camarade pour une action précise'); },
+  respire: g => { g.hall(); [[70, 70], [170, 70], [270, 70], [120, 160], [220, 160], [320, 160]].forEach(([x, y]) => g.raw(`<g transform="translate(${x} ${y})"><circle cx="-34" cy="0" r="8" fill="#1f63d6"/><rect x="-26" y="-7" width="48" height="14" rx="7" fill="#1f63d6"/><path d="M22 -4H44M22 4H44" stroke="#1f63d6" stroke-width="5" stroke-linecap="round"/></g>`, 'top'));
+    return g.P(380, 230).tag(200, 115, 'allongés · yeux fermés · 5 grandes respirations', {s: 10}).n(1, 'mains sur le ventre, il monte et descend').n(2, 'chacun repense à son meilleur moment, puis on se relève et on s\'étire'); },
+  quiz: g => { g.hall().line('M200 25V225', 3, '#c4b59a').row('a', 6, 200, 50, 200, 200).P(80, 125).tag(80, 95, '« vrai ou faux ? »', {s: 10})
+    .run(212, 80, 262, 80, 0, 1).run(188, 170, 138, 170, 0, 2).label(290, 60, 'VRAI →', {s: 11, b: 1, c: '#16a34a'}).label(120, 200, '← FAUX', {s: 11, b: 1, c: '#c2185b'});
+    return g.n(1, 'vrai = un pas à droite').n(2, 'faux = un pas à gauche ; chaque erreur est expliquée par un élève'); },
   journaliste: g => g.calme('📰 résultats · joueur fair-play · action du jour').A(200, 155, 'J').sheet(222, 155).n(1, 'le journaliste de chaque équipe annonce les résultats, le joueur fair-play et l\'action du jour')
 };
 const NUMS = '①②③④⑤⑥⑦⑧⑨';
@@ -411,6 +425,12 @@ function render(spec){
 window.PSCH = (spec, cap) => {
   if (!spec) return '';
   const r = render(spec); if (!r) return '';
+  // 2e schéma d'un jeu (scène « clé/2 ») : dessiné à côté du premier (ex. la règle, puis la variante ou la 2e phase)
+  if (spec[0] === '@' && !/\/2(#|$)/.test(spec)){ const i = spec.indexOf('#'), [lib, key] = (i < 0 ? spec.slice(1) : spec.slice(1, i)).split('|'), SC = window.PSCH_SC || {};
+    if (SC[lib] && SC[lib][key + '/2']) return fig(r, cap) + fig(render('@' + lib + '|' + key + '/2') || r, cap ? cap + ' (2)' : ''); }
+  return fig(r, cap);
+};
+function fig(r, cap){
   const nt = r.notes.length ? `<ol class="psch-n">${r.notes.map(([k, t]) => `<li><b>${typeof k === 'number' ? NUMS[k - 1] || k : esc(k)}</b> ${esc(t)}</li>`).join('')}</ol>` : '';
   return `<figure class="psch" tabindex="0" title="Toucher pour agrandir">${r.svg}${cap || r.caption || nt ? `<figcaption>${cap ? `<b>${cap}</b>` : ''}${r.caption ? `<span class="psch-c">${esc(r.caption)}</span>` : ''}${nt}</figcaption>` : ''}</figure>`;
 };

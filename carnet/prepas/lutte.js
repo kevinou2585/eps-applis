@@ -6,48 +6,56 @@
 (() => {
 const A = {th: 'Lutte : s\'opposer en sécurité, déséquilibrer, renverser et immobiliser, arbitrer', comp: ['HME1', 'HME3', 'HSC1', 'HSC3', 'GSS2', 'GSS3'], l: [
   {t: 'Les règles d\'or et le contact', o: 'Connaître et respecter les règles de sécurité ; accepter le contact et saluer.',
-   e: [['regles', 6], ['chat4', 7]],
+   e: [['regles', 6],
+    ['chat4', 7]],
    c: [['tortue', 15, '', 'Je respecte toutes les règles pendant les reprises.', 'La tortue peut se déplacer à 4 pattes.'],
     ['chiffonniers', 16, '', 'Je garde mon foulard plus de 30 s.', 'Deux foulards chacun.'],
     ['crocodile', 15, '', 'Je touche les deux épaules au moins une fois.', 'Toucher une seule épaule pour les débutants.']],
-   x: [['coffre', 15, '', 'Je garde le ballon 20 s.', '']],
+   x: [['coffre', 15, '', 'Je garde le ballon 20 s.']],
    r: [['salut', 7]]},
   {t: 'Pousser, tirer : sortir l\'autre de la zone', o: 'Garder son équilibre et faire sortir l\'adversaire d\'une zone en poussant ou en tirant avec tout le corps.',
-   e: [['regles', 4, 'Un élève redit les règles et montre le « stop ».'], ['coqs', 9]],
+   e: [['genoux', 4],
+    ['coqs', 9]],
    c: [['sumo', 16, '', 'Je fais sortir mon adversaire au moins une fois.', 'Zone plus petite.'],
-    ['roitapis', 15, '', 'Je reste sur le tapis jusqu\'à la fin d\'une reprise.', ''],
+    ['roitapis', 15, '', 'Je reste sur le tapis jusqu\'à la fin d\'une reprise.'],
     ['planche', 15, '', 'Je reste gainé et je résiste.', 'La planche peut ramper.']],
-   x: [['tire', 15, '', 'Je gagne au moins une manche.', '']],
-   r: [['salut', 7, 'Qu\'est-ce qui aide à garder l\'équilibre ? (jambes fléchies, pieds écartés, centre bas).']]},
+   x: [['tire', 15, '', 'Je gagne au moins une manche.']],
+   r: [['meteo', 7, 'Qu\'est-ce qui aide à garder l\'équilibre ? (jambes écartées, genoux fléchis)']]},
   {t: 'Déséquilibrer et renverser au sol', o: 'Renverser un adversaire à 4 pattes sur le dos en le faisant basculer, sans le soulever.',
-   e: [['chutes', 7], ['coqs', 6]],
+   e: [['chutes', 7],
+    ['lions', 6]],
    c: [['renverse', 16, '', 'Je réussis {4|3} renversements sur 5.', 'Le partenaire résiste un peu.'],
-    ['tortue', 15, 'On utilise les renversements appris.', 'Je retourne la tortue en moins de 20 s.', ''],
-    ['tresor', 15, '', 'Je prends le trésor au moins une fois.', '']],
-   x: [['roitapis', 15, '', 'Je reste sur le tapis.', '']],
-   r: [['salut', 7, 'Rappel : on ne soulève jamais l\'autre.']]},
+    ['Les renversements en jeu', 15],
+    ['tresor', 15, '', 'Je prends le trésor au moins une fois.']],
+   x: [['equipes', 15]],
+   r: [['respire', 7, 'Rappel : on ne soulève jamais l\'autre.']]},
   {t: 'Immobiliser et se dégager', o: 'Maintenir un adversaire sur le dos 5 secondes (immobilisation) et savoir se dégager.',
-   e: [['chutes', 6], ['tortue', 7, 'Rappel en 3 reprises de 20 s.']],
-   c: [['immo', 16, '', 'Je tiens l\'immobilisation 5 s.', ''],
+   e: [['dos', 6],
+    ['crabes', 7]],
+   c: [['immo', 16, '', 'Je tiens l\'immobilisation 5 s.'],
     ['degage', 15, '', 'Je me dégage au moins une fois sur trois.', 'L\'immobilisateur ne serre qu\'à moitié au début.'],
-    ['enchaine', 15, '', 'J\'enchaîne renversement et immobilisation.', '']],
-   x: [['coffre', 15, 'Au sol.', 'Je garde le ballon 20 s.', '']],
-   r: [['salut', 7]]},
+    ['enchaine', 15, '', 'J\'enchaîne renversement et immobilisation.']],
+   x: [['envers', 15]],
+   r: [['mercis', 7]]},
   {t: 'Combats arbitrés', o: 'Lutter en respectant les règles et arbitrer un combat : départ, points, arrêt, vainqueur.',
-   e: [['coqs', 6], ['Les règles du combat', 7, 'Combat au sol, départ à genoux, 1 min 30 : sortie de la zone = 1 point à l\'autre, renversement = 1 point, immobilisation 5 s = 2 points. L\'arbitre dit « allez », « stop » et annonce le score avec les doigts.', '', '', 'explication', '']],
+   e: [['pousse', 6],
+    ['Les règles du combat', 7, 'Combat au sol, départ à genoux, 1 min 30 : sortie de la zone = 1 point à l\'autre, renversement = 1 point, immobilisation 5 s = 2 points. L\'arbitre dit « allez », « stop » et annonce le score avec les doigts.', '', '', 'explication']],
    c: [['poules', 22, '', 'Je marque des points dans chaque combat.', 'Combats de 1 min pour les débutants.'],
-    ['Le tribunal de l\'arbitre', 10, 'Chaque poule rejoue une situation difficile à arbitrer ; la classe vote la bonne décision avec la règle.', 'J\'explique une décision avec la règle.', '', 'explication', ''],
-    ['roitapis', 14, '', 'Je reste sur le tapis.', '']],
-   x: [['tresor', 15, '', 'Je prends le trésor.', '']],
-   r: [['salut', 7, 'Chacun dit une règle de sécurité qu\'il a appliquée.']]},
+    ['Le tribunal de l\'arbitre', 10, 'Chaque poule rejoue une situation difficile à arbitrer ; la classe vote la bonne décision avec la règle.', 'J\'explique une décision avec la règle.', '', 'explication'],
+    ['ronde', 14]],
+   x: [['ballonvole', 15]],
+   r: [['quiz', 7, 'Les phrases portent sur les règles de sécurité et d\'arbitrage.']]},
   {t: 'Évaluation : combattre et arbitrer', o: 'Montrer renversement, immobilisation, dégagement en combat et un arbitrage juste, en sécurité.',
    crit: [['Renversement (3 essais, partenaire qui résiste un peu)', 5, '5 : 3 réussis, sans soulever · 4 : 2 · 2 : 1 · 0 : aucun'], ['Immobilisation 5 s', 4, '4 : tenue 5 s, sans prise au cou · 2 : moins de 5 s · 0 : non réussie'], ['Dégagement (2 essais)', 3, '3 : se dégage 2 fois · 2 : 1 fois · 1 : tente en pont ou en se retournant'], ['Combat : engagement et stratégie', 4, '4 : attaque, enchaîne renversement et immobilisation · 2 : surtout en défense · 1 : peu actif'], ['Sécurité, salut et arbitrage', 4, '4 : règles toujours respectées, arbitre juste et clair · 2 : un rappel · 0 : règle de sécurité non respectée']],
-   e: [['chutes', 6], ['coqs', 7]],
+   e: [['gardes', 6],
+    ['chaussettes', 7]],
    c: [['Épreuve 1 : les gestes', 12, 'Par 3 : renversements, immobilisation, dégagements devant le prof.', '', '', 'tapis::sol', 'g3'],
     ['Épreuve 2 : combats arbitrés', 26, 'Poules de gabarit proche ; chacun arbitre au moins un combat.', '', '', 'tapis', 'g4']],
-   r: [['salut', 6]]}
+   r: [['parole', 6]]}
 ]};
-PREPA_JEUX({id: 'lutte', sport: 'Lutte', divers: true,
+PREPA_JEUX({id: 'lutte',
+sport: 'Lutte',
+divers: true,
 mat: [['tapis', 0.5, 'tapis'], ['foulard', 1], ['ballon en mousse', 6, 'mousse'], ['coupelle', 20, 'plots'], ['chronomètre', 2], ['fiche d\'arbitrage et crayon', 0.25]],
 sal: {
   tk: {zone: 'la zone de tapis'},
@@ -75,9 +83,28 @@ J: {
   degage: {n: 'L\'évasion', k: 'opp', s: 'tapis::sol', f: 'p', d: 'A immobilise B ; B a 15 s pour s\'évader en pont (pousser sur les pieds, rouler sur l\'épaule) ou en se retournant sur le ventre. Évasion réussie = 1 point. On inverse.'},
   enchaine: {n: 'Renverser puis immobiliser', k: 'opp', s: 'tapis', f: 'p', d: 'Départ à 4 pattes / à genoux : renverser = 1 point, renverser puis immobiliser 5 s = 2 points. Reprises de 45 s, on change de partenaire.'},
   poules: {n: 'Les combats par poules', k: 'opp', s: 'tapis', f: 'g4', d: 'Poules de 4 de gabarit proche par tapis : chacun lutte contre les 3 autres (1 min 30) ; ceux qui ne luttent pas arbitrent et tiennent la fiche. On se salue avant et après chaque combat.'},
-  salut: {n: 'Le salut et le dos qui respire', k: 'fp', s: 'etirements', d: 'Salut du partenaire. Étirements du dos (position de l\'enfant, chat-vache), des épaules et de la nuque, doucement. Un élève redit les règles d\'or ; chacun nomme un partenaire respectueux.'}
+  salut: {n: 'Le salut et le dos qui respire', k: 'fp', s: 'etirements', d: 'Salut du partenaire. Étirements du dos (position de l\'enfant, chat-vache), des épaules et de la nuque, doucement. Un élève redit les règles d\'or ; chacun nomme un partenaire respectueux.'},
+  genoux: {n: 'Touche-genoux', k: 'opp', s: 'tapis::cercle', f: 'p', d: 'Par deux, debout, en garde (pieds écartés, genoux fléchis) : chacun essaie de toucher les genoux de l\'autre avec la main, en protégeant les siens par le déplacement et les mains. 1 point par touche, manches de 30 s, puis nouveau partenaire. Interdit de toucher ailleurs.'},
+  lions: {n: 'Les lions et les gazelles', k: 'opp', s: 'tapis::sol', d: 'Sur {zone}, tout le monde à 4 pattes. Les gazelles traversent d\'un bord à l\'autre ; {n/8 lion} au milieu les attrapent en les retournant sur le dos (sans soulever). Une gazelle retournée devient lion. Les dernières gazelles gagnent.'},
+  dos: {n: 'Dos à dos', k: 'coop', s: 'tapis::sol', f: 'p', d: 'Par deux, assis dos à dos, bras croisés : on se relève ensemble en poussant dos contre dos, puis on se rassoit. Puis à genoux : on pousse dos contre dos pour faire avancer l\'autre jusqu\'au bord du tapis (sans se retourner). On change de partenaire à chaque manche.'},
+  crabes: {n: 'Le chat crabe', k: 'opp', s: 'tapis::sol', d: 'Sur {zone}, tout le monde en crabe (mains et pieds au sol, ventre en haut). {n/8 chat} touchent les pieds des autres avec la main. Touché = on devient chat aussi. On change la position toutes les manches : en ours, en phoque.'},
+  pousse: {n: 'Le pousse-mains', k: 'opp', s: 'tapis::cercle', f: 'p', d: 'Par deux, debout face à face, pieds joints, à 50 cm : on se pousse seulement par les paumes, ou on esquive. Celui qui bouge un pied perd le point. Puis à genoux, puis sur un pied. Nouveau partenaire toutes les 3 manches.'},
+  gardes: {n: 'Les gardes du lutteur', k: 'coop', s: 'tapis::sol', d: 'On se déplace sur les tapis ; au signal, on prend la position annoncée : garde debout, à genoux, tortue (en boule à 4 pattes), à plat ventre gainé, pont. Le prof (puis un élève) pousse doucement : qui tient sa position sans bouger ? Puis on enchaîne les positions le plus vite possible.'},
+  chaussettes: {n: 'La guerre des chaussettes', k: 'opp', s: 'tapis::sol', d: 'Sur {zone}, chaussettes à moitié enlevées, tout le monde à 4 pattes : on essaie de retirer les chaussettes des autres en protégeant les siennes. On ne tire que sur la chaussette, jamais sur la jambe. Celui qui n\'en a plus continue à attraper. Qui garde une chaussette jusqu\'au bout ?'},
+  'Les renversements en jeu': {n: 'Les renversements en jeu', k: 'opp', s: 'tapis::sol', f: 'p', d: 'Retourner la tortue, mais avec les renversements appris : retourner avec un des deux renversements montrés = 2 points, autrement = 1 point. 20 s par essai, 3 essais, puis on inverse et on change de partenaire.'},
+  equipes: {n: 'Le roi du tapis par équipes', k: 'opp', s: 'tapis', f: 'g4', d: 'Par 4 sur un tapis, 2 contre 2, à genoux : chaque équipe essaie de faire sortir les deux adversaires du tapis en poussant ou en tirant (jamais par la tête). Une équipe dont les deux joueurs sont sortis perd la manche. Manches de 45 s ; on change d\'équipier.'},
+  envers: {n: 'La tortue à l\'envers', k: 'opp', s: 'tapis::sol', f: 'p', d: 'A est couché sur le dos ; au signal, il doit se retourner pour se mettre à 4 pattes en 20 s. B, à côté de lui, l\'en empêche en poussant ou en le retenant par le buste (sans s\'allonger dessus, jamais par la tête). Réussi = 1 point pour A. On inverse.'},
+  ronde: {n: 'La ronde des lutteurs', k: 'opp', s: 'tapis', f: 'g4', d: 'Combats courts de 30 s au sol, départ à genoux. Au sifflet, on salue et on tourne : chacun change d\'adversaire sur son tapis (de gabarit proche). Renverser = 1 point, immobiliser 5 s = 2 points. Chacun fait le compte de ses points sur 6 combats.'},
+  ballonvole: {n: 'Le ballon volé', k: 'opp', s: 'tapis', f: 'g3', d: 'Par 3 : deux lutteurs à genoux de part et d\'autre d\'un ballon posé au centre du tapis. Au signal, chacun essaie de prendre le ballon et de le poser au bord du tapis derrière l\'autre. Le 3e arbitre et compte les points ; on tourne après chaque manche de 30 s.'}
 },
-an: {1: A, 2: A, 3: A, 4: A, 5: A, 6: A}});
+an: {
+1: A,
+2: A,
+3: A,
+4: A,
+5: A,
+6: A
+}});
 })();
 
 /* ===== Schémas de chaque jeu (zone de tapis vue de dessus, ou lutteurs dessinés de profil) ===== */
@@ -116,6 +143,27 @@ an: {1: A, 2: A, 3: A, 4: A, 5: A, 6: A}});
     poules: g => tapis4(g, (x, y, i) => { g.A(x - 12, y, '', {c: EQ[i]}).A(x + 12, y, '', {c: EQ[i]}).J(x, y - 32, 'A').A(x + 55, y + 25, '', {c: '#9aa3a0'}).sheet(x + 75, y + 25); }).n(1, 'poules de 4 de gabarit proche : chacun lutte contre les 3 autres').n(2, 'ceux qui ne luttent pas arbitrent et tiennent la fiche ; salut avant et après'),
     'Le tribunal de l\'arbitre': g => { zone(g); g.A(180, 110).B(220, 110).J(200, 70, 'A'); g.row('g', 8, 60, 240, 340, 240); return g.tag(200, 160, 'la classe vote la bonne décision', {s: 10}).n(1, 'chaque poule rejoue une situation difficile à arbitrer'); },
     'Épreuve 1 : les gestes': g => { prof(g); g.fig(110, 205, 'table', {s: 1.4}).fig(140, 205, 'genou', {s: 1.4, t: 'b', r: 1}).fig(270, 205, 'allonge', {s: 1.4, r: 1}).fig(275, 193, 'planche', {s: 1.1, t: 'b'}).P(360, 150).sheet(360, 180); return g.n(1, 'par 3 : renversements, immobilisation, dégagements devant le prof'); },
-    'Épreuve 2 : combats arbitrés': g => tapis4(g, (x, y, i) => g.A(x - 12, y, '', {c: EQ[i]}).A(x + 12, y, '', {c: EQ[i]}).J(x, y - 32, 'A')).n(1, 'poules de gabarit proche ; chacun arbitre au moins un combat')
+    'Épreuve 2 : combats arbitrés': g => tapis4(g, (x, y, i) => g.A(x - 12, y, '', {c: EQ[i]}).A(x + 12, y, '', {c: EQ[i]}).J(x, y - 32, 'A')).n(1, 'poules de gabarit proche ; chacun arbitre au moins un combat'),
+    genoux: g => { prof(g); g.fig(150, 205, 'pareur', {s: 1.7}).fig(250, 205, 'pareur', {s: 1.7, t: 'b', r: 1}).arrow('run', 175, 160, 230, 185, 10);
+      return g.tag(200, 50, 'toucher les genoux de l\'autre · protéger les siens', {s: 10}).n(1, 'en garde, pieds écartés, genoux fléchis : 1 point par touche').n(2, 'manches de 30 s, puis nouveau partenaire'); },
+    lions: g => { zone(g); [50, 90, 130, 170, 210].forEach(y => g.A(45, y)); g.X(180, 90, 'L').X(220, 160, 'L'); g.arrow('run', 58, 90, 350, 80, -10).arrow('run', 58, 170, 350, 180, 10);
+      return g.tag(200, 238, 'à 4 pattes · retourné sur le dos = lion', {s: 9}).n(1, 'les gazelles traversent ; les lions les retournent sur le dos, sans soulever').n(2, 'les dernières gazelles gagnent'); },
+    dos: g => { prof(g); g.fig(120, 205, 'assis', {s: 1.6, r: 1}).fig(140, 205, 'assis', {s: 1.6, t: 'b'}).arrow('run', 130, 120, 130, 90, 0); g.fig(260, 205, 'genou', {s: 1.6, r: 1}).fig(285, 205, 'genou', {s: 1.6, t: 'b'}).arrow('run', 300, 140, 350, 140, 0);
+      return g.tag(200, 50, 'se relever ensemble · puis pousser dos contre dos', {s: 10}).n(1, 'assis dos à dos, bras croisés : on se relève et on se rassoit ensemble').n(2, 'à genoux : pousser l\'autre jusqu\'au bord du tapis'); },
+    crabes: g => { zone(g); g.scatter('a', 9, 50, 50, 350, 200, {seed: 9}); g.X(190, 120).run(202, 120, 235, 140, 0).X(300, 70);
+      return g.tag(200, 238, 'en crabe · puis en ours · puis en phoque', {s: 9}).n(1, 'les chats touchent les pieds des autres ; touché = chat aussi'); },
+    pousse: g => { prof(g); g.fig(180, 205, 'pareur', {s: 1.7}).fig(220, 205, 'pareur', {s: 1.7, t: 'b', r: 1});
+      return g.tag(200, 50, 'pieds joints · seulement par les paumes', {s: 10}).n(1, 'on pousse ou on esquive : celui qui bouge un pied perd le point').n(2, 'puis à genoux, puis sur un pied'); },
+    gardes: g => { prof(g); g.fig(70, 205, 'pareur', {s: 1.3}).label(70, 225, 'garde', {s: 9}).fig(150, 205, 'genou', {s: 1.3}).label(150, 225, 'à genoux', {s: 9}).fig(235, 205, 'table', {s: 1.3}).label(235, 225, 'tortue', {s: 9}).fig(330, 205, 'planche', {s: 1.3}).label(330, 225, 'planche', {s: 9});
+      return g.tag(200, 60, 'au signal, la position annoncée ; le prof pousse doucement : qui tient ?', {s: 9}).n(1, 'on se déplace, puis on prend la position annoncée').n(2, 'puis on enchaîne les positions le plus vite possible'); },
+    chaussettes: g => { zone(g); g.scatter('a', 9, 50, 50, 350, 200, {seed: 13}).each((x, y) => g.raw(`<path d="M${x - 10} ${y + 8}l-6 4" stroke="#fff" stroke-width="5" stroke-linecap="round"/>`, 'top'));
+      return g.tag(200, 238, 'à 4 pattes · on tire la chaussette, jamais la jambe', {s: 9}).n(1, 'on retire les chaussettes des autres en protégeant les siennes').n(2, 'sans chaussettes, on continue à jouer'); },
+    'Les renversements en jeu': g => { prof(g); g.fig(160, 205, 'table', {s: 1.8}).fig(250, 205, 'genou', {s: 1.8, t: 'b', r: 1}).rot(200, 150, 160, 120, -20);
+      return g.tag(200, 50, 'renversement appris = 2 points · autrement = 1 point', {s: 10}).n(1, 'retourner la tortue en 20 s avec un des renversements montrés').n(2, '3 essais, on inverse, nouveau partenaire'); },
+    equipes: g => tapis4(g, (x, y, i) => { g.A(x - 25, y - 15).A(x - 25, y + 15).B(x + 25, y - 15).B(x + 25, y + 15).arrow('run', x - 12, y, x + 12, y, 0); }).n(1, '2 contre 2 à genoux : faire sortir les deux adversaires du tapis').n(2, 'manches de 45 s ; on change d\'équipier'),
+    envers: g => { prof(g); g.fig(170, 205, 'jambes', {s: 1.6}).fig(250, 205, 'genou', {s: 1.6, t: 'b', r: 1}).rot(150, 140, 190, 120, -20);
+      return g.tag(200, 50, '20 s pour se mettre à 4 pattes', {s: 10}).n(1, 'A sur le dos se retourne ; B l\'en empêche par le buste, sans s\'allonger dessus').n(2, 'jamais par la tête ; on inverse'); },
+    ronde: g => tapis4(g, (x, y) => { g.A(x - 18, y).B(x + 18, y).ring('g', 2, x, y, 60, 30); g.arrow('rot', x + 40, y - 30, x + 60, y, -10); }).n(1, 'combats de 30 s au sol, départ à genoux').n(2, 'au sifflet : salut, puis on change d\'adversaire ; on compte ses points sur 6 combats'),
+    ballonvole: g => tapis4(g, (x, y) => { g.A(x - 35, y).B(x + 35, y).ball(x, y, 'gros').J(x, y - 34, 'a'); }).n(1, 'à genoux, chacun essaie de prendre le ballon et de le poser au bord derrière l\'autre').n(2, 'le 3e arbitre ; on tourne après chaque manche de 30 s')
   };
 })();

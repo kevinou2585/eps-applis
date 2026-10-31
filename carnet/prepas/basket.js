@@ -605,8 +605,6 @@ an: {
     .label(200, 125, 'ressortir derrière l\'arc', {s: 9}).tag(240, 238, 'panier = 1 · tir de loin = 2 · match à 21', {s: 9.5}).n(1, 'un seul panier, on ressort derrière l\'arc après chaque panier ou récupération').n(2, 'les joueurs annoncent eux-mêmes leurs fautes'),
   massage: g => { g.hall(); [[100, 75], [300, 75], [100, 180], [300, 180]].forEach(([x, y], i) => g.raw(`<g transform="translate(${x} ${y})"><circle cx="-34" cy="0" r="8" fill="#e8590c"/><rect x="-26" y="-7" width="48" height="14" rx="7" fill="#e8590c"/><path d="M22 -4H44M22 4H44" stroke="#e8590c" stroke-width="5" stroke-linecap="round"/></g>`, 'mid').A(x, y - 26).ball(x - 6, y - 2).arrow('run', x - 20, y - 12, x + 20, y - 12, 0, i ? null : 1));
     return g.label(200, 130, 'le ballon roule doucement sur le dos', {s: 10, b: 1}).n(1, 'l\'un est allongé, l\'autre fait rouler le ballon en racontant son meilleur moment').n(2, '1 min 30 puis on change ; étirements des épaules et des poignets'); },
-  arbitre: g => { g.hall().ring('a', 9, 200, 160, 150, 70, {a0: Math.PI * 1.1}); g.P(200, 70); return g.tag(200, 40, 'marcher ? reprise ? contact ?', {s: 10}).label(200, 175, 'la classe fait le geste de l\'arbitre', {s: 10, b: 1})
-      .n(1, 'le prof mime une faute, la classe fait le geste officiel').n(2, 'puis l\'inverse : le prof fait le geste, un élève mime la faute'); },
   doigt: g => g.hall().scatter('a', 10, 40, 40, 360, 215, {seed: 13}).each((x, y) => g.raw(`<path d="M${x + 10} ${y - 4}v-14" stroke="#1f63d6" stroke-width="2.5" stroke-linecap="round"/>`, 'top').ball(x + 10, y - 22).raw(`<path d="M${x + 2} ${y - 22}a8 4 0 1 0 16 0" fill="none" stroke="#7a3a10" stroke-width="1" stroke-dasharray="2 2"/>`, 'top'))
     .n(1, 'faire tourner le ballon sur un doigt, puis autour de la taille les yeux fermés').n(2, 'étirements des poignets, des épaules et des mollets'),
 
@@ -662,5 +660,8 @@ an: {
     return g.label(200, 132, 'le rond regarde le ballon, dos à son adversaire', {s: 10, b: 1}).n(1, 'le rond garde l\'autre derrière lui 3 s, fesses en arrière, bras écartés, sans pousser').n(2, 'réussi = il ramasse le ballon : 1 point ; 5 essais puis on inverse'); },
   couleurs: g => g.court().J(36, 236, '').raw('<rect x="46" y="226" width="10" height="16" rx="2" fill="#e11d48"/>', 'top').label(110, 238, 'rouge · bleu · jaune', {s: 9})
     .scatter('a', 4, 210, 50, 340, 200, {seed: 3}).scatter('b', 4, 220, 60, 350, 210, {seed: 7}).ball(g.last[0][0] + 8, g.last[0][1] + 7)
-    .n(1, 'rouge = tir en moins de 5 s · bleu = 3 passes avant de tirer · jaune = pick and roll').n(2, 'code respecté + panier = 2 points ; panier hors code = 1')
+    .n(1, 'rouge = tir en moins de 5 s · bleu = 3 passes avant de tirer · jaune = pick and roll').n(2, 'code respecté + panier = 2 points ; panier hors code = 1'),
+  arbitre: g => { g.hall(); for (let i = 0; i < 9; i++){ const a = (.1 + i * .8 / 8) * Math.PI; g.A(200 + 165 * Math.cos(a), 62 + 150 * Math.sin(a)); } g.P(200, 70);
+    return g.tag(200, 36, 'marcher ? reprise de dribble ? contact ?', {s: 10}).label(200, 130, 'la classe fait le geste de l\'arbitre', {s: 10, b: 1})
+      .n(1, 'le prof mime une faute, la classe fait le geste officiel').n(2, 'puis l\'inverse : le prof fait le geste, un élève mime la faute'); }
 };

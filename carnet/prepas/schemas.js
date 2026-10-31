@@ -93,8 +93,7 @@ function G(sp){
   // balle aux prisonniers : 2 camps + une prison derrière chaque camp adverse
   g.prisonCourt = (o = {}) => {
     g.floor(); g.raw(`<rect x="62" y="25" width="276" height="200" fill="#f4efe4" stroke="${CL}" stroke-width="2.5"/>`, 'bg').line('M200 25V225', 2.5, CL);
-    g.zone(14, 25, 44, 200, '', 'red').zone(342, 25, 44, 200, '', 'red');
-    g.label(36, 20, 'prison B', {s: 10, b: 1}).label(364, 20, 'prison A', {s: 10, b: 1});
+    if (!o.noPrison) g.zone(14, 25, 44, 200, '', 'red').zone(342, 25, 44, 200, '', 'red').label(36, 20, 'prison B', {s: 10, b: 1}).label(364, 20, 'prison A', {s: 10, b: 1});
     if (o.camps !== false) g.label(131, 240, 'camp A', {s: 11, b: 1, c: COL.a}).label(269, 240, 'camp B', {s: 11, b: 1, c: COL.b});
     return g;
   };

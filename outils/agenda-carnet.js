@@ -463,7 +463,7 @@ function agJournal(ls){
   if (!ls.length) return '';
   const w = ls.filter(l => l.sport || l.note).length;
   return `<details class="card ag-jr"><summary><b>📅 Journal des leçons</b><span class="small muted">${ls.length} leçon${ls.length > 1 ? 's' : ''}${w ? ` · ${w} avec sport ou note` : ''}</span></summary>
-    ${[...ls].reverse().map(l => `<div class="evt"><span class="d">${esc(fmtD(l.date))}${l.h ? '<br>' + esc(slotLabel(l)) : ''}</span><span class="l">${l.sport ? `<b>${esc(l.sport)}</b>` : '<span class="muted">Sport non noté</span>'}${l.type === 'piscine' ? ' <span class="small muted">· piscine</span>' : ''}${l.note ? `<br><span class="small">${esc(l.note)}</span>` : ''}${l.prog && l.prog.length ? `<br><span class="small ag-jp">📚 ${esc(l.prog.join(' · '))}</span>` : ''}${l.prepa ? `<br><span class="small ag-jp">📋 ${esc(prepaCourt(l.prepa))}</span>` : ''}</span></div>`).join('')}</details>`;
+    ${[...ls].reverse().map(l => `<div class="evt"><span class="d">${esc(fmtD(l.date))}${l.h ? '<br>' + esc(slotLabel(l)) : ''}</span><span class="l">${l.sport ? `<b>${esc(l.sport)}${l.dbl && l.dbl.s2 ? ' + ' + esc(l.dbl.s2) : ''}</b>` : '<span class="muted">Sport non noté</span>'}${l.type === 'piscine' ? ' <span class="small muted">· piscine</span>' : ''}${l.note ? `<br><span class="small">${esc(l.note)}</span>` : ''}${l.prog && l.prog.length ? `<br><span class="small ag-jp">📚 ${esc(l.prog.join(' · '))}</span>` : ''}${l.prepa ? `<br><span class="small ag-jp">📋 ${esc(prepaCourt(l.prepa))}</span>` : ''}</span></div>`).join('')}</details>`;
 }
 
 /* --- Réglages : sports ajoutés --- */

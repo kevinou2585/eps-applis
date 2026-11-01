@@ -4464,23 +4464,27 @@ let introAvant = null, introEnCours = false;
 // Kevin (29/10) : 5 places tenues par le script (fichier battle/google/Places.gs) : 0 Dieu, 1 Empereur, 2 Roi, 3 Bourreau, 4 Garde.
 // Battre un boss = prendre sa place, l'ancien occupant descend d'un cran (cascade). Plus de scores : chaque place a son palier fixe.
 // Le Dieu se prend seulement en battant AUSSI son record (seul score qu'on garde). L'Empereur et le Dieu restent cachés de l'accueil.
-// Kevin (29/10) : garde 300 000, bourreau / sorcière 500 000, roi 600 000, empereur 700 000, dieu / déesse 900 000
-const BOSS_DEPART = [600000, 500000, 300000], ULTIME_DEPART = 700000, DIEU_DEPART = 900000;
+// Kevin (01/11) : garde 300 000, bourreau / sorcière 500 000, roi 650 000, empereur 800 000, dieu / déesse 1 000 000 (+ la montée de chaque place)
+const BOSS_DEPART = [650000, 500000, 300000], ULTIME_DEPART = 800000, DIEU_DEPART = 1000000;
 const PALIERS = [DIEU_DEPART, ULTIME_DEPART, ...BOSS_DEPART];
+// Kevin (01/11) : chaque fois qu'une place change de main, son palier monte de MONTEE points (retenu par le script) : les boss montent doucement
+const MONTEE = 100;
+const palier = i => PALIERS[i] + ((places.bonus && places.bonus[i]) || 0);
 const placeVide = () => ({ jeu: JEU, p: [null, null, null, null, null], record: 0, t: 0 });
 let places = (() => { const c = lsGet('battle-places', null); return c && c.jeu === JEU && Array.isArray(c.p) && c.p.length === 5 ? c : placeVide(); })();
 const memeNom = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 function garderPlaces(r) {
   if (!r || !r.ok || !Array.isArray(r.places)) return;
   const p = [0, 1, 2, 3, 4].map(i => { const x = r.places[i]; return x && String(x.nom || '').trim() ? { nom: String(x.nom).trim(), genre: x.genre === 'F' || x.genre === 'H' ? x.genre : '', photo: photoOk(x.photo) ? x.photo : '' } : null; });
-  places = { jeu: JEU, p, record: +r.record || 0, t: Date.now() }; lsSet('battle-places', places);
+  const bonus = [0, 1, 2, 3, 4].map(i => Math.max(0, Math.floor(+(Array.isArray(r.bonus) ? r.bonus[i] : 0) || 0))); // palier qui monte (script du 01/11 ; ancien script : 0)
+  places = { jeu: JEU, p, record: +r.record || 0, bonus, t: Date.now() }; lsSet('battle-places', places);
 }
 function prendrePlace(i, moi) { // même règle que le script (hors ligne : on se place soi-même) ; renvoie la place obtenue (-1 : rien ne bouge)
   const P = places.p.slice(); let place = i;
   if (i === 0) { if (score > places.record) places.record = Math.round(score); else place = P[0] && memeNom(P[0].nom, moi.nom) ? -1 : 1; }
   if (place >= 0) {
     if (P[place] && memeNom(P[place].nom, moi.nom)) { if (moi.photo) P[place] = Object.assign({}, P[place], { photo: moi.photo, genre: moi.genre || P[place].genre }); }
-    else { let libre = P.indexOf(null, place); if (libre < 0) libre = 4; for (let j = libre; j > place; j--) P[j] = P[j - 1]; P[place] = moi; }
+    else { let libre = P.indexOf(null, place); if (libre < 0) libre = 4; for (let j = libre; j > place; j--) P[j] = P[j - 1]; P[place] = moi; if (places.bonus) { places.bonus = places.bonus.slice(); places.bonus[place] += MONTEE; } }
   }
   places = Object.assign({}, places, { p: P }); lsSet('battle-places', places);
   return place;
@@ -4503,8 +4507,8 @@ async function chargerClassement() {
 }
 function bossDePlace(i) { // { rang (1 roi … 3 garde, 0 empereur, -1 dieu), nom, score = palier, genre, photo, defaut / inconnu si place libre }
   const p = places.p[i], rang = i - 1;
-  if (!p) return { rang, nom: '???', score: PALIERS[i], genre: i === 0 ? (lsGetTxt('battle-genre') === 'F' ? 'F' : 'H') : i === 1 ? 'H' : '', photo: '', defaut: true, inconnu: true };
-  return { rang, nom: p.nom, score: PALIERS[i], genre: i < 2 ? (p.genre === 'F' ? 'F' : 'H') : p.genre, photo: photoOk(p.photo) ? p.photo : '' };
+  if (!p) return { rang, nom: '???', score: palier(i), genre: i === 0 ? (lsGetTxt('battle-genre') === 'F' ? 'F' : 'H') : i === 1 ? 'H' : '', photo: '', defaut: true, inconnu: true };
+  return { rang, nom: p.nom, score: palier(i), genre: i < 2 ? (p.genre === 'F' ? 'F' : 'H') : p.genre, photo: photoOk(p.photo) ? p.photo : '' };
 }
 function listeBoss() { // les 3 boss à battre (roi, bourreau, garde) : { rang, nom, score, genre ('H' / 'F' / '' si inconnu), photo }
   if (introAvant) return introAvant; // pendant l'intronisation : l'ancien classement reste affiché

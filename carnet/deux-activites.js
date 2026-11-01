@@ -144,6 +144,7 @@
 .dbl-ck input{width:20px; height:20px; flex:none; margin:1px 0 0; accent-color:var(--accent)}
 .dbl-ck:has(input:checked){border-style:solid; border-color:var(--accent); background:var(--accent-soft)}
 .dbl-b{display:grid; gap:8px}
+.dbl-b[hidden], #plc-s2l[hidden]{display:none !important}
 .dbl-h{display:grid; grid-template-columns:76px 1fr; gap:6px 8px; align-items:center}
 .dbl-h > b{grid-row:span 2; align-self:start; padding-top:10px}
 .dbl-s1{font-weight:600; padding:4px 0}

@@ -283,7 +283,7 @@ function planWeekHTML(c, w){
     return `<div class="evt pl-evt"><span class="d">${esc(fmtD(x.date))}${x.h ? '<br>' + esc(x.h) : ''}</span><span class="l">${x.sport ? `<b>${esc(x.sport)}</b>` : '<span class="muted">Sport non noté</span>'}${x.pp ? `<br><span class="small">📋 ${esc(prepaCourt(x.pp))}</span>` : x.note ? `<br><span class="small">${esc(x.note)}</span>` : ''}</span>
       ${it ? `<button class="btn" type="button" data-plo-open="${x.date}|${it.id}">${x.pp ? 'Voir la prépa' : '＋ Prépa'}</button>` : ''}</div>`; }).join('');
 }
-const agPlanned = (date, it) => it.cls.map(id => planOf(id, date)).find(Boolean) || '';
+const agPlanned = (date, it) => it.cls.map(id => planOf(id, date, it.h)).find(Boolean) || '';
 /* --- Feuille d'un cours (date précise) --- */
 function openAgSlot(date, id){
   const d = wdOf(date), it = agItems(d).find(x => x.id === id); if (!it){ render(); return; }
@@ -1110,7 +1110,8 @@ window.prepaFeuille = () => {
    S.settings.planAn = {idClasse: {'AAAA-MM-JJ' (lundi): 'Basket-ball' | 'Congé'}}. Simple prévision : rien n'est imposé aux cours. */
 const PLAN_COL = ['#1f63d6', '#f06400', '#8a3ffc', '#0f8a5f', '#c2185b', '#00838f', '#7a5a00', '#5d4037', '#3949ab', '#b23c17', '#2e7d32', '#6a1b9a'];
 const planSet = () => S.settings.planAn && typeof S.settings.planAn === 'object' ? S.settings.planAn : {};
-const planOf = (cid, iso) => (planSet()[cid] || {})[mondayOf(iso)] || '';
+/* planJ = {idClasse: {'AAAA-MM-JJ|H1': sport}} : prévision d'un cours précis (le mardi H1-H2), prioritaire sur la semaine */
+const planOf = (cid, iso, h) => { const j = ((S.settings.planJ || {})[cid] || {}), k = iso + '|' + h; return h && k in j ? j[k] : (planSet()[cid] || {})[mondayOf(iso)] || ''; };
 const PLAN_ABR = [[/basket/i, 'Basket'], [/volley/i, 'Volley'], [/hand/i, 'Hand'], [/natation/i, 'Nat.'], [/endurance/i, 'Endur.'], [/badminton/i, 'Bad'], [/acro/i, 'Acro'], [/prisonnier/i, 'Prison'], [/athl/i, 'Athlé'], [/foot/i, 'Foot'], [/hiver/i, 'Hiver'], [/gym/i, 'Gym'], [/tennis de table/i, 'Ping'], [/unihoc|floorball/i, 'Unihoc'], [/évaluation/i, 'Éval']];
 const planAbbr = s => s === 'Congé' ? 'congé' : (PLAN_ABR.find(([re]) => re.test(s)) || [0, s.replace(/[-'’ ]/g, ' ').split(' ').filter(Boolean)[0].slice(0, 6)])[1];
 function planWeeks(iso){

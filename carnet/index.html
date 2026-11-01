@@ -4723,7 +4723,7 @@ function openComments(c, vp){
     let st, ph = {};
     if (cleArch){ const o = JSON.parse(get(cleArch)); st = o.state; ph = o.photos || {}; }
     else {
-      const keep = {...S.settings}; delete keep.tt; delete keep.ag;
+      const keep = {...S.settings}; delete keep.tt; delete keep.ag; delete keep.archives; delete keep.planAn; delete keep.planAn2;
       st = {v: 1, ts: Date.now(), cur: null, settings: {...keep, tt: []}, classes: [], deleted: []};
     }
     try {
@@ -4929,6 +4929,7 @@ function openComments(c, vp){
 <script src="travail.js"></script>
 <script src="planning.js"></script>
 <script src="deux-activites.js"></script>
+<script src="archives.js"></script>
 <script>
 // Mise a jour automatique : on verifie a chaque ouverture et a chaque retour dans l'appli,
 // et on recharge une fois quand la nouvelle version est prete (les donnees restent sur le telephone).

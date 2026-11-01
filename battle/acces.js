@@ -20,7 +20,7 @@
   const ok = !!(lire('eps-code') && lire('eps-script')) || lire('battle-acces') === '1';
   // Verrou provisoire (kevin, 27/10) : l'appli installée demande aussi un code jusqu'à dimanche.
   // Les collègues venus par le lien (battle-acces) ne sont pas concernés. Pour déverrouiller : FERME = false.
-  const FERME = true, EMPREINTE = '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5';
+  const FERME = false, EMPREINTE = '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5';
   if (ok && FERME && lire('battle-acces') !== '1' && lire('battle-ouvert') !== EMPREINTE) {
     const st = document.createElement('style'); st.id = 'ferme-cache';
     st.textContent = 'body>*:not(#ferme){display:none!important}#ferme{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:#101a36;font:16px system-ui,-apple-system,sans-serif;z-index:2147483647}'

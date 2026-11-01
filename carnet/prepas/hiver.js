@@ -3,6 +3,14 @@
    Une leçon = un jeu complet : une mise en train qui prépare le jeu, le jeu en 3 étapes (découverte, règle complète, variante),
    une étape de plus en 2 h, un retour au calme. Pour toutes les années : on monte les règles avec l'âge.
    Sécurité : ballons en mousse, on touche sous les épaules, on lâche au « stop ». */
+/* Petite salle (kevin, 1er nov. 2026) : les jeux marqués ps sont rangés dans le volet « Petite salle » des préparations.
+   Pensés pour la salle 2 ; dans une autre salle, une note le rappelle. */
+var PREPA_PSAL = {
+  p: {m: 1, f: 1, ff: {}},
+  g: {note: "jeu pensé pour la petite salle : en Grande salle, on joue sur la moitié du terrain (ou deux parties en même temps), le matériel lourd est dans le local."},
+  b: {note: "jeu pensé pour la petite salle : au Brel, il manque les plinths, les steps, les espaliers et les gros tapis ; remplace-les (bancs, cônes) ou choisis un autre jeu."},
+  c: {note: "jeu pensé pour la petite salle (murs, engins) : dehors, il ne marche pas tel quel."}
+};
 PREPA_JEUX({id: 'hiver',
 sport: 'Sports divers',
 divers: true,
@@ -10,7 +18,7 @@ mat: [['chasuble (4 couleurs)', 1, 'chasubles'], ['cône', 12, 'cones'], ['coupe
 sal: {
   tk: {terrain: 'le terrain'},
   g: {m: 4, f: 2, tk: {terrain: 'le terrain de basket'}, note: 'grand espace : au-delà de 14 élèves, deux parties en même temps (une par moitié de salle).'},
-  p: {m: 2, f: 1, ff: {e4: 'e2'}, tk: {terrain: 'toute la salle'}, note: 'une seule partie dans toute la salle ; les gros tapis rangés contre les murs.', warn: 'Petite salle : jeux de course à vitesse réduite (on marche vite dans les jeux de poursuite si le groupe est grand).'},
+  p: {m: 2, f: 1, ff: {e4: 'e2'}, tk: {terrain: 'toute la salle'}, note: 'une seule partie dans toute la salle ; le matériel qui ne sert pas est rangé contre les murs.', warn: 'Petite salle : jeux de course à vitesse réduite (on marche vite dans les jeux de poursuite si le groupe est grand).'},
   b: {m: 2, f: 1, src: 'la Grande salle', tk: {terrain: 'le terrain de basket'}, note: 'une partie sur tout le terrain ; le matériel particulier est à apporter de la Grande salle.'},
   c: {m: 4, f: 2, tk: {terrain: 'le terrain de mini-foot'}, note: 'deux terrains : le mini-foot et la 2e zone tracée avec des coupelles. Tout le matériel est à emporter.', warn: 'Dehors : ballons en mousse lourds (le vent), pas de jeu au sol sur le dur.'}
 },
@@ -29,7 +37,15 @@ J: {
   molecules: {n: 'Les molécules', k: 'coop', s: 'libre', d: 'On court dans toute la salle. Le prof crie un nombre : on forme le plus vite possible un groupe de ce nombre en se tenant la main. Les joueurs en trop font un tour de salle en courant et reviennent. Puis le prof ajoute une consigne : « 3, assis ! », « 4, sur un pied ! ».'},
   ombre: {n: 'L\'ombre', k: 'coop', s: 'deux', f: 'p', d: 'Par deux, l\'un derrière l\'autre : le meneur court partout dans la salle et change souvent (accélère, s\'arrête, saute, se baisse, change de direction) ; son ombre fait exactement la même chose. Au signal, l\'ombre devient meneur.'},
   feux: {n: 'Les feux de signalisation', k: 'coop', s: 'libre', d: 'Tout le monde court dans la salle. Le prof montre une couleur : vert = on court, orange = on marche, rouge = on s\'arrête et on s\'accroupit, bleu = on change de direction, violet = on tape dans la main de 3 camarades. Le dernier à réagir fait 5 sauts.'},
-  chaine: {n: 'La chaîne', k: 'opp', s: 'chat', d: 'Un chat. Chaque joueur touché lui donne la main : la chaîne s\'allonge et seuls les deux bouts peuvent toucher. Quand la chaîne a 4 joueurs, elle se coupe en deux chaînes de 2. Le dernier libre gagne.'}
+  chaine: {n: 'La chaîne', k: 'opp', s: 'chat', d: 'Un chat. Chaque joueur touché lui donne la main : la chaîne s\'allonge et seuls les deux bouts peuvent toucher. Quand la chaîne a 4 joueurs, elle se coupe en deux chaînes de 2. Le dernier libre gagne.'},
+  /* --- Petite salle (1er nov. 2026) : mises en train et retour au calme pour une petite salle et un grand groupe --- */
+  chef: {n: "Le chef d'orchestre", k: "coop", s: "cercle", d: "Tout le monde en cercle. Un élève sort de la salle ; le prof désigne en silence un chef d'orchestre. Le chef fait des mouvements (talons-fesses, moulinets, sauts, montées de genoux) et le cercle le copie en même temps. Le détective revient au centre : il a 3 essais pour trouver le chef. Le chef change de mouvement toutes les 5 s sans se faire voir."},
+  stepflash: {n: "Le step-réflexe", k: "opp", s: "deux", f: "p", d: "Par deux, face à face, un step entre les deux et une coupelle posée sur le step. Au rythme de la musique, on monte et on descend du step chacun son tour (pied droit, pied gauche). Le prof annonce « genoux ! », « fesses ! », « épaules ! » (on touche la partie annoncée) puis « STEP ! » : le premier qui attrape la coupelle marque 1 point. 5 points = on change de partenaire."},
+  baudruche: {n: "Le ballon qui vole", k: "coop", s: "cercle", f: "g4", d: "Par groupes de 4, un ballon de baudruche par groupe. On le garde en l'air en le frappant chacun son tour (jamais 2 fois de suite le même joueur) et on compte à voix haute. Ballon au sol = on repart de zéro. Record du groupe en 1 min, puis 2 ballons par groupe, puis seulement avec la tête, les genoux et les pieds."},
+  genoux: {n: "Touche-genoux", k: "opp", s: "deux", f: "p", d: "Par deux, face à face, dans un espace de 2 m sur 2 m. On essaie de toucher les genoux de l'autre avec la main, tout en protégeant les siens (on recule, on esquive, on pare avec les mains). Chaque touche = 1 point, manches de 30 s. Après chaque manche, les gagnants tournent dans un sens et les perdants dans l'autre : nouvel adversaire."},
+  serpent: {n: "Les serpents", k: "opp", s: "chat", f: "g4", d: "Par groupes de 4 en file, les mains sur les épaules de celui de devant : c'est un serpent. Le dernier a un foulard (ou une chasuble) coincé dans le short. La tête du serpent essaie d'attraper le foulard d'un autre serpent sans que son propre serpent se casse. Foulard pris = 1 point, le foulard est rendu et le jeu continue. Toutes les minutes, la tête passe à la queue."},
+  ninja: {n: "Le ninja", k: "opp", s: "cercle", f: "g8", d: "Par groupes de 6 à 8 en cercle, en position de ninja. Chacun son tour, dans le sens du cercle, on fait UN seul geste rapide pour toucher la main d'un voisin ; le voisin visé peut faire un seul geste pour esquiver. Main touchée = on la met dans le dos ; deux mains touchées = on sort et on encourage. Le dernier ninja gagne. Puis on mélange les groupes : les gagnants ensemble."},
+  podium: {n: "Le podium", k: "fp", s: "etirements", d: "Étirements guidés en cercle (cuisses, mollets, épaules, dos). Puis la cérémonie : on annonce l'équipe gagnante du jour, qui monte sur le podium (3 steps). Chaque élève vote ensuite en secret, en levant la main, pour le meilleur arbitre et le joueur le plus fair-play : les deux élus montent aussi sur le podium sous les applaudissements."}
 },
 an: {
 0: {th: 'Sports divers : des sports et des jeux complets en une leçon, peu de matériel', comp: ['HSC1', 'HSC3', 'GSS1'], l: [
@@ -65,7 +81,7 @@ an: {
     ['Deux capitaines', 14, 'Deux capitaines par équipe (un dans chaque coin).', 'Je fais une passe décisive.', '', 'match:prisonnier:5c5', 'm5']],
    x: [['La revanche : la balle au capitaine', 15, 'Nouvelles équipes (ou nouveaux rôles), on rejoue pour la revanche. Chaque joueur doit toucher le ballon avant de marquer.', 'Toute mon équipe touche.']],
    r: [['meteo', 7]]},
-  {t: 'Gaga ball', tags: 'ballon en mousse · bancs', o: 'Frapper un ballon de la main pour toucher les jambes des adversaires, esquiver par des sauts.', mat2: [['ballon en mousse', 2, 'mousse'], ['banc (pour l\'arène)', 6, 'bancs']], sal: {c: {warn: 'Dehors : arène de coupelles (pas de bancs), on frappe seulement à la main.'}},
+  {t: 'Gaga ball', ps: 1, tags: 'ballon en mousse · bancs', o: 'Frapper un ballon de la main pour toucher les jambes des adversaires, esquiver par des sauts.', mat2: [['ballon en mousse', 2, 'mousse'], ['banc (pour l\'arène)', 6, 'bancs']], sal: {c: {warn: 'Dehors : arène de coupelles (pas de bancs), on frappe seulement à la main.'}},
    e: [['reaction', 6],
     ['ombre', 7]],
    c: [['Le gaga-ball', 18, 'Dans une arène de bancs couchés : frapper le ballon de la main (jamais à 2 mains, jamais 2 fois de suite) pour toucher les autres sous le genou. Touché = on sort et on compte les points au bord. Dernier survivant gagne.', 'Je suis dernier survivant une fois.', 'Toucher sous la ceinture pour les plus grands.', 'cercle', 'g8'],
@@ -201,7 +217,7 @@ an: {
     ['Le rugby-flag tous ensemble', 14, 'Un essai ne compte que si tous les attaquants ont dépassé la moitié du terrain.', 'Mon équipe marque un essai.', '', 'match:prisonnier:5c5', 'm5']],
    x: [['La revanche : le rugby-flag', 15, 'Nouvelles équipes (ou nouveaux rôles) et une règle en plus tirée au sort par le capitaine : on rejoue pour la revanche.', 'Mon équipe gagne un match.']],
    r: [['statues', 7]]},
-  {t: 'Sitting volley', tags: 'ballon · filet bas ou corde', o: 'Jouer au volley assis : se déplacer sur les fesses et les mains, coopérer.', mat2: [['ballon de volley ou en mousse', 3], ['corde ou élastique (filet à 1 m)', 2]], sal: {c: {warn: 'Dehors sur le dur : pas de jeu assis. On joue en volley « à genoux » sur l\'herbe, ou on rentre.'}},
+  {t: 'Sitting volley', ps: 1, tags: 'ballon · filet bas ou corde', o: 'Jouer au volley assis : se déplacer sur les fesses et les mains, coopérer.', mat2: [['ballon de volley ou en mousse', 3], ['corde ou élastique (filet à 1 m)', 2]], sal: {c: {warn: 'Dehors sur le dur : pas de jeu assis. On joue en volley « à genoux » sur l\'herbe, ou on rentre.'}},
    e: [['Les déplacements assis', 6, 'Assis, on se déplace avec les mains et les pieds : en avant, en arrière, de côté. Puis chat assis !', '', '', 'chat'],
     ['Les passes assises', 7, 'Par deux assis face à face : passes à deux mains, puis frappées.', '', '', 'deux', 'p']],
    c: [['Le record assis', 14, 'Par 4 de chaque côté du filet bas : record d\'échanges.', 'Mon équipe fait {8|5} échanges.', 'Le ballon peut être attrapé puis relancé.', 'filet:volley:4c4', 'f4'],
@@ -225,7 +241,7 @@ an: {
     ['Les passes muettes', 15, 'Interdit de parler : on appelle le ballon avec les mains et les yeux.', 'Mon équipe réussit en silence.', '', 'match:prisonnier:4c4', 'm4']],
    x: [['La revanche : les 10 passes', 15, 'Nouvelles équipes (ou nouveaux rôles), on rejoue pour la revanche. Les 5 dernières passes en sautant.', 'Mon équipe réussit.']],
    r: [['mercis', 7]]},
-  {t: 'La balle au mur', tags: 'ballons en mousse · mur', o: 'Frapper le mur adverse en se passant le ballon et en défendant.', mat2: [['ballon en mousse', 4, 'mousse']],
+  {t: 'La balle au mur', ps: 1, tags: 'ballons en mousse · mur', o: 'Frapper le mur adverse en se passant le ballon et en défendant.', mat2: [['ballon en mousse', 4, 'mousse']],
    e: [['passes2', 6],
     ['zombies', 7]],
    c: [['La balle au mur', 16, 'Chaque équipe défend un mur (ou une zone de mur marquée). On marque en touchant le mur adverse avec le ballon lancé ; on ne marche pas avec le ballon.', 'Mon équipe marque {4|2} points.', 'Zone de tir interdite à 3 m du mur.', 'match:prisonnier:5c5', 'm5'],
@@ -233,7 +249,7 @@ an: {
     ['Les deux ballons', 15, 'Deux ballons en même temps : attaque et défense à la fois.', 'Mon équipe marque.', '', 'match:prisonnier:5c5', 'm5']],
    x: [['La revanche : la balle au mur', 15, 'Nouvelles équipes (ou nouveaux rôles) et une règle en plus tirée au sort par le capitaine : on rejoue pour la revanche.', 'Mon équipe gagne.']],
    r: [['statues', 7]]},
-  {t: 'Sumo tapis', tags: 'tapis · opposition', o: 'Pousser son partenaire hors du tapis en respectant les règles de sécurité.', mat2: [['tapis', 0.5, 'tapis']], sal: {b: {src: 'la Petite salle', note: 'tapis à apporter de la Petite salle.'}, g: {src: 'la Petite salle', note: 'tapis à apporter de la Petite salle.'}, c: {warn: 'Dehors : seulement sur l\'herbe, debout ; jamais de jeu au sol sur le dur.'}},
+  {t: 'Sumo tapis', ps: 1, tags: 'tapis · opposition', o: 'Pousser son partenaire hors du tapis en respectant les règles de sécurité.', mat2: [['tapis', 0.5, 'tapis']], sal: {b: {src: 'la Petite salle', note: 'tapis à apporter de la Petite salle.'}, g: {src: 'la Petite salle', note: 'tapis à apporter de la Petite salle.'}, c: {warn: 'Dehors : seulement sur l\'herbe, debout ; jamais de jeu au sol sur le dur.'}},
    e: [['Les règles d\'or', 6, 'On salue avant et après ; pas de coup, pas de prise à la tête ou au cou ; on lâche au « stop » ou si l\'autre tape 2 fois. Puis chutes sur les tapis.', '', '', 'explication'],
     ['Le combat des coqs', 7, 'Par deux accroupis, paumes contre paumes : faire perdre l\'équilibre à l\'autre.', '', '', 'tapis::cercle', 'p']],
    c: [['Le sumo', 16, 'Par deux sur un tapis : à genoux, faire sortir l\'autre en poussant. 30 s, on change de partenaire (gabarit proche).', 'Je fais sortir mon adversaire.', 'Debout, mains sur les épaules.', 'tapis::cercle', 'p'],
@@ -249,7 +265,7 @@ an: {
     ['Le déménagement en chaîne', 15, 'L\'objet doit passer de main en main par toute l\'équipe avant d\'entrer dans la maison.', 'Mon équipe fait la chaîne sans faire tomber.', '', 'files', 'e4']],
    x: [['La revanche : les déménageurs', 15, 'Nouvelles équipes (ou nouveaux rôles), on rejoue pour la revanche. À cloche-pied ou à reculons.', 'Mon équipe gagne une manche.']],
    r: [['meteo', 7]]},
-  {t: 'Morpion en relais', tags: 'cerceaux · foulards · réflexion', o: 'Courir et réfléchir : aligner 3 foulards avant l\'autre équipe.', mat2: [['cerceau', 9, 'cerceaux'], ['foulard (3 par équipe)', 12]],
+  {t: 'Morpion en relais', ps: 1, tags: 'cerceaux · foulards · réflexion', o: 'Courir et réfléchir : aligner 3 foulards avant l\'autre équipe.', mat2: [['cerceau', 9, 'cerceaux'], ['foulard (3 par équipe)', 12]],
    e: [['chifoumi', 6],
     ['molecules', 7]],
    c: [['Le morpion en relais', 16, 'Un grand morpion de 9 cerceaux à 10 m, une grille pour deux équipes de 3 ou 4 (3 ou 4 grilles en même temps). Chaque équipe a 3 foulards. Chacun son tour, on court poser un foulard ; quand les 3 sont posés, on court en déplacer un. Trois alignés = 1 point.', 'Mon équipe aligne 3 foulards {3|2} fois.', 'Plus loin, ou en pas chassés.', 'files', 'e2'],
@@ -273,7 +289,7 @@ an: {
     ['Les coins dorés', 14, 'Un coin vaut 2 points si le ballon y arrive après 3 passes.', 'Je fais une passe décisive.', '', 'match:prisonnier:5c5', 'm5']],
    x: [['La revanche : la balle aux coins', 15, 'Nouvelles équipes (ou nouveaux rôles) et une règle en plus tirée au sort par le capitaine : on rejoue pour la revanche.', 'Mon équipe gagne un match.']],
    r: [['mercis', 7]]},
-  {t: 'Le cône protégé', tags: 'ballons en mousse · cônes · cerceaux', o: 'Viser et protéger une cible.', mat2: [['ballon en mousse', 4, 'mousse'], ['cerceau', 1, 'cerceaux']],
+  {t: 'Le cône protégé', ps: 1, tags: 'ballons en mousse · cônes · cerceaux', o: 'Viser et protéger une cible.', mat2: [['ballon en mousse', 4, 'mousse'], ['cerceau', 1, 'cerceaux']],
    e: [['passes2', 6],
     ['Le bowling à deux', 7, '', '', '', 'deux', 'p']],
    c: [['Le cône protégé', 16, 'Chacun a un cône dans un cerceau. On essaie de renverser les cônes des autres en lançant (en roulant d\'abord) ; on protège le sien sans entrer dans son cerceau. Cône renversé = on le relève et on fait 1 tour de terrain.', 'Je renverse {3|2} cônes.', 'Lancer à bras cassé.', 'chat'],
@@ -289,7 +305,7 @@ an: {
     ['Le chat des numéros', 15, 'Chacun a un numéro ; le prof appelle un numéro qui devient chat. Fous rires garantis.', 'Je réagis tout de suite.', '', 'chat']],
    x: [['La revanche : le chat et la souris', 15, 'Nouvelles équipes (ou nouveaux rôles), on rejoue pour la revanche. Deux chats et deux souris.', 'Je me sauve.']],
    r: [['bilan', 7]]},
-  {t: 'Le parachute', tags: 'parachute de jeu · coopération', o: 'Coopérer en groupe : rythme, synchronisation.', mat2: [['parachute de jeu (ou grand drap)', 1], ['balle légère', 6]], sal: {c: {warn: 'Dehors : le vent soulève le parachute ; jouer seulement par temps calme.'}},
+  {t: 'Le parachute', ps: 1, tags: 'parachute de jeu · coopération', o: 'Coopérer en groupe : rythme, synchronisation.', mat2: [['parachute de jeu (ou grand drap)', 1], ['balle légère', 6]], sal: {c: {warn: 'Dehors : le vent soulève le parachute ; jouer seulement par temps calme.'}},
    e: [['cercle', 6],
     ['zombies', 7]],
    c: [['Les vagues', 14, 'Tous autour du parachute : petites vagues, grosses vagues, la tempête ; puis le champignon (on le monte haut et on recule).', 'On fait le champignon ensemble.', '', 'cercle'],
@@ -297,7 +313,7 @@ an: {
     ['Le pop-corn', 16, 'Des balles sur le parachute : faire sauter le pop-corn sans le faire tomber ; puis deux équipes (moitié du cercle) essaient de les faire tomber du côté de l\'autre.', 'Mon équipe fait tomber moins de balles.', '', 'cercle', 'e2']],
    x: [['La revanche : le changement de place', 15, 'Nouvelles équipes (ou nouveaux rôles), on rejoue pour la revanche. Le requin : un élève sous le parachute attrape les pieds !', 'Je ne suis pas attrapé.']],
    r: [['vote', 7]]},
-  {t: 'Boccia (pétanque en salle)', tags: 'balles souples · calme · précision', o: 'Lancer avec précision et élaborer une stratégie.', mat2: [['jeu de boccia (ou balles en mousse de 2 couleurs)', 4], ['cochonnet (petite balle blanche)', 4]],
+  {t: 'Boccia (pétanque en salle)', ps: 1, tags: 'balles souples · calme · précision', o: 'Lancer avec précision et élaborer une stratégie.', mat2: [['jeu de boccia (ou balles en mousse de 2 couleurs)', 4], ['cochonnet (petite balle blanche)', 4]],
    e: [['lapins', 6],
     ['feux', 7]],
    c: [['Le cochonnet', 14, 'Par 4 : on lance le cochonnet, puis chacun lance sa balle au plus près. La plus proche = 1 point.', 'Je gagne {3|2} manches.', 'Lancer de dos ou de la main faible.', 'tir', 'g4'],
@@ -305,7 +321,7 @@ an: {
     ['La boccia stratège', 14, 'Avant chaque lancer, on annonce son intention (« placer », « pousser », « chasser »).', 'Je réussis mon intention 2 fois.', '', 'tir', 'g4']],
    x: [['La revanche : la boccia', 15, 'Nouvelles équipes (ou nouveaux rôles), on rejoue pour la revanche. Tournoi en 4 mènes.', 'Mon équipe gagne.']],
    r: [['meteo', 7]]},
-  {t: 'Le sol est de la lave', tags: 'tapis · bancs · engins', o: 'Se déplacer sur des engins sans toucher le sol, en sécurité.', mat2: [['tapis', 0.5, 'tapis'], ['banc', 4, 'bancs'], ['cerceau', 10, 'cerceaux']], sal: {p: {note: 'la salle idéale : plinths, steps, trampolines bas et gros tapis pour construire les îles.'}, b: {warn: 'Au Brel : bancs et cerceaux seulement (pas de matériel lourd) : parcours bas.'}, c: {warn: 'Dehors : version « îles » avec cerceaux et coupelles au sol uniquement.'}},
+  {t: 'Le sol est de la lave', ps: 1, tags: 'tapis · bancs · engins', o: 'Se déplacer sur des engins sans toucher le sol, en sécurité.', mat2: [['tapis', 0.5, 'tapis'], ['banc', 4, 'bancs'], ['cerceau', 10, 'cerceaux']], sal: {p: {note: 'la salle idéale : plinths, steps, trampolines bas et gros tapis pour construire les îles.'}, b: {warn: 'Au Brel : bancs et cerceaux seulement (pas de matériel lourd) : parcours bas.'}, c: {warn: 'Dehors : version « îles » avec cerceaux et coupelles au sol uniquement.'}},
    e: [['couleurs', 6, 'Le prof crie « lave ! » : tout le monde doit monter sur quelque chose en 3 s.'],
     ['chifoumi', 7]],
    c: [['La construction des îles', 12, 'Par groupes, on installe en sécurité un parcours de bancs, tapis et cerceaux (îles) sur toute la salle. Le prof valide chaque île.', 'Mon groupe construit une île sûre.', '', 'slalom', 'g4'],
@@ -321,7 +337,7 @@ an: {
     ['Le soleil du trésor', 16, 'Un trésor (foulard) derrière le meneur : il faut le voler et revenir sans être vu en train de bouger. Par équipes : on peut se faire des passes du trésor.', 'Mon équipe ramène le trésor.', '', 'chat', 'e2']],
    x: [['La revanche : 1, 2, 3, soleil', 15, 'Nouvelles équipes (ou nouveaux rôles), on rejoue pour la revanche. En marchant à reculons.', 'Je touche le mur.']],
    r: [['mercis', 7]]},
-  {t: 'Les pirates', tags: 'engins de gym · grimper', o: 'Grimper, sauter, se déplacer sur les engins et fuir les pirates.', mat2: [['tapis', 0.5, 'tapis'], ['banc', 4, 'bancs']], sal: {g: {note: 'espaliers, bancs et tapis de la Grande salle ; gros tapis apportés de la Petite salle sous les sauts.'}, p: {note: 'plinths, steps, trampolines et gros tapis : le bateau idéal.'}, b: {warn: 'Au Brel : sans matériel lourd, le bateau se fait avec bancs et tapis légers uniquement.'}, c: {warn: 'Dehors : jeu impossible tel quel ; jouer « Le sol est de la lave » version cerceaux.'}},
+  {t: 'Les pirates', ps: 1, tags: 'engins de gym · grimper', o: 'Grimper, sauter, se déplacer sur les engins et fuir les pirates.', mat2: [['tapis', 0.5, 'tapis'], ['banc', 4, 'bancs']], sal: {g: {note: 'espaliers, bancs et tapis de la Grande salle ; gros tapis apportés de la Petite salle sous les sauts.'}, p: {note: 'plinths, steps, trampolines et gros tapis : le bateau idéal.'}, b: {warn: 'Au Brel : sans matériel lourd, le bateau se fait avec bancs et tapis légers uniquement.'}, c: {warn: 'Dehors : jeu impossible tel quel ; jouer « Le sol est de la lave » version cerceaux.'}},
    e: [['couleurs', 6],
     ['miroir', 7]],
    c: [['La construction du bateau', 12, 'Par groupes, on installe les engins (le bateau) avec le prof : chaque saut a son tapis, rien d\'instable.', 'Mon groupe installe un poste sûr.', '', 'slalom', 'g4'],
@@ -336,7 +352,250 @@ an: {
     ['Le docteur', 18, 'Chaque équipe a un docteur secret qui soigne les assis en les touchant. Si le docteur est touché, l\'équipe n\'est plus soignée. On gagne quand tous les adversaires sont assis.', 'Mon équipe trouve le docteur adverse.', 'Deux docteurs.', 'prisonnier', 'm6'],
     ['L\'hôpital', 14, 'Les touchés vont à l\'hôpital (un tapis) ; le docteur peut y aller et les soigne d\'une tape dans la main.', 'Je protège mon docteur.', '', 'prisonnier', 'm6']],
    x: [['La revanche : le docteur', 15, 'Nouvelles équipes (ou nouveaux rôles), on rejoue pour la revanche. Le docteur peut aussi lancer.', 'Mon équipe gagne.']],
-   r: [['vote', 7]]}
+   r: [['vote', 7]]},
+  /* ===== Petite salle (kevin, 1er nov. 2026) : 30 jeux pensés pour la salle 2 (un grand terrain de badminton, 20 à 26 élèves),
+     avec son matériel : 4 bancs, 2 plinths, sautoirs, 15 à 20 steps, espaliers sur un petit côté, 3 gros tapis de réception,
+     + tout le matériel de la Grande salle. Ludiques, tout le monde bouge vite, toujours un gagnant (et souvent un meilleur arbitre). ===== */
+  {t: "Ultimate volley au kin-ball", ps: 1, sal: PREPA_PSAL, tags: "petite salle · petit kin-ball · filet haut · les murs comptent", o: "Garder le ballon en l'air et le renvoyer chez l'adversaire en s'organisant à plusieurs : frapper, se placer, s'encourager.", mat2: [["petit kin-ball (ou gros ballon léger)", 2], ["filet de badminton monté à hauteur de volley", "1"]],
+   e: [["baudruche", 6, "Avec le petit kin-ball : on frappe à deux mains vers le haut, bras tendus."],
+    ["molecules", 7]],
+   c: [["Le kin-volley sans faute", 14, "Deux équipes, une de chaque côté du filet monté à hauteur de volley au milieu de la salle. On frappe le ballon avec les mains ou les avant-bras, on ne le tient jamais. Autant de touches qu'on veut dans son camp, et les murs comptent : un ballon qui rebondit sur un mur reste en jeu. Ballon au sol = 1 point pour l'autre équipe. Service à deux mains par en dessous, depuis le fond.", "Mon équipe renvoie {3|2} ballons de suite.", "Le ballon passe par 3 joueurs avant de franchir le filet.", "", "e2"],
+    ["L'ultimate volley", 18, "Le vrai jeu : tout compte (murs, filet, touches illimitées), mais un même joueur ne frappe jamais 2 fois de suite. Match en 7 points, puis on change de côté ; l'équipe qui vient de perdre le point sert. Un arbitre au bord (à tour de rôle) annonce le score à voix haute après chaque point.", "Mon équipe gagne une manche en 7 points.", "Seulement les avant-bras (plus dur).", "", "e2"],
+    ["Le roi du filet", 14, "Trois équipes : deux jouent, la troisième attend au bord et arbitre. L'équipe qui gagne le point reste sur le terrain et prend une couronne ; la perdante sort et l'équipe du bord entre tout de suite (service pour elle). L'équipe qui a le plus de couronnes à la fin gagne.", "Mon équipe garde le filet 3 points de suite.", "Deux ballons en même temps.", "", "e3"]],
+   x: [["La revanche : l'ultimate volley", 15, "Nouvelles équipes tirées au sort, tournoi en 2 manches de 7 points. À la fin, les joueurs votent pour le meilleur arbitre du tournoi.", "Mon équipe gagne une manche."]],
+   r: [["podium", 7]]},
+  {t: "Nettoie ton camp", ps: 1, sal: PREPA_PSAL, tags: "petite salle · 30 balles · 2 bancs au milieu · manches éclair", o: "Lancer vite, loin et précis par-dessus un obstacle, se répartir le terrain, réagir au signal.", mat2: [["ballon en mousse ou balle souple", 30, "mousse"], ["banc (la frontière)", 2, "bancs"], ["cerceau", 2, "cerceaux"]],
+   e: [["feux", 6],
+    ["passes2", 7, "Un banc couché entre les deux : passes en cloche par-dessus, puis on recule d'un pas."]],
+   c: [["Nettoie ton camp", 15, "Deux équipes, une de chaque côté de deux bancs couchés bout à bout au milieu de la salle. Les balles sont réparties dans les deux camps. Au sifflet, on renvoie les balles une par une par-dessus les bancs, en cloche (jamais en tir direct sur quelqu'un). Au « STOP ! », tout le monde s'assoit les mains sur la tête et on compte à voix haute les balles de chaque camp. Le camp le plus propre gagne la manche (manches de 1 min 30).", "Mon équipe gagne {2|1} manches.", "Seulement de la main faible.", "", "e2"],
+    ["Le camp des gardiens", 15, "Même jeu, mais au fond de chaque camp un cerceau posé au sol, gardé par 2 gardiens qui ne lancent pas : ils dévient les balles avec les mains. Une balle qui retombe dans le cerceau adverse vaut 3 balles. On change de gardiens à chaque manche.", "Je mets une balle dans le cerceau adverse.", "Le cerceau change de place à chaque manche.", "", "e2"],
+    ["La guerre des couleurs", 16, "Deux sortes de balles (ballons en mousse et balles de tennis, par exemple). Chaque équipe a sa sorte : elle doit garder les siennes dans son camp et renvoyer toutes celles de l'autre. Au « STOP », chaque balle à soi dans son camp = +1, chaque balle adverse = −1.", "Mon équipe gagne en points.", "On ne lance qu'en étant assis.", "", "e2"]],
+   x: [["La revanche : nettoie ton camp", 15, "Nouvelles équipes, 3 manches gagnantes. Chaque équipe désigne un compteur qui compte les balles du camp d'en face (arbitre croisé).", "Mon équipe gagne le tournoi."]],
+   r: [["meteo", 7]]},
+  {t: "Les châteaux forts", ps: 1, sal: PREPA_PSAL, tags: "petite salle · plinths · cônes ou quilles · ballons en mousse", o: "Lancer précis pour abattre une cible, défendre son château, choisir entre attaquer et défendre.", mat2: [["plinth (le château)", 2], ["cône ou quille", 10, "cones"], ["ballon en mousse", 6, "mousse"], ["step", 4]],
+   e: [["zombies", 6],
+    ["reaction", 7]],
+   c: [["Le tir au château", 14, "Deux équipes, chacune dans sa moitié de salle. Au fond de chaque camp, un plinth (le château) avec 5 cônes ou quilles posés dessus. La ligne de lancer est la ligne de service du badminton de l'autre camp : on ne la dépasse pas. On lance les ballons en mousse pour faire tomber les cônes adverses ; chaque équipe récupère les ballons qui arrivent chez elle. Tous les cônes adverses tombés = manche gagnée.", "Mon équipe fait tomber {3|2} cônes.", "Lancer de la main faible.", "", "e2"],
+    ["Les gardes du château", 16, "Même jeu, avec 2 gardes par équipe devant leur château (sans le toucher), qui arrêtent les ballons avec les mains. Un joueur touché par un ballon sous les épaules va faire 3 montées de step au bord, puis revient. Un garde qui touche son château fait remettre un cône debout par l'adversaire.", "Je protège mon château pendant une manche entière.", "3 gardes, mais ils restent à genoux.", "", "e2"],
+    ["Le roi du château", 16, "Sur chaque château, en plus des cônes, un roi : un ballon de basket posé dans un cerceau. Faire tomber le roi = victoire immédiate ; sinon, l'équipe qui a fait tomber le plus de cônes en 3 min gagne. On change de gardes à chaque manche, 3 manches.", "Mon équipe fait tomber le roi.", "Le roi est un cône seul, plus petit.", "", "e2"]],
+   x: [["La revanche : les châteaux forts", 15, "Nouvelles équipes ; chaque équipe construit son château comme elle veut avec 5 cônes et 2 steps (1 min). Tournoi en 3 manches.", "Mon château tient une manche."]],
+   r: [["statues", 7]]},
+  {t: "Le ballon-banc", ps: 1, sal: PREPA_PSAL, tags: "petite salle · 2 bancs · ballon · toute l'équipe monte sur le banc", o: "Se démarquer et faire des passes précises vers un partenaire en hauteur, aider toute l'équipe à le rejoindre.", mat2: [["banc", 2, "bancs"], ["ballon (volley ou mousse)", 2], ["coupelle", 8, "plots"]],
+   e: [["couleurs", 6],
+    ["passes2", 7, "Passes à deux mains à hauteur de poitrine, puis passes lobées au-dessus de la tête de l'autre."]],
+   c: [["Le ballon-banc", 16, "Deux équipes. Contre chaque mur du fond, un banc posé dans la longueur, devant une zone de 1 m (coupelles) où personne ne rentre. Au départ, un joueur de chaque équipe monte sur le banc du fond du camp ADVERSE. On marque en lui faisant une passe qu'il attrape sans tomber du banc : le passeur monte alors le rejoindre. Pas de dribble, 3 s maximum avec le ballon, pas de contact. La première équipe qui a tous ses joueurs sur le banc gagne (ou le plus de joueurs sur le banc après 5 min).", "Je monte sur le banc.", "Le receveur sur le banc attrape à une main.", "", "e2"],
+    ["Le ballon-banc à 3 passes", 15, "Même jeu, mais il faut 3 passes dans l'équipe avant de viser le banc, et c'est le joueur qui a fait la passe d'avant (la passe décisive) qui monte.", "Je fais une passe décisive.", "Interdit de rendre au passeur.", "", "e2"],
+    ["Le ballon-banc à deux ballons", 15, "Deux ballons en même temps. Les joueurs déjà sur le banc peuvent bloquer les passes adverses en levant les bras (sans quitter le banc). Si un défenseur intercepte une passe destinée au banc, le dernier joueur monté redescend.", "Mon équipe a la moitié de ses joueurs sur le banc.", "", "", "e2"]],
+   x: [["La revanche : le ballon-banc", 15, "Nouvelles équipes ; un arbitre par équipe au bord (à tour de rôle) qui valide chaque montée. On vote pour le meilleur arbitre.", "Mon équipe gagne une partie."]],
+   r: [["mercis", 7]]},
+  {t: "Le mat-ball (kickball des gros tapis)", ps: 1, sal: PREPA_PSAL, tags: "petite salle · 3 gros tapis = bases · ballon en mousse", o: "Frapper loin au pied, courir les bases en choisissant le bon moment ; en défense, renvoyer vite le ballon au lanceur.", mat2: [["gros tapis de réception (les bases)", 3], ["ballon en mousse (taille foot)", 2, "mousse"], ["cerceau (le marbre et le lanceur)", 2, "cerceaux"]],
+   e: [["lapins", 6],
+    ["chaine", 7]],
+   c: [["Le mat-ball", 16, "Deux équipes : les frappeurs (en file près du marbre) et les défenseurs (partout dans la salle). Les 3 gros tapis sont les bases, dans 3 coins ; le marbre est un cerceau dans le 4e coin. Le lanceur roule le ballon vers le frappeur, qui le frappe du pied et court vers le tapis 1. Plusieurs coureurs peuvent être sur le même tapis. Un coureur entre deux tapis est éliminé si un défenseur le touche avec le ballon tenu à deux mains, ou si le ballon frappé est attrapé de volée. Tour complet = 1 point ; d'un seul coup sans s'arrêter = 3 points. On change de rôle quand tous les frappeurs ont frappé.", "Je fais un tour complet.", "On frappe au poing au lieu du pied.", "", "e2"],
+    ["Le mat-ball du lanceur", 15, "Pour arrêter le jeu, les défenseurs doivent ramener le ballon dans le cerceau du lanceur en 3 passes maximum : à ce moment, tous les coureurs qui sont entre deux tapis sont éliminés. Un coureur peut rester sur un tapis tant qu'il veut.", "Je choisis le bon moment pour courir.", "Seulement 2 passes.", "", "e2"],
+    ["Le mat-ball qui déborde", 15, "Un tapis qui a 5 coureurs ou plus « déborde » : le premier arrivé doit repartir vers le tapis suivant. Chaque équipe a 2 jokers : un frappeur joker peut frapper à la main.", "Mon équipe marque plus de points que l'autre.", "", "", "e2"]],
+   x: [["La revanche : le mat-ball", 15, "Nouvelles équipes, 2 tours de frappe chacune. Un arbitre de chaque équipe compte les points de l'autre.", "Mon équipe gagne."]],
+   r: [["ralenti", 7]]},
+  {t: "Pac-Man sur les lignes", ps: 1, sal: PREPA_PSAL, tags: "petite salle · lignes du terrain de badminton · plots", o: "Se déplacer vite en respectant une contrainte (marcher sur les lignes), anticiper la trajectoire d'un poursuivant.", mat2: [["coupelle (pac-gomme)", 20, "plots"], ["chasuble jaune (Pac-Man)", 4]],
+   e: [["ombre", 6, "L'ombre, mais seulement sur les lignes du terrain de badminton."],
+    ["genoux", 7]],
+   c: [["Pac-Man", 14, "On ne se déplace que sur les lignes (terrain de badminton et lignes de la salle), en marchant vite. {n/8 Pac-Man} en chasuble jaune poursuivent les autres, sur les lignes aussi. Touché = on s'assoit sur la ligne : on devient un obstacle, personne ne passe par-dessus. Le dernier libre gagne et devient Pac-Man à la manche suivante.", "Je reste libre 1 min.", "Les joueurs assis tendent les bras : ils touchent aussi.", "", ""],
+    ["Les pac-gommes", 16, "Des coupelles sont posées sur les lignes : ce sont les pac-gommes. Deux équipes de fantômes en ramassent un maximum (une à la fois, on la rapporte dans son coin). Touché par un Pac-Man = on pose ses coupelles là où on est et on repart de son coin. Après 3 min, l'équipe qui a le plus de coupelles gagne.", "Je rapporte 3 pac-gommes.", "Les Pac-Man courent, les fantômes marchent.", "", "e2"],
+    ["Le super Pac-Man", 16, "Même jeu avec 4 coupelles rouges : les super pac-gommes. Celui qui en ramasse une crie « SUPER ! » : pendant 10 s, ce sont les fantômes qui chassent les Pac-Man ; un Pac-Man touché donne sa chasuble à celui qui l'a touché.", "Je deviens Pac-Man en touchant un Pac-Man.", "", "", "e2"]],
+   x: [["La revanche : Pac-Man", 15, "Nouvelles équipes, 3 manches de 3 min ; chaque manche, 2 nouveaux Pac-Man. On additionne les coupelles des 3 manches.", "Mon équipe gagne."]],
+   r: [["respire", 7]]},
+  {t: "Le parcours ninja", ps: 1, sal: {...PREPA_PSAL, p: {m: 1, f: 1}}, tags: "petite salle · bancs, plinths, steps, espaliers, gros tapis · chrono", o: "Enchaîner des actions variées (sauter, ramper, grimper, tenir en équilibre) vite et en sécurité.", mat2: [["banc", 4, "bancs"], ["plinth", 2], ["step", 10], ["gros tapis de réception", 2], ["cerceau", 6, "cerceaux"], ["chronomètre (ou téléphone)", 2]],
+   e: [["serpent", 6],
+    ["feux", 7]],
+   c: [["La découverte du parcours", 14, "La classe monte le parcours en boucle (5 min, chacun porte quelque chose) : ① 6 steps en ligne, on saute de step en step ; ② on marche sur un banc retourné (la barre étroite) ; ③ on rampe sous un banc posé sur 2 steps ; ④ traversée des espaliers sur 4 m, pieds au 1er barreau seulement ; ⑤ on monte sur le plinth et on saute groupé dans le gros tapis ; ⑥ slalom dans les cerceaux pour revenir. Départ toutes les 10 s, par groupes de 4 ; premier tour en marchant, puis en trottinant.", "Je fais le tour sans poser le pied à terre aux steps.", "Pour les grands : ② en marche arrière.", "", "g4"],
+    ["Le chrono des ninjas", 16, "Chacun fait 2 passages chronométrés par son binôme. Faute (pied au sol, barreau sauté, réception assise) = +3 s. On garde le meilleur temps ; l'équipe additionne les temps de ses 3 meilleurs. Le prof reste au plinth et au gros tapis (sécurité).", "Je bats mon premier temps.", "Pas de chrono pour ceux qui le préfèrent : on compte les fautes.", "", "e4"],
+    ["Le relais ninja", 16, "Relais par équipes de 4 : on part quand le coéquipier qui revient tape dans la main. Une équipe à la fois pour la sécurité ; les autres chronométrent et comptent les fautes (+3 s chacune). L'équipe la plus rapide gagne ; meilleur juge = celui dont les comptes n'ont jamais été contestés.", "Mon équipe fait un relais sans faute.", "", "", "e4"]],
+   x: [["La revanche : le parcours ninja", 15, "Chaque équipe change UN élément du parcours (validé par le prof), puis nouveau relais chronométré. Le prof remet la ceinture du meilleur ninja.", "Mon équipe bat son temps."]],
+   r: [["parole", 7]]},
+  {t: "Le tremplin des stars", ps: 1, sal: {...PREPA_PSAL, p: {m: 1, f: 1, warn: "Sécurité : le prof reste aux tremplins ; jamais de salto ni de saut tête en bas."}}, tags: "petite salle · sautoirs (tremplins) · gros tapis · juges", o: "Sauter en sécurité à partir d'un tremplin, réussir une figure simple et une réception plantée, juger les autres avec des critères.", mat2: [["sautoir (tremplin)", 2], ["gros tapis de réception", 2], ["feuille de juge et crayon", 6]],
+   e: [["chef", 6],
+    ["stepflash", 7]],
+   c: [["Les sauts de base", 14, "Deux ateliers identiques : un sautoir (tremplin) devant un gros tapis de réception. File de 5 m d'élan derrière chaque tremplin ; un seul sauteur à la fois, le suivant part quand le tapis est libre. Sauts imposés : saut droit bras en haut, saut groupé (genoux à la poitrine), saut écart (l'étoile). Réception debout, pieds écartés largeur de hanches, bras devant : « on plante » 2 s.", "Je réussis 3 réceptions plantées.", "Élan plus court pour les plus jeunes.", "", "e2"],
+    ["La note des juges", 16, "Par groupes de 4 : 1 sauteur et 3 juges qui notent sur 10 : figure (4), hauteur (3), réception (3). Chacun présente 2 sauts de son choix parmi droit, groupé, écart, demi-tour ; on garde la meilleure note. Le meilleur sauteur de chaque groupe va en finale.", "J'ai au moins 7 sur 10.", "Les juges notent sans se parler, on compare.", "", "g4"],
+    ["La finale des stars", 16, "Finale : chaque groupe présente son champion, puis un saut synchronisé à deux (un sur chaque tremplin, au même signal). Toute la classe juge en montrant 1 à 5 doigts. Prix du meilleur saut, de la meilleure réception et du juge le plus juste (le plus proche de la moyenne).", "Notre saut synchronisé part ensemble.", "", "", "g4"]],
+   x: [["La revanche : le tremplin des stars", 15, "Chaque groupe invente un enchaînement de 3 sauts (un par élève, à la suite) avec une entrée et un salut ; présentation et note du jury.", "Mon groupe enchaîne les 3 sauts sans arrêt."]],
+   r: [["podium", 7]]},
+  {t: "Le hand des gros tapis", ps: 1, sal: PREPA_PSAL, tags: "petite salle · gros tapis debout = buts · ballon en mousse", o: "Se démarquer, faire progresser le ballon par des passes et tirer fort sur une grande cible.", mat2: [["gros tapis de réception (debout contre le mur)", 2], ["ballon en mousse (taille hand)", 2, "mousse"], ["coupelle", 12, "plots"]],
+   e: [["ninja", 6],
+    ["passes2", 7, "Passes à une main, bras armé haut ; puis tir à deux sur un tapis."]],
+   c: [["Le hand-tapis", 15, "Deux gros tapis posés debout contre les murs du fond (calés, le prof vérifie) : ce sont les buts. Devant chaque tapis, une zone de 2 m en coupelles où seul le gardien entre. On marque en touchant le tapis avec le ballon, au-dessus du genou. Pas de dribble, 3 pas et 3 s avec le ballon, pas de contact. Après un but, le gardien relance.", "Je marque un but.", "Tir seulement après une passe de chacun de ses coéquipiers.", "", "m5"],
+    ["Le hand-tapis à cibles", 15, "Sur chaque tapis, 3 cibles collées (feuilles de couleur) : toucher une cible = 2 points, le reste du tapis = 1 point. Le gardien change à chaque but encaissé.", "Je touche une cible.", "", "", "m5"],
+    ["Le hand-tapis à 2 gardiens", 16, "Deux gardiens par équipe, et un but compte seulement s'il est marqué par un joueur qui n'a pas encore marqué (toute l'équipe doit marquer).", "Toute mon équipe marque.", "", "", "m5"]],
+   x: [["La revanche : le hand des gros tapis", 15, "Tournoi : chaque équipe joue contre toutes les autres (matchs de 4 min) ; les équipes au bord arbitrent. Meilleur arbitre voté.", "Mon équipe gagne un match."]],
+   r: [["journaliste", 7]]},
+  {t: "Les îles musicales", ps: 1, sal: PREPA_PSAL, tags: "petite salle · steps · musique · requins", o: "Réagir vite à un signal, trouver une place libre, coopérer pour tenir à plusieurs sur une petite surface.", mat2: [["step (les îles)", 15], ["enceinte et musique", "1"], ["tapis", 2]],
+   e: [["molecules", 6],
+    ["chef", 7]],
+   c: [["Les îles musicales", 14, "Les steps sont éparpillés dans la salle : ce sont les îles (2 places par île). En musique, on court ou on danse autour sans toucher les steps. Musique coupée : chacun monte sur une île, 2 au maximum par île. Ceux qui restent dans l'eau font 5 sauts et reviennent ; à chaque manche, le prof retire un step. Les 2 derniers sur la dernière île gagnent.", "Je trouve toujours une île.", "Les déplacements imposés changent : pas chassés, cloche-pied, à reculons.", "", ""],
+    ["Les requins", 16, "Même jeu, mais les joueurs restés dans l'eau deviennent requins : à la manche suivante, quand la musique s'arrête, ils peuvent toucher ceux qui ne sont pas encore montés sur une île. Touché = requin à son tour. Le dernier naufragé gagne.", "Je ne me fais jamais toucher.", "", "", ""],
+    ["Le naufrage", 16, "Par équipes de 4, chacune a 3 steps. Musique coupée : toute l'équipe doit tenir 5 s sans toucher le sol, sur ses steps. À chaque manche, chaque équipe enlève un step… jusqu'à tenir à 4 sur un seul step. L'équipe qui tient le plus longtemps gagne.", "Mon équipe tient à 4 sur 2 steps.", "Plus difficile : on tient en silence.", "", "g4"]],
+   x: [["La revanche : les îles musicales", 15, "Grande finale : les naufragés deviennent requins, les équipes de 4 doivent rejoindre une île ensemble en se tenant la main.", "Mon équipe survit jusqu'à la finale."]],
+   r: [["vote", 7]]},
+  {t: "Le foot des bancs", ps: 1, sal: PREPA_PSAL, tags: "petite salle · bancs couchés = buts · ballon en mousse", o: "Conduire et passer le ballon au pied en espace réduit, viser un but bas et défendre en équipe.", mat2: [["banc (couché sur le côté)", 4, "bancs"], ["ballon en mousse (taille foot)", 2, "mousse"]],
+   e: [["serpent", 6],
+    ["passes2", 7, "Passes au pied, intérieur du pied, ballon qui roule ; un pas en arrière à chaque passe arrêtée."]],
+   c: [["Le foot-bancs", 15, "Deux équipes. Contre chaque mur du fond, un banc couché sur le côté (l'assise face au terrain) : c'est le but. On marque en touchant le banc avec le ballon, au ras du sol. Pas de gardien, personne ne s'assoit devant le banc. Les murs de côté comptent comme des bandes (le ballon reste en jeu). Ballon au-dessus des genoux = faute, l'autre équipe repart de là.", "Mon équipe marque {3|2} buts.", "Seulement 2 touches de balle par joueur.", "", "m5"],
+    ["Les 4 bancs", 15, "Deux bancs par équipe, dans les deux coins du fond : on attaque le banc le moins défendu. On peut changer de côté par une passe longue.", "Je marque sur le banc le moins défendu.", "", "", "m5"],
+    ["Le foot-bancs en passes", 16, "Un but compte seulement après 3 passes dans l'équipe ; un but marqué du pied faible ou du talon vaut 2 points.", "Je fais une passe décisive.", "", "", "m5"]],
+   x: [["La revanche : le foot des bancs", 15, "Tournoi de matchs de 4 min ; les équipes au bord arbitrent (un arbitre, deux juges de but). Meilleur arbitre voté.", "Mon équipe gagne un match."]],
+   r: [["journaliste", 7]]},
+  {t: "La balle au caisson", ps: 1, sal: PREPA_PSAL, tags: "petite salle · plinth ouvert = panier · ballon", o: "Se démarquer, faire des passes et viser une cible au sol par un lancer en cloche.", mat2: [["plinth (on garde le bas : un caisson ouvert)", 2], ["ballon (hand ou volley)", 2], ["coupelle", 16, "plots"], ["step", "1"], ["cerceau", "1", "cerceaux"]],
+   e: [["lapins", 6],
+    ["passes2", 7, "Passes en cloche : le ballon monte plus haut que la tête du partenaire."]],
+   c: [["La balle au caisson", 15, "À chaque bout de la salle, un plinth dont on a enlevé le dessus et les éléments du haut : il reste un caisson ouvert (un bac). Autour, un cercle de 2 m en coupelles où personne n'entre. On marque en lançant le ballon dans le caisson. Passes à la main, 3 pas et 3 s maximum, pas de contact. Après un panier, l'autre équipe repart de son caisson.", "Je marque un panier.", "Panier seulement en lancer à deux mains par en dessous.", "", "m5"],
+    ["Le caisson à 2 points", 15, "Même jeu : un panier marqué après une passe de chaque joueur de l'équipe vaut 2 points. Chaque joueur suit un adversaire précis (marquage individuel).", "Mon équipe marque un panier à 2 points.", "", "", "m5"],
+    ["Le caisson et le cerceau", 16, "Au milieu, un joueur neutre debout sur un step tient un cerceau : faire passer le ballon dans le cerceau puis le rattraper = 1 point bonus, à faire avant de viser le caisson.", "Je réussis le cerceau puis le caisson.", "", "", "m5"]],
+   x: [["La revanche : la balle au caisson", 15, "Tournoi ; les équipes au bord arbitrent et comptent les paniers.", "Mon équipe gagne un match."]],
+   r: [["quiz", 7]]},
+  {t: "Le volley-baudruche", ps: 1, sal: {...PREPA_PSAL, p: {m: 1, f: 2}}, tags: "petite salle · ballons de baudruche · filet bas · tous niveaux", o: "Se placer sous le ballon et le renvoyer en coopérant, enchaîner 3 touches avant de renvoyer.", mat2: [["ballon de baudruche (et de rechange)", 12], ["filet de badminton (hauteur normale)", "1"], ["coupelle", 16, "plots"]],
+   e: [["baudruche", 6],
+    ["miroir", 7]],
+   c: [["Le baudruche-volley", 15, "Le filet de badminton tendu au milieu. Avec des coupelles, on fait 2 terrains de chaque côté (4 demi-terrains). Matchs 3 contre 3 avec un ballon de baudruche : 3 touches maximum par équipe, jamais 2 fois de suite le même joueur. Ballon au sol dans le camp = point pour l'autre équipe. Matchs de 3 min.", "Mon équipe fait 3 touches avant de renvoyer.", "Seulement les avant-bras ou la tête.", "", "f3"],
+    ["Le baudruche à 2 ballons", 15, "Deux ballons de baudruche en même temps sur le même terrain : chaque ballon tombé compte. Il faut se partager le terrain.", "Mon équipe garde les 2 ballons en l'air 20 s.", "", "", "f3"],
+    ["La montée-descente", 16, "Tournoi : le terrain 1 est le terrain des rois. Après 3 min, l'équipe gagnante monte d'un terrain, la perdante descend. L'équipe qui est sur le terrain des rois à la fin gagne.", "Mon équipe monte d'un terrain.", "", "", "f3"]],
+   x: [["La revanche : le volley-baudruche", 15, "Avec un ballon de plage (plus lourd) : même tournoi en montée-descente.", "Mon équipe arrive au terrain des rois."]],
+   r: [["mercis", 7]]},
+  {t: "Le foot-tennis", ps: 1, sal: {...PREPA_PSAL, p: {m: 1, f: 2}}, tags: "petite salle · filet bas ou bancs · ballon de foot en mousse", o: "Contrôler et renvoyer un ballon au pied (cuisse, tête) au-dessus d'un filet bas, en coopérant à deux.", mat2: [["filet de badminton descendu à 60 cm (ou 2 bancs)", "1"], ["ballon en mousse (taille foot)", 4, "mousse"], ["coupelle", 16, "plots"]],
+   e: [["genoux", 6],
+    ["passes2", 7, "Jongles à deux : un rebond, une touche du pied, un rebond, passe."]],
+   c: [["Le foot-tennis à un rebond", 15, "Filet bas (genou-hanche) au milieu ; 2 terrains côte à côte en coupelles. Matchs 2 contre 2 : le ballon peut rebondir une fois dans son camp ; 3 touches maximum (pied, cuisse, tête, jamais la main), dont une passe au partenaire obligatoire. Points comme au tennis de table, en 11.", "Mon équipe gagne un set.", "Pour les débutants : 2 rebonds permis.", "", "f2"],
+    ["Le foot-tennis de volée", 15, "Même jeu, mais le dernier renvoi se fait de volée (sans rebond juste avant). Un renvoi de la tête vaut 2 points.", "Je renvoie de volée.", "", "", "f2"],
+    ["Le tournoi des champions", 16, "Montée-descente : après 4 min, les gagnants montent vers le terrain 1, les perdants descendent. Les joueurs au bord arbitrent (un par terrain).", "Mon équipe joue sur le terrain 1.", "", "", "f2"]],
+   x: [["La revanche : le foot-tennis", 15, "Nouvelles paires tirées au sort, même tournoi.", "Ma paire gagne un match."]],
+   r: [["ralenti", 7]]},
+  {t: "La pelote à la main", ps: 1, sal: PREPA_PSAL, tags: "petite salle · murs · balles souples · 2 contre 2", o: "Frapper une balle de la main ouverte contre un mur, se replacer, viser les espaces libres.", mat2: [["balle souple (ou balle de tennis molle)", 6], ["coupelle", 24, "plots"]],
+   e: [["reaction", 6],
+    ["passes2", 7, "Frappe de la main ouverte contre le mur, par deux, chacun son tour."]],
+   c: [["Le mur à deux", 14, "Par deux face à un mur (les grands murs de côté : 3 terrains le long de chaque mur, en coupelles, 3 m de large). Une balle souple : on la frappe de la main ouverte contre le mur, elle doit retomber dans le terrain, avec au plus un rebond ; on frappe chacun son tour. D'abord on coopère : record d'échanges sans faute.", "Ma paire fait 10 échanges.", "Frappe de la main faible.", "", "g4"],
+    ["La pelote 2 contre 2", 16, "Deux contre deux sur le même terrain : on frappe à tour de rôle d'équipe (A, B, A, B). Balle qui retombe hors du terrain, qui fait 2 rebonds ou qui touche le sol avant le mur = point pour l'autre équipe. Matchs en 11 points.", "Ma paire gagne un match.", "", "", "g4"],
+    ["La pelote des rois", 16, "Montée-descente le long des murs : le terrain du coin est celui des rois. Les gagnants montent, les perdants descendent toutes les 4 min ; les joueurs qui attendent arbitrent.", "Ma paire monte d'un terrain.", "", "", "g4"]],
+   x: [["La revanche : la pelote à la main", 15, "Nouvelles paires mélangées, mêmes terrains, tournoi des rois.", "Ma paire gagne un match."]],
+   r: [["meteo", 7]]},
+  {t: "Le tennis-banc", ps: 1, sal: PREPA_PSAL, tags: "petite salle · 4 bancs = filets · balle souple · à la main", o: "Renvoyer une balle à la main au-dessus d'un banc après un rebond, varier la force et la direction.", mat2: [["banc (le filet)", 4, "bancs"], ["balle souple ou balle de tennis", 6], ["coupelle", 32, "plots"]],
+   e: [["genoux", 6],
+    ["reaction", 7]],
+   c: [["Le tennis-banc", 15, "4 bancs posés dans la salle = 4 filets ; de chaque côté du banc, un terrain de 3 m sur 2 (coupelles). Matchs 1 contre 1 : la balle doit rebondir une fois dans le camp avant d'être renvoyée à la main ouverte, par-dessus le banc. Service en cloche. Points en 7. Ceux qui attendent sont juges de ligne.", "Je gagne un match.", "Pour les plus forts : frappe de la main faible.", "", "g4"],
+    ["Le roi du banc", 15, "Montée-descente : après chaque match, le gagnant monte d'un banc vers le banc des rois, le perdant descend.", "Je monte d'un banc.", "", "", "g4"],
+    ["Le tennis-banc en double", 16, "Deux contre deux, terrain plus large (5 m), on frappe chacun son tour dans l'équipe.", "Ma paire gagne un match.", "", "", "g4"]],
+   x: [["La revanche : le tennis-banc", 15, "Grand tournoi des rois, matchs de 3 min.", "Je joue au banc des rois."]],
+   r: [["vote", 7]]},
+  {t: "Retourne les plots", ps: 1, sal: PREPA_PSAL, tags: "petite salle · 40 coupelles · manches de 45 s", o: "Réagir vite, se déplacer en changeant de direction, lire le jeu pour aller là où il faut.", mat2: [["coupelle ou cône", 40, "plots"], ["cône de 4 couleurs", 24, "cones"]],
+   e: [["feux", 6],
+    ["stepflash", 7]],
+   c: [["Retourne les plots", 14, "Deux équipes, 40 coupelles éparpillées : moitié à l'endroit, moitié à l'envers. L'équipe A retourne les coupelles à l'endroit (dôme en haut), l'équipe B à l'envers. Une coupelle à la fois, avec la main ; interdit de la tenir ou de la cacher. Manches de 45 s ; au « STOP », tout le monde s'assoit et on compte.", "Mon équipe gagne {2|1} manches.", "On retourne seulement avec la main faible.", "", "e2"],
+    ["Retourne et protège", 15, "Chaque équipe a 2 gardiens (chasubles) qui ne retournent rien : ils touchent les adversaires. Touché = 3 sauts sur place avant de rejouer.", "Je ne me fais pas toucher.", "", "", "e2"],
+    ["Les plots des 4 couleurs", 17, "4 équipes, cônes de 4 couleurs couchés au sol. Chaque équipe relève les cônes de sa couleur et couche ceux des autres. Au « STOP », chaque cône de sa couleur debout = 1 point.", "Mon équipe a le plus de cônes debout.", "", "", "e4"]],
+   x: [["La revanche : retourne les plots", 15, "Finale par équipes de 2 ; chaque équipe désigne un compteur pour une autre équipe.", "Mon équipe gagne une manche."]],
+   r: [["respire", 7]]},
+  {t: "Le béret des engins", ps: 1, sal: PREPA_PSAL, tags: "petite salle · béret · step, banc, tapis · ballon", o: "Réagir à son numéro, franchir vite des obstacles, gagner le duel pour le ballon.", mat2: [["step", 4], ["banc", 2, "bancs"], ["tapis", 2], ["ballon en mousse", 2, "mousse"], ["cerceau", 2, "cerceaux"]],
+   e: [["chifoumi", 6],
+    ["reaction", 7]],
+   c: [["Le béret parcours", 14, "Deux équipes alignées face à face le long des grands murs ; chaque joueur a un numéro (les mêmes dans les deux équipes). Au milieu, un ballon dans un cerceau. Le prof appelle un numéro : les deux joueurs font leur mini-parcours (sauter sur un step et redescendre, passer sous un banc posé sur 2 steps, une roulade avant sur le tapis) puis prennent le ballon et le rapportent dans leur camp sans être touchés par l'autre. Ballon rapporté = 2 points ; porteur touché = 1 point pour celui qui touche.", "Je gagne mon duel.", "Pour les plus jeunes : le parcours sans la roulade.", "", "e2"],
+    ["Le béret à deux numéros", 15, "Le prof appelle 2 numéros : on peut se faire une passe pour rapporter le ballon. Ballon tombé = l'autre équipe le prend.", "Je fais une passe à mon partenaire.", "", "", "e2"],
+    ["Le béret des calculs", 17, "Le prof donne un calcul (« 3 + 4 ! ») : le joueur numéro 7 part. Pour les plus grands : « le double de 4 », « 15 moins 6 ».", "Je pars le premier.", "", "", "e2"]],
+   x: [["La revanche : le béret des engins", 15, "Nouvelles équipes ; ce sont les élèves qui inventent le parcours (validé par le prof).", "Mon équipe gagne."]],
+   r: [["bilan", 7]]},
+  {t: "Le panier vivant", ps: 1, sal: PREPA_PSAL, tags: "petite salle · cerceau tenu par un joueur sur un step · ballon", o: "Faire des passes pour s'approcher d'une cible mobile et marquer en collaborant avec le porteur du panier.", mat2: [["step", 4], ["cerceau", 4, "cerceaux"], ["ballon (mousse ou volley)", 2], ["coupelle", 16, "plots"]],
+   e: [["couleurs", 6],
+    ["passes2", 7, "Passes à travers un cerceau tenu par un troisième joueur."]],
+   c: [["Le panier vivant", 15, "Deux équipes. Au fond de chaque camp, un joueur de l'équipe debout sur un step, dans un cercle de 2 m (coupelles) où personne n'entre : il tient un cerceau au-dessus de sa tête, c'est le panier. On marque en lançant le ballon à travers le cerceau (le porteur peut bouger les bras pour aider). Passes à la main, pas de dribble, 3 pas maximum. Après chaque panier, le marqueur devient porteur.", "Je marque un panier.", "Panier seulement en lancer à deux mains.", "", "m5"],
+    ["Le panier qui bouge", 15, "Le porteur se déplace sur 3 steps alignés : l'équipe doit regarder où il est avant de lancer.", "Je lance quand le panier est en face.", "", "", "m5"],
+    ["Les deux paniers", 16, "Deux porteurs par équipe dans les deux coins du fond ; le panier du coin gauche vaut 1 point, celui du coin droit 2 points (plus loin, plus haut).", "Je marque un panier à 2 points.", "", "", "m5"]],
+   x: [["La revanche : le panier vivant", 15, "Tournoi ; les équipes au bord arbitrent et comptent.", "Mon équipe gagne un match."]],
+   r: [["parole", 7]]},
+  {t: "Le ballon-cible", ps: 1, sal: PREPA_PSAL, tags: "petite salle · gros ballon au centre · ballons en mousse", o: "Lancer fort et précis sur une cible mobile, récupérer vite les ballons, s'organiser en équipe.", mat2: [["gros ballon (kin-ball ou ballon de gym)", 2], ["ballon en mousse", 12, "mousse"]],
+   e: [["zombies", 6],
+    ["passes2", 7, "Passes fortes, à hauteur de poitrine, avec un pas en avant."]],
+   c: [["Le ballon-cible", 15, "Un gros ballon posé au milieu de la salle. Deux équipes, chacune derrière sa ligne de lancer (ligne de service du badminton, à 2 m du milieu). On lance les ballons en mousse sur le gros ballon pour le pousser jusqu'au mur ou la ligne de fond adverse. On ne franchit jamais sa ligne ; on récupère les ballons qui reviennent chez soi. Gros ballon au fond adverse = 1 point, on le replace au milieu.", "Mon équipe pousse le ballon au fond adverse.", "Lancers seulement à deux mains par-dessus la tête.", "", "e2"],
+    ["Les deux ballons-cibles", 15, "Deux gros ballons en même temps : il faut se partager les cibles. Chaque ballon arrivé au fond = 1 point.", "Mon équipe marque avec les 2 ballons.", "", "", "e2"],
+    ["Le ballon-cible des 4 camps", 16, "4 équipes, une de chaque côté de la salle (un carré de 4 lignes de lancer). Le gros ballon au centre : l'équipe dont le mur est touché perd 1 point.", "Mon mur n'est jamais touché.", "", "", "e4"]],
+   x: [["La revanche : le ballon-cible", 15, "Nouvelles équipes, 3 manches de 3 min ; les équipes changent de côté à chaque manche.", "Mon équipe gagne une manche."]],
+   r: [["statues", 7]]},
+  {t: "Les équilibristes", ps: 1, sal: PREPA_PSAL, tags: "petite salle · bancs retournés · duels d'équilibre · tournoi", o: "Tenir son équilibre sur une surface étroite, déséquilibrer l'autre sans brutalité, en respectant les règles du duel.", mat2: [["banc (retourné : on marche sur la barre)", 4, "bancs"], ["tapis", 8], ["coussin ou ballon en mousse", 4, "mousse"]],
+   e: [["genoux", 6],
+    ["miroir", 7]],
+   c: [["Le croisement", 14, "4 bancs retournés au sol (on marche sur la barre étroite), avec des tapis de chaque côté. Par deux, chacun part d'un bout : on se croise au milieu sans descendre, en s'aidant. Puis les yeux fermés pour l'un, guidé par la voix de l'autre.", "Ma paire se croise sans tomber.", "Avec un ballon tenu sur la tête.", "", "p"],
+    ["Le duel des paumes", 16, "Face à face au milieu de la barre, pieds l'un derrière l'autre. On ne touche QUE les paumes de l'autre (pousser, esquiver, tirer) pour lui faire poser un pied par terre. Pied à terre = 1 point pour l'autre. Manches en 3 points. Ceux qui attendent sont arbitres.", "Je gagne une manche.", "Avec un coussin chacun : on pousse seulement le coussin de l'autre.", "", "g4"],
+    ["Le tournoi des équilibristes", 16, "Montée-descente sur les 4 bancs : le banc 1 est celui des champions. Après chaque duel, le gagnant monte d'un banc, le perdant descend. Celui qui finit au banc 1 est le champion.", "Je monte d'un banc.", "", "", "g4"]],
+   x: [["La revanche : les équilibristes", 15, "Duels par équipes : chaque équipe envoie un joueur à la fois, le gagnant reste sur la barre (le roi). L'équipe qui garde le roi le plus longtemps gagne.", "Mon équipe garde le roi."]],
+   r: [["mercis", 7]]},
+  {t: "Le jeu de l'oie sportif", ps: 1, sal: PREPA_PSAL, tags: "petite salle · steps = cases · gros dé · défis en équipe", o: "Réaliser des défis physiques variés en équipe, avec régularité et sans tricher, dans un jeu de plateau grandeur nature.", mat2: [["step (les cases)", 20], ["gros dé (en mousse) ou dé normal", "1"], ["feuille des défis", 4], ["chasuble (4 couleurs)", 1, "chasubles"]],
+   e: [["molecules", 6],
+    ["stepflash", 7]],
+   c: [["Le jeu de l'oie", 15, "20 steps en grande boucle = le plateau ; une feuille de défis numérotés de 1 à 20 est affichée. 4 équipes : le pion de chaque équipe est un joueur (différent à chaque tour). On lance le dé, le pion avance, et toute l'équipe fait le défi de la case au milieu (10 squats, 5 pompes, 30 s de gainage, un aller-retour en pas chassés…) avant de relancer. Cases spéciales : 6 = le pont (on avance de 3), 13 = la prison (on attend un double), 19 = retour à la case 10. L'équipe qui arrive au 20 la première gagne.", "Mon équipe fait tous ses défis jusqu'au bout.", "Défis plus durs pour les plus grands (doubler les nombres).", "", "e4"],
+    ["Le jeu de l'oie des duels", 15, "Quand un pion arrive sur la case d'un autre pion, duel (chifoumi ou le premier qui touche le step d'à côté) : le perdant recule de 3 cases.", "Je gagne un duel.", "", "", "e4"],
+    ["Le jeu de l'oie des quiz", 16, "Cases paires = une question de sport, de règles ou d'EPS posée par le prof : bonne réponse = on rejoue tout de suite.", "Mon équipe répond juste à 3 questions.", "", "", "e4"]],
+   x: [["La revanche : le jeu de l'oie sportif", 15, "Chaque équipe écrit 3 nouveaux défis sur des feuilles et les place sur des cases ; nouvelle partie.", "Mon équipe gagne une partie."]],
+   r: [["quiz", 7]]},
+  {t: "La chasse aux lettres", ps: 1, sal: PREPA_PSAL, tags: "petite salle · steps · cartes-lettres · relais", o: "Courir en relais, mémoriser et coopérer pour trouver un mot avant les autres équipes.", mat2: [["step", 16], ["carte-lettre (sous les steps)", 40], ["cerceau (le coin de chaque équipe)", 4, "cerceaux"]],
+   e: [["serpent", 6],
+    ["feux", 7]],
+   c: [["La chasse aux lettres", 15, "Sous chaque step, le prof a caché 2 ou 3 cartes-lettres. 4 équipes, chacune dans un coin avec un cerceau, reçoivent un mot de 5 ou 6 lettres. Un joueur à la fois court soulever UN step : si une lettre sert à son mot, il la rapporte dans le cerceau, sinon il remet le step et revient taper dans la main du suivant. La première équipe qui a son mot gagne.", "Je rapporte une bonne lettre.", "Mots plus longs pour les plus grands.", "", "e4"],
+    ["Le mot mystère", 15, "Les équipes ne connaissent pas leur mot (un mot de sport) : elles rapportent les lettres de leur couleur et essaient de le deviner. Une mauvaise réponse = 10 sauts pour toute l'équipe.", "Mon équipe devine le mot.", "", "", "e4"],
+    ["Les voleurs de lettres", 16, "Même jeu, mais on peut aussi voler une lettre dans le cerceau d'une autre équipe (une seule par course). Deux gardiens par équipe protègent le cerceau en touchant les voleurs.", "Je vole une lettre sans être touché.", "", "", "e4"]],
+   x: [["La revanche : la chasse aux lettres", 15, "Chaque équipe cache un mot pour une autre équipe ; nouvelle chasse.", "Mon équipe trouve son mot la première."]],
+   r: [["journaliste", 7]]},
+  {t: "La course des chenilles", ps: 1, sal: PREPA_PSAL, tags: "petite salle · ballons · relais en files · obstacles", o: "Coopérer en file pour faire avancer un ballon vite et sans le faire tomber, franchir des obstacles ensemble.", mat2: [["ballon (volley ou mousse)", 6], ["banc", 2, "bancs"], ["step", 6], ["tapis", 2]],
+   e: [["serpent", 6],
+    ["cercle", 7]],
+   c: [["Le dessus-dessous", 14, "Équipes de 5 ou 6 en file, collés. Le premier passe le ballon au-dessus de sa tête, le deuxième entre ses jambes, et ainsi de suite. Le dernier court se placer devant la file avec le ballon. La file avance ainsi d'un mur à l'autre ; la première chenille dont la tête touche le mur d'en face gagne.", "Mon équipe ne fait jamais tomber le ballon.", "Ballon tombé = toute la chenille fait 3 sauts.", "", "g6"],
+    ["La chenille à obstacles", 16, "Même course, mais la chenille doit franchir un banc (tout le monde passe dessus), slalomer entre 3 steps et passer sur un tapis à genoux. On ne lâche pas les épaules du joueur de devant.", "Mon équipe passe tous les obstacles sans se casser.", "", "", "g6"],
+    ["La chenille à 3 ballons", 16, "Trois ballons en même temps dans la file, qui passent l'un après l'autre (dessus, dessous, sur le côté). Le dernier ne part que quand il a les 3 ballons.", "Mon équipe garde les 3 ballons.", "", "", "g6"]],
+   x: [["La revanche : la course des chenilles", 15, "Grande finale : 2 chenilles géantes (la moitié de la classe chacune), aller-retour.", "Ma chenille gagne."]],
+   r: [["meteo", 7]]},
+  {t: "Les olympiades de la petite salle", ps: 1, sal: PREPA_PSAL, tags: "petite salle · 5 ateliers · points par équipe · podium", o: "Se dépasser sur des épreuves variées et courtes, compter juste pour son équipe, encourager les autres.", mat2: [["step", 5], ["plinth (le caisson ouvert)", "1"], ["ballon en mousse", 5, "mousse"], ["tapis", 3], ["chronomètre", 2], ["feuille de score", 5]],
+   e: [["chef", 6],
+    ["stepflash", 7]],
+   c: [["Le tour des ateliers", 16, "5 ateliers de 2 min 30, une équipe par atelier, on tourne au sifflet : ① montées de step en 30 s (chacun son tour, on compte) ; ② lancer de 5 ballons dans le caisson du plinth à 4 m ; ③ traversée des espaliers chronométrée (pieds au 1er barreau) ; ④ saut en longueur sans élan sur les tapis (on mesure en pieds) ; ⑤ gainage à 2 (le premier qui pose le genou perd). Chaque équipe note son meilleur score par atelier.", "Je bats mon score au 2e passage.", "Ateliers plus faciles pour les plus jeunes (lancer à 3 m).", "", "a5"],
+    ["Le défi des champions", 15, "Chaque équipe envoie un champion par atelier contre les champions des autres équipes (épreuve en direct devant tout le monde). 1er = 4 points, 2e = 3, 3e = 2, 4e = 1.", "Mon équipe gagne un atelier.", "", "", "e4"],
+    ["La finale par équipes", 16, "Relais final à travers les 5 ateliers (une épreuve courte à chacun, toute l'équipe passe). Les points de la finale comptent double.", "Mon équipe finit le relais.", "", "", "e4"]],
+   x: [["La revanche : les olympiades", 15, "Épreuve surprise inventée par les équipes, puis remise des médailles.", "Mon équipe monte sur le podium."]],
+   r: [["podium", 7]]},
+  {t: "La balle-bunker", ps: 1, sal: PREPA_PSAL, tags: "petite salle · ballons en mousse · bancs et plinths comme abris", o: "Lancer précis sous les épaules, se protéger derrière un abri, revenir en jeu grâce à son équipe.", mat2: [["ballon en mousse", 6, "mousse"], ["banc (couché sur le côté)", 4, "bancs"], ["plinth", 2], ["step", 6]],
+   e: [["lapins", 6],
+    ["passes2", 7, "Passes à une main de plus en plus fortes, vers le ventre ; le receveur serre la balle."]],
+   c: [["La balle-bunker", 15, "Deux camps séparés par la ligne du milieu. Dans chaque camp, des abris : 2 bancs couchés sur le côté, un plinth, 3 steps. Ballons en mousse uniquement, on touche sous les épaules. Touché sans rebond = on va s'asseoir au bord de son camp ; on revient quand un coéquipier attrape un ballon de volée. On ne reste pas plus de 5 s derrière un abri (on compte). L'équipe qui n'a plus de joueur en jeu perd.", "Je reviens en jeu au moins une fois.", "Un troisième ballon.", "", "e2"],
+    ["Le bunker du roi", 15, "Chaque équipe a un roi secret : il ne peut être touché qu'une fois tous ses coéquipiers éliminés… ou si l'autre équipe le devine en criant son nom (une seule tentative par manche).", "Mon équipe trouve le roi adverse.", "", "", "e2"],
+    ["Le bunker du milieu", 16, "Un abri au milieu (le plinth) : un joueur qui reste 5 s derrière sans être touché libère tous ses coéquipiers assis.", "Je libère mon équipe.", "", "", "e2"]],
+   x: [["La revanche : la balle-bunker", 15, "Nouvelles équipes ; chaque équipe place ses abris comme elle veut (1 min).", "Mon équipe gagne une manche."]],
+   r: [["vote", 7]]},
+  {t: "La conquête des tapis", ps: 1, sal: PREPA_PSAL, tags: "petite salle · gros tapis = refuges · chasubles · jeu de course", o: "Courir en évitant, feinter, choisir le bon moment pour attaquer, protéger son camp.", mat2: [["gros tapis de réception", 2], ["chasuble (2 couleurs)", 1, "chasubles"], ["foulard", 1]],
+   e: [["chaine", 6],
+    ["genoux", 7]],
+   c: [["La conquête des tapis", 15, "Deux équipes, chacune dans sa moitié. Au fond de chaque camp, un gros tapis (le trésor). Il faut aller s'allonger sur le tapis adverse sans se faire toucher : chaque joueur arrivé = 1 point, il revient en marchant sur le côté (il ne peut pas être touché). Dans son propre camp, on peut toucher les adversaires (main sur le dos) : touché = retour dans son camp. Interdit de rester à moins de 2 m de son propre tapis.", "Je marque un point sur le tapis adverse.", "Les arrivants restent sur le tapis et attendent un coéquipier pour revenir.", "", "e2"],
+    ["Le tapis des prisonniers", 15, "Touché = prisonnier, assis sur le tapis de l'adversaire. Un coéquipier qui arrive sur ce tapis délivre un prisonnier : ils reviennent ensemble, sans être touchés.", "Je délivre un prisonnier.", "", "", "e2"],
+    ["Les foulards", 16, "Chacun a un foulard dans le short : on ne touche plus, on vole le foulard. Foulard volé = retour dans son camp pour en reprendre un.", "Je garde mon foulard en marquant.", "", "", "e2"]],
+   x: [["La revanche : la conquête des tapis", 15, "Nouvelles équipes, 3 manches de 4 min ; chaque équipe a un arbitre (à tour de rôle) qui valide les points.", "Mon équipe gagne une manche."]],
+   r: [["respire", 7]]},
+  {t: "Le relais des énigmes", ps: 1, sal: PREPA_PSAL, tags: "petite salle · cartes · course et réflexion · équipes", o: "Courir vite en relais et réfléchir ensemble, sous la fatigue, pour résoudre des énigmes avant les autres.", mat2: [["plinth (la table des énigmes)", "1"], ["carte-énigme (calcul, devinette, règle de sport)", 40], ["cerceau (le coin de chaque équipe)", 4, "cerceaux"], ["feuille et crayon", 4]],
+   e: [["molecules", 6],
+    ["ombre", 7]],
+   c: [["Le relais des énigmes", 15, "Sur le plinth au milieu, les cartes-énigmes retournées. 4 équipes dans 4 coins. Un joueur court chercher UNE carte, la rapporte ; toute l'équipe cherche la réponse et l'écrit sur la feuille. Le joueur suivant ne part qu'une fois la réponse écrite. Le prof vérifie à la fin : 1 point par bonne réponse, −1 par mauvaise.", "Mon équipe a 5 bonnes réponses.", "Énigmes adaptées à l'âge (calcul pour les 1res, logique pour les 6es).", "", "e4"],
+    ["Le puzzle-relais", 15, "Chaque course rapporte une pièce d'un puzzle (une affiche de sport découpée en 12). Première équipe qui a reconstitué son affiche gagne.", "Mon équipe finit son puzzle.", "", "", "e4"],
+    ["Les énigmes à gage", 16, "Les énigmes sont collées sous les steps ; avant de prendre une carte, le coureur fait le défi écrit sur le step (5 montées, 5 sauts, 1 roulade).", "Je fais tous les défis.", "", "", "e4"]],
+   x: [["La revanche : le relais des énigmes", 15, "Chaque équipe écrit 3 énigmes pour les autres ; dernier relais.", "Mon équipe gagne le relais."]],
+   r: [["parole", 7]]},
+  {t: "La fête foraine", ps: 1, sal: PREPA_PSAL, tags: "petite salle · 4 stands de lancer · tickets · grand gagnant", o: "Lancer avec précision de différentes façons (à une main, à deux mains, en roulant), compter ses points honnêtement.", mat2: [["plinth", 2], ["cône ou quille", 15, "cones"], ["cerceau", 6, "cerceaux"], ["ballon en mousse ou balle", 16, "mousse"], ["banc", 2, "bancs"], ["coupelle (ticket)", 30, "plots"]],
+   e: [["zombies", 6],
+    ["passes2", 7, "Lancers précis dans un cerceau posé au sol entre les deux."]],
+   c: [["Les stands", 16, "4 stands comme à la foire : ① le chamboule-tout (une pyramide de 6 cônes sur un plinth, 3 balles) ; ② les cerceaux des espaliers (3 cerceaux accrochés aux barreaux, on lance à travers) ; ③ le bowling (5 quilles au bout d'un banc, on fait rouler) ; ④ le lancer dans le caisson du plinth. 4 groupes, on tourne au sifflet. À chaque stand réussi, le forain (un élève du groupe) donne un ticket (une coupelle).", "Je gagne un ticket à chaque stand.", "On recule d'un pas après chaque réussite.", "", "a4"],
+    ["Le grand concours", 15, "Chaque stand a son record affiché ; un élève qui bat le record gagne 3 tickets. Le forain change à chaque tour.", "Je bats un record.", "", "", "a4"],
+    ["La fête foraine en équipe", 15, "Les groupes deviennent des équipes : les tickets de tout le groupe s'additionnent. Les gagnants choisissent le stand de la finale.", "Mon équipe a le plus de tickets.", "", "", "a4"]],
+   x: [["La revanche : la fête foraine", 15, "Chaque groupe invente un nouveau stand (validé par le prof) et les autres l'essaient.", "Mon stand est essayé par tous."]],
+   r: [["podium", 7]]},
+  {t: "Le défi des grimpeurs", ps: 1, sal: {...PREPA_PSAL, p: {m: 1, f: 1, warn: "Sécurité : gros tapis au pied des espaliers, pieds jamais plus haut que le 3e barreau, 4 grimpeurs maximum en même temps."}}, tags: "petite salle · espaliers · gros tapis · pinces à linge · circuit", o: "Se déplacer en sécurité sur les espaliers (3 appuis, pieds bas), enchaîner avec un circuit au sol.", mat2: [["gros tapis de réception (au pied des espaliers)", 3], ["pince à linge", 30], ["step", 8], ["banc", 2, "bancs"]],
+   e: [["serpent", 6],
+    ["chef", 7]],
+   c: [["La traversée des espaliers", 14, "La moitié de la classe aux espaliers (gros tapis au pied), l'autre moitié sur un circuit au sol (montées de step, pas chassés le long des bancs) ; on change toutes les 4 min. Aux espaliers : traversée d'un bout à l'autre, pieds jamais plus haut que le 3e barreau, toujours 3 appuis (2 mains 1 pied ou 2 pieds 1 main). 4 grimpeurs en même temps, départs décalés.", "Je traverse sans poser le pied au sol.", "Traversée avec une main dans le dos pour les plus à l'aise.", "", "a2"],
+    ["La cueillette", 16, "Des pinces à linge sont accrochées aux barreaux (bas et milieu). Pendant sa traversée, chacun en décroche le plus possible pour son équipe, sans monter plus haut que le 3e barreau. Équipe avec le plus de pinces = gagnante.", "Je rapporte 3 pinces.", "", "", "a2"],
+    ["Le relais des grimpeurs", 16, "Par équipes : traversée en relais, chrono de l'équipe. Pied au sol = on recommence la traversée. L'équipe la plus rapide gagne ; les autres sont pareurs (une main tendue, sans toucher).", "Mon équipe fait le relais sans pied au sol.", "", "", "e4"]],
+   x: [["La revanche : le défi des grimpeurs", 15, "Chaque équipe accroche les pinces pour une autre équipe (là où c'est difficile, mais pas plus haut que le 3e barreau).", "Mon équipe récolte toutes ses pinces."]],
+   r: [["respire", 7]]}
 ]}
 }});
 
@@ -573,3 +832,238 @@ an: {
     'La revanche : le docteur': g => window.PSCH_SC.hiver['Le docteur'](g)
   };
 })();
+
+/* ===== Schémas des jeux « Petite salle » (1er nov. 2026) : la salle 2 = un grand terrain de badminton,
+   espaliers sur le petit côté gauche, plinths, steps, bancs, gros tapis. ===== */
+Object.assign(window.PSCH_SC.hiver, (() => {
+  const EQ = ['#1f63d6', '#e8590c', '#16a34a', '#8a3ffc'];
+  const R = (g, s) => g.raw(s, 'top');
+  const LB = '#9cc9ad';
+  // la petite salle : lignes du terrain de badminton, espaliers à gauche
+  const esp = g => { let s = '<rect x="13" y="28" width="11" height="194" fill="#ecd9ae" stroke="#a5824a" stroke-width="1.2"/>'; for (let y = 34; y < 222; y += 8) s += `<path d="M13 ${y}h11" stroke="#a5824a" stroke-width="1.1"/>`; g.raw(s, 'mid'); return g.label(19, 22, 'espaliers', {s: 8, b: 1, c: '#7a5a22', a: 'start'}); };
+  const salle = (g, o = {}) => { g.hall(); if (o.lignes !== false) g.raw(`<rect x="44" y="40" width="330" height="170" fill="none" stroke="${LB}" stroke-width="1.6"/><path d="M209 40V210M44 125H170M248 125H374M170 40V210M248 40V210" stroke="${LB}" stroke-width="1.1"/>`, 'bg'); if (o.esp !== false) esp(g); return g; };
+  const gt = (g, x, y, w, h, lab = 'gros tapis') => { g.mat(x, y, w, h, {c: '#7fb0e3', st: '#3f6fa8', seams: 3}); return lab ? g.label(x + w / 2, y + h / 2 + 3, lab, {s: 9, b: 1, c: '#0b2545'}) : g; };
+  const kin = (g, x, y, r = 13) => R(g, `<circle cx="${x}" cy="${y}" r="${r}" fill="#ec4899" opacity=".88" stroke="#831843" stroke-width="1.5"/><path d="M${x - r * .6} ${y - r * .3}q${r * .6} ${r * .5} ${r * 1.2} 0" stroke="#fff" stroke-width="1.2" fill="none" opacity=".7"/>`);
+  const baud = (g, x, y, c = '#f43f5e') => R(g, `<ellipse cx="${x}" cy="${y}" rx="6" ry="7.5" fill="${c}" stroke="#7f1d1d" stroke-width="1"/><path d="M${x} ${y + 7.5}q-3 5 1 9" stroke="#555" stroke-width=".9" fill="none"/>`);
+  const caisson = (g, x, y, lab = 'caisson ouvert') => { g.raw(`<rect x="${x - 18}" y="${y - 13}" width="36" height="26" rx="4" fill="#d8b98a" stroke="#7a5228" stroke-width="1.6"/><rect x="${x - 12}" y="${y - 8}" width="24" height="16" rx="2" fill="#6b4a26"/>`, 'mid'); return lab ? g.label(x, y + 24, lab, {s: 8.5}) : g; };
+  const bancCouche = (g, x, y, vert = true, lab) => { vert ? g.bench(x, y - 28, x, y + 28) : g.bench(x - 28, y, x + 28, y); g.raw(vert ? `<path d="M${x + (x < 200 ? 6 : -6)} ${y - 26}V${y + 26}" stroke="#7a5228" stroke-width="3"/>` : `<path d="M${x - 26} ${y + 6}H${x + 26}" stroke="#7a5228" stroke-width="3"/>`, 'mid'); return lab ? g.label(x, y + (vert ? 42 : 18), lab, {s: 8.5, b: 1}) : g; };
+  const tremplin = (g, x, y) => g.raw(`<path d="M${x - 14} ${y + 10}L${x + 14} ${y + 2}V${y - 2}L${x - 14} ${y - 10}Z" fill="#c2410c" stroke="#7c2d12" stroke-width="1.4"/>`, 'mid').label(x, y + 22, 'sautoir', {s: 8.5});
+  const pince = (g, x, y) => R(g, `<rect x="${x - 2}" y="${y - 5}" width="4" height="10" rx="1" fill="#facc15" stroke="#854d0e" stroke-width=".8"/>`);
+  const carte = (g, x, y, t = '?') => R(g, `<rect x="${x - 6}" y="${y - 8}" width="12" height="16" rx="2" fill="#fff" stroke="#2d3530" stroke-width="1.2"/><text x="${x}" y="${y + 4}" font-size="9" font-weight="700" text-anchor="middle" fill="#2d3530">${t}</text>`);
+  const coupelle = (g, x, y, dos) => R(g, dos ? `<path d="M${x - 6} ${y + 3}Q${x} ${y - 8} ${x + 6} ${y + 3}Z" fill="#facc15" stroke="#a37f00" stroke-width="1"/>` : `<path d="M${x - 6} ${y - 3}Q${x} ${y + 8} ${x + 6} ${y - 3}Z" fill="#fde68a" stroke="#a37f00" stroke-width="1" stroke-dasharray="2 1.5"/>`);
+  const assis = (g, x, y, t = 'a') => g.pl(t, x, y, '', {}).raw(`<path d="M${x - 9} ${y + 12}h18" stroke="#2d3530" stroke-width="2" stroke-linecap="round"/>`, 'top');
+  const milieu = g => g.line('M209 25V225', 2.2, '#9a8b6e', '6 4');
+  const deux = (g, nA = 5, nB = 5, o = {}) => { g.scatter('a', nA, o.ax0 || 50, 45, o.ax1 || 190, 205, {seed: o.s || 3}); g.scatter('b', nB, o.bx0 || 228, 45, o.bx1 || 370, 205, {seed: (o.s || 3) + 5}); return g; };
+  const calmeP = (g, T) => { salle(g, {lignes: false}); g.ring('a', 10, 209, 162, 130, 50); [180, 209, 238].forEach((x, i) => g.step(x, 125 - (i === 1 ? 6 : 0))); g.label(209, 108, 'podium', {s: 9, b: 1}); T.forEach((t, i) => g.tag(209, 36 + i * 21, t, {s: 9.5})); return g; };
+
+  /* --- bases des jeux --- */
+  const kinVolley = (g, o = {}) => { salle(g); g.net(209, 30, 220); g.label(209, 238, 'filet à hauteur de volley', {s: 9, b: 1}); deux(g, o.n || 6, o.n || 6, {ax0: 40, ax1: 190, bx0: 228, bx1: 372}); kin(g, 150, 70); g.lob(150, 80, 290, 120, -40); g.arrow('lob', 375, 60, 330, 95, 10); g.tag(345, 40, 'le mur compte !', {s: 8.5}); return g; };
+  const nettoie = (g, o = {}) => { salle(g); g.bench(209, 50, 209, 125).bench(209, 125, 209, 200); deux(g, 5, 5); [[90, 80], [130, 170], [70, 140], [160, 60], [290, 90], [320, 180], [260, 150], [345, 70], [110, 110], [300, 130]].forEach(([x, y]) => g.ball(x, y)); g.lob(130, 170, 280, 160, -40).lob(300, 130, 150, 100, 40); return g; };
+  const chateaux = (g, o = {}) => { salle(g); milieu(g); g.plinth(60, 125, 34, 50, 'château A').plinth(358, 125, 34, 50, 'château B'); [[60, 108], [60, 118], [60, 128], [60, 138], [60, 148]].forEach(([x, y]) => g.cone(x, y)); [[358, 108], [358, 118], [358, 128], [358, 138], [358, 148]].forEach(([x, y]) => g.cone(x, y, '#1f63d6'));
+    g.line('M170 30V220', 2, '#e11d48', '4 3').line('M248 30V220', 2, '#e11d48', '4 3'); g.pls('a', [[120, 60], [140, 125], [115, 190]]).pls('b', [[290, 70], [275, 140], [300, 195]]); g.shot(150, 120, 345, 128); return g.label(170, 238, 'ligne de lancer de B', {s: 8.5, c: '#e11d48'}).label(248, 18, 'ligne de lancer de A', {s: 8.5, c: '#e11d48'}); };
+  const bBanc = (g, o = {}) => { salle(g, {esp: false}); milieu(g); g.bench(372, 70, 372, 180).bench(30, 70, 30, 180); g.zone(340, 60, 28, 130, '', 'red').zone(46, 60, 28, 130, '', 'blue'); g.A(372, 125, '', {}).B(30, 125); if (o.monte) g.A(372, 100).A(372, 150); g.pls('a', [[120, 70], [170, 140], [240, 90], [280, 180]]).pls('b', [[150, 100], [210, 160], [300, 60], [110, 190]]); g.ball(280, 180).lob(285, 175, 366, 130, -20); return g; };
+  const matball = (g, o = {}) => { salle(g, {lignes: false}); gt(g, 300, 160, 70, 50, 'base 1'); gt(g, 300, 36, 70, 50, 'base 2'); gt(g, 40, 36, 70, 50, 'base 3'); g.hoop(70, 190, 14).label(70, 220, 'marbre', {s: 8.5, b: 1}); g.hoop(200, 150, 12, '#16a34a').B(200, 150, 'L'); g.A(85, 190, '', {ball: 'foot'}); g.row('a', 4, 110, 226, 170, 226); g.label(140, 244 - 30, 'frappeurs', {s: 8.5, b: 1}); g.path('run', [[95, 185], [250, 200], [300, 190]]); g.pls('b', [[180, 70], [240, 110], [130, 120], [330, 120]]); return g; };
+  const pacman = (g, o = {}) => { salle(g); [[44, 80], [100, 40], [209, 160], [170, 90], [300, 125], [248, 190], [374, 60], [120, 125]].forEach(([x, y]) => coupelle(g, x, y, true)); if (o.rouge) [[44, 200], [374, 200]].forEach(([x, y]) => g.plot(x, y, '#e11d48'));
+    g.pls('a', [[44, 150], [170, 60], [248, 70], [320, 210], [140, 210]]); [[209, 100], [330, 40]].forEach(([x, y]) => R(g, `<circle cx="${x}" cy="${y}" r="10" fill="#facc15" stroke="#854d0e" stroke-width="1.5"/><path d="M${x} ${y}L${x + 11} ${y - 6}V${y + 6}Z" fill="#f4efe4"/>`)); g.run(209, 110, 209, 150, 0).run(320, 40, 255, 40, 0); return g; };
+  const ninja = (g, o = {}) => { salle(g, {lignes: false}); [60, 85, 110, 135, 160, 185].forEach((x, i) => g.step(x, 205 - (i % 2) * 10)); g.num(40, 205, 1); g.bench(230, 210, 340, 210); g.num(232, 230, 2); g.step(370, 165).step(370, 115).bench(355, 110, 355, 170); g.num(385, 140, 3); g.num(40, 120, 4); g.plinth(80, 50, 36, 26, ''); gt(g, 110, 34, 70, 40, ''); g.num(80, 30, 5); [230, 260, 290, 320].forEach((x, i) => g.hoop(x, 60 + (i % 2) * 22, 11)); g.num(350, 60, 6);
+    g.path('run', [[60, 190], [190, 195], [345, 205], [370, 100], [300, 70], [200, 60], [130, 50], [70, 70], [30, 130], [40, 185]]); g.A(65, 190).A(140, 196); return g; };
+  const tremp = (g, o = {}) => { salle(g, {lignes: false}); [80, 175].forEach((y, i) => { tremplin(g, 230, y); gt(g, 262, y - 30, 90, 60, 'gros tapis'); g.file('a', 4, 200, y, -24, 0, {c: EQ[i]}); g.run(204, y, 222, y); g.P(300, y + 38 > 225 ? y - 40 : y + 38); }); if (o.juges) g.row('b', 3, 120, 128, 180, 128).label(150, 146, 'juges', {s: 9, b: 1}); return g; };
+  const handTapis = (g, o = {}) => { salle(g, {esp: false}); milieu(g); g.mat(14, 75, 10, 100, {c: '#7fb0e3', st: '#3f6fa8'}).mat(376, 75, 10, 100, {c: '#7fb0e3', st: '#3f6fa8'}); g.czone(20, 125, 55, '', 'blue').czone(380, 125, 55, '', 'red'); g.label(48, 238, 'gros tapis debout', {s: 8.5, b: 1}).label(352, 238, 'gros tapis debout', {s: 8.5, b: 1}); g.X(36, 125, 'G').X(364, 125, 'G');
+    g.pls('a', [[140, 70], [190, 150], [260, 95], [300, 175]]).pls('b', [[170, 100], [230, 170], [320, 70], [120, 180]]); g.ball(300, 175).shot(306, 170, 372, 140); if (o.cibles) [[381, 100], [381, 125], [381, 150]].forEach(([x, y]) => R(g, `<rect x="${x - 4}" y="${y - 6}" width="8" height="12" fill="#facc15" stroke="#854d0e"/>`)); return g; };
+  const iles = (g, o = {}) => { salle(g, {lignes: false}); const P = [[70, 60], [150, 50], [240, 70], [320, 50], [110, 120], [200, 130], [290, 125], [360, 120], [70, 190], [160, 195], [250, 190], [340, 195]]; P.forEach(([x, y]) => g.step(x, y)); g.music(45, 125);
+    P.slice(0, 7).forEach(([x, y], i) => g.A(x - 6 + (i % 2) * 12, y - 12)); if (o.requins) g.X(130, 160, 'R').X(300, 160, 'R').run(130, 160, 155, 185, 0); return g; };
+  const footBancs = (g, o = {}) => { salle(g, {esp: false}); milieu(g); if (o.quatre) [[30, 70], [30, 180], [380, 70], [380, 180]].forEach(([x, y]) => bancCouche(g, x, y)); else { bancCouche(g, 30, 125, true, 'but'); bancCouche(g, 380, 125, true, 'but'); }
+    g.pls('a', [[120, 80], [170, 160], [250, 100], [300, 180]]).pls('b', [[150, 110], [230, 60], [270, 150], [110, 190]]); g.ball(300, 182, 'foot'); g.shot(306, 182, 372, o.quatre ? 182 : 140); g.tag(209, 238, 'ballon au ras du sol', {s: 9}); return g; };
+  const caissonJ = (g, o = {}) => { salle(g, {esp: false}); milieu(g); caisson(g, 40, 125, ''); caisson(g, 378, 125, ''); g.czone(40, 125, 42, '', 'blue').czone(378, 125, 42, '', 'red'); g.pls('a', [[130, 70], [180, 150], [250, 90], [290, 175]]).pls('b', [[160, 100], [230, 170], [310, 70], [110, 185]]); g.ball(290, 175); g.lob(295, 170, 374, 126, -30); if (o.cerceau){ g.step(209, 60); g.J(209, 60, 'N'); g.hoop(209, 40, 11); } return g.label(40, 175, 'caisson', {s: 8.5, b: 1}).label(378, 175, 'caisson', {s: 8.5, b: 1}); };
+  const baudVolley = (g, o = {}) => { salle(g); g.net(209, 30, 220); g.line('M30 125H388', 1.6, '#e8a06c', '5 4'); [[100, 60], [100, 185], [318, 60], [318, 185]].forEach(([x, y], i) => { g.ring(i < 2 ? 'a' : 'b', 3, x, y, 34, 26); }); baud(g, 140, 60); baud(g, 280, 175, '#3b82f6'); if (o.deux) baud(g, 120, 190, '#22c55e'); g.lob(140, 68, 270, 60, -30); return g.label(100, 238, 'terrain 2', {s: 8.5}).label(100, 18, 'terrain 1 (rois)', {s: 8.5, b: 1}); };
+  const footTennis = (g, o = {}) => { salle(g); g.net(209, 30, 220); g.label(209, 238, 'filet bas (genou-hanche)', {s: 9, b: 1}); g.line('M30 125H388', 1.6, '#e8a06c', '5 4'); [[110, 70], [110, 180]].forEach(([x, y]) => g.A(x - 30, y).A(x + 30, y)); [[310, 70], [310, 180]].forEach(([x, y]) => g.B(x - 30, y).B(x + 30, y)); g.ball(140, 70, 'foot'); g.lob(146, 66, 290, 60, -35); g.raw('<circle cx="250" cy="66" r="4" fill="none" stroke="#2d3530" stroke-dasharray="2 2"/>', 'top'); return g.label(250, 82, '1 rebond', {s: 8}); };
+  const pelote = (g, o = {}) => { salle(g, {lignes: false, esp: false}); g.wall(14, 14, 372, 9); [70, 170, 270].forEach((x, i) => { g.zone(x - 10, 26, 100, 70, `terrain ${i + 1}`, 'grey', {ly: 108}); g.A(x + 20, 70).B(x + 60, 75); }); g.ball(90, 50, 'hand'); g.shot(90, 66, 110, 26).shot(110, 26, 140, 70); g.wall(14, 227, 372, 9); [70, 170, 270].forEach(x => g.zone(x - 10, 154, 100, 70, '', 'grey')); g.A(110, 180).A(150, 185); return g.label(200, 140, 'les deux grands murs : 3 terrains chacun', {s: 9, b: 1}); };
+  const tennisBanc = (g, o = {}) => { salle(g, {lignes: false}); [[110, 75], [300, 75], [110, 180], [300, 180]].forEach(([x, y], i) => { g.zone(x - 70, y - 28, 140, 56, '', 'grey'); g.bench(x, y - 24, x, y + 24); g.A(x - 45, y, ''); g.B(x + 45, y, ''); g.label(x, y - 34, i === 0 ? 'banc des rois' : `banc ${i + 1}`, {s: 8.5, b: i === 0 ? 1 : 0}); }); g.ball(80, 75, 'hand'); g.lob(70, 70, 150, 70, -25); return g; };
+  const plots = (g, o = {}) => { salle(g); const P = [[60, 60], [100, 110], [70, 180], [140, 50], [150, 150], [190, 90], [230, 190], [250, 60], [270, 130], [310, 80], [330, 170], [360, 110], [200, 140], [120, 200], [300, 210], [350, 40]]; P.forEach(([x, y], i) => coupelle(g, x, y, i % 2));
+    g.A(110, 115).A(260, 125).A(300, 205).B(160, 145).B(320, 75).B(70, 175); if (o.gardiens) g.X(209, 100).X(200, 200); g.run(110, 115, 140, 55, 10); return g.tag(209, 18, '45 s… STOP !', {s: 9.5}); };
+  const beret = (g, o = {}) => { salle(g, {lignes: false}); g.row('a', 5, 60, 32, 360, 32, {labs: ['1', '2', '3', '4', '5']}); g.row('b', 5, 360, 218, 60, 218, {labs: ['1', '2', '3', '4', '5']}); g.hoop(209, 125, 13); g.ball(209, 125); g.step(150, 70); g.bench(240, 60, 290, 60); g.mat(120, 160, 40, 26); g.step(270, 180);
+    g.path('run', [[180, 42], [150, 70], [200, 95], [209, 115]]); g.path('run', [[240, 208], [270, 180], [215, 150]]); return g.tag(209, 238, '« 3 ! »', {s: 10}); };
+  const panierV = (g, o = {}) => { salle(g, {esp: false}); milieu(g); g.czone(370, 125, 38, '', 'red').czone(48, 125, 38, '', 'blue'); g.step(370, 125); g.A(370, 125).hoop(370, 104, 11); g.step(48, 125); g.B(48, 125).hoop(48, 104, 11);
+    if (o.bouge){ g.step(370, 75).step(370, 175); g.run(378, 120, 378, 82, 10); } g.pls('a', [[140, 70], [190, 150], [260, 95], [300, 170]]).pls('b', [[170, 100], [230, 170], [320, 60], [120, 185]]); g.ball(300, 170); g.lob(305, 166, 366, 108, -25); return g.label(370, 175, 'panier vivant', {s: 8.5, b: 1}); };
+  const cible = (g, o = {}) => { salle(g); g.line('M170 30V220', 2.2, '#e11d48', '4 3').line('M248 30V220', 2.2, '#e11d48', '4 3'); g.raw(`<circle cx="209" cy="${o.deux ? 80 : 125}" r="22" fill="#5fb784" stroke="#226b40" stroke-width="2"/>`, 'top'); if (o.deux) g.raw('<circle cx="209" cy="175" r="22" fill="#5fb784" stroke="#226b40" stroke-width="2"/>', 'top');
+    g.row('a', 5, 150, 45, 150, 205).row('b', 5, 268, 45, 268, 205); g.shot(158, 100, 188, 118).shot(158, 150, 190, 130).shot(260, 120, 232, 124); g.arrow('run', 222, 125, 290, 125, 0); return g.label(170, 238, 'ligne de lancer A', {s: 8.5, c: '#e11d48'}).label(248, 18, 'ligne de lancer B', {s: 8.5, c: '#e11d48'}); };
+  const equil = (g, o = {}) => { salle(g, {lignes: false}); [[70, 60], [240, 60], [70, 180], [240, 180]].forEach(([x, y], i) => { g.mat(x - 10, y - 22, 120, 44, {c: '#bcd6f2', st: '#7ea5e0'}); g.raw(`<rect x="${x}" y="${y - 3}" width="100" height="6" rx="2" fill="#c08a4f" stroke="#7a5228"/>`, 'mid'); if (o.duel){ g.A(x + 38, y).B(x + 62, y); } else { g.A(x + 15, y).B(x + 85, y); g.run(x + 22, y, x + 45, y, 0); } g.label(x + 50, y + 34, i === 0 ? 'banc 1 (champions)' : `banc ${i + 1}`, {s: 8.5, b: i === 0 ? 1 : 0}); }); return g; };
+  const oie = (g, o = {}) => { salle(g, {lignes: false}); const P = []; for (let i = 0; i < 20; i++){ const a = -Math.PI / 2 + i / 20 * 2 * Math.PI; P.push([209 + 160 * Math.cos(a), 125 + 92 * Math.sin(a)]); } P.forEach(([x, y], i) => { g.step(x, y); g.label(x, y + 3, String(i + 1), {s: 8, b: 1, c: '#fff'}); });
+    [[0, 'a'], [4, 'b'], [7, 'j'], [11, 'x']].forEach(([i, t]) => g.pl(t, P[i][0], P[i][1] - 14)); R(g, '<rect x="196" y="112" width="26" height="26" rx="5" fill="#fff" stroke="#2d3530" stroke-width="2"/><circle cx="203" cy="119" r="2.4" fill="#2d3530"/><circle cx="215" cy="131" r="2.4" fill="#2d3530"/><circle cx="209" cy="125" r="2.4" fill="#2d3530"/>'); return g.label(209, 152, 'défi au milieu', {s: 9, b: 1}); };
+  const lettres = (g, o = {}) => { salle(g, {lignes: false}); [[40, 40, 0], [378, 40, 1], [40, 210, 2], [378, 210, 3]].forEach(([x, y, i]) => { g.hoop(x, y, 13, EQ[i]); g.file('a', 3, x + (x < 200 ? 22 : -22), y, x < 200 ? 18 : -18, 0, {c: EQ[i]}); }); [[130, 80], [200, 60], [280, 90], [150, 150], [230, 130], [300, 165], [120, 200], [200, 195]].forEach(([x, y]) => g.step(x, y)); carte(g, 230, 118, 'S');
+    g.run(72, 45, 128, 72, 10).run(228, 132, 74, 205, 0); return g.tag(209, 18, 'mot : S P O R T', {s: 9.5}); };
+  const chenille = (g, o = {}) => { salle(g, {lignes: false}); [60, 125, 190].forEach((y, i) => { g.file('a', 6, 150, y, -20, 0, {c: EQ[i]}); g.ball(50, y - 12); g.lob(52, y - 8, 70, y - 8, -10); g.run(40, y + 14, 165, y + 14, 0); });
+    if (o.obst){ g.bench(250, 40, 250, 80); [250, 280, 310].forEach(x => g.step(x, 125)); g.mat(250, 170, 50, 36); } g.wall(376, 25, 10, 200); return g.label(350, 238, 'mur d\'arrivée', {s: 9, b: 1}); };
+  const olymp = (g, o = {}) => { salle(g, {lignes: false}); g.step(70, 60); g.num(70, 40, 1); caisson(g, 200, 60, ''); g.A(140, 60, '', {ball: true}).lob(146, 56, 192, 58, -20); g.num(200, 35, 2); g.num(40, 125, 3); g.A(30, 150); g.mat(270, 40, 90, 40); g.A(280, 60).run(290, 60, 340, 60, 0); g.num(315, 30, 4); g.mat(150, 160, 120, 50); g.label(210, 220, 'gainage à 2', {s: 8.5}); g.A(180, 185).B(240, 185); g.num(210, 150, 5); return g.chrono(360, 200); };
+  const bunker = (g, o = {}) => { salle(g, {lignes: false}); milieu(g); bancCouche(g, 80, 70); bancCouche(g, 140, 170); g.plinth(120, 110, 36, 22, ''); g.step(60, 190).step(170, 60); bancCouche(g, 340, 180); bancCouche(g, 280, 75); g.plinth(300, 140, 36, 22, ''); g.step(360, 60).step(250, 190); if (o.milieu) g.plinth(209, 125, 34, 30, 'abri du milieu');
+    g.pls('a', [[95, 70], [130, 120], [150, 185]]).pls('b', [[268, 80], [312, 150], [330, 190]]); assis(g, 30, 225); assis(g, 388 - 20, 225, 'b'); g.ball(130, 120); g.shot(140, 120, 300, 152); return g; };
+  const conquete = (g, o = {}) => { salle(g, {esp: false}); milieu(g); gt(g, 22, 85, 40, 80, ''); gt(g, 356, 85, 40, 80, ''); g.label(42, 180, 'tapis A', {s: 8.5, b: 1}).label(376, 180, 'tapis B', {s: 8.5, b: 1}); g.pls('a', [[100, 70], [140, 160], [250, 100], [300, 190]]).pls('b', [[120, 110], [270, 60], [320, 140], [170, 200]]);
+    g.path('run', [[250, 100], [300, 80], [350, 110]]); g.raw('<path d="M330 130L300 140" stroke="#2d3530" stroke-width="1.5"/>', 'top'); if (o.foulard) g.flag(305, 192, '#facc15'); return g.tag(209, 238, 'chez moi, je touche ; chez l\'autre, je cours', {s: 9}); };
+  const enigmes = (g, o = {}) => { salle(g, {lignes: false}); g.plinth(209, 125, 50, 34, 'énigmes'); [[196, 116], [209, 114], [222, 117]].forEach(([x, y]) => carte(g, x, y)); [[40, 40, 0], [378, 40, 1], [40, 210, 2], [378, 210, 3]].forEach(([x, y, i]) => { g.hoop(x, y, 13, EQ[i]); g.ring('a', 3, x + (x < 200 ? 30 : -30), y + (y < 125 ? 22 : -22), 14, 10, {c: EQ[i]}); }); g.run(80, 60, 185, 115, 10).run(190, 135, 80, 70, 20); return g.sheet ? g.sheet(60, 95) : g; };
+  const foire = (g, o = {}) => { salle(g, {lignes: false}); g.plinth(110, 55, 40, 22, ''); [[102, 45], [110, 45], [118, 45], [106, 38], [114, 38], [110, 31]].forEach(([x, y]) => g.cone(x, y)); g.num(60, 55, 1); g.A(160, 55, '', {ball: true}).shot(155, 55, 125, 50);
+    [80, 125, 170].forEach(y => g.hoop(26, y, 10)); g.num(48, 210, 2); g.A(90, 125).shot(84, 125, 34, 125); g.bench(250, 60, 350, 60); [[340, 50], [352, 56], [340, 66], [362, 62], [352, 70]].forEach(([x, y]) => g.cone(x, y, '#1f63d6')); g.num(300, 40, 3); g.A(230, 60).shot(238, 60, 330, 60);
+    caisson(g, 300, 175, ''); g.num(300, 205, 4); g.A(220, 175, '', {ball: true}).lob(228, 170, 294, 172, -20); return g.label(110, 18, 'chamboule-tout', {s: 8.5, b: 1}); };
+  const grimpe = (g, o = {}) => { salle(g, {lignes: false}); gt(g, 26, 30, 44, 190, ''); g.label(48, 238, 'gros tapis au pied', {s: 8.5, b: 1}); [[20, 50], [20, 90], [20, 130], [20, 170], [20, 200]].forEach(([x, y]) => pince(g, x, y)); g.A(19, 70).A(19, 150); g.run(30, 70, 30, 110, 0);
+    [[180, 60], [220, 60], [260, 60], [300, 60]].forEach(([x, y]) => g.step(x, y)); g.bench(170, 180, 330, 180); g.pls('b', [[180, 45], [260, 45], [200, 165], [290, 195]]); g.zone(150, 30, 220, 200, 'circuit au sol', 'grey', {top: 1}); return g; };
+
+  const x = (fn, o) => g => fn(g, o);
+  return {
+    chef: g => { salle(g, {lignes: false}); g.ring('a', 12, 209, 125, 120, 80); g.A(209, 45, 'C', {c: '#16a34a'}); g.X(209, 125, '?'); return g.tag(209, 160, 'le chef change de mouvement toutes les 5 s', {s: 9}).n(1, 'le cercle copie le chef d\'orchestre (C) en même temps').n(2, 'le détective (◆) au centre a 3 essais pour le trouver'); },
+    stepflash: g => { salle(g, {lignes: false}); [55, 105, 155, 205].forEach(y => { g.A(150, y - 5).B(270, y - 5); g.step(209, y - 5); coupelle(g, 209, y - 16, true); }); g.music(360, 125); return g.tag(209, 238, '« genoux ! … STEP ! »', {s: 9.5}).n(1, 'par deux, on monte et descend du step au rythme').n(2, 'au mot « STEP », le premier qui attrape la coupelle marque'); },
+    baudruche: g => { salle(g, {lignes: false}); [[110, 70], [300, 70], [110, 180], [300, 180]].forEach(([x, y], i) => { g.ring('a', 4, x, y, 40, 30, {c: EQ[i]}); baud(g, x, y - 4, ['#f43f5e', '#3b82f6', '#22c55e', '#f59e0b'][i]); }); g.lob(80, 60, 105, 60, -25); return g.n(1, 'groupes de 4 : on frappe chacun son tour, on compte à voix haute').n(2, 'ballon au sol = on repart de zéro ; puis 2 ballons'); },
+    genoux: g => { salle(g, {lignes: false}); [[100, 70], [300, 70], [100, 180], [300, 180]].forEach(([x, y]) => { g.zone(x - 40, y - 30, 80, 60, '', 'grey'); g.A(x - 14, y).B(x + 14, y); }); g.raw('<path d="M90 70l14 12" stroke="#2d3530" stroke-width="1.5"/>', 'top'); return g.tag(209, 125, 'les gagnants tournent →  ← les perdants', {s: 9}).n(1, 'toucher les genoux de l\'autre, protéger les siens : 30 s').n(2, 'nouvel adversaire à chaque manche'); },
+    serpent: g => { salle(g, {lignes: false}); [[120, 70, 0], [300, 90, 1], [140, 180, 2], [300, 190, 3]].forEach(([x, y, i]) => { g.file('a', 4, x, y, -20, 0, {c: EQ[i]}); g.flag(x - 72, y + 2, '#facc15'); }); g.run(130, 70, 225, 88, -10); return g.n(1, 'files de 4, mains sur les épaules ; la queue a un foulard').n(2, 'la tête attrape le foulard d\'un autre serpent sans casser le sien'); },
+    ninja: g => { salle(g, {lignes: false}); g.ring('a', 7, 120, 125, 70, 60); g.ring('b', 7, 300, 125, 70, 60); g.arrow('shot', 120, 70, 165, 95, -10); return g.tag(209, 225, 'un seul geste chacun son tour', {s: 9.5}).n(1, 'on essaie de toucher la main d\'un voisin, il peut esquiver d\'un geste').n(2, 'deux mains touchées = on sort ; le dernier ninja gagne'); },
+    podium: g => calmeP(g, ['étirements guidés', '🏆 l\'équipe gagnante monte sur le podium', '✋ vote : meilleur arbitre, joueur fair-play']).n(1, 'étirements en cercle').n(2, 'podium : équipe gagnante, meilleur arbitre, joueur le plus fair-play'),
+
+    "Le kin-volley sans faute": g => kinVolley(g).n(1, 'touches illimitées, on ne tient jamais le ballon').n(2, 'les murs comptent : le ballon reste en jeu'),
+    "L'ultimate volley": g => { kinVolley(g); g.bord(250, 238, 3, '', 'b'); return g.n(1, 'tout compte : murs, filet, touches illimitées').n(2, 'jamais 2 frappes de suite pour le même joueur ; match en 7').n(3, 'un arbitre au bord annonce le score'); },
+    "Le roi du filet": g => { kinVolley(g, {n: 4}); g.zone(300, 214, 80, 20, '', 'yellow'); g.row('j', 3, 310, 224, 370, 224); return g.label(340, 210, 'équipe qui attend', {s: 8.5, b: 1}).n(1, 'l\'équipe qui gagne le point reste et prend une couronne').n(2, 'la perdante sort, l\'équipe du bord entre tout de suite'); },
+    "La revanche : l'ultimate volley": g => window.PSCH_SC.hiver["L'ultimate volley"](g),
+
+    "Nettoie ton camp": g => nettoie(g).tag(209, 18, '1 min 30… STOP ! on compte', {s: 9}).n(1, 'renvoyer les balles une par une par-dessus les bancs, en cloche').n(2, 'au STOP : le camp le plus propre gagne la manche'),
+    "Le camp des gardiens": g => { nettoie(g); g.hoop(50, 125, 16).hoop(370, 125, 16); g.X(70, 105, 'G').X(70, 145, 'G').X(350, 105, 'G').X(350, 145, 'G'); return g.n(1, 'balle dans le cerceau adverse = 3 balles').n(2, 'les gardiens dévient les balles mais ne les attrapent pas'); },
+    "La guerre des couleurs": g => { nettoie(g); [[120, 60], [180, 190], [300, 60]].forEach(([x, y]) => R(g, `<circle cx="${x}" cy="${y}" r="4" fill="#c5e063" stroke="#5b6b1a"/>`)); return g.n(1, 'garder ses balles, renvoyer celles de l\'autre').n(2, 'au STOP : +1 par balle à soi, −1 par balle adverse'); },
+    "La revanche : nettoie ton camp": g => window.PSCH_SC.hiver["Nettoie ton camp"](g),
+
+    "Le tir au château": g => chateaux(g).n(1, '5 cônes sur chaque plinth (château)').n(2, 'on lance depuis sa ligne de lancer (pointillés rouges), sans la dépasser').n(3, 'tous les cônes adverses tombés = manche gagnée'),
+    "Les gardes du château": g => { chateaux(g); g.X(95, 105, 'G').X(95, 150, 'G').X(320, 110, 'G').X(320, 150, 'G'); g.step(209, 230); return g.label(230, 238, '3 montées', {s: 8, a: 'start'}).n(1, '2 gardes devant le château, sans le toucher').n(2, 'touché sous les épaules = 3 montées de step au bord'); },
+    "Le roi du château": g => { chateaux(g); g.hoop(358, 160, 9); g.ball(358, 160, 'basket'); g.hoop(60, 160, 9); g.ball(60, 160, 'basket'); return g.n(1, 'le roi (ballon de basket) est sur le château').n(2, 'faire tomber le roi = victoire immédiate'); },
+    "La revanche : les châteaux forts": g => window.PSCH_SC.hiver["Le tir au château"](g),
+
+    "Le ballon-banc": g => bBanc(g).n(1, 'un joueur debout sur le banc au fond du camp adverse').n(2, 'il attrape la passe sans tomber : le passeur monte le rejoindre').n(3, 'zone de 1 m devant le banc : personne n\'entre'),
+    "Le ballon-banc à 3 passes": g => { bBanc(g, {monte: 1}); g.pass(120, 70, 170, 136, 10).pass(176, 140, 238, 96, 10); return g.tag(209, 18, '3 passes, puis le banc', {s: 9}).n(1, '3 passes avant de viser le banc').n(2, 'c\'est l\'auteur de la passe décisive qui monte'); },
+    "Le ballon-banc à deux ballons": g => { bBanc(g, {monte: 1}); g.ball(150, 100); return g.n(1, 'deux ballons en même temps').n(2, 'ceux du banc bloquent les passes adverses bras levés'); },
+    "La revanche : le ballon-banc": g => window.PSCH_SC.hiver["Le ballon-banc"](g),
+
+    "Le mat-ball": g => matball(g).n(1, 'le lanceur (L) roule, le frappeur frappe du pied et court vers la base 1').n(2, 'plusieurs coureurs peuvent être sur le même tapis').n(3, 'tour complet = 1 point, d\'un coup = 3 points'),
+    "Le mat-ball du lanceur": g => { matball(g); g.pass(240, 110, 206, 144, 10); return g.n(1, 'ballon dans le cerceau du lanceur en 3 passes : les coureurs entre deux tapis sont éliminés'); },
+    "Le mat-ball qui déborde": g => { matball(g); [[315, 175], [330, 185], [345, 175], [355, 192], [320, 195]].forEach(([x, y]) => g.A(x, y)); return g.tag(335, 150, '5 = ça déborde !', {s: 8.5}).n(1, '5 coureurs sur un tapis : le premier arrivé repart'); },
+    "La revanche : le mat-ball": g => window.PSCH_SC.hiver["Le mat-ball"](g),
+
+    "Pac-Man": g => { pacman(g); assis(g, 100, 40); return g.n(1, 'on ne se déplace que sur les lignes').n(2, 'touché = assis sur la ligne : un obstacle'); },
+    "Les pac-gommes": g => { pacman(g); g.zone(14, 200, 40, 30, '', 'blue').zone(350, 200, 40, 30, '', 'orange'); return g.n(1, 'ramasser les coupelles (pac-gommes) une à une, les rapporter dans son coin').n(2, 'touché = on pose ses coupelles et on repart de son coin'); },
+    "Le super Pac-Man": g => { pacman(g, {rouge: 1}); return g.tag(209, 18, '« SUPER ! » : 10 s pour chasser Pac-Man', {s: 9}).n(1, 'coupelle rouge = les fantômes chassent Pac-Man 10 s'); },
+    "La revanche : Pac-Man": g => window.PSCH_SC.hiver["Les pac-gommes"](g),
+
+    "La découverte du parcours": g => ninja(g).n(1, 'sauter de step en step').n(2, 'marcher sur le banc retourné').n(3, 'ramper sous le banc posé sur 2 steps').n(4, 'traversée des espaliers, pieds au 1er barreau').n(5, 'plinth → saut groupé dans le gros tapis').n(6, 'slalom dans les cerceaux'),
+    "Le chrono des ninjas": g => { ninja(g); g.chrono(209, 125); return g.tag(209, 145, 'faute = +3 s', {s: 9}).n(1, '2 passages chronométrés par le binôme, on garde le meilleur'); },
+    "Le relais ninja": g => { ninja(g); g.file('b', 3, 60, 228, 20, 0); return g.n(1, 'relais par 4 : on part quand le coéquipier tape dans la main').n(2, 'les autres équipes chronomètrent et comptent les fautes'); },
+    "La revanche : le parcours ninja": g => window.PSCH_SC.hiver["Le relais ninja"](g),
+
+    "Les sauts de base": g => tremp(g).n(1, 'un sauteur à la fois par tremplin').n(2, 'droit, groupé, étoile ; réception plantée 2 s').n(3, 'le prof reste aux tremplins'),
+    "La note des juges": g => tremp(g, {juges: 1}).n(1, '3 juges notent : figure 4, hauteur 3, réception 3'),
+    "La finale des stars": g => { tremp(g); return g.tag(120, 125, 'saut synchronisé à deux', {s: 9}).n(1, 'les champions sautent en même temps sur les 2 tremplins').n(2, 'toute la classe juge (1 à 5 doigts)'); },
+    "La revanche : le tremplin des stars": g => window.PSCH_SC.hiver["La finale des stars"](g),
+
+    "Le hand-tapis": g => handTapis(g).n(1, 'but = toucher le gros tapis debout avec le ballon').n(2, 'seul le gardien (G) entre dans la zone'),
+    "Le hand-tapis à cibles": g => handTapis(g, {cibles: 1}).n(1, 'cible jaune = 2 points, le reste du tapis = 1 point'),
+    "Le hand-tapis à 2 gardiens": g => { handTapis(g); g.X(40, 90, 'G').X(370, 160, 'G'); return g.n(1, 'deux gardiens ; un but compte s\'il est marqué par un nouveau buteur'); },
+    "La revanche : le hand des gros tapis": g => window.PSCH_SC.hiver["Le hand-tapis"](g),
+
+    "Les îles musicales": g => iles(g).n(1, 'musique : on court autour des steps').n(2, 'musique coupée : sur une île, 2 au maximum').n(3, 'à chaque manche, un step de moins'),
+    "Les requins": g => iles(g, {requins: 1}).n(1, 'les requins (◆ R) touchent ceux qui ne sont pas encore sur une île'),
+    "Le naufrage": g => { salle(g, {lignes: false}); [[100, 75, 0], [300, 75, 1], [100, 180, 2], [300, 180, 3]].forEach(([x, y, i]) => { g.step(x - 14, y).step(x + 14, y); g.row('a', 4, x - 24, y - 4, x + 24, y - 4, {c: EQ[i]}); }); g.music(209, 125); return g.n(1, 'toute l\'équipe tient 5 s sur ses steps').n(2, 'un step de moins à chaque manche'); },
+    "La revanche : les îles musicales": g => window.PSCH_SC.hiver["Les requins"](g),
+
+    "Le foot-bancs": g => footBancs(g).n(1, 'but = toucher le banc couché avec le ballon, au ras du sol').n(2, 'pas de gardien ; les murs de côté comptent'),
+    "Les 4 bancs": g => footBancs(g, {quatre: 1}).n(1, 'deux bancs par équipe : on attaque le moins défendu'),
+    "Le foot-bancs en passes": g => { footBancs(g); g.pass(120, 80, 165, 156, 10).pass(170, 160, 245, 104, 10); return g.n(1, 'but seulement après 3 passes').n(2, 'pied faible ou talon = 2 points'); },
+    "La revanche : le foot des bancs": g => window.PSCH_SC.hiver["Le foot-bancs"](g),
+
+    "La balle au caisson": g => caissonJ(g).n(1, 'on marque en lançant le ballon dans le caisson').n(2, 'cercle de 2 m autour : personne n\'entre').n(3, '3 pas, 3 s, pas de contact'),
+    "Le caisson à 2 points": g => { caissonJ(g); g.tag(209, 18, 'tous ont touché = 2 points', {s: 9}); return g.n(1, 'panier après une passe de chacun = 2 points').n(2, 'chacun suit un adversaire précis'); },
+    "Le caisson et le cerceau": g => caissonJ(g, {cerceau: 1}).n(1, 'joueur neutre (N) sur un step avec un cerceau : passer dedans = bonus'),
+    "La revanche : la balle au caisson": g => window.PSCH_SC.hiver["La balle au caisson"](g),
+
+    "Le baudruche-volley": g => baudVolley(g).n(1, 'filet de badminton, 4 demi-terrains en coupelles').n(2, '3 contre 3, 3 touches maximum, jamais 2 de suite'),
+    "Le baudruche à 2 ballons": g => baudVolley(g, {deux: 1}).n(1, 'deux ballons en même temps : se partager le terrain'),
+    "La montée-descente": g => { baudVolley(g); g.arrow('run', 30, 190, 30, 70, 0); return g.label(36, 130, 'gagnants ↑', {s: 8.5, b: 1, a: 'start'}).n(1, 'après 3 min : les gagnants montent, les perdants descendent'); },
+    "La revanche : le volley-baudruche": g => window.PSCH_SC.hiver["La montée-descente"](g),
+
+    "Le foot-tennis à un rebond": g => footTennis(g).n(1, '2 contre 2 : un rebond permis, 3 touches maximum').n(2, 'une passe au partenaire obligatoire, jamais la main'),
+    "Le foot-tennis de volée": g => footTennis(g).n(1, 'le dernier renvoi se fait de volée').n(2, 'renvoi de la tête = 2 points'),
+    "Le tournoi des champions": g => { footTennis(g); return g.tag(110, 18, 'terrain 1', {s: 9}).n(1, 'toutes les 4 min : gagnants vers le terrain 1, perdants descendent'); },
+    "La revanche : le foot-tennis": g => window.PSCH_SC.hiver["Le foot-tennis à un rebond"](g),
+
+    "Le mur à deux": g => pelote(g).n(1, 'frappe de la main ouverte contre le mur').n(2, 'la balle retombe dans le terrain, un rebond au plus'),
+    "La pelote 2 contre 2": g => pelote(g).n(1, 'on frappe à tour de rôle d\'équipe : A, B, A, B').n(2, 'hors terrain, 2 rebonds ou sol avant le mur = point pour l\'autre'),
+    "La pelote des rois": g => { pelote(g); return g.tag(70, 120, 'rois', {s: 9}).n(1, 'les gagnants montent vers le terrain des rois toutes les 4 min'); },
+    "La revanche : la pelote à la main": g => window.PSCH_SC.hiver["La pelote 2 contre 2"](g),
+
+    "Le tennis-banc": g => tennisBanc(g).n(1, 'un rebond dans son camp, puis on renvoie à la main par-dessus le banc').n(2, 'matchs en 7 points ; ceux qui attendent sont juges'),
+    "Le roi du banc": g => { tennisBanc(g); g.arrow('run', 380, 190, 380, 90, 0); return g.n(1, 'le gagnant monte vers le banc des rois, le perdant descend'); },
+    "Le tennis-banc en double": g => { tennisBanc(g); [[110, 75], [300, 75]].forEach(([x, y]) => g.A(x - 45, y + 16).B(x + 45, y + 16)); return g.n(1, 'deux contre deux, terrain plus large, chacun son tour'); },
+    "La revanche : le tennis-banc": g => window.PSCH_SC.hiver["Le roi du banc"](g),
+
+    "Retourne les plots": g => plots(g).n(1, 'A retourne les coupelles dôme en haut, B dôme en bas').n(2, 'une à la fois, sans la tenir ; manches de 45 s'),
+    "Retourne et protège": g => plots(g, {gardiens: 1}).n(1, 'les gardiens (◆) touchent les adversaires : 3 sauts avant de rejouer'),
+    "Les plots des 4 couleurs": g => { salle(g); [[70, 60], [130, 140], [190, 70], [250, 180], [300, 90], [350, 160], [110, 200], [220, 120], [330, 50], [80, 120], [270, 140], [180, 200]].forEach(([x, y], i) => g.cone(x, y, ['#1f63d6', '#e8590c', '#16a34a', '#8a3ffc'][i % 4])); [[40, 30, 0], [380, 30, 1], [40, 220, 2], [380, 220, 3]].forEach(([x, y, i]) => g.A(x, y, '', {c: EQ[i]})); return g.n(1, 'relever les cônes de sa couleur, coucher ceux des autres'); },
+    "La revanche : retourne les plots": g => window.PSCH_SC.hiver["Retourne les plots"](g),
+
+    "Le béret parcours": g => beret(g).n(1, 'numéro appelé : step, sous le banc, roulade sur le tapis').n(2, 'puis on prend le ballon et on le rapporte sans être touché'),
+    "Le béret à deux numéros": g => { beret(g); g.pass(209, 125, 280, 90, 10); return g.n(1, 'deux numéros appelés : on peut se faire une passe'); },
+    "Le béret des calculs": g => { beret(g); return g.tag(209, 18, '« 3 + 4 ! » → le 7 part', {s: 9.5}).n(1, 'le prof donne un calcul, le résultat est le numéro qui part'); },
+    "La revanche : le béret des engins": g => window.PSCH_SC.hiver["Le béret parcours"](g),
+
+    "Le panier vivant": g => panierV(g).n(1, 'un coéquipier sur un step tient le cerceau : c\'est le panier').n(2, 'cercle de 2 m : personne n\'entre').n(3, 'le marqueur devient porteur'),
+    "Le panier qui bouge": g => panierV(g, {bouge: 1}).n(1, 'le porteur se déplace sur 3 steps'),
+    "Les deux paniers": g => { panierV(g); g.step(370, 50); g.A(370, 50).hoop(370, 30, 9); return g.n(1, 'deux paniers : un vaut 1 point, l\'autre 2 points'); },
+    "La revanche : le panier vivant": g => window.PSCH_SC.hiver["Le panier vivant"](g),
+
+    "Le ballon-cible": g => cible(g).n(1, 'lancer les ballons en mousse sur le gros ballon').n(2, 'le pousser jusqu\'au fond adverse = 1 point').n(3, 'on ne franchit jamais sa ligne de lancer'),
+    "Les deux ballons-cibles": g => cible(g, {deux: 1}).n(1, 'deux gros ballons : se partager les cibles'),
+    "Le ballon-cible des 4 camps": g => { salle(g); g.zone(110, 60, 200, 130, '', 'grey'); g.raw('<circle cx="209" cy="125" r="22" fill="#5fb784" stroke="#226b40" stroke-width="2"/>', 'top'); g.row('a', 4, 90, 70, 90, 180).row('b', 4, 330, 70, 330, 180).row('j', 4, 140, 40, 280, 40).row('x', 4, 140, 210, 280, 210); g.shot(100, 120, 186, 125); return g.n(1, 'une équipe par côté : celle dont le mur est touché perd 1 point'); },
+    "La revanche : le ballon-cible": g => window.PSCH_SC.hiver["Le ballon-cible"](g),
+
+    "Le croisement": g => equil(g).n(1, 'bancs retournés : on marche sur la barre étroite, tapis autour').n(2, 'on se croise au milieu sans descendre'),
+    "Le duel des paumes": g => equil(g, {duel: 1}).n(1, 'on ne touche que les paumes de l\'autre').n(2, 'pied à terre = 1 point pour l\'autre ; manches en 3 points'),
+    "Le tournoi des équilibristes": g => { equil(g, {duel: 1}); g.arrow('run', 380, 190, 380, 70, 0); return g.n(1, 'le gagnant monte vers le banc des champions, le perdant descend'); },
+    "La revanche : les équilibristes": g => window.PSCH_SC.hiver["Le duel des paumes"](g),
+
+    "Le jeu de l'oie": g => oie(g).n(1, '20 steps = le plateau ; le pion de l\'équipe avance du nombre du dé').n(2, 'toute l\'équipe fait le défi de la case au milieu, puis relance'),
+    "Le jeu de l'oie des duels": g => { oie(g); return g.tag(209, 18, 'même case = duel, le perdant recule de 3', {s: 9}).n(1, 'deux pions sur la même case : duel'); },
+    "Le jeu de l'oie des quiz": g => { oie(g); g.P(209, 185); return g.n(1, 'case paire = une question ; bonne réponse = on rejoue'); },
+    "La revanche : le jeu de l'oie sportif": g => window.PSCH_SC.hiver["Le jeu de l'oie"](g),
+
+    "La chasse aux lettres": g => lettres(g).n(1, 'un joueur à la fois soulève UN step').n(2, 'bonne lettre = on la rapporte dans le cerceau, sinon on la remet'),
+    "Le mot mystère": g => { lettres(g); return g.n(1, 'mot inconnu : on le devine avec les lettres trouvées').n(2, 'mauvaise réponse = 10 sauts pour toute l\'équipe'); },
+    "Les voleurs de lettres": g => { lettres(g); g.X(350, 60, 'G').X(60, 60, 'G'); g.run(320, 200, 360, 60, -20); return g.n(1, 'on peut voler une lettre chez une autre équipe').n(2, 'deux gardiens touchent les voleurs'); },
+    "La revanche : la chasse aux lettres": g => window.PSCH_SC.hiver["La chasse aux lettres"](g),
+
+    "Le dessus-dessous": g => chenille(g).n(1, 'ballon au-dessus de la tête, puis entre les jambes').n(2, 'le dernier court devant la file avec le ballon'),
+    "La chenille à obstacles": g => chenille(g, {obst: 1}).n(1, 'banc, slalom entre les steps, tapis à genoux, sans se lâcher'),
+    "La chenille à 3 ballons": g => { chenille(g); return g.n(1, 'trois ballons à la suite dans la file'); },
+    "La revanche : la course des chenilles": g => window.PSCH_SC.hiver["Le dessus-dessous"](g),
+
+    "Le tour des ateliers": g => olymp(g).n(1, 'montées de step en 30 s').n(2, 'lancer dans le caisson').n(3, 'traversée des espaliers chronométrée').n(4, 'saut en longueur sans élan').n(5, 'gainage à 2'),
+    "Le défi des champions": g => { olymp(g); return g.tag(209, 125, 'un champion par équipe et par atelier', {s: 9}).n(1, '1er = 4 points, 2e = 3, 3e = 2, 4e = 1'); },
+    "La finale par équipes": g => { olymp(g); return g.n(1, 'relais à travers les 5 ateliers : points doublés'); },
+    "La revanche : les olympiades": g => window.PSCH_SC.hiver["Le tour des ateliers"](g),
+
+    "La balle-bunker": g => bunker(g).n(1, 'des abris dans chaque camp : bancs couchés, plinth, steps').n(2, 'touché = assis au bord ; on revient quand un coéquipier attrape de volée').n(3, '5 s maximum derrière un abri'),
+    "Le bunker du roi": g => { bunker(g); g.A(95, 70, '♛').B(330, 190, '♛'); return g.n(1, 'chaque équipe a un roi secret'); },
+    "Le bunker du milieu": g => bunker(g, {milieu: 1}).n(1, '5 s derrière l\'abri du milieu = on libère son équipe'),
+    "La revanche : la balle-bunker": g => window.PSCH_SC.hiver["La balle-bunker"](g),
+
+    "La conquête des tapis": g => conquete(g).n(1, 's\'allonger sur le tapis adverse sans être touché = 1 point').n(2, 'chez soi, on touche les adversaires (main dans le dos)'),
+    "Le tapis des prisonniers": g => { conquete(g); assis(g, 376, 100); return g.n(1, 'touché = prisonnier sur le tapis adverse ; un coéquipier vient le délivrer'); },
+    "Les foulards": g => conquete(g, {foulard: 1}).n(1, 'on vole le foulard au lieu de toucher'),
+    "La revanche : la conquête des tapis": g => window.PSCH_SC.hiver["La conquête des tapis"](g),
+
+    "Le relais des énigmes": g => enigmes(g).n(1, 'un coureur à la fois prend UNE carte et la rapporte').n(2, 'l\'équipe écrit la réponse, puis le suivant part'),
+    "Le puzzle-relais": g => { enigmes(g); return g.n(1, 'chaque course rapporte une pièce du puzzle'); },
+    "Les énigmes à gage": g => { enigmes(g); [[140, 70], [280, 70], [140, 180], [280, 180]].forEach(([x, y]) => g.step(x, y)); return g.n(1, 'défi écrit sur le step avant de prendre la carte'); },
+    "La revanche : le relais des énigmes": g => window.PSCH_SC.hiver["Le relais des énigmes"](g),
+
+    "Les stands": g => foire(g).n(1, 'chamboule-tout sur le plinth').n(2, 'cerceaux accrochés aux espaliers').n(3, 'bowling au bout du banc').n(4, 'lancer dans le caisson'),
+    "Le grand concours": g => { foire(g); return g.tag(209, 125, 'record battu = 3 tickets', {s: 9}).n(1, 'chaque stand a son record'); },
+    "La fête foraine en équipe": g => { foire(g); return g.n(1, 'les tickets du groupe s\'additionnent'); },
+    "La revanche : la fête foraine": g => window.PSCH_SC.hiver["Les stands"](g),
+
+    "La traversée des espaliers": g => grimpe(g).n(1, 'pieds jamais plus haut que le 3e barreau, 3 appuis').n(2, 'l\'autre moitié fait le circuit au sol ; on change toutes les 4 min'),
+    "La cueillette": g => grimpe(g).n(1, 'décrocher les pinces à linge pendant la traversée'),
+    "Le relais des grimpeurs": g => { grimpe(g); g.chrono(110, 125); return g.n(1, 'traversée en relais, chrono de l\'équipe').n(2, 'pied au sol = on recommence'); },
+    "La revanche : le défi des grimpeurs": g => window.PSCH_SC.hiver["La cueillette"](g)
+  };
+})());

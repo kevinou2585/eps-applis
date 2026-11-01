@@ -2632,8 +2632,11 @@ const prepaCat = () => PREPA_CAT.filter(([id]) => PREPA_PRETS.includes(id));
    les jeux de la bibliothèque 'hiver' (une leçon chacun) sont listés un par un (valeur « hiver:N »), sans rubrique à part. */
 const PREPA_DIVERS = ['corde', 'lutte', 'hiver'];
 const prepaOpts = sel => { const o = ([id, n]) => `<option value="${id}" ${id === sel ? 'selected' : ''}>${esc(n)}</option>`, c = prepaCat(), H = PREPA_LIB.hiver;
-  const hv = !c.some(x => x[0] === 'hiver') ? [] : H ? H.an[0].l.map((l, i) => [`hiver:${i + 1}`, l.t]).sort((a, b) => a[1].localeCompare(b[1], 'fr')) : [['hiver', 'Sports divers (une leçon)']];
-  return c.filter(x => !PREPA_DIVERS.includes(x[0])).map(o).join('') + `<optgroup label="Sports divers">${PREPA_DIVERS.map(id => c.find(x => x[0] === id && id !== 'hiver')).filter(Boolean).map(o).join('')}${hv.map(o).join('')}</optgroup>`; };
+  // jeux en une leçon : « Sports divers », et un 3e volet « Petite salle » pour les jeux marqués ps (kevin, 1er nov. 2026)
+  const une = ps => !c.some(x => x[0] === 'hiver') ? [] : H ? H.an[0].l.map((l, i) => [`hiver:${i + 1}`, l.t, !!l.ps]).filter(x => x[2] === ps).sort((a, b) => a[1].localeCompare(b[1], 'fr')) : ps ? [] : [['hiver', 'Sports divers (une leçon)']];
+  const ps = une(true);
+  return c.filter(x => !PREPA_DIVERS.includes(x[0])).map(o).join('') + `<optgroup label="Sports divers">${PREPA_DIVERS.map(id => c.find(x => x[0] === id && id !== 'hiver')).filter(Boolean).map(o).join('')}${une(false).map(o).join('')}</optgroup>`
+    + (ps.length ? `<optgroup label="Petite salle (${ps.length} jeux)">${ps.map(o).join('')}</optgroup>` : ''); };
 // valeur d'une liste de sports → [id de la bibliothèque, n° du jeu pour « hiver:N »]
 const prepaVal = v => { const m = /^hiver:(\d+)$/.exec(v || ''); return m ? ['hiver', +m[1]] : [v || '', 0]; };
 const PREPA_LIB = window.PREPA_LIB = window.PREPA_LIB || {};
@@ -3074,7 +3077,7 @@ function openPrepaPrint(){
 
 /* --- Recueil papier : toutes les prépas de la bibliothèque pour une farde (classées par année puis par sport, pages de garde, onglets au bord droit) --- */
 const RC_PAGE = '@page{size:A4 portrait;margin:12mm 0 12mm 12mm}';  // marge droite à 0 : les onglets vont jusqu'au bord de la feuille
-const RC_ONGLETS = [1, 2, 3, 4, 5, 6, 'natdeb', 'divers'];  // position verticale de l'onglet de chaque section
+const RC_ONGLETS = [1, 2, 3, 4, 5, 6, 'natdeb', 'divers', 'psalle'];  // position verticale de l'onglet de chaque section
 function rcTab(pos, haut, bas){
   const i = RC_ONGLETS.indexOf(pos);
   return `<div class="rc-tab" style="top:${8 + i * 29}mm"><b>${esc(haut)}</b>${bas ? `<span>${esc(bas)}</span>` : ''}</div>`;
@@ -3096,12 +3099,13 @@ async function prepaRecueilHTML(){
   let h = `<article class="pr-page rc-p rc-cover">${rcEnTete(en, 'Recueil des préparations de leçons')}
     <h1>Recueil des préparations de leçons</h1><p class="rc-sub">Éducation physique · ${esc(sy)}${en.prof ? ' · ' + esc(en.prof) : ''}</p>
     <p>Chaque séquence compte 6 leçons : 5 leçons d'apprentissage et une leçon d'évaluation (la 6e), avec sa grille de critères. En natation (1re à 3e), deux cycles de plus sont prévus pour les classes qui ont 12 ou 18 semaines de piscine, et un parcours séparé existe pour le groupe débutants.</p>
-    <h2>Comment trouver une prépa</h2><p>Les onglets noirs au bord droit des pages indiquent l'année (1re en haut, 6e plus bas), puis les sections « Natation débutants » et « Sports divers » (corde à sauter, lutte, puis les sports en une leçon). Dans chaque année, les sports sont classés par ordre alphabétique, chacun précédé d'une page de garde avec la liste de ses leçons.</p>
+    <h2>Comment trouver une prépa</h2><p>Les onglets noirs au bord droit des pages indiquent l'année (1re en haut, 6e plus bas), puis les sections « Natation débutants », « Sports divers » (corde à sauter, lutte, puis les sports en une leçon) et « Petite salle ». Dans chaque année, les sports sont classés par ordre alphabétique, chacun précédé d'une page de garde avec la liste de ses leçons.</p>
     <table class="rc-ls rc-som"><tr><th>Section</th><th>Contenu</th></tr>
       ${[1, 2, 3, 4, 5, 6].map(a => `<tr><td><b>${AN_TXT(a)} secondaire</b></td><td>${sp.filter(id => PREPA_LIB[id].an[a]).map(id => `${esc(nom(id).replace(/ \(.*\)$/, ''))} (${PREPA_LIB[id].an[a].l.length})`).join(' · ')}</td></tr>`).join('')}
       ${PREPA_LIB.natdeb ? `<tr><td><b>Natation débutants</b></td><td>3 cycles de 6 leçons (petite profondeur), toutes années</td></tr>` : ''}
       ${PREPA_DIVERS.some(id => id !== 'hiver' && PREPA_LIB[id]) ? `<tr><td><b>Sports divers</b></td><td>${PREPA_DIVERS.filter(id => id !== 'hiver' && PREPA_LIB[id]).map(id => esc(nom(id))).join(' · ')} : un cycle de 6 leçons, toutes années</td></tr>` : ''}
-      ${PREPA_LIB.hiver ? `<tr><td><b>Sports divers en une leçon</b></td><td>${PREPA_LIB.hiver.an[0].l.length} sports et jeux complets en une leçon (petite salle, peu de matériel)</td></tr>` : ''}</table>
+      ${PREPA_LIB.hiver ? `<tr><td><b>Sports divers en une leçon</b></td><td>${PREPA_LIB.hiver.an[0].l.filter(l => !l.ps).length} sports et jeux complets en une leçon (peu de matériel)</td></tr>` : ''}
+      ${PREPA_LIB.hiver && PREPA_LIB.hiver.an[0].l.some(l => l.ps) ? `<tr><td><b>Petite salle</b></td><td>${PREPA_LIB.hiver.an[0].l.filter(l => l.ps).length} jeux complets en une leçon pour la petite salle (grand groupe, bancs, plinths, steps, espaliers, gros tapis)</td></tr>` : ''}</table>
     <h2>Légende des schémas</h2>${window.PSCH_LEGENDE || ''}</article>`;
   [1, 2, 3, 4, 5, 6].forEach(a => {
     const lst = sp.filter(id => PREPA_LIB[id].an[a]), A_ = AN_TXT(a);
@@ -3121,9 +3125,13 @@ async function prepaRecueilHTML(){
     h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Sports divers')}<div class="rc-sph"><small>Sports divers · toutes années</small><h1>${esc(nom(id))}</h1><p>${esc(A.th)}</p></div>
       <p class="rc-mat"><b>Matériel :</b> ${esc(A.mat || PREPA_LIB[id].mat || '')}</p><p class="rc-mat">Un seul cycle de 6 leçons, le même pour toutes les années : adapte les exigences à l'âge des élèves.</p>${rcLecons(A, id)}</article>`;
     A.l.forEach((l, i) => h += lecon(id, 1, i + 1, tab).replace(/<span>1re secondaire<\/span>/, '<span>toutes années</span>')); });
-  if (PREPA_LIB.hiver){ const A = PREPA_LIB.hiver.an[0], tab = rcTab('divers', 'Divers', 'une leçon');
-    h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, 'Sports divers')}<div class="rc-sph"><small>Toutes années · une leçon par sport</small><h1>Sports divers en une leçon</h1><p>Jeux pour la petite salle ou les jours sans installation, classés par mots-clés.</p></div>${rcLecons(A, 'hiver')}</article>`;
-    A.l.forEach((l, i) => h += lecon('hiver', 0, i + 1, tab).replace(/<span>(toutes années|\d+r?e) secondaire<\/span>/, '<span>toutes années</span>')); }
+  if (PREPA_LIB.hiver){ const A0 = PREPA_LIB.hiver.an[0];
+    [[false, 'divers', 'Divers', 'une leçon', 'Sports divers', 'Sports divers en une leçon', 'Jeux pour les jours sans installation, classés par mots-clés.'],
+     [true, 'psalle', 'Salle 2', 'petite salle', 'Petite salle', 'Petite salle : jeux en une leçon', 'Jeux pour la petite salle et un grand groupe (20 à 26 élèves) : bancs, plinths, steps, espaliers, gros tapis.']].forEach(([ps, pos, haut, bas, sec, ti, tx]) => {
+      const I = A0.l.map((l, i) => i).filter(i => !!A0.l[i].ps === ps); if (!I.length) return;
+      const A = {...A0, l: I.map(i => A0.l[i])}, tab = rcTab(pos, haut, bas);
+      h += `<article class="pr-page rc-p rc-sp">${tab}${rcEnTete(en, sec)}<div class="rc-sph"><small>Toutes années · une leçon par jeu</small><h1>${esc(ti)}</h1><p>${esc(tx)}</p></div>${rcLecons(A, 'hiver')}</article>`;
+      I.forEach(i => h += lecon('hiver', 0, i + 1, tab).replace(/<span>(toutes années|\d+r?e) secondaire<\/span>/, '<span>toutes années</span>')); }); }
   return h;
 }
 window.prepaRecueilHTML = prepaRecueilHTML;

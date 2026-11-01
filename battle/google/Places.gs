@@ -9,6 +9,8 @@
 // Règles (Kevin, 29/10/2026) : battre un boss = prendre sa place ; l'ancien occupant descend d'un cran, et ainsi de suite
 // jusqu'à la première place libre (sinon la Garde sort). Le Dieu se prend seulement en battant aussi son record.
 // Une place déjà à toi ne bouge pas (le Dieu qui rate son record reste Dieu). Plus de scores affichés : on garde le record du Dieu.
+// Kevin (01/11) : chaque fois qu'une place change de main, son palier monte de 100 points (colonne « Bonus ») : les boss montent doucement.
+const MONTEE = 100;
 const PLACES = ['Dieu', 'Empereur', 'Roi', 'Bourreau', 'Garde'];
 
 function ongletPlaces(jeu) {
@@ -17,7 +19,7 @@ function ongletPlaces(jeu) {
   let sh = ss.getSheetByName(nom);
   if (!sh) {
     sh = ss.insertSheet(nom);
-    sh.getRange(1, 1, 1, 5).setValues([['Place', 'Nom', 'Roi/Reine', 'Photo', 'Depuis']]).setFontWeight('bold').setBackground('#12352b').setFontColor('#ffffff');
+    sh.getRange(1, 1, 1, 6).setValues([['Place', 'Nom', 'Roi/Reine', 'Photo', 'Depuis', 'Bonus']]).setFontWeight('bold').setBackground('#12352b').setFontColor('#ffffff');
     sh.getRange(2, 1, PLACES.length, 1).setValues(PLACES.map(p => [p]));
     sh.getRange(PLACES.length + 2, 1, 1, 2).setValues([['Record du Dieu', 0]]);
     sh.setFrozenRows(1); sh.setColumnWidth(2, 160); sh.setColumnWidth(4, 120);
@@ -26,23 +28,25 @@ function ongletPlaces(jeu) {
 }
 
 function placesLire(sh) {
-  const v = sh.getRange(2, 1, PLACES.length + 1, 5).getValues();
+  const v = sh.getRange(2, 1, PLACES.length + 1, 6).getValues();
   const places = v.slice(0, PLACES.length).map(r => String(r[1]).trim() ? {
     nom: String(r[1]).trim(), genre: r[2] === 'F' || r[2] === 'H' ? r[2] : '',
     photo: String(r[3] || '').indexOf('data:image/') === 0 ? String(r[3]) : '',
     date: r[4] instanceof Date ? Utilities.formatDate(r[4], 'Europe/Brussels', 'dd/MM') : String(r[4] || '')
   } : null);
-  return {places: places, record: Number(v[PLACES.length][1]) || 0};
+  return {places: places, record: Number(v[PLACES.length][1]) || 0, bonus: v.slice(0, PLACES.length).map(r => Math.max(0, Number(r[5]) || 0))};
 }
 
 function placesEcrire(sh, e) {
   sh.getRange(2, 2, PLACES.length, 4).setValues(e.places.map(p => p ? [p.nom, p.genre, p.photo, p.date] : ['', '', '', '']));
   sh.getRange(PLACES.length + 2, 2).setValue(e.record);
+  sh.getRange(1, 6).setValue('Bonus');
+  sh.getRange(2, 6, PLACES.length, 1).setValues(e.bonus.map(b => [b]));
 }
 
 function placesEtat(jeu) {
   const e = placesLire(ongletPlaces(jeu));
-  return {ok: true, places: e.places, record: e.record};
+  return {ok: true, places: e.places, record: e.record, bonus: e.bonus};
 }
 
 // nom prend la place i : chacun descend d'un cran jusqu'à la première place libre (sinon la Garde sort)
@@ -73,11 +77,11 @@ function placesEnvoi(o) {
     if (score > e.record) e.record = score;
     else place = estDieu ? -1 : 1; // record raté : le Dieu reste Dieu (rien ne bouge), les autres deviennent Empereur
   }
-  if (place >= 0) placesPrendre(e.places, place, moi);
+  if (place >= 0) { const avant = e.places[place]; placesPrendre(e.places, place, moi); if (e.places[place] !== avant && !(avant && avant.nom.toLowerCase() === nom.toLowerCase())) e.bonus[place] += MONTEE; }
   placesEcrire(sh, e);
   ongletJeu(o.jeu).appendRow([new Date(), nom, score, '', moi.genre, place >= 0 ? PLACES[place] : 'reste Dieu']); // journal de toutes les parties (sans photo)
   flipperRangerSur(o.jeu);
-  return {ok: true, places: e.places, record: e.record, place: place};
+  return {ok: true, places: e.places, record: e.record, bonus: e.bonus, place: place};
 }
 
 // ---------- Onglet « Flipper » : tout le flipper sur un seul onglet propre (Kevin, 29/10/2026) ----------

@@ -21,7 +21,7 @@
     h >= 2 ? 100 - 2 * VEST : 50 - VEST;
   const SALLES = {
     g: {n: 'Grande salle', k: 'Salle 1', d: 'un terrain de basket officiel ou un peu plus · 2 paniers, 2 buts, filet de volley, tout le matériel'},
-    p: {n: 'Petite salle', k: 'Salle 2', d: 'un grand terrain de badminton · plinths, steps, trampolines, gros tapis, filet bas ou haut · petite pour un grand groupe'},
+    p: {n: 'Petite salle', k: 'Salle 2', d: 'un grand terrain de badminton · 4 bancs, 2 plinths, sautoirs, 15 à 20 steps, espaliers, 3 gros tapis, filet bas ou haut · petite pour un grand groupe'},
     b: {n: 'Le Brel', k: 'Salle 3', d: 'un petit terrain de basket · bancs, 10 ballons de basket, plots, cônes : le reste est à apporter'},
     c: {n: 'Cour extérieure', k: 'Salle 4', d: 'terrain de mini-foot (2 buts, 2 anneaux) + une 2e zone de même taille sans tracé · rien sur place'}
   };
@@ -133,7 +133,7 @@
     c.forEach((x, i) => { x.m = i === c.length - 1 ? Math.max(5, reste - fait) : Math.max(5, Math.round(x.m * reste / sc)); fait += x.m; });
     // S.ff : une salle peut remplacer une organisation (ex. petite salle : 2 équipes au lieu de 4)
     const org = x => { const o = orga((S.ff && S.ff[x.f]) || x.f, ctx.n, S, x.m); return o ? `${x.d}\n   👥 ${o}.` : x.d; };
-    const out = {t: tx(l.t), o: tx(l.o), comp: l.comp, crit: l.crit, ...(l.tags ? {tags: tx(l.tags)} : {}), jeux: true, ctx: {...ctx},
+    const out = {t: tx(l.t), o: tx(l.o), comp: l.comp, crit: l.crit, ...(l.tags ? {tags: tx(l.tags)} : {}), ...(l.ps ? {ps: 1} : {}), jeux: true, ctx: {...ctx},
       e: e.map(x => [x.nom, x.m, org(x), x.sch]), c: c.map(x => [x.nom, x.m, org(x), x.ok, x.va, x.sch]), r: r.map(x => [x.nom, x.m, org(x), x.sch])};
     const place = [S.note ? `📍 ${L.lieu ? L.lieu.n : SALLES[sl].n} : ${tx(S.note)}` : '', LS2.note ? `📍 ${tx(LS2.note)}` : '', S.warn ? `⚠ ${tx(S.warn)}` : '', LS2.warn ? `⚠ ${tx(LS2.warn)}` : ''].filter(Boolean).join('\n');
     out.mat = (place ? place + '\n' : '') + '🧺 ' + materiel(L, l, ctx.n, sl, S);

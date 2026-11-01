@@ -9,7 +9,7 @@
    planWeekLessons / planWeekHTML / openPlanCell. */
 (() => {
   const SALLES2 = ['Grande salle', 'Petite salle', 'Le Brel', 'Cour extérieure', 'Plaine', 'Stade', 'Piscine'];
-  const dOk = d => d && (d.s2 || (d.sa && (d.sa[0] || d.sa[1]))) ? d : null;
+  const dOk = d => d && (d.s2 || d.pp2 || (d.sa && (d.sa[0] || d.sa[1]))) ? d : null;
   const cp = d => d ? JSON.parse(JSON.stringify(d)) : null;
   const agK = (date, h) => date + '|' + (h || '');
   /* deux activités d'un cours (leçons d'abord, sinon ce qui a été prévu avant l'appel) */
@@ -54,14 +54,16 @@
       <div class="dbl-b" id="${pre}-dblb" ${d ? '' : 'hidden'}>
         <div class="dbl-h"><b>1re heure</b><span class="dbl-s1" id="${pre}-s1t"></span><select class="inp" id="${pre}-sa1" aria-label="Salle de la 1re heure">${salOpts(sa[0])}</select></div>
         <div class="dbl-h"><b>2e heure</b><select class="inp" id="${pre}-s2" aria-label="Sport de la 2e heure">${sOpts((d && d.s2) || '')}</select><select class="inp" id="${pre}-sa2" aria-label="Salle de la 2e heure">${salOpts(sa[1])}</select></div>
+        <div id="${pre}-pp2w"></div>
         ${prevu2 && !(d && d.s2) ? `<button class="btn ag-plb" type="button" id="${pre}-pl2">🗓 2e heure prévue au planning : <b>${esc(prevu2)}</b> · choisir</button>` : ''}
       </div></div>`;
   }
-  function dblMount(pre, d, prevu2, put){
+  function dblMount(pre, d, prevu2, put, cur, prepa2){
     const row = $(pre + '-addrow'); if (!row || $(pre + '-dbl')) return;
     row.insertAdjacentHTML('afterend', dblHTML(pre, d, prevu2));
     const lab = $(pre + '-sp') && $(pre + '-sp').closest('label'), t0 = lab && lab.firstChild && lab.firstChild.nodeType === 3 ? lab.firstChild : null, txt0 = t0 ? t0.textContent : '';
-    const get = () => $(pre + '-dblck').checked ? {s2: $(pre + '-s2').value, sa: [$(pre + '-sa1').value, $(pre + '-sa2').value]} : null;
+    const get = () => { if (!$(pre + '-dblck').checked) return null; const o = {s2: $(pre + '-s2').value, sa: [$(pre + '-sa1').value, $(pre + '-sa2').value]}, old = cur();
+      if (old && old.pp2) o.pp2 = old.pp2; return o; };
     const show = () => { const on = $(pre + '-dblck').checked, v = $(pre + '-sp') ? $(pre + '-sp').value : '';
       $(pre + '-s1t').textContent = v && v !== '__add' ? v : 'choisis le sport au-dessus'; $(pre + '-dblb').hidden = !on; if (t0) t0.textContent = on ? 'Sport / activité · 1re heure' : txt0; };
     const go = () => { show(); put(get()); };
@@ -69,6 +71,12 @@
     [pre + '-s2', pre + '-sa1', pre + '-sa2'].forEach(id => $(id).onchange = go);
     if ($(pre + '-pl2')) $(pre + '-pl2').onclick = () => { const sel = $(pre + '-s2'); if (![...sel.options].some(o => o.value === prevu2)) sel.innerHTML = sOpts(prevu2); sel.value = prevu2; $(pre + '-pl2').remove(); go(); };
     if ($(pre + '-sp')) $(pre + '-sp').addEventListener('change', show);
+    /* 2e prépa : bouton « Sélectionner une préparation (2e heure) » + « ▶ Lancer » */
+    if (prepa2){ const w = $(pre + '-pp2w'), draw = () => { const pp2 = (cur() || {}).pp2;
+        w.innerHTML = `<button class="btn block ag-ppb" type="button" id="${pre}-pp2"><span>📋 ${pp2 ? `Prépa 2e heure : <b>${esc(prepaCourt(pp2))}</b> · changer` : 'Sélectionner une préparation pour la 2e heure'}</span></button>${pp2 && window.plLancer ? `<button class="btn pri block" type="button" id="${pre}-pp2go">▶ Lancer la prépa de la 2e heure</button>` : ''}`;
+        $(pre + '-pp2').onclick = () => { put(get()); prepa2.choisir(); };
+        if ($(pre + '-pp2go')) $(pre + '-pp2go').onclick = () => { put(get()); prepa2.lancer(); }; };
+      draw(); }
     show();
   }
   const bloc = it => it && it.b > it.a;
@@ -80,7 +88,9 @@
     const r = openAgSlot0.apply(this, arguments);
     const it = agItems(wdOf(date)).find(x => x.id === id); if (!bloc(it)) return r;
     const grpIds = () => { const b = document.querySelector('[data-grp][aria-pressed="true"]'); return it.pick && b ? [b.dataset.grp] : it.cls; };
-    dblMount('ags', dblGet(date, it), prevu2Of(date, it), d => dblSet(date, it, grpIds(), d));
+    dblMount('ags', dblGet(date, it), prevu2Of(date, it), d => dblSet(date, it, grpIds(), d), () => dblGet(date, it, grpIds()), {
+      choisir: () => { const oc = sheetOnClose; sheetOnClose = null; if (oc) oc(); prepa2Ouvrir(date, it, grpIds(), false); },
+      lancer: () => { const oc = sheetOnClose; sheetOnClose = null; closeSheet(); if (oc) oc(); prepa2Lancer(date, it, grpIds()); }});
     return r;
   };
   /* Présences : « Ce cours » sous l'appel */
@@ -89,11 +99,64 @@
     const r = bindAgRoll0.apply(this, arguments);
     if (!$('ag-rc')) return r;
     const it = agRollIt(Ls, cls), l0 = Ls.find(Boolean) || {};
-    if (it){ if (bloc(it)){ const date = l0.date, ids = cls.map(c => c.id); dblMount('rc', dblGet(date, it, ids), prevu2Of(date, it), d => dblSet(date, it, ids, d)); } }
+    if (it){ if (bloc(it)){ const date = l0.date, ids = cls.map(c => c.id); dblMount('rc', dblGet(date, it, ids), prevu2Of(date, it), d => dblSet(date, it, ids, d), () => dblGet(date, it, ids), {
+      choisir: () => prepa2Ouvrir(date, it, ids, true), lancer: () => prepa2Lancer(date, it, ids)}); } }
     else if (l0.h && l0.h2 && l0.h2 !== l0.h){  // appel hors horaire, mais sur 2 h
-      dblMount('rc', l0.dbl || null, '', d => { d = dOk(d); cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; if (d) l.dbl = cp(d); else delete l.dbl; save(c.id); }); });
+      dblMount('rc', l0.dbl || null, '', d => { d = dOk(d); cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; if (d) l.dbl = cp(d); else delete l.dbl; save(c.id); }); }, () => (Ls.find(l => l && l.dbl) || {}).dbl || null);
     }
     return r;
+  };
+
+  /* --- 2e prépa : la même fenêtre de prépa (openPrepa), branchée sur la 2e heure ---
+     Pendant qu'elle est ouverte, agGet / agSet de ce cours lisent et écrivent la 2e activité (s2, pp2) au lieu de la 1re.
+     Avec 2 activités, chaque prépa est faite pour 1 heure (durée de la barre Durée · Salle · Élèves). */
+  let H2 = null;
+  const h2On = (date, it) => H2 && H2.date === date && H2.h === it.h && (H2.boot || $('pp-h2mark'));
+  const agGet1 = agGet;
+  agGet = function(date, it){
+    if (!h2On(date, it)) return agGet1.apply(this, arguments);
+    const d = dblGet(date, it, H2.ids) || {}; return {s: d.s2 || '', n: '', p: null, pp: d.pp2 || null};
+  };
+  const agSet1 = agSet;
+  agSet = function(date, it, ids, s, n, pr, pp){
+    if (!h2On(date, it)) return agSet1.apply(this, arguments);
+    const d = {...(dblGet(date, it, ids) || {s2: '', sa: ['', '']})};
+    if (!d.s2 && s) d.s2 = s; if (pp) d.pp2 = JSON.parse(JSON.stringify(pp)); else delete d.pp2;
+    dblSet(date, it, ids, d);
+  };
+  /* bloc de 2 h avec 2 activités : la prépa (1re ou 2e) est prévue pour 1 heure */
+  const openPrepa0 = openPrepa;
+  openPrepa = function(date, slotId, ids){
+    const it = agItems(wdOf(date)).find(x => x.id === slotId), d = it && bloc(it) && dblGet(date, it, ids);
+    if (!d) return openPrepa0.apply(this, arguments);
+    const ai = agItems; agItems = function(){ return ai.apply(this, arguments).map(x => x.id === slotId ? {...x, b: x.a} : x); };
+    try { return openPrepa0.apply(this, arguments); } finally { agItems = ai; }
+  };
+  function prepa2Ouvrir(date, it, ids, dansAppel){
+    H2 = {date, h: it.h, ids, boot: true};
+    try { openPrepa(date, it.id, ids, dansAppel); } finally { if (H2) H2.boot = false; }
+    const sb = document.querySelector('#sheetroot .sb'), h2 = document.querySelector('#sheetroot .sh h2');
+    if (!sb){ H2 = null; return; }
+    sb.insertAdjacentHTML('afterbegin', '<i id="pp-h2mark" hidden></i><div class="dbl-h2b">🔀 Prépa de la <b>2e heure</b></div>');
+    if (h2) h2.textContent += ' · 2e heure';
+    const oc = sheetOnClose;  // à la fermeture : enregistrer encore en mode 2e heure, puis revenir au mode normal
+    sheetOnClose = () => { const r0 = render; if (H2) H2.boot = true; render = () => {}; try { if (oc) oc(); } finally { render = r0; H2 = null; } render(); };
+  }
+  function prepa2Lancer(date, it, ids){
+    if (!window.plLancer){ toast('Guide pas disponible'); return; }
+    const d = dblGet(date, it, ids) || {}, st = agState(date, it);
+    window.plLancer({date, ids, slot: it.id, nEl: ids.map(clsById).filter(Boolean).reduce((a, c) => a + c.pupils.length, 0), n: 1, type: /natation|piscine|nage/i.test(d.s2 || '') ? st.type : 'salle', sp: d.s2 || '', an: ids.map(clsById).map(progYear).find(Boolean) || 1,
+      get: () => (dblGet(date, it, ids) || {}).pp2 || null,
+      save: pp => { const d2 = {...(dblGet(date, it, ids) || {s2: '', sa: ['', '']})}; d2.pp2 = JSON.parse(JSON.stringify(pp)); if (!d2.s2) d2.s2 = pp.sp || ''; dblSet(date, it, ids, d2); }});
+  }
+  /* Mes prépas (impression, suite du cycle) : les prépas de la 2e heure comptent aussi */
+  const prepaAll0 = prepaAll;
+  prepaAll = function(){
+    const out = prepaAll0.apply(this, arguments), m = new Map();
+    S.classes.forEach(c => c.lessons.forEach(l => { if (l.dbl && l.dbl.pp2) { const k = l.date + '|' + l.h + '|2|' + (l.dbl.pp2.ref || '') + '|' + l.dbl.pp2.t, y = m.get(k); if (y) y.cls.push(c); else m.set(k, {date: l.date, h: l.h, cls: [c], pp: l.dbl.pp2, prog: null, h2: true}); } }));
+    Object.entries(S.settings.ag || {}).forEach(([k, v]) => { if (!v.d || !v.d.pp2) return; const [date, h] = k.split('|'), it = agItems(wdOf(date)).find(x => x.h === h);
+      const kk = date + '|' + h + '|2|' + (v.d.pp2.ref || '') + '|' + v.d.pp2.t; if (!m.has(kk)) m.set(kk, {date, h, cls: (it ? it.cls : []).map(clsById).filter(Boolean), pp: v.d.pp2, prog: null, plan: true, h2: true}); });
+    return [...out, ...m.values()].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : hI(a.h || 'H1') - hI(b.h || 'H1') || (a.h2 ? 1 : 0) - (b.h2 ? 1 : 0));
   };
 
   /* Agenda : étiquettes des cours (jour et semaine) */
@@ -106,7 +169,7 @@
   planWeekLessons = function(c, w){
     return pwl0.apply(this, arguments).map(x => {
       const l = lessonOn(c, x.date, x.h), d = l ? l.dbl : ((S.settings.ag || {})[agK(x.date, x.h)] || {}).d;
-      return d ? {...x, dbl: d, sport2: d.s2 || ''} : x;
+      return d ? {...x, dbl: d, sport2: d.s2 || '', pp: x.pp || d.pp2 || null} : x;
     });
   };
   const pwh0 = planWeekHTML;
@@ -148,6 +211,7 @@
 .dbl-h{display:grid; grid-template-columns:76px 1fr; gap:6px 8px; align-items:center}
 .dbl-h > b{grid-row:span 2; align-self:start; padding-top:10px}
 .dbl-s1{font-weight:600; padding:4px 0}
+.dbl-h2b{background:var(--accent-soft); border:1.5px solid var(--accent); border-radius:12px; padding:8px 12px; font-size:14px}
 `;
   document.head.appendChild(css);
 })();

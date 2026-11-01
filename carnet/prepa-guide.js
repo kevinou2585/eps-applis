@@ -176,6 +176,7 @@
     PM.bind('plc-x', () => { if (ctx.slot) PM.salleDe(ctx.slot, PM.ctx().sl); });
     draw();
   }
+  window.plLancer = plLancer;  // utilisé par deux-activites.js (prépa de la 2e heure)
   function plLancer(ctx){ const pp = ctx.get(); ctx.change = () => plChoisir(ctx); if (pp && (pp.e || pp.c || pp.r)) plGuide(pp, ctx); else plChoisir(ctx); }
 
   /* --- bouton « ▶ Lancer la prépa » à gauche de 🎤 Dicter --- */

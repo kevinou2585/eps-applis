@@ -3,6 +3,7 @@
    Les données ne changent pas : S.settings.planAn = {idClasse: {'AAAA-MM-JJ' (lundi): sport | 'Congé'}},
    et une case touchée ouvre toujours openPlanCell() (même fenêtre qu'avant).
    Nouveau :
+   - une ligne par jour de cours : la date de chaque cours dans la colonne de gauche (kevin, 1er nov.) ;
    - les semaines en lignes (de haut en bas), les classes en colonnes : lisible sur téléphone ;
    - filtre des classes : toutes, une seule ou plusieurs (réglage de cet appareil) ;
    - « Par semaine » ou « Mes heures » : seulement les cours de l'horaire de chaque classe, avec congés et événements ;
@@ -61,40 +62,48 @@
   /* début de période cette semaine-là (P2 · piscine…) */
   const perDebut = (k, mon) => periodsOf(k.cs[0]).filter((p, i) => i > 0 && p.start >= mon && p.start <= addDays(mon, 6));
 
-  function cellSem(c, w, dense, forPrint){
-    const sp = spCol(c, w), wk = wkCol(c, w), done = [...new Set(wk.filter(x => x.sport).flatMap(x => x.sport2 ? [x.sport, x.sport2] : [x.sport]))], np = wk.filter(x => x.pp).length;
-    const cs = coursSem(c, w).filter(x => x.it), nOff = cs.filter(x => calOff(x.iso)).length, nOk = cs.length - nOff;
-    const nom = s => esc(dense ? planAbbr(s) : s);
-    const s2 = sp && sp !== 'Congé' ? sp2Col(c, w) : '';
-    let h = sp === 'Congé' ? '<b class="p2-cg">🏖 congé</b>' : sp ? `<b class="p2-sp">${nom(sp)}${s2 ? ' + ' + nom(s2) : ''}</b>` : '';
-    if (sp) spAutres(c, w, sp).forEach(t => h += `<span class="p2-n">≠ ${esc(t)}</span>`);
-    if (done.length && done.some(x => x !== sp && x !== s2)) h += `<span class="p2-fait">✓ ${done.map(nom).join(', ')}</span>`;
-    else if (done.length) h += '<span class="p2-ok">✓ fait</span>';
-    if (np) h += `<span class="p2-pp">📋${np > 1 ? ' ' + np : ''}${dense ? '' : ' prépa' + (np > 1 ? 's' : '')}</span>`;
-    /* les jours de cours de la classe cette semaine (kevin, 1er nov. : « la date du jour où j'ai ces heures-là ») */
-    const jours = []; cs.forEach(x => { if (!jours.some(j => j.iso === x.iso)) jours.push({iso: x.iso, off: calOff(x.iso)}); });
-    if (jours.length) h += `<span class="p2-j">${jours.map(j => j.off ? `<s title="${esc(j.off.t)}">${jourC(j.iso)}</s>` : jourC(j.iso)).join(' · ')}</span>`;
-    else h += '<span class="p2-n">pas de cours à l\'horaire</span>';
-    perDebut(c, w).forEach(p => h += `<span class="p2-per">▶ ${esc(p.name)}${p.type === 'piscine' ? ' 🌊' : ''}</span>`);
-    if (!h && !forPrint) h = '<span class="p2-vide">＋</span>';
-    const st = sp && sp !== 'Congé' ? ` style="--pc:${planColor(sp)}"` : '';
-    const lab = `${c.name}, semaine du ${fmtD(w)}${sp ? ' : ' + sp : ' : rien de prévu'}${done.length ? ', fait : ' + done.join(', ') : ''}`;
-    return forPrint ? `<td class="p2-c${sp ? ' on' : ''}"${st}>${h}</td>`
-      : `<td class="p2-c${sp ? ' on' : ''}"${st}><button type="button" class="p2-b" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(lab)}">${h}</button></td>`;
+  /* --- Une ligne par jour de cours (kevin, 1er nov. : « renvoie les dates à gauche partout ») ---
+     La colonne de gauche donne la date de chaque cours (ma 25, je 27…) ; une classe qui n'a pas cours ce jour-là a une case vide.
+     Le sport prévu reste celui de la semaine (planAn) : toucher une case de la semaine change la prévision de la semaine. */
+  const puce = (sp, s2, dense) => `<b class="p2-sp">${sp === 'Congé' ? '🏖 congé' : esc(dense ? planAbbr(sp) : sp) + (s2 ? ' + ' + esc(dense ? planAbbr(s2) : s2) : '')}</b>`;
+  const heures = (xs, dense) => dense ? '' : `<span class="p2-n">${xs.map(x => esc(x.it ? slotLabel(x.it) : x.h || '')).filter(Boolean).join(' · ')}</span>`;
+
+  function cellSem(c, w, iso, xs, prem, dense, forPrint){
+    if (!xs.length) return '<td class="p2-c p2-x"></td>';
+    const sp = spCol(c, w), s2 = sp && sp !== 'Congé' ? sp2Col(c, w) : '', wk = wkCol(c, w).filter(x => x.date === iso);
+    const done = [...new Set(wk.filter(x => x.sport).flatMap(x => x.sport2 ? [x.sport, x.sport2] : [x.sport]))], np = wk.filter(x => x.pp).length;
+    const off = xs.every(x => calOff(x.iso)) ? calOff(iso) : null, nom = s => esc(dense ? planAbbr(s) : s);
+    let h = '';
+    if (off) h += `<span class="p2-n">⛔ ${esc(off.o === 2 ? 'cours suspendus' : off.t)}</span>`;
+    else {
+      if (sp) h += puce(sp, s2, dense);
+      if (sp && prem) spAutres(c, w, sp).forEach(t => h += `<span class="p2-n">≠ ${esc(t)}</span>`);
+      if (done.length && done.some(x => x !== sp && x !== s2)) h += `<span class="p2-fait">✓ ${done.map(nom).join(', ')}</span>`;
+      else if (done.length) h += '<span class="p2-ok">✓ fait</span>';
+      if (np) h += `<span class="p2-pp">📋${dense ? '' : ' prépa'}</span>`;
+      evClasse(c, iso).forEach(e => h += `<span class="p2-w">⚠ ${esc(e.t)}</span>`);
+      if (h || !forPrint) h += heures(xs, dense);
+    }
+    if (prem) perDebut(c, w).forEach(p => h += `<span class="p2-per">▶ ${esc(p.name)}${p.type === 'piscine' ? ' 🌊' : ''}</span>`);
+    if (!sp && !off && !done.length && !forPrint) h = '<span class="p2-vide">＋</span>' + h;
+    const st = sp && sp !== 'Congé' && !off ? ` style="--pc:${planColor(sp)}"` : '', on = sp && !off ? ' on' : '';
+    const lab = `${c.name}, ${fmtD(iso)}${sp ? ' : ' + sp : ' : rien de prévu'}${done.length ? ', fait : ' + done.join(', ') : ''}. Prévoir la semaine`;
+    return forPrint ? `<td class="p2-c${on}"${st}>${h}</td>`
+      : `<td class="p2-c${on}"${st}><button type="button" class="p2-b" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(lab)}">${h}</button></td>`;
   }
-  function cellCours(c, w, dense, forPrint){
-    const sp = spCol(c, w), s2 = sp && sp !== 'Congé' ? sp2Col(c, w) : '', cs = coursSem(c, w), st = sp && sp !== 'Congé' ? ` style="--pc:${planColor(sp)}"` : '';
-    let h = forPrint ? (sp ? `<b class="p2-sp">${esc(dense ? planAbbr(sp) : sp)}</b>` : '')
-      : `<button type="button" class="p2-hd" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(`${c.name}, semaine du ${fmtD(w)} : ${sp || 'rien de prévu'}. Changer`)}">${sp ? `<b class="p2-sp">${sp === 'Congé' ? '🏖 congé' : esc(dense ? planAbbr(sp) : sp) + (s2 ? ' + ' + esc(dense ? planAbbr(s2) : s2) : '')}</b>` : '<span class="p2-vide">＋ prévoir</span>'}</button>`;
-    if (sp) spAutres(c, w, sp).forEach(t => h += `<span class="p2-n" style="display:block;padding:0 6px">≠ ${esc(t)}</span>`);
-    perDebut(c, w).forEach(p => h += `<span class="p2-per">▶ ${esc(p.name)}${p.type === 'piscine' ? ' 🌊' : ''}</span>`);
-    if (!cs.length) h += '<span class="p2-n">pas de cours à l\'horaire</span>';
-    cs.forEach(x => { const off = calOff(x.iso), pv = prevu(c, x), ev = evClasse(c, x.iso), pis = !off && lessonType(x.c || c.cs[0], x.iso, x.h) === 'piscine';
-      const t = `${jourC(x.iso)}${x.h ? ' · ' + (x.it ? slotLabel(x.it) : x.h) : ''}`;
+  function cellCours(c, w, iso, xs, prem, dense, forPrint){
+    if (!xs.length) return '<td class="p2-c p2-x"></td>';
+    const sp = spCol(c, w), s2 = sp && sp !== 'Congé' ? sp2Col(c, w) : '', st = sp && sp !== 'Congé' ? ` style="--pc:${planColor(sp)}"` : '';
+    let h = forPrint ? (sp ? puce(sp, s2, dense) : '')
+      : `<button type="button" class="p2-hd" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(`${c.name}, semaine du ${fmtD(w)} : ${sp || 'rien de prévu'}. Changer`)}">${sp ? puce(sp, s2, dense) : '<span class="p2-vide">＋ prévoir</span>'}</button>`;
+    if (sp && prem) spAutres(c, w, sp).forEach(t => h += `<span class="p2-n" style="display:block;padding:0 6px">≠ ${esc(t)}</span>`);
+    if (prem) perDebut(c, w).forEach(p => h += `<span class="p2-per">▶ ${esc(p.name)}${p.type === 'piscine' ? ' 🌊' : ''}</span>`);
+    xs.forEach(x => { const off = calOff(x.iso), pv = prevu(c, x), ev = evClasse(c, x.iso), pis = !off && lessonType(x.c || c.cs[0], x.iso, x.h) === 'piscine';
+      const t = x.it ? slotLabel(x.it) : x.h || 'cours';
       const d2 = pv.d && pv.d.s2 && pv.d.s2 !== pv.sp ? pv.d : null, sal = pv.d && pv.d.sa && (pv.d.sa[0] || pv.d.sa[1]) ? pv.d.sa : null;
       const det = off ? `<em>${esc(off.o === 2 ? 'cours suspendus' : off.t)}</em>`
         : d2 ? `<span class="p2-s">${x.l ? '✓ ' : ''}${esc(dense ? planAbbr(pv.sp || '?') : pv.sp || '?')} puis ${esc(dense ? planAbbr(d2.s2) : d2.s2)}</span>${sal && !dense ? `<span class="p2-n">${esc(sal[0] || '?')} → ${esc(sal[1] || '?')}</span>` : ''}${pv.pp ? '<span>📋</span>' : ''}${ev.map(e => `<span class="p2-w">⚠ ${esc(e.t)}</span>`).join('')}`
-        : `${pv.sp && pv.sp !== sp ? `<span class="p2-s">${x.l ? '✓ ' : ''}${esc(dense ? planAbbr(pv.sp) : pv.sp)}</span>` : x.l ? '<span class="p2-s p2-ok">✓ fait</span>' : pv.sp ? '<span class="p2-s">prévu</span>' : ''}${pv.pp ? '<span>📋</span>' : ''}${pis ? '<span>🌊</span>' : ''}${ev.map(e => `<span class="p2-w">⚠ ${esc(e.t)}</span>`).join('')}`;
+        : `${pv.sp && pv.sp !== sp ? `<span class="p2-s">${x.l ? '✓ ' : ''}${esc(dense ? planAbbr(pv.sp) : pv.sp)}</span>` : x.l ? '<span class="p2-s p2-ok">✓ fait</span>' : ''}${pv.pp ? '<span>📋</span>' : ''}${pis ? '<span>🌊</span>' : ''}${ev.map(e => `<span class="p2-w">⚠ ${esc(e.t)}</span>`).join('')}`;
       const inner = `<span class="p2-t">${esc(t)}</span>${det}`;
       h += forPrint || off || !x.it ? `<span class="p2-k${off ? ' off' : ''}">${inner}</span>`
         : `<button type="button" class="p2-k" data-plag="${x.it.id}" data-date="${x.iso}" aria-label="${esc(`${c.name}, ${fmtD(x.iso)} ${t}${pv.sp ? ', ' + pv.sp : ''}. Ouvrir le cours`)}">${inner}</button>`; });
@@ -102,20 +111,30 @@
   }
 
   function tableHTML(weeks, forPrint){
-    const cols = shown(), cls = allCls(cols), n = cols.length, dense = n > 3, t0 = mondayOf(today()), cours = V.vue === 'cours';
-    let h = `<div class="p2-wrap"><table class="p2-tb${dense ? ' dense' : ''}${cours ? ' cours' : ''}" style="--n:${n}"><thead><tr><th class="p2-w0">Sem. du</th>${cols.map(k => `<th>${esc(k.name)}</th>`).join('')}</tr></thead><tbody>`;
+    const cols = shown(), cls = allCls(cols), n = cols.length, dense = n > 3, t0 = mondayOf(today()), auj = today(), cours = V.vue === 'cours';
+    const cell = cours ? cellCours : cellSem;
+    let h = `<div class="p2-wrap"><table class="p2-tb${dense ? ' dense' : ''}${cours ? ' cours' : ''}" style="--n:${n}"><thead><tr><th class="p2-w0">Date</th>${cols.map(k => `<th>${esc(k.name)}</th>`).join('')}</tr></thead><tbody>`;
     let mois = -1, i = 0;
+    const moisRow = iso => { const d = dOf(iso); if (d.getMonth() === mois) return ''; mois = d.getMonth(); return `<tr class="p2-mo"><th colspan="${n + 1}">${MOIS_L[mois]} ${d.getFullYear()}</th></tr>`; };
     while (i < weeks.length){
       const w = weeks[i], d = dOf(w);
-      if (d.getMonth() !== mois && !calOffSem(w)){ mois = d.getMonth(); h += `<tr class="p2-mo"><th colspan="${n + 1}">${MOIS_L[mois]} ${d.getFullYear()}</th></tr>`; }
       /* vacances : un seul bandeau pour les semaines qui se suivent */
       const vac = calOffSem(w), vk = k => calOffSem(k) === vac && cls.every(c => [undefined, '', 'Congé'].includes((planSet()[c.id] || {})[k]) && !planWeekLessons(c, k).length); if (vac && vac.o === 1 && vk(w)){
         let j = i; while (j + 1 < weeks.length && vk(weeks[j + 1])) j++;
         h += `<tr class="p2-vac${weeks.slice(i, j + 1).includes(t0) ? ' now' : ''}"><th class="p2-w0">${d.getDate()} ${MOIS[d.getMonth()]}${j > i ? `<small>→ ${dOf(addDays(weeks[j], 4)).getDate()} ${MOIS[dOf(addDays(weeks[j], 4)).getMonth()]}</small>` : ''}</th><td colspan="${n}">🏖 ${esc(vac.t)}</td></tr>`;
         i = j + 1; continue;
       }
+      /* les jours de cours de la semaine, toutes classes affichées confondues */
+      const parCol = cols.map(k => coursSem(k, w)), jours = [...new Set(parCol.flat().map(x => x.iso))].sort(), now = w === t0;
+      if (!jours.length){
+        h += moisRow(w) + `<tr class="p2-wk p2-w1${now ? ' now' : ''}"${now ? ' id="p2-now"' : ''}><th class="p2-w0">${d.getDate()} ${MOIS[d.getMonth()]}<small>sem.</small></th>${cols.map(k => `<td class="p2-c p2-x"><span class="p2-n">pas de cours</span></td>`).join('')}</tr>`;
+      }
+      const vus = cols.map(() => false);
+      jours.forEach((iso, r) => { const dd = dOf(iso);
+        h += moisRow(iso) + `<tr class="p2-wk${r === 0 ? ' p2-w1' : ''}${now ? ' now' : ''}${iso === auj ? ' auj' : ''}"${now && r === 0 ? ' id="p2-now"' : ''}><th class="p2-w0"><span class="p2-dj">${JR[dd.getDay()]} ${dd.getDate()}</span><small>${MOIS[dd.getMonth()]}${iso === auj ? ' · auj.' : ''}</small></th>${cols.map((k, ci) => {
+          const xs = parCol[ci].filter(x => x.iso === iso), prem = xs.length && !vus[ci]; if (xs.length) vus[ci] = true;
+          return cell(k, w, iso, xs, prem, dense, forPrint); }).join('')}</tr>`; });
       const ev = V.ev ? [...(vac ? [vac] : []), ...evSem(w, cls)] : [];
-      h += `<tr class="p2-wk${w === t0 ? ' now' : ''}"${w === t0 ? ' id="p2-now"' : ''}><th class="p2-w0">${d.getDate()} ${MOIS[d.getMonth()]}${w === t0 ? '<small class="p2-auj">cette sem.</small>' : ''}</th>${cols.map(k => (cours ? cellCours : cellSem)(k, w, dense, forPrint)).join('')}</tr>`;
       if (ev.length) h += `<tr class="p2-ev"><td colspan="${n + 1}"><div>${ev.map(e => `<span class="p2-e${e.o ? ' off' : ''}"><b>${evIco(e)} ${esc(quand(e, w))}</b> ${esc(e.t)}${evAns(e) ? ` <i>${esc(e.p)}</i>` : ''}</span>`).join('')}</div></td></tr>`;
       i++;
     }
@@ -184,7 +203,7 @@
         <div class="p2-f"><div class="seg" role="group" aria-label="Affichage du planning"><button type="button" data-p2v="sem" aria-pressed="${V.vue !== 'cours'}">Par semaine</button><button type="button" data-p2v="cours" aria-pressed="${V.vue === 'cours'}">Mes heures</button></div>
           <button class="chip" type="button" id="p2-ev" aria-pressed="${!!V.ev}">📅 Dates école</button>
           <label class="fi-chk p2-reg"><input type="checkbox" id="p2-reg" ${reg ? 'checked' : ''}><span>Regrouper par groupes</span></label></div>
-        <p class="small muted" style="margin:0">${V.vue === 'cours' ? 'Seulement tes heures de cours. Touche un cours pour l\'ouvrir, le sport en haut pour le changer.' : 'Touche une case pour prévoir un sport (ta prévision, rien n\'est imposé).'}</p></div>
+        <p class="small muted" style="margin:0">${V.vue === 'cours' ? 'Seulement tes heures de cours. Touche un cours pour l\'ouvrir, le sport en haut pour le changer.' : 'Une ligne par jour de cours. Touche une case pour prévoir le sport de la semaine (ta prévision, rien n\'est imposé).'}</p></div>
         ${tableHTML(weeks)}${legendeHTML()}` : '<p class="small">Ajoute d\'abord tes classes.</p>'}</section>`;
     $('pl-back').onclick = () => { UI.agPlan = false; first = true; UI.p2Top = null; render(); };
     $('pl-prt').onclick = () => printHTML(`<article class="pr-page pr-plan p2"><h1>Planning EPS ${esc(sy)}${prepaEn().prof ? ' · ' + esc(prepaEn().prof) : ''}<small>${esc(sel.map(c => c.name).join(', '))}${V.vue === 'cours' ? ' · mes heures' : ''}</small></h1>${tableHTML(weeks, true)}${legendeHTML()}</article>`, `Planning EPS ${sy}`);
@@ -226,6 +245,12 @@
 .p2-tb .p2-w0 .p2-auj{color:var(--accent)}
 .p2-mo th{background:var(--surface2); text-align:left; padding:6px 10px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted)}
 .p2-wk > *{border-top:1px solid var(--line)}
+.p2-wk.p2-w1 > *{border-top:2px solid color-mix(in srgb, var(--fg) 35%, var(--line))}
+.p2-tb .p2-dj{display:block; font-size:14px; white-space:nowrap}
+.p2-wk.auj .p2-w0 small{color:var(--accent); font-weight:700}
+.p2-c.p2-x{background:repeating-linear-gradient(135deg, transparent 0 6px, color-mix(in srgb, var(--line) 35%, transparent) 6px 8px)}
+.p2-c.p2-x .p2-n{display:block; padding:8px; font-size:11.5px}
+.p2-b .p2-w{font-size:12px; line-height:1.25; color:var(--warn); font-weight:600}
 .p2-c{padding:0; vertical-align:top; border-left:1px solid var(--line)}
 .p2-c.on{background:color-mix(in srgb, var(--pc) 13%, var(--surface)); box-shadow:inset 4px 0 0 var(--pc)}
 .p2-b{all:unset; box-sizing:border-box; width:100%; min-height:48px; padding:6px 6px 6px 10px; display:flex; flex-direction:column; gap:3px; cursor:pointer}

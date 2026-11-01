@@ -4464,8 +4464,8 @@ let introAvant = null, introEnCours = false;
 // Kevin (29/10) : 5 places tenues par le script (fichier battle/google/Places.gs) : 0 Dieu, 1 Empereur, 2 Roi, 3 Bourreau, 4 Garde.
 // Battre un boss = prendre sa place, l'ancien occupant descend d'un cran (cascade). Plus de scores : chaque place a son palier fixe.
 // Le Dieu se prend seulement en battant AUSSI son record (seul score qu'on garde). L'Empereur et le Dieu restent cachés de l'accueil.
-// Kevin (29/10) : garde 300 000, bourreau / sorcière 500 000, roi 600 000, empereur 700 000, dieu / déesse 900 000
-const BOSS_DEPART = [600000, 500000, 300000], ULTIME_DEPART = 700000, DIEU_DEPART = 900000;
+// Kevin (01/11) : garde 300 000, bourreau / sorcière 500 000, roi 650 000, empereur 800 000, dieu / déesse 1 000 000 (+ la montée de chaque place)
+const BOSS_DEPART = [650000, 500000, 300000], ULTIME_DEPART = 800000, DIEU_DEPART = 1000000;
 const PALIERS = [DIEU_DEPART, ULTIME_DEPART, ...BOSS_DEPART];
 // Kevin (01/11) : chaque fois qu'une place change de main, son palier monte de MONTEE points (retenu par le script) : les boss montent doucement
 const MONTEE = 100;

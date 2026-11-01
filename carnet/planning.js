@@ -71,7 +71,10 @@
     if (done.length && done.some(x => x !== sp && x !== s2)) h += `<span class="p2-fait">✓ ${done.map(nom).join(', ')}</span>`;
     else if (done.length) h += '<span class="p2-ok">✓ fait</span>';
     if (np) h += `<span class="p2-pp">📋${np > 1 ? ' ' + np : ''}${dense ? '' : ' prépa' + (np > 1 ? 's' : '')}</span>`;
-    if (cs.length && nOff) h += `<span class="p2-n">${nOk ? nOk + ' cours sur ' + cs.length : 'pas cours'}</span>`;
+    /* les jours de cours de la classe cette semaine (kevin, 1er nov. : « la date du jour où j'ai ces heures-là ») */
+    const jours = []; cs.forEach(x => { if (!jours.some(j => j.iso === x.iso)) jours.push({iso: x.iso, off: calOff(x.iso)}); });
+    if (jours.length) h += `<span class="p2-j">${jours.map(j => j.off ? `<s title="${esc(j.off.t)}">${jourC(j.iso)}</s>` : jourC(j.iso)).join(' · ')}</span>`;
+    else h += '<span class="p2-n">pas de cours à l\'horaire</span>';
     perDebut(c, w).forEach(p => h += `<span class="p2-per">▶ ${esc(p.name)}${p.type === 'piscine' ? ' 🌊' : ''}</span>`);
     if (!h && !forPrint) h = '<span class="p2-vide">＋</span>';
     const st = sp && sp !== 'Congé' ? ` style="--pc:${planColor(sp)}"` : '';
@@ -100,7 +103,7 @@
 
   function tableHTML(weeks, forPrint){
     const cols = shown(), cls = allCls(cols), n = cols.length, dense = n > 3, t0 = mondayOf(today()), cours = V.vue === 'cours';
-    let h = `<div class="p2-wrap"><table class="p2-tb${dense ? ' dense' : ''}${cours ? ' cours' : ''}" style="--n:${n}"><thead><tr><th class="p2-w0">Semaine</th>${cols.map(k => `<th>${esc(k.name)}</th>`).join('')}</tr></thead><tbody>`;
+    let h = `<div class="p2-wrap"><table class="p2-tb${dense ? ' dense' : ''}${cours ? ' cours' : ''}" style="--n:${n}"><thead><tr><th class="p2-w0">Sem. du</th>${cols.map(k => `<th>${esc(k.name)}</th>`).join('')}</tr></thead><tbody>`;
     let mois = -1, i = 0;
     while (i < weeks.length){
       const w = weeks[i], d = dOf(w);
@@ -133,6 +136,43 @@
       if (b) b.setAttribute('aria-pressed', 'true');
       else ok.insertAdjacentHTML('beforebegin', `<button type="button" data-plo="${id}" aria-pressed="true" hidden></button>`); });
   }
+  /* --- Périodes (kevin, 1er nov.) : une période commence le lundi de la rentrée après les vacances.
+     Anciennes dates par défaut 2026-2027 (samedi avant les vacances) → lundi de la rentrée, pour tous les carnets,
+     seulement si la classe a encore la date par défaut (une date changée à la main est gardée). Aucun cours n'a lieu
+     pendant les vacances : les notes ne changent pas de période. */
+  const PER_MIG = {'2026-10-17': '2026-11-02', '2026-12-19': '2027-01-04'};
+  function perMigre(){
+    (S.classes || []).forEach(c => { let ch = false; (c.periods || []).forEach(p => { if (PER_MIG[p.start]){ p.start = PER_MIG[p.start]; ch = true; } }); if (ch) save(c.id); });
+  }
+  perMigre();
+  const render0 = render; render = function(){ perMigre(); return render0.apply(this, arguments); };
+
+  /* --- Fenêtre d'une case : « Jusqu'à la fin de la période » (s'arrête aux vacances) --- */
+  /* semaines de cours de la classe de w jusqu'à la veille de la période suivante, sans les semaines de vacances */
+  function semPeriode(cid, w){
+    const c = clsById(cid), nx = c && periodsOf(c).find(p => p.start > w), fin = nx ? nx.start : planWeeks(w).weeks.slice(-1)[0];
+    return planWeeks(w).weeks.filter(k => k >= w && (nx ? k < mondayOf(fin) || k < fin && addDays(k, 4) < fin : k <= fin) && !calOffSem(k));
+  }
+  window.planSemPeriode = semPeriode;
+  const opc0 = openPlanCell;
+  openPlanCell = function(cid, w){
+    const r = opc0.apply(this, arguments);
+    const row = $('plc-n'), ok = $('plc-ok'); if (!row || !ok) return r;
+    const ws = semPeriode(cid, w), c = clsById(cid), per = c && periodOf(c, w);
+    if (ws.length < 1) return r;
+    row.insertAdjacentHTML('beforeend', `<button class="chip" type="button" data-pln="per" aria-pressed="false">Jusqu'à la fin de ${esc(per ? per.name.replace(/^Période/, 'la période') : 'la période')} (${ws.length} sem.)</button>`);
+    row.querySelectorAll('[data-pln]').forEach(b => { const f = b.onclick; b.onclick = () => { if (f) f(); row.querySelectorAll('[data-pln]').forEach(x => x.setAttribute('aria-pressed', x === b)); window.planSemChoix = b.dataset.pln === 'per' ? ws : null; }; });
+    window.planSemChoix = null;
+    const ok0 = ok.onclick;
+    ok.onclick = () => {
+      if (!window.planSemChoix) return ok0();
+      const sp = $('plc-sp').value, ids = [cid, ...[...document.querySelectorAll('[data-plo][aria-pressed="true"]')].map(b => b.dataset.plo)], P = {...planSet()};
+      ids.forEach(id => { const o = {...(P[id] || {})}; window.planSemChoix.forEach(k => { if (sp) o[k] = sp; else delete o[k]; }); P[id] = o; });
+      S.settings.planAn = P; save(); const n = window.planSemChoix.length; closeSheet(); toast(sp ? `${sp} prévu jusqu'à la fin de la période (${n} sem.)` : 'Retiré du planning');
+    };
+    return r;
+  };
+
   window.renderPlanAn = renderPlanAn;
   function renderPlanAn(m){
     const {weeks, sy} = planWeeks(UI.agDate || today()), all = colsAll(), sel = shown(), y0 = window.scrollY, reg = regroupe();
@@ -195,6 +235,8 @@
 .p2-fait, .p2-ok, .p2-pp, .p2-n, .p2-per{font-size:12px; line-height:1.25; color:var(--muted)}
 .p2-fait, .p2-ok{color:var(--ok); font-weight:600}
 .p2-per{color:var(--fg); font-weight:700}
+.p2-j{font-size:12.5px; font-weight:700; color:var(--fg); letter-spacing:.01em}
+.p2-j s{color:var(--muted); font-weight:500}
 .p2-vide{color:var(--line); font-size:16px; font-weight:700}
 .p2-wk.now > *{background-color:var(--accent-soft)}
 .p2-wk.now .p2-w0{background:var(--accent-soft)}

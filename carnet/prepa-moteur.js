@@ -21,7 +21,7 @@
     h >= 2 ? 100 - 2 * VEST : 50 - VEST;
   const SALLES = {
     g: {n: 'Grande salle', k: 'Salle 1', d: 'un terrain de basket officiel ou un peu plus · 2 paniers, 2 buts, filet de volley, tout le matériel'},
-    p: {n: 'Petite salle', k: 'Salle 2', d: 'un grand terrain de badminton · 4 bancs, 2 plinths, sautoirs, 15 à 20 steps, espaliers, 3 gros tapis, filet bas ou haut · petite pour un grand groupe'},
+    p: {n: 'Petite salle', k: 'Salle 2', d: 'un grand terrain de badminton · 4 bancs, 2 plinths, sautoirs, 15 à 20 steps, espaliers, 3 gros tapis, 15 tapis de gym (1 × 2 m), filet bas ou haut · petite pour un grand groupe'},
     b: {n: 'Le Brel', k: 'Salle 3', d: 'un petit terrain de basket · bancs, 10 ballons de basket, plots, cônes : le reste est à apporter'},
     c: {n: 'Cour extérieure', k: 'Salle 4', d: 'terrain de mini-foot (2 buts, 2 anneaux) + une 2e zone de même taille sans tracé · rien sur place'}
   };

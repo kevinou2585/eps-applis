@@ -136,11 +136,12 @@
       if (b) b.setAttribute('aria-pressed', 'true');
       else ok.insertAdjacentHTML('beforebegin', `<button type="button" data-plo="${id}" aria-pressed="true" hidden></button>`); });
   }
-  /* --- Périodes (kevin, 1er nov.) : une période commence le lundi de la rentrée après les vacances.
-     Anciennes dates par défaut 2026-2027 (samedi avant les vacances) → lundi de la rentrée, pour tous les carnets,
-     seulement si la classe a encore la date par défaut (une date changée à la main est gardée). Aucun cours n'a lieu
-     pendant les vacances : les notes ne changent pas de période. */
-  const PER_MIG = {'2026-10-17': '2026-11-02', '2026-12-19': '2027-01-04'};
+  /* --- Périodes (kevin, 1er nov.) : une période commence le lendemain de la fermeture de Skore pour la précédente :
+     P2 le lundi 2 nov. (rentrée de Toussaint), P3 le 19/12 (Skore P2 ouvert jusqu'au 18/12), P4 le 31/03/2027 (P3 jusqu'au 30/03),
+     fin de P4 le 29/06/2027. Pour tous les carnets, seulement si la classe a encore une date par défaut (une date changée
+     à la main est gardée). Le 4 janv. (mis quelques heures le 1er nov.) revient au 19/12. Aucun cours pendant les vacances :
+     les notes ne changent pas de période. */
+  const PER_MIG = {'2026-10-17': '2026-11-02', '2027-01-04': '2026-12-19'};
   function perMigre(){
     (S.classes || []).forEach(c => { let ch = false; (c.periods || []).forEach(p => { if (PER_MIG[p.start]){ p.start = PER_MIG[p.start]; ch = true; } }); if (ch) save(c.id); });
   }

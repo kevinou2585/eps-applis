@@ -206,7 +206,8 @@
       const n = +((document.querySelector('[data-pln][aria-pressed="true"]') || {}).dataset || {}).pln || 1;
       const ids = [cid, ...[...document.querySelectorAll('[data-plo][aria-pressed="true"]')].map(b => b.dataset.plo)];
       const P = {...(S.settings.planAn2 || {})};
-      ids.forEach(id => { const o = {...(P[id] || {})}; for (let i = 0; i < n; i++){ const k = addDays(w, 7 * i); if (sp && sp !== 'Congé' && s2) o[k] = s2; else delete o[k]; } P[id] = o; });
+      const wks = window.planSemChoix || Array.from({length: n}, (_, i) => addDays(w, 7 * i));
+      ids.forEach(id => { const o = {...(P[id] || {})}; wks.forEach(k => { if (sp && sp !== 'Congé' && s2) o[k] = s2; else delete o[k]; }); P[id] = o; });
       S.settings.planAn2 = P;
       ok0();
     };

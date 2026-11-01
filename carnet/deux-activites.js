@@ -92,7 +92,9 @@
     show();
   }
   const bloc = it => it && it.b > it.a;
-  const prevu2Of = (date, it) => it.cls.map(id => ((S.settings.planAn2 || {})[id] || {})[mondayOf(date)]).find(Boolean) || '';
+  /* 2e activité prévue : d'abord pour ce cours précis (planJ2, clé 'date|H'), sinon pour la semaine (planAn2) */
+  const plan2 = (id, date, h) => { const j = ((S.settings.planJ2 || {})[id] || {}), k = date + '|' + h; return h && k in j ? j[k] : ((S.settings.planAn2 || {})[id] || {})[mondayOf(date)] || ''; };
+  const prevu2Of = (date, it) => it.cls.map(id => plan2(id, date, it.h)).find(Boolean) || '';
 
   /* Agenda : fiche d'un cours */
   const openAgSlot0 = openAgSlot;
@@ -196,13 +198,18 @@
   openPlanCell = function(cid, w){
     const r = opc0.apply(this, arguments);
     const sel = $('plc-sp'), ok = $('plc-ok'); if (!sel || !ok) return r;
-    const cur2 = ((S.settings.planAn2 || {})[cid] || {})[w] || '';
+    const jr = window.planJour, cur2 = jr ? plan2(cid, jr.iso, jr.hs[0]) : ((S.settings.planAn2 || {})[cid] || {})[w] || '';
     sel.closest('label').insertAdjacentHTML('afterend', `<label class="toggle dbl-ck"><input type="checkbox" id="plc-dbl" ${cur2 ? 'checked' : ''}><span>🔀 <b>2 activités</b> pendant les blocs de 2 h</span></label>
       <label class="f" id="plc-s2l" ${cur2 ? '' : 'hidden'}>2e heure<select class="inp" id="plc-s2"><option value="">— Rien —</option>${sportsList().filter(s => s !== 'Autre').map(s => `<option ${s === cur2 ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>`);
     $('plc-dbl').onchange = () => { $('plc-s2l').hidden = !$('plc-dbl').checked; };
     const ok0 = ok.onclick;
     ok.onclick = () => {
       const s2 = $('plc-dbl').checked ? $('plc-s2').value : '', sp = sel.value;
+      if (window.planJour && window.planJourCibles){
+        const P = {...(S.settings.planJ2 || {})};
+        window.planJourCibles().forEach(([id, d, h]) => { P[id] = {...(P[id] || {}), [d + '|' + h]: sp && sp !== 'Congé' ? s2 : ''}; });
+        S.settings.planJ2 = P; return ok0();
+      }
       const n = +((document.querySelector('[data-pln][aria-pressed="true"]') || {}).dataset || {}).pln || 1;
       const ids = [cid, ...[...document.querySelectorAll('[data-plo][aria-pressed="true"]')].map(b => b.dataset.plo)];
       const P = {...(S.settings.planAn2 || {})};

@@ -16,12 +16,14 @@
 
   function retirer(c){
     const slots = tt().filter(s => s.cls.includes(c.id)).map(copie);
-    const pa = (S.settings.planAn || {})[c.id], pa2 = (S.settings.planAn2 || {})[c.id];
-    arch().push({c: copie(c), at: Date.now(), tt: slots, ...(pa ? {pa: copie(pa)} : {}), ...(pa2 ? {pa2: copie(pa2)} : {})});
+    const pa = (S.settings.planAn || {})[c.id], pa2 = (S.settings.planAn2 || {})[c.id], pj = (S.settings.planJ || {})[c.id], pj2 = (S.settings.planJ2 || {})[c.id];
+    arch().push({c: copie(c), at: Date.now(), tt: slots, ...(pa ? {pa: copie(pa)} : {}), ...(pa2 ? {pa2: copie(pa2)} : {}), ...(pj ? {pj: copie(pj)} : {}), ...(pj2 ? {pj2: copie(pj2)} : {})});
     S.classes = S.classes.filter(x => x !== c); S.deleted.push(c.id);
     tt().forEach(s => s.cls = s.cls.filter(id => id !== c.id)); S.settings.tt = tt().filter(s => s.cls.length);
     if (S.settings.planAn) delete S.settings.planAn[c.id];
     if (S.settings.planAn2) delete S.settings.planAn2[c.id];
+    if (S.settings.planJ) delete S.settings.planJ[c.id];
+    if (S.settings.planJ2) delete S.settings.planJ2[c.id];
     if (S.cur === c.id) S.cur = S.classes[0]?.id || null;
     if (Array.isArray(UI.cgrp)) UI.cgrp = UI.cgrp.filter(id => id !== c.id);
     UI.cview = false; save(c.id);
@@ -38,6 +40,8 @@
     });
     if (a.pa) S.settings.planAn = {...(S.settings.planAn || {}), [nid2]: copie(a.pa)};
     if (a.pa2) S.settings.planAn2 = {...(S.settings.planAn2 || {}), [nid2]: copie(a.pa2)};
+    if (a.pj) S.settings.planJ = {...(S.settings.planJ || {}), [nid2]: copie(a.pj)};
+    if (a.pj2) S.settings.planJ2 = {...(S.settings.planJ2 || {}), [nid2]: copie(a.pj2)};
     S.settings.archives = arch().filter(x => x !== a);
     save(nid2);
     return c;

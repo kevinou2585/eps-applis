@@ -55,17 +55,20 @@
     k.cs.forEach(c => c.lessons.filter(l => l.date >= mon && l.date <= addDays(mon, 6) && !out.some(x => x.iso === l.date && x.h === (l.h || null))).forEach(l => out.push({iso: l.date, it: null, h: l.h, l, c})));
     return out.sort((a, b) => a.iso < b.iso ? -1 : a.iso > b.iso ? 1 : hI(a.h || 'H1') - hI(b.h || 'H1'));
   }
-  const prevu = (c, x) => { const g = (S.settings.ag || {})[`${x.iso}|${x.h}`] || {}; return {sp: (x.l && x.l.sport) || g.s || '', pp: (x.l && x.l.prepa) || g.pp || null}; };
+  const prevu = (c, x) => { const g = (S.settings.ag || {})[`${x.iso}|${x.h}`] || {}; return {sp: (x.l && x.l.sport) || g.s || '', pp: (x.l && x.l.prepa) || g.pp || null, d: (x.l ? x.l.dbl : g.d) || null}; };
+  /* 2e activité prévue au planning (blocs de 2 h) */
+  const sp2Col = (k, w) => k.ids.map(id => ((S.settings.planAn2 || {})[id] || {})[w] || '').find(Boolean) || '';
   /* début de période cette semaine-là (P2 · piscine…) */
   const perDebut = (k, mon) => periodsOf(k.cs[0]).filter((p, i) => i > 0 && p.start >= mon && p.start <= addDays(mon, 6));
 
   function cellSem(c, w, dense, forPrint){
-    const sp = spCol(c, w), wk = wkCol(c, w), done = [...new Set(wk.filter(x => x.sport).map(x => x.sport))], np = wk.filter(x => x.pp).length;
+    const sp = spCol(c, w), wk = wkCol(c, w), done = [...new Set(wk.filter(x => x.sport).flatMap(x => x.sport2 ? [x.sport, x.sport2] : [x.sport]))], np = wk.filter(x => x.pp).length;
     const cs = coursSem(c, w).filter(x => x.it), nOff = cs.filter(x => calOff(x.iso)).length, nOk = cs.length - nOff;
     const nom = s => esc(dense ? planAbbr(s) : s);
-    let h = sp === 'Congé' ? '<b class="p2-cg">🏖 congé</b>' : sp ? `<b class="p2-sp">${nom(sp)}</b>` : '';
+    const s2 = sp && sp !== 'Congé' ? sp2Col(c, w) : '';
+    let h = sp === 'Congé' ? '<b class="p2-cg">🏖 congé</b>' : sp ? `<b class="p2-sp">${nom(sp)}${s2 ? ' + ' + nom(s2) : ''}</b>` : '';
     if (sp) spAutres(c, w, sp).forEach(t => h += `<span class="p2-n">≠ ${esc(t)}</span>`);
-    if (done.length && !(done.length === 1 && done[0] === sp)) h += `<span class="p2-fait">✓ ${done.map(nom).join(', ')}</span>`;
+    if (done.length && done.some(x => x !== sp && x !== s2)) h += `<span class="p2-fait">✓ ${done.map(nom).join(', ')}</span>`;
     else if (done.length) h += '<span class="p2-ok">✓ fait</span>';
     if (np) h += `<span class="p2-pp">📋${np > 1 ? ' ' + np : ''}${dense ? '' : ' prépa' + (np > 1 ? 's' : '')}</span>`;
     if (cs.length && nOff) h += `<span class="p2-n">${nOk ? nOk + ' cours sur ' + cs.length : 'pas cours'}</span>`;
@@ -77,15 +80,17 @@
       : `<td class="p2-c${sp ? ' on' : ''}"${st}><button type="button" class="p2-b" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(lab)}">${h}</button></td>`;
   }
   function cellCours(c, w, dense, forPrint){
-    const sp = spCol(c, w), cs = coursSem(c, w), st = sp && sp !== 'Congé' ? ` style="--pc:${planColor(sp)}"` : '';
+    const sp = spCol(c, w), s2 = sp && sp !== 'Congé' ? sp2Col(c, w) : '', cs = coursSem(c, w), st = sp && sp !== 'Congé' ? ` style="--pc:${planColor(sp)}"` : '';
     let h = forPrint ? (sp ? `<b class="p2-sp">${esc(dense ? planAbbr(sp) : sp)}</b>` : '')
-      : `<button type="button" class="p2-hd" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(`${c.name}, semaine du ${fmtD(w)} : ${sp || 'rien de prévu'}. Changer`)}">${sp ? `<b class="p2-sp">${sp === 'Congé' ? '🏖 congé' : esc(dense ? planAbbr(sp) : sp)}</b>` : '<span class="p2-vide">＋ prévoir</span>'}</button>`;
+      : `<button type="button" class="p2-hd" data-plc="${c.id}" data-plw="${w}" aria-label="${esc(`${c.name}, semaine du ${fmtD(w)} : ${sp || 'rien de prévu'}. Changer`)}">${sp ? `<b class="p2-sp">${sp === 'Congé' ? '🏖 congé' : esc(dense ? planAbbr(sp) : sp) + (s2 ? ' + ' + esc(dense ? planAbbr(s2) : s2) : '')}</b>` : '<span class="p2-vide">＋ prévoir</span>'}</button>`;
     if (sp) spAutres(c, w, sp).forEach(t => h += `<span class="p2-n" style="display:block;padding:0 6px">≠ ${esc(t)}</span>`);
     perDebut(c, w).forEach(p => h += `<span class="p2-per">▶ ${esc(p.name)}${p.type === 'piscine' ? ' 🌊' : ''}</span>`);
     if (!cs.length) h += '<span class="p2-n">pas de cours à l\'horaire</span>';
     cs.forEach(x => { const off = calOff(x.iso), pv = prevu(c, x), ev = evClasse(c, x.iso), pis = !off && lessonType(x.c || c.cs[0], x.iso, x.h) === 'piscine';
       const t = `${jourC(x.iso)}${x.h ? ' · ' + (x.it ? slotLabel(x.it) : x.h) : ''}`;
+      const d2 = pv.d && pv.d.s2 && pv.d.s2 !== pv.sp ? pv.d : null, sal = pv.d && pv.d.sa && (pv.d.sa[0] || pv.d.sa[1]) ? pv.d.sa : null;
       const det = off ? `<em>${esc(off.o === 2 ? 'cours suspendus' : off.t)}</em>`
+        : d2 ? `<span class="p2-s">${x.l ? '✓ ' : ''}${esc(dense ? planAbbr(pv.sp || '?') : pv.sp || '?')} puis ${esc(dense ? planAbbr(d2.s2) : d2.s2)}</span>${sal && !dense ? `<span class="p2-n">${esc(sal[0] || '?')} → ${esc(sal[1] || '?')}</span>` : ''}${pv.pp ? '<span>📋</span>' : ''}${ev.map(e => `<span class="p2-w">⚠ ${esc(e.t)}</span>`).join('')}`
         : `${pv.sp && pv.sp !== sp ? `<span class="p2-s">${x.l ? '✓ ' : ''}${esc(dense ? planAbbr(pv.sp) : pv.sp)}</span>` : x.l ? '<span class="p2-s p2-ok">✓ fait</span>' : pv.sp ? '<span class="p2-s">prévu</span>' : ''}${pv.pp ? '<span>📋</span>' : ''}${pis ? '<span>🌊</span>' : ''}${ev.map(e => `<span class="p2-w">⚠ ${esc(e.t)}</span>`).join('')}`;
       const inner = `<span class="p2-t">${esc(t)}</span>${det}`;
       h += forPrint || off || !x.it ? `<span class="p2-k${off ? ' off' : ''}">${inner}</span>`

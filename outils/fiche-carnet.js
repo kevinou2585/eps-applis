@@ -152,7 +152,7 @@ function fiHistHTML(c, p, vp){
   const hh = l => l.h ? slotLabel(l) : '';
   let nL = 0, nP = 0;
   c.lessons.filter(l => inP(l.date)).forEach(l => {
-    nL++; const m = l.m[p.id] || {}, a = effA(p, l), pool = l.type === 'piscine', sp = l.sport ? ' · ' + l.sport : (pool ? ' · piscine' : '');
+    nL++; const m = l.m[p.id] || {}, a = effA(p, l), pool = l.type === 'piscine', sp = l.sport ? ' · ' + l.sport + (l.dbl && l.dbl.s2 ? ' + ' + l.dbl.s2 : '') : (pool ? ' · piscine' : '');
     const add = (t, ic, cls) => ev.push({date: l.date, k: rgKey(l), h: hh(l), t, ic, cls, sp});
     if (a === 'A'){ add('Absent', '✗', 'abs'); return; }
     nP++;

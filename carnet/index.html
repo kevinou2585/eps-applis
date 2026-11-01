@@ -857,7 +857,7 @@ const lessonOn = (c, date, h) => c.lessons.find(l => l.date === date && (l.h || 
 // Annee scolaire choisie (bouton a cote du titre) : les dates proposees suivent l'annee.
 function decalAnnee(){ try { const a = parseInt(localStorage.getItem('carnet-eps-annee'), 10); return a ? a - 2026 : 0; } catch(e){ return 0; } }
 function defaultPeriods(){
-  return [['Période 1','2026-08-24','salle'],['Période 2','2026-11-02','salle'],['Période 3','2026-12-19','salle'],['Période 4','2027-03-31','salle']]
+  return [['Période 1','2026-08-24','salle'],['Période 2','2026-10-17','salle'],['Période 3','2026-12-19','salle'],['Période 4','2027-03-31','salle']]
     .map(([name, start, type]) => ({id: nid('p'), name, start: (+start.slice(0, 4) + decalAnnee()) + start.slice(4), type}));
 }
 function newClass(name, names, periods){
@@ -1039,7 +1039,7 @@ function applySeed(v){
 const MIG = 'periodes-2026-v1';
 function migrate(){
   if ((S.settings.seeds || []).includes(MIG)) return false;
-  const starts = ['2026-08-31', '2026-11-02', '2026-12-19', '2027-03-31'];
+  const starts = ['2026-08-31', '2026-10-17', '2026-12-19', '2027-03-31'];
   S.classes.forEach(c => {
     if (!c.periods) return;
     const old = periodsOf(c), yr = (c.name || '').trim()[0];

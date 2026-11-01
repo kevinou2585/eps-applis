@@ -5230,7 +5230,7 @@ function montrerBienvenue(revoir) {
     <div class="bv-carte"><span class="bv-cof" aria-hidden="true">🎁</span><span class="bv-k">Avis à tous les profs</span>
       <h2>Bienvenue au Battle des profs</h2>
       ${L.map((t, i) => `<p class="bv-l" style="animation-delay:${0.9 + i * 0.7}s">${t}</p>`).join('')}
-      <div class="bv-l bv-mois" style="animation-delay:2.4s">📅 <b>Chaque mois, un nouveau jeu.</b> Le classement repart à zéro.<br>Le meilleur score du mois recevra une récompense…<span class="bv-rec">INCOMMENSURABLE</span></div>
+      <div class="bv-l bv-mois" style="animation-delay:2.4s">🔮 <b>Un jour, sans prévenir, un nouveau jeu apparaîtra…</b> Ce jour-là, le classement repartira à zéro.<br>Celui ou celle qui sera en tête recevra une récompense…<span class="bv-rec">INCOMMENSURABLE</span></div>
       <p class="bv-l bv-chut" style="animation-delay:3.2s">On n’en dira pas plus. Certains secrets se méritent.</p>
       <div class="bv-l" style="animation-delay:3.5s"><input class="champ" id="bv-nom" maxlength="24" placeholder="Ton prénom" autocomplete="given-name" value="${esc(lsGetTxt('battle-nom'))}" style="margin:14px 0 0;text-align:center"><div class="aide" style="margin:4px 0 0">Il restera ton nom dans le jeu, sur ce téléphone.</div></div>
       <button class="gros" type="button" id="bv-ok" style="animation-delay:3.7s">⚔ J’accepte le défi</button></div></div>`;

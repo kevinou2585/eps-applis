@@ -9,7 +9,7 @@
    planWeekLessons / planWeekHTML / openPlanCell. */
 (() => {
   const SALLES2 = ['Grande salle', 'Petite salle', 'Le Brel', 'Cour extérieure', 'Plaine', 'Stade', 'Piscine'];
-  const dOk = d => d && (d.s2 || d.pp2 || (d.sa && (d.sa[0] || d.sa[1]))) ? d : null;
+  const dOk = d => d && (d.s2 || d.pp2 || d.n2 || d.p2 || (d.sa && (d.sa[0] || d.sa[1]))) ? d : null;
   const cp = d => d ? JSON.parse(JSON.stringify(d)) : null;
   const agK = (date, h) => date + '|' + (h || '');
   /* deux activités d'un cours (leçons d'abord, sinon ce qui a été prévu avant l'appel) */
@@ -47,36 +47,48 @@
   /* --- la case et ses deux lignes, placées juste sous le choix du sport --- */
   const sOpts = cur => sportOptions(cur).replace(/<option value="__add">[^<]*<\/option>/, '');
   const salOpts = cur => `<option value="">— Salle —</option>${cur && !SALLES2.includes(cur) ? `<option selected>${esc(cur)}</option>` : ''}${SALLES2.map(s => `<option ${s === cur ? 'selected' : ''}>${esc(s)}</option>`).join('')}`;
-  function dblHTML(pre, d, prevu2){
-    const sa = (d && d.sa) || ['', ''];
-    return `<div class="dbl" id="${pre}-dbl">
-      <label class="toggle dbl-ck"><input type="checkbox" id="${pre}-dblck" ${d ? 'checked' : ''}><span>🔀 <b>2 activités sur ce bloc</b> (une par heure)</span></label>
-      <div class="dbl-b" id="${pre}-dblb" ${d ? '' : 'hidden'}>
-        <div class="dbl-h"><b>1re heure</b><span class="dbl-s1" id="${pre}-s1t"></span><select class="inp" id="${pre}-sa1" aria-label="Salle de la 1re heure">${salOpts(sa[0])}</select></div>
-        <div class="dbl-h"><b>2e heure</b><select class="inp" id="${pre}-s2" aria-label="Sport de la 2e heure">${sOpts((d && d.s2) || '')}</select><select class="inp" id="${pre}-sa2" aria-label="Salle de la 2e heure">${salOpts(sa[1])}</select></div>
-        <div id="${pre}-pp2w"></div>
-        ${prevu2 && !(d && d.s2) ? `<button class="btn ag-plb" type="button" id="${pre}-pl2">🗓 2e heure prévue au planning : <b>${esc(prevu2)}</b> · choisir</button>` : ''}
-      </div></div>`;
-  }
-  function dblMount(pre, d, prevu2, put, cur, prepa2){
-    const row = $(pre + '-addrow'); if (!row || $(pre + '-dbl')) return;
-    row.insertAdjacentHTML('afterend', dblHTML(pre, d, prevu2));
-    const lab = $(pre + '-sp') && $(pre + '-sp').closest('label'), t0 = lab && lab.firstChild && lab.firstChild.nodeType === 3 ? lab.firstChild : null, txt0 = t0 ? t0.textContent : '';
-    const get = () => { if (!$(pre + '-dblck').checked) return null; const o = {s2: $(pre + '-s2').value, sa: [$(pre + '-sa1').value, $(pre + '-sa2').value]}, old = cur();
-      if (old && old.pp2) o.pp2 = old.pp2; return o; };
-    const show = () => { const on = $(pre + '-dblck').checked, v = $(pre + '-sp') ? $(pre + '-sp').value : '';
-      $(pre + '-s1t').textContent = v && v !== '__add' ? v : 'choisis le sport au-dessus'; $(pre + '-dblb').hidden = !on; if (t0) t0.textContent = on ? 'Sport / activité · 1re heure' : txt0; };
+  /* Fiche « Ce cours » (Agenda et Présences) : case cochée → la fiche se range par heure (kevin, 1er nov.) :
+     « 1re heure » : sport, salle, lien avec le programme, prépa, lancer / dicter, ce que j'ai fait (les champs habituels)
+     « 2e heure »  : les mêmes, pour la 2e heure (d.s2, d.sa[1], d.p2, d.pp2, d.n2). */
+  function dblMount(pre, d, prevu2, put, cur, prepa2, ids){
+    const lab = $(pre + '-sp') && $(pre + '-sp').closest('label'), noteLab = $(pre + '-note') && $(pre + '-note').closest('label');
+    if (!lab || !noteLab || $(pre + '-dbl')) return;
+    const sa = (d && d.sa) || ['', ''], q = pre + '2';
+    lab.insertAdjacentHTML('beforebegin', `<label class="toggle dbl-ck" id="${pre}-dbl"><input type="checkbox" id="${pre}-dblck" ${d ? 'checked' : ''}><span>🔀 <b>2 activités sur ce bloc</b> (une par heure)</span></label>
+      <div class="dbl-hh" id="${pre}-hh1" hidden>1re heure</div>`);
+    const after1 = $(pre + '-plan') || $(pre + '-addrow');
+    after1.insertAdjacentHTML('afterend', `<label class="f" id="${pre}-sa1w" hidden>Salle<select class="inp" id="${pre}-sa1">${salOpts(sa[0])}</select></label>`);
+    noteLab.insertAdjacentHTML('afterend', `<div class="dbl-b" id="${pre}-dblb" hidden>
+      <div class="dbl-hh">2e heure</div>
+      <label class="f">Sport / activité<select class="inp" id="${q}-s2">${sOpts((d && d.s2) || '')}</select></label>
+      ${prevu2 && !(d && d.s2) ? `<button class="btn ag-plb" type="button" id="${q}-pl2">🗓 Prévu au planning : <b>${esc(prevu2)}</b> · choisir</button>` : ''}
+      <label class="f">Salle<select class="inp" id="${q}-sa2">${salOpts(sa[1])}</select></label>
+      ${progField(q, (d && d.p2) || null, ids)}
+      <div id="${q}-ppw"></div>
+      ${micBtn(q + '-note')}
+      <label class="f">Ce que j'ai fait<textarea class="inp" id="${q}-note" rows="3" style="min-height:90px" placeholder="ex. échauffement, passes à deux, match 4 contre 4">${esc((d && d.n2) || '')}</textarea></label>
+    </div>`);
+    let PF2 = null;
+    const get = () => { if (!$(pre + '-dblck').checked) return null; const old = cur() || {};
+      const o = {s2: $(q + '-s2').value, sa: [$(pre + '-sa1').value, $(q + '-sa2').value]}, p2 = PF2 ? PF2.get() : old.p2, n2 = $(q + '-note').value.trim();
+      if (p2) o.p2 = p2; if (n2) o.n2 = n2; if (old.pp2) o.pp2 = old.pp2; return o; };
+    const t0 = lab.firstChild && lab.firstChild.nodeType === 3 ? lab.firstChild : null, txt0 = t0 ? t0.textContent : '';
+    const show = () => { const on = $(pre + '-dblck').checked;
+      $(pre + '-hh1').hidden = $(pre + '-sa1w').hidden = $(pre + '-dblb').hidden = !on; $(pre + '-dbl').classList.toggle('on', on);
+      if (t0) t0.textContent = on ? 'Sport / activité' : txt0; };
     const go = () => { show(); put(get()); };
-    $(pre + '-dblck').onchange = () => { go(); toast($(pre + '-dblck').checked ? '2 activités sur ce bloc' : 'Une seule activité sur le bloc'); };
-    [pre + '-s2', pre + '-sa1', pre + '-sa2'].forEach(id => $(id).onchange = go);
-    if ($(pre + '-pl2')) $(pre + '-pl2').onclick = () => { const sel = $(pre + '-s2'); if (![...sel.options].some(o => o.value === prevu2)) sel.innerHTML = sOpts(prevu2); sel.value = prevu2; $(pre + '-pl2').remove(); go(); };
-    if ($(pre + '-sp')) $(pre + '-sp').addEventListener('change', show);
-    /* 2e prépa : bouton « Sélectionner une préparation (2e heure) » + « ▶ Lancer » */
-    if (prepa2){ const w = $(pre + '-pp2w'), draw = () => { const pp2 = (cur() || {}).pp2;
-        w.innerHTML = `<button class="btn block ag-ppb" type="button" id="${pre}-pp2"><span>📋 ${pp2 ? `Prépa 2e heure : <b>${esc(prepaCourt(pp2))}</b> · changer` : 'Sélectionner une préparation pour la 2e heure'}</span></button>${pp2 && window.plLancer ? `<button class="btn pri block" type="button" id="${pre}-pp2go">▶ Lancer la prépa de la 2e heure</button>` : ''}`;
-        $(pre + '-pp2').onclick = () => { put(get()); prepa2.choisir(); };
-        if ($(pre + '-pp2go')) $(pre + '-pp2go').onclick = () => { put(get()); prepa2.lancer(); }; };
-      draw(); }
+    $(pre + '-dblck').onchange = () => { go(); toast($(pre + '-dblck').checked ? '2 activités : la fiche est rangée par heure' : 'Une seule activité sur le bloc'); };
+    [q + '-s2', pre + '-sa1', q + '-sa2'].forEach(id => $(id).onchange = () => { if (id === q + '-s2' && PF2) PF2.sport(); go(); });
+    if ($(q + '-pl2')) $(q + '-pl2').onclick = () => { const sel = $(q + '-s2'); if (![...sel.options].some(o => o.value === prevu2)) sel.innerHTML = sOpts(prevu2); sel.value = prevu2; $(q + '-pl2').remove(); if (PF2) PF2.sport(); go(); };
+    PF2 = bindProgField(q, (d && d.p2) || null, () => $(q + '-s2').value, () => put(get()));
+    let tm = null; const ta = $(q + '-note'); ta.oninput = () => { clearTimeout(tm); tm = setTimeout(() => { tm = null; put(get()); }, 500); }; ta.onblur = () => { if (tm){ clearTimeout(tm); tm = null; put(get()); } };
+    bindMic(q + '-note');
+    const go2 = document.querySelector(`[data-plgo="${q}-note"]`);
+    if (prepa2){ const w = $(q + '-ppw'), pp2 = (cur() || {}).pp2;
+      w.innerHTML = `<button class="btn block ag-ppb" type="button" id="${q}-prepa"><span>📋 ${pp2 ? `Prépa : <b>${esc(prepaCourt(pp2))}</b> · changer` : 'Sélectionner une préparation'}</span></button>`;
+      $(q + '-prepa').onclick = () => { put(get()); prepa2.choisir(); };
+      if (go2) go2.onclick = () => { put(get()); if ((cur() || {}).pp2) prepa2.lancer(); else prepa2.choisir(); }; }
+    else if (go2) go2.remove();
     show();
   }
   const bloc = it => it && it.b > it.a;
@@ -90,7 +102,7 @@
     const grpIds = () => { const b = document.querySelector('[data-grp][aria-pressed="true"]'); return it.pick && b ? [b.dataset.grp] : it.cls; };
     dblMount('ags', dblGet(date, it), prevu2Of(date, it), d => dblSet(date, it, grpIds(), d), () => dblGet(date, it, grpIds()), {
       choisir: () => { const oc = sheetOnClose; sheetOnClose = null; if (oc) oc(); prepa2Ouvrir(date, it, grpIds(), false); },
-      lancer: () => { const oc = sheetOnClose; sheetOnClose = null; closeSheet(); if (oc) oc(); prepa2Lancer(date, it, grpIds()); }});
+      lancer: () => { const oc = sheetOnClose; sheetOnClose = null; closeSheet(); if (oc) oc(); prepa2Lancer(date, it, grpIds()); }}, it.cls);
     return r;
   };
   /* Présences : « Ce cours » sous l'appel */
@@ -100,9 +112,9 @@
     if (!$('ag-rc')) return r;
     const it = agRollIt(Ls, cls), l0 = Ls.find(Boolean) || {};
     if (it){ if (bloc(it)){ const date = l0.date, ids = cls.map(c => c.id); dblMount('rc', dblGet(date, it, ids), prevu2Of(date, it), d => dblSet(date, it, ids, d), () => dblGet(date, it, ids), {
-      choisir: () => prepa2Ouvrir(date, it, ids, true), lancer: () => prepa2Lancer(date, it, ids)}); } }
+      choisir: () => prepa2Ouvrir(date, it, ids, true), lancer: () => prepa2Lancer(date, it, ids)}, ids); } }
     else if (l0.h && l0.h2 && l0.h2 !== l0.h){  // appel hors horaire, mais sur 2 h
-      dblMount('rc', l0.dbl || null, '', d => { d = dOk(d); cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; if (d) l.dbl = cp(d); else delete l.dbl; save(c.id); }); }, () => (Ls.find(l => l && l.dbl) || {}).dbl || null);
+      dblMount('rc', l0.dbl || null, '', d => { d = dOk(d); cls.forEach((c, i) => { const l = Ls[i]; if (!l) return; if (d) l.dbl = cp(d); else delete l.dbl; save(c.id); }); }, () => (Ls.find(l => l && l.dbl) || {}).dbl || null, null, cls.map(c => c.id));
     }
     return r;
   };
@@ -115,13 +127,14 @@
   const agGet1 = agGet;
   agGet = function(date, it){
     if (!h2On(date, it)) return agGet1.apply(this, arguments);
-    const d = dblGet(date, it, H2.ids) || {}; return {s: d.s2 || '', n: '', p: null, pp: d.pp2 || null};
+    const d = dblGet(date, it, H2.ids) || {}; return {s: d.s2 || '', n: d.n2 || '', p: d.p2 || null, pp: d.pp2 || null};
   };
   const agSet1 = agSet;
   agSet = function(date, it, ids, s, n, pr, pp){
     if (!h2On(date, it)) return agSet1.apply(this, arguments);
     const d = {...(dblGet(date, it, ids) || {s2: '', sa: ['', '']})};
     if (!d.s2 && s) d.s2 = s; if (pp) d.pp2 = JSON.parse(JSON.stringify(pp)); else delete d.pp2;
+    if (n) d.n2 = n; else delete d.n2; if (pr) d.p2 = [...pr]; else delete d.p2;
     dblSet(date, it, ids, d);
   };
   /* bloc de 2 h avec 2 activités : la prépa (1re ou 2e) est prévue pour 1 heure */
@@ -208,9 +221,8 @@
 .dbl-ck:has(input:checked){border-style:solid; border-color:var(--accent); background:var(--accent-soft)}
 .dbl-b{display:grid; gap:8px}
 .dbl-b[hidden], #plc-s2l[hidden]{display:none !important}
-.dbl-h{display:grid; grid-template-columns:76px 1fr; gap:6px 8px; align-items:center}
-.dbl-h > b{grid-row:span 2; align-self:start; padding-top:10px}
-.dbl-s1{font-weight:600; padding:4px 0}
+.dbl-hh{font-family:var(--display); font-weight:800; font-size:20px; text-transform:uppercase; letter-spacing:.03em; color:var(--accent); border-bottom:2px solid var(--accent); padding:6px 0 2px; margin-top:4px}
+.dbl-b{border-top:0; margin-top:6px}
 .dbl-h2b{background:var(--accent-soft); border:1.5px solid var(--accent); border-radius:12px; padding:8px 12px; font-size:14px}
 `;
   document.head.appendChild(css);

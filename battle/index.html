@@ -93,6 +93,7 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .photo-btn{position:relative;overflow:hidden}
 .photo-btn input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
 #confettis{position:fixed;inset:0;pointer-events:none;z-index:6}
+.recup{position:fixed;left:16px;right:16px;bottom:24px;z-index:50;background:#12352b;color:#fff;font-weight:700;text-align:center;padding:14px 16px;border-radius:14px;box-shadow:0 8px 24px #0008}
 #pause{position:fixed;right:calc(env(safe-area-inset-right) + 8px);top:calc(env(safe-area-inset-top) + 8px);z-index:3;width:42px;height:42px;border-radius:12px;border:2px solid rgba(255,255,255,.25);background:rgba(16,26,54,.6);font-weight:900;font-size:16px;display:none}
 /* bouton LANCER : petit, collé au bord droit (zone du couloir du lanceur), visible seulement quand une bille attend au lanceur */
 #lancer{position:fixed;right:calc(env(safe-area-inset-right) + 3px);bottom:calc(env(safe-area-inset-bottom) + 3px);z-index:3;width:50px;height:50px;padding:0;border-radius:50%;border:2.5px solid #fff;background:radial-gradient(circle at 35% 30%,#ff8a95,#d61f2e 60%,#7a0f19);color:#fff;font-weight:900;font-size:9.5px;letter-spacing:-.01em;box-shadow:0 4px 0 #5a0a12,0 6px 14px rgba(0,0,0,.5);display:none;touch-action:none;-webkit-user-select:none;user-select:none;animation:pulse 1s ease-in-out infinite;line-height:1}
@@ -5789,9 +5790,18 @@ function montrerFin() {
     if ($('envoyer') && !$('envoyer').disabled) $('envoyer').classList.remove('cache');
     if (!photoData) $('photo').click();
   }));
-  $('rejouer').onclick = () => { pleinEcran(); deverrouiller(); montrer(null); nouvellePartie(); partieTest(); };
-  $('vers-accueil').onclick = () => { etat = 'accueil'; balles = []; table = 'base'; combat = null; montrer('accueil'); accueilDessine = false; chargerClassement(); };
+  $('rejouer').onclick = () => { lsSet('battle-fin-cote', null); pleinEcran(); deverrouiller(); montrer(null); nouvellePartie(); partieTest(); };
+  $('vers-accueil').onclick = () => { lsSet('battle-fin-cote', null); etat = 'accueil'; balles = []; table = 'base'; combat = null; montrer('accueil'); accueilDessine = false; chargerClassement(); };
   if ($('montrer-nom')) $('montrer-nom').onclick = () => { $('zone-nom').classList.remove('cache'); $('montrer-nom').classList.add('cache'); $('nom').focus(); };
+  // Kevin (02/11, Pixel 5) : l'appareil photo peut fermer le jeu faute de mémoire ; au retour la page repartait de l'accueil et la place
+  // était perdue. Juste avant d'ouvrir l'appareil photo, la partie est mise de côté ; si elle n'a pas pu partir, elle part au prochain lancement.
+  const mettreDeCote = () => {
+    const nom = (($('nom') && $('nom').value) || lsGetTxt('battle-nom')).trim().replace(/\s+/g, ' ').slice(0, 24);
+    const ip = mode !== 'top' ? -1 : dieuF || dieuRate ? 0 : ult ? 1 : rang + 1;
+    if (!CLASSEMENT_OK || !nom || ip < 0) return;
+    lsSet('battle-fin-cote', { t: Date.now(), p: { code: CODE, action: 'places', jeu: JEU, nom, score: Math.round(score), photo: '', genre: genre || lsGetTxt('battle-genre'), place: ip } });
+  };
+  if ($('photo')) $('photo').addEventListener('click', mettreDeCote);
   if ($('photo')) $('photo').onchange = async e => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
     e.target.value = ''; // pour pouvoir reprendre la même photo
@@ -5811,7 +5821,7 @@ function montrerFin() {
     // Kevin (29/10) : une place prise part au script (action « places ») qui fait la cascade ; sinon la partie est juste notée (action « jeu »)
     const ip = mode !== 'top' ? -1 : dieuF || dieuRate ? 0 : ult ? 1 : rang + 1, ph = mode === 'top' && photoData.length < 48000 ? photoData : '';
     const p = ip >= 0 ? { code: CODE, action: 'places', jeu: JEU, nom, score: Math.round(score), photo: ph, genre, place: ip } : { code: CODE, action: 'jeu', jeu: JEU, nom, score: Math.round(score), photo: '', genre: '' };
-    const r = await envoyer(p);
+    const r = await envoyer(p); lsSet('battle-fin-cote', null); // partie partie (ou gardée hors ligne) : plus rien de côté
     const obtenu = ip < 0 ? -1 : r === null ? prendrePlace(ip, { nom, genre, photo: ph }) : r && r.ok ? (r.place != null ? +r.place : ip) : -1; // hors ligne : on se place soi-même
     const soiMeme = obtenu === 0 && dieuAvant && !dieuAvant.inconnu && memeNom(dieuAvant.nom, nom); // le dieu qui bat son propre record
     if (mode === 'top' && r !== false && !soiMeme && (obtenu === ip || dieuRate && obtenu === 1)) { if (dieuF) garderIntroDieu(r, liste, nom, genre, dieuAvant, ultAvant); else if (ult) garderIntroUltime(r, liste, nom, genre, ultAvant); else garderIntro(r, liste, rang, nom, genre); }
@@ -5887,6 +5897,15 @@ window.__battle = {
   get places() { return places; }, set score(v) { score = v; }, set sauveT(v) { sauveT = v; }, set mult(v) { mult = v; }, set balleNo(v) { balleNo = v; }, recreGenerale, preparerBoss
 };
 
+// partie mise de côté avant l'appareil photo et jamais envoyée (le téléphone a fermé le jeu) : on l'envoie maintenant, sans photo
+(() => {
+  const c = lsGet('battle-fin-cote', null); lsSet('battle-fin-cote', null);
+  if (!c || !c.p || c.p.jeu !== JEU || !(Date.now() - c.t < 30 * 60 * 1000)) return;
+  const q = lsGet('battle-attente', []); q.push(c.p); lsSet('battle-attente', q);
+  const m = document.createElement('div'); m.className = 'recup';
+  m.textContent = '📸 L’appareil photo avait fermé le jeu… pas grave, ta partie part quand même au classement !';
+  document.body.appendChild(m); setTimeout(() => m.remove(), 6000);
+})();
 redim(); afficherAccueil(); chargerClassement(); viderAttente();
 // Kevin : à la toute première ouverture, un mot d'accueil avant le chemin des boss (une seule fois par appareil)
 function montrerBienvenue(revoir) {

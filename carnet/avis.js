@@ -13,7 +13,7 @@
    S.settings.avisVu = ['date|h|ref'] (cours déjà proposés), S.settings.avisFile = [{ref, note, sp, an, n, t}] (à envoyer).
    Cache des notes de tout le monde : localStorage 'carnet-avis' = {at, avis}. */
 (() => {
-  const AVIS_URL = '';  // URL /exec du script « Notes des prépas EPS » (carnet/google/Avis.gs), à remplir une fois déployé
+  const AVIS_URL = 'https://script.google.com/macros/s/AKfycbypz3HaFoZ4NpN6lU2UdP2lKSrxR3UzVp_FRTiB0-GALwJYXckApss12sC3DusVSa8C/exec';  // script « Notes des prépas EPS » de kevin (carnet/google/Avis.gs), déployé le 02/11/2026
   const LS = (k, v) => { const ls = window.DEMO_LS || localStorage; try { if (v === undefined) return ls.getItem(k); ls.setItem(k, v); } catch(e){ return null; } };
   const JOURS_MAX = 4, HEURE_FIN = 17, CACHE_MS = 30 * 60 * 1000;
   const set = () => S.settings;

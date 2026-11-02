@@ -153,7 +153,8 @@
   /* --- choisir une leçon quand le cours n'a pas encore de prépa --- */
   function plChoisir(ctx){
     const cat0 = prepaCatOf(ctx.sp || '');
-    let [id, hn] = prepaVal(cat0 && PREPA_PRETS.includes(cat0[0]) && cat0[0] !== 'hiver' ? cat0[0] : (LS('carnet-pl-sp') || '')), an = ctx.an || 1;
+    const jn = jeuNo(ctx.sp || '');  // un jeu des prépas choisi comme sport → ce jeu-là
+    let [id, hn] = prepaVal(jn ? 'hiver:' + jn : cat0 && PREPA_PRETS.includes(cat0[0]) && cat0[0] !== 'hiver' ? cat0[0] : (LS('carnet-pl-sp') || '')), an = ctx.an || 1;
     const T = () => plMin(PM.ctx().h, plPool(id, ctx.sp, ctx.type));
     PM.setCtx({h: ctx.n >= 2 ? 2 : 1, n: ctx.nEl || PM.ctx().n, sl: ctx.slot ? PM.salleDe(ctx.slot) : PM.ctx().sl});
     openSheet('Lancer la prépa', `<p class="small muted" style="margin:0">Pas encore de prépa pour ce cours. Choisis une leçon de la bibliothèque : elle est enregistrée pour ce cours et le guide démarre.</p>

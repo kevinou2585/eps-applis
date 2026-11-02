@@ -200,7 +200,7 @@
     const sel = $('plc-sp'), ok = $('plc-ok'); if (!sel || !ok) return r;
     const jr = window.planJour, cur2 = jr ? plan2(cid, jr.iso, jr.hs[0]) : ((S.settings.planAn2 || {})[cid] || {})[w] || '';
     sel.closest('label').insertAdjacentHTML('afterend', `<label class="toggle dbl-ck"><input type="checkbox" id="plc-dbl" ${cur2 ? 'checked' : ''}><span>🔀 <b>2 activités</b> pendant les blocs de 2 h</span></label>
-      <label class="f" id="plc-s2l" ${cur2 ? '' : 'hidden'}>2e heure<select class="inp" id="plc-s2"><option value="">— Rien —</option>${sportsList().filter(s => s !== 'Autre').map(s => `<option ${s === cur2 ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>`);
+      <label class="f" id="plc-s2l" ${cur2 ? '' : 'hidden'}>2e heure<select class="inp" id="plc-s2"><option value="">— Rien —</option>${planSportOpts(cur2)}</select></label>`);
     $('plc-dbl').onchange = () => { $('plc-s2l').hidden = !$('plc-dbl').checked; };
     const ok0 = ok.onclick;
     ok.onclick = () => {

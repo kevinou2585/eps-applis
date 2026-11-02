@@ -2139,16 +2139,32 @@ function sportsAll(){
 /* Kevin : ses sports en premier, dans l'ordre qu'il choisit (les autres suivent) */
 const sportsOrdre = () => { const all = sportsAll(); return (Array.isArray(S.settings.sportsOrdre) ? S.settings.sportsOrdre : []).map(s => all.find(x => sameTxt(x, s))).filter((s, i, a) => s && a.indexOf(s) === i); };
 const sportsReste = () => { const o = sportsOrdre(); return sportsAll().filter(s => !o.includes(s)); };
-function sportsList(){ return [...sportsOrdre(), ...sportsReste(), 'Autre']; }
+/* Kevin (2 nov. 2026) : le menu propose aussi tous les jeux en une leçon des prépas (bibliothèque 'hiver') :
+   les sports d'hiver / divers puis les jeux de la Petite salle, avec le même nom que dans la prépa.
+   Titres recopiés de carnet/prepas/hiver.js (même ordre, 1 = Petite salle) ; si la bibliothèque est chargée, c'est elle qui compte. */
+const PREPA_JEUX_T = [["Balle aux prisonniers"],["Ultimate-volley au ballon géant"],["Balle assise"],["Balle au capitaine"],["Gaga ball", 1],["Thèque (balle au camp)"],["Kickball"],["Poules, renards, vipères"],["Béret ballon"],["Capture du drapeau"],["Bulldog (traverser la rivière)"],["Les queues de renard"],["Le loup glacé"],["Balle brûlée des quatre coins"],["Bowling brûlé"],["Ballon chasseur"],["Tchoukball"],["Kin-ball"],["Ultimate (disque souple)"],["Unihoc (floorball)"],["Rugby-flag"],["Sitting volley", 1],["Volley à quatre camps"],["Les 10 passes"],["La balle au mur", 1],["Sumo tapis", 1],["Les déménageurs"],["Morpion en relais", 1],["Chasse aux trésors"],["Balle aux coins (corner ball)"],["Le cône protégé", 1],["Le chat et la souris"],["Le parachute", 1],["Boccia (pétanque en salle)", 1],["Le sol est de la lave", 1],["1, 2, 3, soleil"],["Les pirates", 1],["Balle brûlée avec docteur"],["Ultimate volley au kin-ball", 1],["Nettoie ton camp", 1],["Les châteaux forts", 1],["Le ballon-banc", 1],["Le mat-ball (kickball des gros tapis)", 1],["Pac-Man sur les lignes", 1],["Le parcours ninja", 1],["Le tremplin des stars", 1],["Le hand des gros tapis", 1],["Les îles musicales", 1],["Le foot des bancs", 1],["La balle au caisson", 1],["Le volley-baudruche", 1],["Le foot-tennis", 1],["La pelote à la main", 1],["Le tennis-banc", 1],["Retourne les plots", 1],["Le béret des engins", 1],["Le panier vivant", 1],["Le ballon-cible", 1],["Les équilibristes", 1],["Le jeu de l'oie sportif", 1],["La chasse aux lettres", 1],["La course des chenilles", 1],["Les olympiades de la petite salle", 1],["La balle-bunker", 1],["La conquête des tapis", 1],["Le relais des énigmes", 1],["La fête foraine", 1],["Le défi des grimpeurs", 1]];
+const prepaJeux = () => { const H = window.PREPA_LIB && window.PREPA_LIB.hiver; return H ? H.an[0].l.map(l => [l.t, l.ps ? 1 : 0]) : PREPA_JEUX_T; };
+const sportsJeux = ps => prepaJeux().filter(j => !!j[1] === ps).map(j => j[0]).sort((a, b) => a.localeCompare(b, 'fr'));
+/* n° du jeu (comme « hiver:N ») si ce sport est un jeu des prépas, sinon 0 */
+const jeuNo = sp => sp ? prepaJeux().findIndex(j => sameTxt(j[0], sp)) + 1 : 0;
+function sportsList(){ const b = [...sportsOrdre(), ...sportsReste()]; return [...b, ...[...sportsJeux(false), ...sportsJeux(true)].filter(s => !b.some(x => sameTxt(x, s))), 'Autre']; }
+/* rubriques « Sports d'hiver / divers » et « Petite salle » d'une liste de sports */
+function jeuxGroups(cur){
+  const opt = s => `<option value="${esc(s)}" ${s === cur ? 'selected' : ''}>${esc(s)}</option>`, h = sportsJeux(false), p = sportsJeux(true);
+  return `<optgroup label="Sports d'hiver / divers (${h.length} jeux)">${h.map(opt).join('')}</optgroup><optgroup label="Petite salle (${p.length} jeux)">${p.map(opt).join('')}</optgroup>`;
+}
+/* liste du planning (prévoir) : mêmes sports, sans « Autre » ni « Ajouter » */
+const planSportOpts = cur => sportOptions(cur).replace(/<option value="">[^<]*<\/option>/, '').replace(/<option value="__add">[^<]*<\/option>/, '').replace(/<option value="Autre"[^>]*>Autre<\/option>/, '');
 function addSport(name){
   name = String(name || '').trim().replace(/\s+/g, ' '); if (!name) return null;
   const f = sportsList().find(x => sameTxt(x, name)); if (f) return f;
   S.settings.sports = [...sportsCustom(), name]; save(); return name;
 }
 function sportOptions(cur){
-  const o = sportsOrdre(), r = [...sportsReste(), 'Autre'], all = [...o, ...r], opt = s => `<option value="${esc(s)}" ${s === cur ? 'selected' : ''}>${esc(s)}</option>`;
+  const o = sportsOrdre(), r = sportsReste(), all = sportsList(), opt = s => `<option value="${esc(s)}" ${s === cur ? 'selected' : ''}>${esc(s)}</option>`;
   return '<option value="">— Choisir —</option>' + (cur && !all.includes(cur) ? opt(cur) : '')
-    + (o.length ? `<optgroup label="Mes sports">${o.map(opt).join('')}</optgroup><optgroup label="Les autres">${r.map(opt).join('')}</optgroup>` : r.map(opt).join(''))
+    + (o.length ? `<optgroup label="Mes sports">${o.map(opt).join('')}</optgroup>` : '') + `<optgroup label="${o.length ? 'Les autres sports' : 'Sports'}">${r.map(opt).join('')}</optgroup>`
+    + jeuxGroups(cur) + opt('Autre')
     + '<option value="__add">➕ Ajouter un sport…</option>';
 }
 /* petit panneau « ⇅ Ordre » : mes sports en tête de liste, ▲ ▼ pour les ranger */
@@ -2699,7 +2715,8 @@ function openPrepa(date, slotId, ids, dansAppel){
   let comp = Array.isArray(g.p) ? [...g.p] : (g.pp && g.pp.comp) || progDefault(g.s);
   /* sport proposé : celui du cours, sinon celui prévu au planning, sinon le dernier cycle de la classe */
   const lastPp = prepaAll().filter(x => x.date < date && x.cls.some(c => ids.includes(c.id)) && x.pp.ref && !/^hiver/.test(x.pp.ref)).pop();
-  const cat0 = prepaCatOf(pp.sp || g.s || agPlanned(date, it)) || (lastPp && !g.s ? prepaCatOf(lastPp.pp.sp) : null);
+  const sp0 = pp.sp || g.s || agPlanned(date, it), jn0 = jeuNo(sp0);  // un jeu des prépas choisi comme sport → ce jeu-là
+  const cat0 = jn0 ? PREPA_CAT[0] : prepaCatOf(sp0) || (lastPp && !g.s ? prepaCatOf(lastPp.pp.sp) : null);
   let libId = cat0 && PREPA_PRETS.includes(cat0[0]) ? cat0[0] : '', libAn = pp.an || an0;
   const title = `Prépa · ${fmtD(date)} · ${slotLabel(it)}`;
   /* durée, salle et nombre d'élèves (prepa-moteur.js) : ceux de la prépa enregistrée, sinon le cours, la salle de ce créneau et l'effectif */
@@ -2709,7 +2726,7 @@ function openPrepa(date, slotId, ids, dansAppel){
   openSheet(title, `
     <div class="card ag-sum"><b class="ag-who">${esc(clsName(ids))}</b><span class="small muted">${esc(fmtDL(date))} · ${esc(slotLabel(it))} · ${esc(slotTime(it))}${g.s ? ' · ' + esc(g.s) : ''}</span></div>
     <div class="card sec pp-lib"><h3>📚 Prépa toute faite</h3>
-      <div class="row2"><label class="f" style="flex:1 1 150px">Sport<select class="inp" id="pp-lsp"><option value="">— Choisir —</option>${prepaOpts(libId === 'hiver' && /^hiver\|0\|\d+$/.test(pp.ref || '') ? 'hiver:' + pp.ref.split('|')[2] : libId)}</select></label>
+      <div class="row2"><label class="f" style="flex:1 1 150px">Sport<select class="inp" id="pp-lsp"><option value="">— Choisir —</option>${prepaOpts(libId === 'hiver' && /^hiver\|0\|\d+$/.test(pp.ref || '') ? 'hiver:' + pp.ref.split('|')[2] : libId === 'hiver' && jn0 && !pp.ref ? 'hiver:' + jn0 : libId)}</select></label>
       <label class="f" id="pp-lanw" style="flex:1 1 110px">Année<select class="inp" id="pp-lan">${[1, 2, 3, 4, 5, 6].map(a => `<option value="${a}" ${a === libAn ? 'selected' : ''}>${AN_TXT(a)} secondaire</option>`).join('')}</select></label></div>
       ${PM ? PM.bar('pp-x') : ''}
       <div id="pp-llist"><span class="small muted">Choisis un sport : ses leçons apparaissent ici.</span></div></div>
@@ -3170,7 +3187,9 @@ const planSet = () => S.settings.planAn && typeof S.settings.planAn === 'object'
 /* planJ = {idClasse: {'AAAA-MM-JJ|H1': sport}} : prévision d'un cours précis (le mardi H1-H2), prioritaire sur la semaine */
 const planOf = (cid, iso, h) => { const j = ((S.settings.planJ || {})[cid] || {}), k = iso + '|' + h; return h && k in j ? j[k] : (planSet()[cid] || {})[mondayOf(iso)] || ''; };
 const PLAN_ABR = [[/basket/i, 'Basket'], [/volley/i, 'Volley'], [/hand/i, 'Hand'], [/natation/i, 'Nat.'], [/endurance/i, 'Endur.'], [/badminton/i, 'Bad'], [/acro/i, 'Acro'], [/prisonnier/i, 'Prison'], [/athl/i, 'Athlé'], [/foot/i, 'Foot'], [/hiver/i, 'Hiver'], [/gym/i, 'Gym'], [/tennis de table/i, 'Ping'], [/unihoc|floorball/i, 'Unihoc'], [/évaluation/i, 'Éval']];
-const planAbbr = s => s === 'Congé' ? 'congé' : (PLAN_ABR.find(([re]) => re.test(s)) || [0, s.replace(/[-'’ ]/g, ' ').split(' ').filter(Boolean)[0].slice(0, 6)])[1];
+/* jeu des prépas (« Le foot des bancs ») : 1er mot qui n'est pas un article, pour ne pas le confondre avec le sport (« Foot ») */
+const jeuAbbr = s => { const w = s.replace(/[-'’,() ]/g, ' ').split(' ').filter(x => x && !/^(le|la|les|l|un|une|des|du|de|d|au|aux|à|et|en|sur)$/i.test(x)); if (!w.length) return s.slice(0, 6); return w[0].charAt(0).toUpperCase() + (w[1] ? w[0].slice(1, 5) + ' ' + w[1].charAt(0) : w[0].slice(1, 6)); };
+const planAbbr = s => s === 'Congé' ? 'congé' : jeuNo(s) && !SPORTS0.some(x => sameTxt(x, s)) ? jeuAbbr(s) : (PLAN_ABR.find(([re]) => re.test(s)) || [0, s.replace(/[-'’ ]/g, ' ').split(' ').filter(Boolean)[0].slice(0, 6)])[1];
 function planWeeks(iso){
   const d = dOf(iso), y = d.getMonth() >= 7 ? d.getFullYear() : d.getFullYear() - 1;
   const out = []; let m = mondayOf(`${y}-08-24`); const end = `${y + 1}-07-03`;
@@ -3227,7 +3246,7 @@ function openPlanCell(cid, w){
   openSheet(`${c.name} · semaine du ${fmtD(w)}`, `
     <div class="card sec"><h3>Fait cette semaine</h3>${planWeekHTML(c, w)}</div>
     <h3 style="margin:4px 0 0">Prévoir</h3>
-    <label class="f">Sport prévu<select class="inp" id="plc-sp"><option value="">— Rien de prévu —</option><option value="Congé" ${cur === 'Congé' ? 'selected' : ''}>🏖 Congé / pas cours</option>${sportsList().filter(s => s !== 'Autre').map(s => `<option ${s === cur ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
+    <label class="f">Sport prévu<select class="inp" id="plc-sp"><option value="">— Rien de prévu —</option><option value="Congé" ${cur === 'Congé' ? 'selected' : ''}>🏖 Congé / pas cours</option>${planSportOpts(cur === 'Congé' ? '' : cur)}</select></label>
     <span class="small muted" style="font-weight:600">Pendant</span>
     <div class="row2" id="plc-n">${[1, 2, 3, 4, 5, 6, 8].map(k => `<button class="chip" type="button" data-pln="${k}" aria-pressed="${k === Math.min(n, 8)}">${k} sem.</button>`).join('')}</div>
     <span class="small muted">Un cycle de 6 leçons à 2 cours par semaine ≈ 3 semaines ; à 1 cours ≈ 6 semaines.</span>

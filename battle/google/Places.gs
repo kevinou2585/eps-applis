@@ -49,13 +49,20 @@ function placesEtat(jeu) {
   return {ok: true, places: e.places, record: e.record, bonus: e.bonus};
 }
 
+// la place (0 Dieu … 4 Garde) la plus haute de ce nom, -1 s'il n'en a pas
+function placeDe(places, nom) { const n = String(nom || '').trim().toLowerCase(); return places.findIndex(p => p && p.nom.toLowerCase() === n); }
+
 // nom prend la place i : chacun descend d'un cran jusqu'à la première place libre (sinon la Garde sort)
 function placesPrendre(places, i, moi) {
   const meme = p => p && p.nom.toLowerCase() === moi.nom.toLowerCase();
-  if (meme(places[i])) { // déjà à toi : rien ne bouge (nouvelle photo seulement si tu en as pris une)
-    if (moi.photo) places[i] = Object.assign({}, places[i], {photo: moi.photo, genre: moi.genre || places[i].genre});
+  const deja = placeDe(places, moi.nom);
+  if (deja >= 0 && deja <= i) { // déjà à toi (ou mieux) : rien ne bouge (nouvelle photo seulement si c'est cette place-là)
+    if (deja === i && moi.photo) places[i] = Object.assign({}, places[i], {photo: moi.photo, genre: moi.genre || places[i].genre});
     return places;
   }
+  // Kevin (02/11) : une personne n'a qu'UNE place, la plus haute. Tu montes : ta place d'avant se libère,
+  // et les autres ne descendent que jusque-là (ceux qui sont en dessous ne bougent pas).
+  if (deja > i) places[deja] = null;
   let libre = places.indexOf(null, i); if (libre < 0) libre = places.length - 1;
   for (let j = libre; j > i; j--) places[j] = places[j - 1];
   places[i] = moi;
@@ -77,9 +84,11 @@ function placesEnvoi(o) {
     if (score > e.record) e.record = score;
     else place = estDieu ? -1 : 1; // record raté : le Dieu reste Dieu (rien ne bouge), les autres deviennent Empereur
   }
+  const deja = placeDe(e.places, nom);
+  if (place >= 0 && deja >= 0 && deja < place) place = -2; // Kevin (02/11) : tu as déjà mieux, tu gardes ta place la plus haute, rien ne bouge
   if (place >= 0) { const avant = e.places[place]; placesPrendre(e.places, place, moi); if (e.places[place] !== avant && !(avant && avant.nom.toLowerCase() === nom.toLowerCase())) e.bonus[place] += MONTEE; }
   placesEcrire(sh, e);
-  ongletJeu(o.jeu).appendRow([new Date(), nom, score, '', moi.genre, place >= 0 ? PLACES[place] : 'reste Dieu']); // journal de toutes les parties (sans photo)
+  ongletJeu(o.jeu).appendRow([new Date(), nom, score, '', moi.genre, place >= 0 ? PLACES[place] : place === -2 ? 'garde ' + PLACES[deja] : 'reste Dieu']); // journal de toutes les parties (sans photo)
   flipperRangerSur(o.jeu);
   return {ok: true, places: e.places, record: e.record, bonus: e.bonus, place: place};
 }

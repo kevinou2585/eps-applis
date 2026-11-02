@@ -2140,7 +2140,7 @@ function sportsAll(){
 const sportsOrdre = () => { const all = sportsAll(); return (Array.isArray(S.settings.sportsOrdre) ? S.settings.sportsOrdre : []).map(s => all.find(x => sameTxt(x, s))).filter((s, i, a) => s && a.indexOf(s) === i); };
 const sportsReste = () => { const o = sportsOrdre(); return sportsAll().filter(s => !o.includes(s)); };
 /* Kevin (2 nov. 2026) : le menu propose aussi tous les jeux en une leçon des prépas (bibliothèque 'hiver') :
-   les sports d'hiver / divers puis les jeux de la Petite salle, avec le même nom que dans la prépa.
+   les sports divers puis les jeux de la Petite salle, avec le même nom que dans la prépa.
    Titres recopiés de carnet/prepas/hiver.js (même ordre, 1 = Petite salle) ; si la bibliothèque est chargée, c'est elle qui compte. */
 const PREPA_JEUX_T = [["Balle aux prisonniers"],["Ultimate-volley au ballon géant"],["Balle assise"],["Balle au capitaine"],["Gaga ball", 1],["Thèque (balle au camp)"],["Kickball"],["Poules, renards, vipères"],["Béret ballon"],["Capture du drapeau"],["Bulldog (traverser la rivière)"],["Les queues de renard"],["Le loup glacé"],["Balle brûlée des quatre coins"],["Bowling brûlé"],["Ballon chasseur"],["Tchoukball"],["Kin-ball"],["Ultimate (disque souple)"],["Unihoc (floorball)"],["Rugby-flag"],["Sitting volley", 1],["Volley à quatre camps"],["Les 10 passes"],["La balle au mur", 1],["Sumo tapis", 1],["Les déménageurs"],["Morpion en relais", 1],["Chasse aux trésors"],["Balle aux coins (corner ball)"],["Le cône protégé", 1],["Le chat et la souris"],["Le parachute", 1],["Boccia (pétanque en salle)", 1],["Le sol est de la lave", 1],["1, 2, 3, soleil"],["Les pirates", 1],["Balle brûlée avec docteur"],["Ultimate volley au kin-ball", 1],["Nettoie ton camp", 1],["Les châteaux forts", 1],["Le ballon-banc", 1],["Le mat-ball (kickball des gros tapis)", 1],["Pac-Man sur les lignes", 1],["Le parcours ninja", 1],["Le tremplin des stars", 1],["Le hand des gros tapis", 1],["Les îles musicales", 1],["Le foot des bancs", 1],["La balle au caisson", 1],["Le volley-baudruche", 1],["Le foot-tennis", 1],["La pelote à la main", 1],["Le tennis-banc", 1],["Retourne les plots", 1],["Le béret des engins", 1],["Le panier vivant", 1],["Le ballon-cible", 1],["Les équilibristes", 1],["Le jeu de l'oie sportif", 1],["La chasse aux lettres", 1],["La course des chenilles", 1],["Les olympiades de la petite salle", 1],["La balle-bunker", 1],["La conquête des tapis", 1],["Le relais des énigmes", 1],["La fête foraine", 1],["Le défi des grimpeurs", 1]];
 const prepaJeux = () => { const H = window.PREPA_LIB && window.PREPA_LIB.hiver; return H ? H.an[0].l.map(l => [l.t, l.ps ? 1 : 0]) : PREPA_JEUX_T; };
@@ -2148,10 +2148,10 @@ const sportsJeux = ps => prepaJeux().filter(j => !!j[1] === ps).map(j => j[0]).s
 /* n° du jeu (comme « hiver:N ») si ce sport est un jeu des prépas, sinon 0 */
 const jeuNo = sp => sp ? prepaJeux().findIndex(j => sameTxt(j[0], sp)) + 1 : 0;
 function sportsList(){ const b = [...sportsOrdre(), ...sportsReste()]; return [...b, ...[...sportsJeux(false), ...sportsJeux(true)].filter(s => !b.some(x => sameTxt(x, s))), 'Autre']; }
-/* rubriques « Sports d'hiver / divers » et « Petite salle » d'une liste de sports */
+/* rubriques « Sports divers » et « Petite salle » d'une liste de sports */
 function jeuxGroups(cur){
   const opt = s => `<option value="${esc(s)}" ${s === cur ? 'selected' : ''}>${esc(s)}</option>`, h = sportsJeux(false), p = sportsJeux(true);
-  return `<optgroup label="Sports d'hiver / divers (${h.length} jeux)">${h.map(opt).join('')}</optgroup><optgroup label="Petite salle (${p.length} jeux)">${p.map(opt).join('')}</optgroup>`;
+  return `<optgroup label="Sports divers (${h.length} jeux)">${h.map(opt).join('')}</optgroup><optgroup label="Petite salle (${p.length} jeux)">${p.map(opt).join('')}</optgroup>`;
 }
 /* liste du planning (prévoir) : mêmes sports, sans « Autre » ni « Ajouter » */
 const planSportOpts = cur => sportOptions(cur).replace(/<option value="">[^<]*<\/option>/, '').replace(/<option value="__add">[^<]*<\/option>/, '').replace(/<option value="Autre"[^>]*>Autre<\/option>/, '');

@@ -5833,15 +5833,19 @@ function montrerFin() {
 
 // Confettis (Kevin, 29/10 : aux couleurs des blasons : or, gueules, azur, sinople, argent, pourpre)
 const COUL_BLASON = ['#ffcf4a', '#e8b52a', '#b3122a', '#1f4fa8', '#1d7a3e', '#f4efe2', '#6b2a8a'];
+let confGen = 0;
 function confettis(n = 140) {
-  const c = $('confettis'), x = c.getContext('2d'); c.width = CW * DPR; c.height = CH * DPR; x.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const gen = ++confGen;
+  // Kevin (02/11, Pixel 5) : un 2e écran plein pendant la déchirure du Valhalla faisait ramer ; des confettis n'ont pas besoin d'être nets
+  const c = $('confettis'), x = c.getContext('2d'), k = Math.min(DPR, 1.5); c.width = CW * k; c.height = CH * k; x.setTransform(k, 0, 0, k, 0, 0);
   const cols = COUL_BLASON;
   let ps = Array.from({ length: n }, () => ({ x: rnd(0, CW), y: rnd(-CH * 0.5, -10), vx: rnd(-60, 60), vy: rnd(120, 300), a: rnd(0, 6), va: rnd(-8, 8), c: pick(cols), w: rnd(6, 11) }));
   let t0 = performance.now(), last = t0;
   (function f(t) {
+    if (gen !== confGen) return; // une nouvelle pluie a pris le relais
     const dt = Math.min(0.05, (t - last) / 1000); last = t; x.clearRect(0, 0, CW, CH);
     for (const p of ps) { p.x += p.vx * dt; p.y += p.vy * dt; p.a += p.va * dt; x.save(); x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.w / 2, -p.w / 4, p.w, p.w / 2); x.restore(); }
-    if (t - t0 < 4500) requestAnimationFrame(f); else x.clearRect(0, 0, CW, CH);
+    if (t - t0 < 4500) requestAnimationFrame(f); else { x.clearRect(0, 0, CW, CH); c.width = c.height = 0; } // fini : on rend la mémoire
   })(t0);
 }
 
@@ -5915,9 +5919,13 @@ requestAnimationFrame(boucle);
 <script>
 // Mise a jour automatique : on verifie a chaque ouverture et a chaque retour dans l'appli,
 // et on recharge une fois quand la nouvelle version est prete (les donnees restent sur le telephone).
+// Kevin (02/11) : une mise en ligne pendant une partie rechargeait la page en plein jeu (retour a l'accueil, partie perdue).
+// Maintenant on attend d'etre revenu a l'accueil (et que l'intronisation soit finie) pour recharger.
 if ('serviceWorker' in navigator) {
   const dejaPilote = !!navigator.serviceWorker.controller; let recharge = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (dejaPilote && !recharge) { recharge = true; location.reload(); } });
+  const calme = () => { try { return etat === 'accueil' && !introEnCours; } catch (e) { return true; } };
+  const recharger = () => { if (calme()) location.reload(); else setTimeout(recharger, 3000); };
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (dejaPilote && !recharge) { recharge = true; recharger(); } });
   if (navigator.onLine) navigator.serviceWorker.register('../sw.js').then(reg => {
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && navigator.onLine) reg.update().catch(() => {}); });
   }).catch(() => {});

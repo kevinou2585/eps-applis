@@ -448,19 +448,21 @@ function arrDuel(m) { // le duel des dieux : rapide et tendu ; orgue + chœur, p
 function arrCortege(m) { // le cortège du nouveau boss sur le chemin : bourdon + tambours, puis le clavecin, puis le cor et le chœur
   return { tim: 1, b: 1, sn: m >= 2, s: m >= 2, l: m >= 4 ? 0 : null, p: m >= 4, toms: m % 4 === 3, cloche: m % 4 === 0, roll: m === 7 ? 1 : 0, f0: 2400 + (m >= 4) * 1200, f1: 3400 + (m >= 4) * 800 };
 }
-function arrCite(m) { // la Cité des dieux : 16 mesures ; harpe et chœur seuls, puis l'hymne (cuivres), puis tout l'Olympe
-  if (m < 4) return { b: 1, s: 1, p: 1, tim: m >= 2, cloche: m % 2 === 0, f0: 2000 + m * 500, f1: 2600 + m * 500 };
-  if (m < 12) return { k: 1, tim: 1, sn: m >= 8, b: 1, s: 1, l: 0, p: 1, crash: m === 4 || m === 8, cloche: m % 4 === 0, f0: 3600, f1: 4200 };
-  return { k: 1, tim: 1, sn: 1, h: 1, b: 1, s: 1, l: 1, p: 1, crash: m === 12, roll: m === 15 ? 2 : 0, toms: m === 15, cloche: m % 2 === 0, f0: 4200, f1: 4800 };
+function arrCite(m, tour) { // la Cité des dieux (Kevin : « électro, mais électro avec du divin ») : trance en 16 mesures
+  if (m < 4) return tour === 0 ? { k: m >= 2, h: m >= 1, b: m >= 2, p: 1, l: 1, cloche: m % 2 === 0, f0: 500 + m * 700, f1: 1200 + m * 700 } // intro : chœur + arpège, le filtre s'ouvre
+    : { k: 1, c: 1, h: 1, oh: 1, b: 1, s: 1, p: 1, l: 1, crash: m === 0, f0: 3400, f1: 3800 };
+  if (m < 8) return { k: 1, c: 1, h: 1, oh: 1, b: 1, s: 1, l: 0, crash: m === 4, cloche: m === 4, f0: 3600, f1: 4200 }; // le thème (pluck + cloches)
+  if (m < 12) return { k: 1, c: 1, h: 1, oh: 1, b: 1, s: 1, p: 1, l: 0, crash: m === 8, cloche: m % 2 === 0, f0: 4200, f1: 4800 }; // le thème + le chœur des dieux
+  if (m < 14) return { oh: 1, p: 1, l: 1, cloche: m === 12, f0: 900, f1: 1800 }; // le break : chœur et arpège seuls
+  return { k: m === 15, h: 1, s: 1, p: 1, roll: m === 14 ? 1 : 2, souffle: m === 14, f0: 1400 + (m - 14) * 2000, f1: 3400 + (m - 14) * 2000 }; // la montée
 }
 const PISTES = {
-  cite: { // la Cité des dieux (Kevin, 02/11) : hymne lumineux en mi majeur, harpe (clavecin) en arpèges, chœur, cuivres et cloches
-    bpm: 96, pb: 16, racine: 52, gamme: 'maj', cycle: 16, section: arrCite,
-    accords: [[0, 4, 7], [-3, 0, 4], [-7, -3, 0], [-5, -1, 2], [0, 4, 7], [-8, -5, -1], [-7, -3, 0], [-5, -1, 2, 5]],
-    kick: 'x.......x.......', kickSon: 'boum', timbale: 'x.....x.x.......', caisse: '....x.......x...', hat: '..x...x...x...x.',
-    basse: 'r.......5.......', basseSon: 'pedale', basseLong: 7, stab: 'x.x.x.x.x.x.x.x.', stabSon: 'clavecin', stabOct: 12, padSon: 'choeur', padOct: 12,
-    leads: ['4-----3-2---0---1-----2-3-------4-----5-7---5---4-----3-2-------0-----1-2---3---4-----2-1---0---5-----4-3---2---1-----G-0-------',
-      '7-----9-a---9---7-----5-4-------7-----9-b---a---9-----7-5-------4-----5-7---9---a-----9-7---5---4-----5-3---2---1-------0-------'], leadSon: 'cuivre', double: 'cloche'
+  cite: { // la Cité des dieux (Kevin, 02/11 : « électro, mais avec du divin ») : trance en mi mineur, 132 bpm, supersaw, chœur des dieux, pluck + cloches
+    bpm: 132, pb: 16, racine: 52, gamme: 'min', cycle: 16, section: arrCite, pompe: 1,
+    accords: [[0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5]],
+    kick: 'x...x...x...x...', clap: '....x.......x...', hat: 'x.xxx.xxx.xxx.xx', ohat: '..x...x...x...x.', caisse: '....x.......x...',
+    basse: '..r...r...r.r.r.', basseSon: 'house', stab: 'x..x..x...x..x..', stabSon: 'saw', stabOct: 12, padSon: 'choeur', padOct: 12,
+    leads: ['7-..7.4.9-..7.4.7-..7.5.9-..7.5.9-..9.6.b-..9.6.a-..9.8.7---6---', 'arp'], leadSon: 'pluck', double: 'cloche', arpOct: 24
   },
   cortege: { // Kevin (29/10) : musique du cortège sur le chemin, ballade médiévale en ré mineur (composée pour le jeu)
     bpm: 104, pb: 16, racine: 50, gamme: 'min', cycle: 8, section: arrCortege,
@@ -974,7 +976,14 @@ const SON = {
   soleil() { etoiles(5, 0.05, 0, 6); cloche(P(9), 0.6, 0.05); },
   ambroisie(n) { [0, 2, 4].slice(0, n).forEach((k, i) => cloche(P(4 + k), 0.6, 0.06, i * 0.1)); harpe([76, 80, 83].map(midi), 0.04, 0.2); },
   festin() { musDuck(0.3, 2.6); SON.grosseFanfare(); choeurSfx([midi(64), midi(68), midi(71), midi(76)], 2.2, 0.07, 0.2); foule(0.28, 0.2, 1.2); [0, 0.2, 0.4, 0.6].forEach((d, i) => cloche(midi(76 + [0, 4, 7, 12][i]), 1.2, 0.06, d)); },
-  apotheose() { musDuck(0.2, 3.4); SON.tonnerre(1); fanfareCuivre([[64, 0.3, 0.2], [68, 0.5, 0.2], [71, 0.7, 0.2], [76, 0.9, 0.3], [80, 1.25, 0.3], [83, 1.6, 1.4]], 0.08); choeurSfx([midi(52), midi(64), midi(68), midi(71), midi(76)], 3, 0.08, 0.3); harpe([64, 68, 71, 76, 80, 83, 88, 92, 95].map(midi), 0.05, 1.6); foule(0.3, 0.5, 1.4); }
+  apotheose() { musDuck(0.2, 3.4); SON.tonnerre(1); fanfareCuivre([[64, 0.3, 0.2], [68, 0.5, 0.2], [71, 0.7, 0.2], [76, 0.9, 0.3], [80, 1.25, 0.3], [83, 1.6, 1.4]], 0.08); choeurSfx([midi(52), midi(64), midi(68), midi(71), midi(76)], 3, 0.08, 0.3); harpe([64, 68, 71, 76, 80, 83, 88, 92, 95].map(midi), 0.05, 1.6); foule(0.3, 0.5, 1.4); },
+  couloirZeus(n) { cloche(midi(76 + [0, 4, 7, 12][Math.min(3, n - 1)]), 0.7, 0.07); harpe([midi(64 + 4 * n), midi(71 + 4 * n)], 0.04, 0.05); },
+  benediction() { musDuck(0.3, 2); SON.tonnerre(0.4); choeurSfx([midi(64), midi(68), midi(71), midi(76)], 1.8, 0.07, 0.1); [0, 0.12, 0.24, 0.36].forEach((d, i) => cloche(midi([76, 80, 83, 88][i]), 1, 0.06, d)); },
+  hades(dur) { musDuck(0.35, Math.min(2.5, dur)); drop(0.4, 0, 90, 1.2); orgueSfx([28, 40, 43, 47], Math.min(2, dur), 0.05); bruit(Math.min(1.6, dur), 0.08, 300, 0.7, 0, 90, 'lowpass', 0.2); syllabe(160, 110, 0.6, 0.06, 0.2, 400, 900); },
+  dedale(dur) { const n = Math.min(10, Math.floor(dur / 0.13)); for (let i = 0; i < n; i++) pluck(P([0, 3, 1, 4, 2, 5, 3, 6, 4, 7][i]), 0.1, 0.06, i * dur / n, 0.8); whoosh(Math.min(1, dur), 0.07, 2000, 400); },
+  sortieCache() { pop(P(7), 0.15); whoosh(0.3, 0.14, 300, 5000); cloche(P(9), 0.5, 0.05, 0.05); },
+  pandore() { for (let i = 0; i < 6; i++) cogne(140 + i * 20, 0.08, i * 0.22); ton('sine', 400, 900, 1.3, 0.03, 0, 0, true); },
+  pandoreOuvre() { grince(0.5, 0.05); etoiles(8, 0.05, 0.1, 8); choeurSfx([midi(68), midi(71), midi(76)], 1, 0.05, 0.1); }
 };
 function vib(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
 // Kevin (27/10) : l'empereur (et le dieu) parlent à travers le haut-parleur du téléphone : synthèse vocale, voix grave et lente.
@@ -1265,26 +1274,35 @@ const EGIDE = { y: 130, r: 10, amp: 30, kick: 420, petit: true };
 // Pégase (il emporte la bille en vol, sans rail) : chaque vol = une ambroisie ; 3 ambroisies → LE FESTIN DES DIEUX (multibille, seulement ici).
 const segsC = [];
 cibleSegs = segsC;
-const FRONTON = [[10, 252], [200, 64], [390, 252]];
-seg(10, 252, 200, 64); seg(200, 64, 390, 252);
-seg(10, 252, 10, 722);
-seg(390, 252, 390, 712); seg(358, 708, 392, 708, { e: 0.1 }); seg(360, 300, 360, 712); porte(360, 300, 388, 272); // l'escalier de l'Olympe (le lanceur)
+// Kevin (02/11, v2) : plus de fronton en triangle → un grand rectangle au haut bien arrondi, qui prend toute la place
+const RC = 130, CG = { x: 140, y: 140 }, CD = { x: 260, y: 140 }; // rayon et centres des deux coins arrondis du haut
+const BORD_C = (() => { const P = [[10, 722], [10, CG.y]];
+  for (let i = 1; i <= 14; i++) { const a = Math.PI + Math.PI / 2 * i / 14; P.push([CG.x + RC * Math.cos(a), CG.y + RC * Math.sin(a)]); }
+  for (let i = 0; i <= 14; i++) { const a = -Math.PI / 2 + Math.PI / 2 * i / 14; P.push([CD.x + RC * Math.cos(a), CD.y + RC * Math.sin(a)]); }
+  P.push([390, 712]); return P; })();
+for (let i = 0; i < BORD_C.length - 1; i++) seg(BORD_C[i][0], BORD_C[i][1], BORD_C[i + 1][0], BORD_C[i + 1][1]);
+seg(358, 708, 392, 708, { e: 0.1 }); seg(360, 300, 360, 712); porte(360, 300, 388, 272); // l'escalier de l'Olympe (le lanceur)
 seg(OUT.g, OUT.haut, OUT.g, OUT.bas, { epais: 1.5 }); seg(OUT.g, OUT.bas, 99, 631); // le Styx (gauche) / l'Hadès (droite)
 seg(OUT.d, OUT.haut, OUT.d, OUT.bas, { epais: 1.5 }); seg(OUT.d, OUT.bas, 271, 631);
 const SLC = [sling(false), sling(true)];
-// entrées : à gauche le ruban d'Iris, à droite l'écurie de Pégase (toit en pointe + couloir d'accès)
-const ENTREE_I = { x: 84, y: 392 }, ENTREE_P = { x: 286, y: 392 };
+// entrées (Kevin : plus haut, loin des flippers) : à gauche le ruban d'Iris, à droite l'écurie de Pégase
+const ENTREE_I = { x: 84, y: 320 }, ENTREE_P = { x: 286, y: 320 };
 for (const E of [ENTREE_I, ENTREE_P]) { seg(E.x - 20, E.y + 16, E.x, E.y, { epais: 2 }); seg(E.x, E.y, E.x + 20, E.y + 16, { epais: 2 }); seg(E.x - 20, E.y + 16, E.x - 24, E.y + 52); seg(E.x + 20, E.y + 16, E.x + 24, E.y + 52); }
-// le trident de Poséidon : 3 cibles (touchables par-dessous) qui ondulent ensemble comme une vague
-const TRIDENT = [-1, 0, 1].map(i => seg(0, 446, 0, 446, { type: 'trident', i, oneWay: true, nx: 0, ny: 1, epais: 5, e: 0.3, rail: false, bas: false }));
+// les couloirs Ζ Ε Υ Σ en haut (4 passages : les allumer tous = la bénédiction de Zeus, points ×2, ×3, ×4)
+const ZEUSL = [137, 169, 201, 233].map((x, i) => ({ x, l: 'ΖΕΥΣ'[i], on: false, flash: 0 }));
+for (const x of [121, 153, 185, 217, 249]) seg(x, 60, x, 92, { epais: 2.5, e: 0.3 });
 // l'égide d'Athéna : une barre d'or sous les flippers (elle renvoie la bille au jeu) ; éteinte la plupart du temps
 const EGIDE_C = seg(146, 694, 224, 694, { type: 'egide', kick: 640, e: 0.2, rail: false, on: false, epais: 3 });
 cibleSegs = segs;
-const TRONE = { x: 200, y: 130, prise: 15 }; // le trône de Zeus (soucoupe)
-const NUAGES = [{ x: 98, y: 258, r: 17 }, { x: 126, y: 196, r: 15 }, { x: 292, y: 250, r: 17 }].map(c => Object.assign(c, { flash: 0, cd: 0 })); // bumpers
-const COLONNES = [{ x: 150, y: 170, r: 11 }, { x: 250, y: 170, r: 11 }].map(c => Object.assign(c, { kick: 320, petit: true, flash: 0, cd: 0 })); // de part et d'autre du trône
-const HELIOS = { x: 185, y: 330, r: 40, w: 5, a: 0 }; // le disque du soleil : il tourne (rad/s) et entraîne la bille
-const HERMES = [{ x: 46, y: 318 }, { x: 326, y: 318 }].map(p => Object.assign(p, { flash: 0 })); // les deux portails
+const TRONE = { x: 185, y: 150, prise: 15 }; // le trône de Zeus (soucoupe)
+// Kevin : il aime les nuages-bumpers → 5 nuages (2 à gauche, un trio à droite)
+const NUAGES = [{ x: 80, y: 188, r: 16 }, { x: 116, y: 238, r: 15 }, { x: 262, y: 220, r: 16 }, { x: 304, y: 194, r: 15 }, { x: 300, y: 254, r: 15 }].map(c => Object.assign(c, { flash: 0, cd: 0 }));
+const COLONNES = [{ x: 140, y: 168, r: 10 }, { x: 230, y: 168, r: 10 }].map(c => Object.assign(c, { kick: 320, petit: true, flash: 0, cd: 0 })); // de part et d'autre du trône
+const HELIOS = { x: 185, y: 300, r: 34, w: 5, a: 0 }; // le disque du soleil : il tourne (rad/s) et entraîne la bille
+const HERMES = [{ x: 36, y: 412 }, { x: 316, y: 420 }].map(p => Object.assign(p, { flash: 0 })); // les deux portails
+const PANDORE = { x: 122, y: 430, prise: 12, ouv: 0 }; // la boîte de Pandore : elle avale la bille, s'ouvre… bon ou mauvais sort
+// le trident de Poséidon : 3 cibles qui volent partout sur la table en tournant (Kevin : « qu'elles tournent un peu dans tous les sens »)
+const TRIDENT = [0, 1, 2].map(i => ({ i, x: 185, y: 330, r: 11, a: 0, bas: false, flash: 0 }));
 const OLYMPIENS = [ // Kevin : des trucs à faire liés aux dieux et aux déesses ; Zeus vient toujours en dernier (→ apothéose)
   { nom: 'HÉRA', s: '🦚', F: 1, don: 'Elle protège ta bille 20 s' }, { nom: 'POSÉIDON', s: '🔱', don: 'Raz-de-marée : le trident tombe' },
   { nom: 'DÉMÉTER', s: '🌾', F: 1, don: 'Moisson : une ambroisie offerte' }, { nom: 'ATHÉNA', s: '🦉', F: 1, don: 'Son égide ferme le milieu 20 s' },
@@ -1294,18 +1312,30 @@ const OLYMPIENS = [ // Kevin : des trucs à faire liés aux dieux et aux déesse
   { nom: 'DIONYSOS', s: '🍇', don: 'Ivresse : LE FESTIN commence !' }, { nom: 'ZEUS', s: '⚡', don: 'Le roi des dieux en personne' }
 ];
 const CITE = {};
-const T_TRONE = 1.8, VIT_IRIS = 520, VIT_PEGASE = 400, T_APO = 30;
-// le ruban d'Iris : de l'entrée gauche, il monte et dessine un 8 (1 tour ½, il se croise 3 fois) puis redescend au couloir droit
+const T_TRONE = 1.8, VIT_IRIS = 560, VIT_PEGASE = 420, VIT_CACHE = 380, T_APO = 30;
+// le ruban d'Iris : un vrai arc-en-ciel. De l'entrée gauche il monte, fait tout le tour du haut de la table et redescend au couloir droit
 const IRIS = rail((() => {
-  const P = [[84, 404], [86, 360], [92, 310], [100, 262]];
-  for (let t = Math.PI - 0.25; t >= -2 * Math.PI - 0.01; t -= Math.PI / 12) P.push([200 + 88 * Math.cos(t), 214 + 40 * Math.sin(2 * t)]);
-  return P.concat([[300, 198], [318, 226], [326, 270], [327, 330], [325, 400], [323, 470], [322, 528]]);
+  const P = [[84, 332], [78, 290], [66, 240], [54, 190], [48, 150]], r = 92;
+  for (let i = 0; i <= 8; i++) { const a = Math.PI + 0.1 + (Math.PI / 2 - 0.1) * i / 8; P.push([CG.x + r * Math.cos(a), CG.y + r * Math.sin(a)]); }
+  for (let i = 1; i <= 8; i++) { const a = -Math.PI / 2 + (Math.PI / 2 - 0.1) * i / 8; P.push([CD.x + r * Math.cos(a), CD.y + r * Math.sin(a)]); }
+  return P.concat([[352, 190], [350, 260], [349, 340], [348, 420], [344, 470], [330, 505], [322, 528]]);
 })());
 IRIS.vit = VIT_IRIS;
-// le vol de Pégase : de l'écurie (droite), il s'élève, passe au-dessus du trône et dépose la bille en haut du couloir gauche
-const PEGASE = rail([[286, 404], [290, 356], [300, 306], [318, 254], [328, 206], [316, 164], [286, 132], [244, 106], [200, 92], [154, 100], [112, 126], [78, 164], [56, 214], [42, 272], [36, 336], [36, 404], [40, 466], [46, 528]]);
+// le vol de Pégase : de l'écurie (droite), il s'élève et fait le tour du soleil d'Hélios (1 tour ½), puis dépose la bille dans le couloir gauche
+const PEGASE = rail((() => {
+  const P = [[286, 332], [288, 300]], c = HELIOS, r = 74;
+  for (let d = -10; d >= -540; d -= 15) { const a = d * Math.PI / 180; P.push([c.x + r * Math.cos(a), c.y + r * Math.sin(a)]); }
+  return P.concat([[84, 380], [60, 430], [48, 480], [46, 528]]);
+})());
 PEGASE.vit = VIT_PEGASE;
 ENTREE_I.rail = IRIS; ENTREE_P.rail = PEGASE;
+// les couloirs cachés (Kevin : « rajoute des couloirs cachés ») : une fente dans le marbre, la bille disparaît sous la table
+// HADÈS (à droite, derrière les nuages) : descente aux Enfers, elle ressort dans le couloir gauche ;
+// le LABYRINTHE DE DÉDALE (en haut à gauche) : elle erre dessous puis retombe tout en haut, dans les couloirs Ζ Ε Υ Σ
+const CACHE_H = { x: 344, y: 222, r: 11, nom: 'HADÈS' }, CACHE_D = { x: 34, y: 112, r: 11, nom: 'DÉDALE' };
+CACHE_H.rail = rail([[344, 222], [350, 300], [352, 400], [340, 470], [290, 520], [200, 560], [120, 540], [70, 500], [46, 528]]);
+CACHE_D.rail = rail([[34, 112], [56, 70], [100, 60], [90, 100], [130, 110], [150, 70], [185, 40]]);
+for (const C of [CACHE_H, CACHE_D]) { C.rail.vit = VIT_CACHE; C.rail.cache = true; }
 
 // ---------------------------------------------------------------- État de jeu
 let etat = 'accueil';
@@ -2393,11 +2423,12 @@ function butDieu(b) {
 // ---- LA CITÉ DES DIEUX (6e et dernière table)
 function resetCite() {
   Object.assign(CITE, { lit: OLYMPIENS.map(() => false), apo: 0, ares: 0, apollon: 0, hermesT: 0, egide: 0, ambro: 0, besoin: 3, festins: 0, jackpot: 75000,
-    hermes: 0, iris: 0, pegases: 0, soleil: 0, tridentReset: 0, lacher: 0, lacherFestin: 0, foudre: 0, revele: null, grondT: 8, dernier: null, dernierT: -9 });
-  TRIDENT.forEach(c => { c.bas = false; c.on = true; }); EGIDE_C.on = false; HELIOS.a = 0;
+    hermes: 0, iris: 0, pegases: 0, soleil: 0, tridentReset: 0, lacher: 0, lacherFestin: 0, foudre: 0, revele: null, grondT: 8, dernier: null, dernierT: -9,
+    benit: 0, hades: 0, dedale: 0, pandores: 0, flipAv: [false, false], sort: null });
+  TRIDENT.forEach(c => { c.bas = false; c.flash = 0; }); ZEUSL.forEach(l => { l.on = false; l.flash = 0; }); EGIDE_C.on = false; HELIOS.a = 0; PANDORE.ouv = 0;
   [...NUAGES, ...COLONNES, ...HERMES].forEach(c => { c.flash = 0; c.cd = 0; }); majCite(0);
 }
-const pc = n => n * (CITE.apo > 0 ? 3 : 1) * (CITE.ares > 0 ? 2 : 1); // apothéose ×3, fureur d'Arès ×2
+const pc = n => n * (CITE.apo > 0 ? 3 : 1) * (CITE.ares > 0 ? 2 : 1) * (1 + (CITE.benit || 0)); // apothéose ×3, fureur d'Arès ×2, bénédiction de Zeus ×2…×4
 function pasCite(h) {
   const amort = 1 - 0.06 * h, w = HELIOS.w * (CITE.apollon > 0 ? 1.9 : 1) * (multiball ? 1.3 : 1);
   for (const b of balles) {
@@ -2406,34 +2437,55 @@ function pasCite(h) {
     { const dx = b.x - HELIOS.x, dy = b.y - HELIOS.y; // le disque d'Hélios : sa surface tourne et entraîne la bille (elle tourne avec lui)
       if (dx * dx + dy * dy < HELIOS.r * HELIOS.r) { const k = Math.min(1, 3 * h); b.vx += (-w * dy - b.vx) * k; b.vy += (w * dx - b.vy) * k; surSoleil(h); } }
     b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
-    if (b.vy < -60) { const E = [ENTREE_I, ENTREE_P].find(E => b.y < E.y + 36 && b.y > E.y + 10 && Math.abs(b.x - E.x) < 18); if (E && !balles.some(o => o.pont && o.pont.rail === E.rail)) { entrerRailCite(b, E); continue; } }
+    if (b.vy < -60) {
+      const E = [ENTREE_I, ENTREE_P].find(E => b.y < E.y + 36 && b.y > E.y + 10 && Math.abs(b.x - E.x) < 18); if (E && !balles.some(o => o.pont && o.pont.rail === E.rail)) { entrerRailCite(b, E); continue; }
+      const K = [CACHE_H, CACHE_D].find(K => Math.hypot(b.x - K.x, b.y - K.y) < K.r + 4 && (K !== CACHE_H || b.x < 356)); if (K && !balles.some(o => o.pont && o.pont.rail === K.rail)) { entrerCache(b, K); continue; }
+    }
     for (const s of segsC) { if (!s.on) continue; const imp = collSeg(b, s); if (imp > 50) toucheCite(s, b, imp); }
     for (const c of NUAGES) if (collBump(b, c)) toucheNuage(c, b);
     for (const c of COLONNES) if (collBump(b, c)) toucheColonne(c, b);
+    for (const T of TRIDENT) if (!T.bas) collTrident(b, T);
     for (const f of FL) collFlip(b, f);
     const v2 = b.vx * b.vx + b.vy * b.vy; if (v2 > VMAX * VMAX) { const k = VMAX / Math.sqrt(v2); b.vx *= k; b.vy *= k; }
+    if (b.y > 58 && b.y < 92) for (const l of ZEUSL) if (!l.on && Math.abs(b.x - l.x) < 9) allumerCouloir(l, b);
     b.portT = (b.portT || 0) - h;
     if (b.portT <= 0) { const i = HERMES.findIndex(p => Math.hypot(b.x - p.x, b.y - p.y) < 12); if (i >= 0) { teleporter(b, i); continue; } }
     b.ignoreTrone = (b.ignoreTrone || 0) - h;
-    if (b.ignoreTrone <= 0 && Math.hypot(b.x - TRONE.x, b.y - TRONE.y) < TRONE.prise && (b.vy < 0 || v2 < 300 * 300)) { entrerTrone(b); continue; } // il faut y monter (pas y tomber du toit)
+    if (b.ignoreTrone <= 0 && Math.hypot(b.x - TRONE.x, b.y - TRONE.y) < TRONE.prise && (b.vy < 0 || v2 < 200 * 200)) { entrerTrone(b); continue; } // il faut y monter (pas y tomber des couloirs)
+    if (b.ignoreTrone <= 0 && Math.hypot(b.x - PANDORE.x, b.y - PANDORE.y) < PANDORE.prise && v2 < 700 * 700 && !balles.some(o => o.lieu === 'pandore')) { entrerPandore(b); continue; }
   }
+}
+function collTrident(b, T) { // une cible volante : la bille rebondit dessus et l'abat
+  let nx = b.x - T.x, ny = b.y - T.y; const d2 = nx * nx + ny * ny, rr = R + T.r; if (d2 >= rr * rr) return;
+  const d = Math.sqrt(d2) || 1; nx /= d; ny /= d; b.x = T.x + nx * rr; b.y = T.y + ny * rr;
+  const vn = b.vx * nx + b.vy * ny; if (vn < 0) { b.vx -= 1.5 * vn * nx; b.vy -= 1.5 * vn * ny; } else { b.vx += nx * 120; b.vy += ny * 120; }
+  abattreTrident(T, b);
 }
 function surSoleil(h) {
   const av = CITE.soleil; CITE.soleil += h * (CITE.apollon > 0 ? 3 : 1);
-  if (Math.floor(CITE.soleil * 4) > Math.floor(av * 4)) points(pc(60), HELIOS.x, HELIOS.y - 50);
-  if (Math.floor(CITE.soleil / 3) > Math.floor(av / 3)) { points(pc(6000)); blague('Le char d’Hélios ! ☀️', HELIOS.x, HELIOS.y - 64, '#ffd36b'); SON.soleil(); }
+  if (Math.floor(CITE.soleil * 4) > Math.floor(av * 4)) points(pc(60), HELIOS.x, HELIOS.y - 44);
+  if (Math.floor(CITE.soleil / 3) > Math.floor(av / 3)) { points(pc(6000)); blague('Le char d’Hélios ! ☀️', HELIOS.x, HELIOS.y - 58, '#ffd36b'); SON.soleil(); }
 }
 function toucheCite(s, b, imp) {
-  if (s.type === 'trident' && !s.bas) abattreTrident(s, b);
-  else if (s.type === 'sling') { points(pc(100), b.x, b.y - 14); SON.sling(); vib(10); s.flash = 0.15; etincelles(b.x, b.y, 5, '#fff6d8'); }
+  if (s.type === 'sling') { points(pc(100), b.x, b.y - 14); SON.sling(); vib(10); s.flash = 0.15; etincelles(b.x, b.y, 5, '#fff6d8'); }
   else if (s.type === 'egide') { points(pc(500), b.x, b.y - 20); SON.egide(); vib([20, 20, 40]); etincelles(b.x, b.y, 14, '#ffd36b'); blague('L’égide d’Athéna ! 🦉', 185, 650, '#ffd36b'); }
   else SON.mur(imp);
 }
 function toucheNuage(c, b) {
-  if (c.cd > 0) return; c.cd = 0.08; c.flash = 0.3; points(pc(500), c.x, c.y - 30); SON.nuage(); vib(8); etincelles(b.x, b.y, 10, '#ffffff');
+  if (c.cd > 0) return; c.cd = 0.08; c.flash = 0.3; points(pc(CITE.eole > 0 ? 1500 : 500), c.x, c.y - 30); SON.nuage(); vib(8); etincelles(b.x, b.y, 10, '#ffffff');
   if (Math.random() < 0.08) blague(pick(['Nuage divin !', 'Par Zeus !', 'Au-dessus des nuages !']), c.x, c.y - 52, '#ffffff');
 }
 function toucheColonne(c, b) { if (c.cd > 0) return; c.cd = 0.1; c.flash = 0.3; points(pc(300), c.x, c.y - 26); SON.colonne(); vib(8); etincelles(b.x, b.y, 6, '#ffd36b'); }
+function allumerCouloir(l, b) {
+  l.on = true; l.flash = 0.5; points(pc(1000), l.x, 104); SON.couloirZeus(ZEUSL.filter(x => x.on).length); vib(10); if (b) etincelles(b.x, b.y, 8, '#fff2b0');
+  if (ZEUSL.every(x => x.on)) benediction();
+}
+function benediction() { // les 4 couloirs Ζ Ε Υ Σ : la bénédiction de Zeus (multiplicateur de la Cité)
+  CITE.benit = Math.min(3, CITE.benit + 1); points(pc(10000));
+  annonce('LA BÉNÉDICTION DE ZEUS !', 'Tous les points ×' + (1 + CITE.benit) + ' jusqu’à la fin de la bille', '#fff2b0', 28, 2.2);
+  SON.benediction(); vib([30, 30, 60]); flash = Math.max(flash, 0.2);
+  setTimeout(() => ZEUSL.forEach(x => { x.on = false; x.flash = 0.4; }), 600);
+}
 function teleporter(b, i) { // Hermès : la bille entre dans un portail et ressort de l'autre, avec sa vitesse
   const A = HERMES[i], B = HERMES[1 - i], v = Math.hypot(b.vx, b.vy) || 1, f = CITE.hermesT > 0 ? 3 : 1;
   etincelles(A.x, A.y, 16, '#c9a7ff'); A.flash = B.flash = 0.4;
@@ -2444,27 +2496,36 @@ function teleporter(b, i) { // Hermès : la bille entre dans un portail et resso
   else blague('Hermès ! ✉️', B.x + (B.x < 185 ? 40 : -40), B.y - 40, '#c9a7ff');
 }
 function abattreTrident(s, b) {
-  s.bas = true; s.on = false; points(pc(1500), (s.ax + s.bx) / 2, s.ay - 26); SON.trident(); vib(15); etincelles(b.x, b.y, 12, '#5fe0cf'); chaseT = Math.max(chaseT, 0.4);
-  if (TRIDENT.every(c => c.bas)) tridentComplet(); else blague(TRIDENT.filter(c => c.bas).length + '/3 · le trident…', 185, 420, '#5fe0cf');
+  s.bas = true; s.flash = 0.4; points(pc(2000), s.x, s.y - 26); SON.trident(); vib(15); etincelles(s.x, s.y, 16, '#5fe0cf'); chaseT = Math.max(chaseT, 0.4);
+  if (TRIDENT.every(c => c.bas)) tridentComplet(); else blague(TRIDENT.filter(c => c.bas).length + '/3 · le trident…', s.x, s.y - 40, '#5fe0cf');
 }
 function tridentComplet() {
-  TRIDENT.forEach(c => { c.bas = true; c.on = false; }); CITE.tridentReset = 7; CITE.egide = Math.max(CITE.egide, 15); points(pc(15000));
+  TRIDENT.forEach(c => { c.bas = true; }); CITE.tridentReset = 7; CITE.egide = Math.max(CITE.egide, 15); points(pc(15000));
   annonce('LE TRIDENT DE POSÉIDON !', 'Athéna ferme le milieu pendant 15 s', '#5fe0cf', 28, 2); SON.tridentTout(); vib([40, 40, 60]); flash = Math.max(flash, 0.15);
 }
 function entrerRailCite(b, E) {
   b.pont = { d: 0, rail: E.rail }; b.vx = b.vy = 0; chaseT = Math.max(chaseT, 0.5);
   const croise = CITE.dernier && CITE.dernier !== E.rail && temps - CITE.dernierT < 8; CITE.dernier = E.rail; CITE.dernierT = temps;
-  if (E.rail === IRIS) { CITE.iris++; points(pc(4000), E.x, E.y - 30); SON.iris(IRIS.total / VIT_IRIS); vib(15); blague('Le ruban d’Iris ! 🌈', 185, 300, '#ffe2f4'); }
-  else { CITE.pegases++; points(pc(5000), E.x, E.y - 30); SON.pegase(PEGASE.total / VIT_PEGASE); vib(20); blague('Pégase t’emporte !', 185, 300, '#ffffff'); }
+  if (E.rail === IRIS) { CITE.iris++; points(pc(4000), E.x, E.y - 30); SON.iris(IRIS.total / VIT_IRIS); vib(15); blague('Le ruban d’Iris ! 🌈', 185, 250, '#ffe2f4'); }
+  else { CITE.pegases++; points(pc(5000), E.x, E.y - 30); SON.pegase(PEGASE.total / VIT_PEGASE); vib(20); blague('Pégase t’emporte !', 185, 250, '#ffffff'); }
   if (croise) { points(pc(12000)); annonce('LE CIEL ET LA TERRE !', 'Iris et Pégase à la suite · +' + fmt(pc(12000) * mult), '#ffe2f4', 26, 1.6); SON.fanfare(); }
 }
+function entrerCache(b, K) { // un couloir caché : la bille plonge sous le marbre
+  b.pont = { d: 0, rail: K.rail }; b.vx = b.vy = 0; chaseT = Math.max(chaseT, 0.6); etincelles(K.x, K.y, 18, K === CACHE_H ? '#ff7a6a' : '#9fe8ff');
+  if (K === CACHE_H) { CITE.hades++; points(pc(8000), K.x - 30, K.y - 24); SON.hades(K.rail.total / VIT_CACHE); vib([40, 30, 80]);
+    annonce('LE PASSAGE D’HADÈS !', 'Descente aux Enfers · +' + fmt(pc(8000) * mult) + ' · un couloir Ζ Ε Υ Σ s’allume', '#ff8a7a', 26, 2); }
+  else { CITE.dedale++; points(pc(10000), K.x + 40, K.y); SON.dedale(K.rail.total / VIT_CACHE); vib([30, 30, 30, 30, 60]);
+    annonce('LE LABYRINTHE DE DÉDALE !', 'Couloir secret · +' + fmt(pc(10000) * mult) + (CITE.dedale % 2 === 0 ? ' · une ambroisie' : ''), '#9fe8ff', 26, 2); }
+}
+CACHE_H.rail.fin = b => { b.vx = 50; b.vy = 150; etincelles(b.x, b.y, 16, '#ff7a6a'); SON.sortieCache(); const l = ZEUSL.find(x => !x.on); if (l) allumerCouloir(l); };
+CACHE_D.rail.fin = b => { b.vx = rnd(-60, 60); b.vy = 60; etincelles(b.x, b.y, 16, '#9fe8ff'); SON.sortieCache(); if (CITE.dedale % 2 === 0) ambroisie(); };
 IRIS.fin = b => { b.vx = -40; b.vy = 150; points(pc(3000)); etincelles(b.x, b.y, 14, '#ffe2f4'); }; // au bout du ruban : couloir droit → flipper droit
 PEGASE.fin = b => { b.vx = 50; b.vy = 150; etincelles(b.x, b.y, 18, '#ffffff'); ambroisie(); }; // Pégase dépose la bille en haut du couloir gauche
 function ambroisie() {
   if (multiball) { points(pc(10000)); blague('Encore de l’ambroisie ! +' + fmt(pc(10000) * mult), 185, 380, '#e0b3ff'); return; }
   CITE.ambro++; SON.ambroisie(CITE.ambro);
   if (CITE.ambro >= CITE.besoin) lancerFestin();
-  else blague('Ambroisie ' + CITE.ambro + '/' + CITE.besoin + ' 🏺', 185, 380, '#e0b3ff');
+  else blague('Ambroisie ' + CITE.ambro + '/' + CITE.besoin + ' 🏺', 250, 400, '#e0b3ff');
 }
 function lancerFestin() { // Kevin : la multibille, seulement dans la Cité des dieux
   if (multiball) { points(pc(50000)); annonce('IVRESSE DIVINE !', '+' + fmt(pc(50000) * mult), '#e0b3ff', 30, 1.6); return; }
@@ -2481,6 +2542,9 @@ function entrerTrone(b) {
     CITE.jackpot += 25000; SON.jackpotZeus(); vib([60, 40, 60, 40, 120]); return;
   }
   const libres = OLYMPIENS.map((o, i) => i).filter(i => !CITE.lit[i] && OLYMPIENS[i].nom !== 'ZEUS'), i = libres.length ? pick(libres) : OLYMPIENS.length - 1;
+  revelerDieu(i);
+}
+function revelerDieu(i) {
   CITE.lit[i] = true; const O = OLYMPIENS[i]; CITE.revele = { i, t: 2.2 }; SON.trone(); vib([30, 20, 60]);
   const n = CITE.lit.filter(x => x).length;
   if (O.nom === 'ZEUS') { apotheose(); return; }
@@ -2501,25 +2565,49 @@ function sortirTrone(b) { // la foudre rend la bille, entre les colonnes
   b.x = TRONE.x + rnd(-6, 6); b.y = TRONE.y + 18; b.vx = rnd(-150, 150); b.vy = 240; b.lieu = null; b.ignoreTrone = 1; b.ax = b.x; b.ay = b.y; b.at = temps; SON.ejecte();
   if (CITE.lacherFestin > 0) { CITE.lacherFestin = 0; lancerFestin(); }
 }
+// la boîte de Pandore : elle avale la bille, tremble, s'ouvre… et il en sort un sort au hasard (souvent bon, parfois une farce)
+const SORTS_PANDORE = [
+  { t: 'L’ESPOIR', s: 'Il reste au fond de la boîte : bille protégée 15 s', f: () => { sauveT = Math.max(sauveT, 15); } },
+  { t: 'UN DIEU S’ÉCHAPPE !', s: '', f: () => { const L = OLYMPIENS.map((o, i) => i).filter(i => !CITE.lit[i] && OLYMPIENS[i].nom !== 'ZEUS'); if (L.length) revelerDieu(pick(L)); else points(pc(30000)); } },
+  { t: 'DE L’AMBROISIE !', s: 'Elle était cachée dans la boîte', f: () => ambroisie() },
+  { t: 'LES TRÉSORS DE PANDORE', s: '+20 000', f: () => points(pc(20000)) },
+  { t: 'UNE FARCE DES DIEUX !', s: 'La boîte était vide… +1 000', f: () => points(pc(1000)) },
+  { t: 'LES VENTS D’ÉOLE !', s: 'Les nuages valent ×3 pendant 20 s · +5 000', f: () => { CITE.eole = 20; points(pc(5000)); } }
+];
+function entrerPandore(b) {
+  b.tient = 1.5; b.lieu = 'pandore'; b.x = PANDORE.x; b.y = PANDORE.y; b.vx = b.vy = 0; PANDORE.ouv = 1.5; CITE.pandores++;
+  points(pc(2500), PANDORE.x, PANDORE.y - 30); SON.pandore(); vib([20, 20, 20, 20, 40]); etincelles(PANDORE.x, PANDORE.y, 14, '#ffb3e0');
+}
+function sortirPandore(b) {
+  const S_ = CITE.pandores === 1 ? SORTS_PANDORE[1] : pick(SORTS_PANDORE); // la 1re fois : un dieu (pour comprendre à quoi elle sert)
+  b.x = PANDORE.x + 6; b.y = PANDORE.y + 14; b.vx = rnd(60, 200); b.vy = 200; b.lieu = null; b.ignoreTrone = 1; b.ax = b.x; b.ay = b.y; b.at = temps; SON.ejecte();
+  etincelles(PANDORE.x, PANDORE.y, 24, '#ffb3e0'); SON.pandoreOuvre();
+  if (S_.s || S_.t !== 'UN DIEU S’ÉCHAPPE !') annonce('📦 ' + S_.t, S_.s, '#ffb3e0', 26, 2); S_.f();
+}
 function apotheose() { // les 12 dieux : Zeus en personne
   points(pc(150000)); CITE.apo = T_APO; CITE.ares = 0;
   annonce('APOTHÉOSE !', 'Zeus en personne · tout ×3 pendant ' + T_APO + ' s', '#ffffff', 40, 3);
   SON.apotheose(); vib([80, 40, 80, 40, 300]); flash = 0.7; secousse = 0.35; chaseT = 3;
 }
 function majCite(dt) {
-  const ph = temps * 1.25;
-  TRIDENT.forEach(s => { const cx = 185 + s.i * 50 + 22 * Math.sin(ph); s.ax = cx - 14; s.bx = cx + 14; s.ay = s.by = 446 + 4 * Math.sin(ph * 2 + s.i); s.flash = (s.flash || 0) - dt; }); // ils ondulent (vague)
+  const ph = temps * (multiball ? 0.55 : 0.4);
+  TRIDENT.forEach(T => { // ils volent partout (courbes de Lissajous différentes) en tournant sur eux-mêmes
+    const k = T.i * 2.1; T.x = 185 + 112 * Math.sin(ph * 1.3 + k); T.y = 336 + 128 * Math.sin(ph * 0.9 + k * 1.7) + 18 * Math.sin(ph * 3.1 + k);
+    T.a += dt * (2 + T.i); T.flash -= dt; });
   SLC.forEach(s => s.flash = (s.flash || 0) - dt);
   for (const c of [...NUAGES, ...COLONNES, ...HERMES]) { c.flash -= dt; c.cd -= dt; }
+  ZEUSL.forEach(l => l.flash -= dt); PANDORE.ouv = Math.max(0, PANDORE.ouv - dt);
+  { const ap = FL.map(f => f.appui); if (ap.some((a, i) => a && !CITE.flipAv[i]) && !ZEUSL.every(x => x.on)) { // un coup de flipper décale les couloirs allumés
+      const d = ap[1] && !CITE.flipAv[1] ? 1 : -1, on = ZEUSL.map(x => x.on); ZEUSL.forEach((x, i) => x.on = on[(i - d + 4) % 4]); } CITE.flipAv = ap; }
   HELIOS.a += HELIOS.w * (CITE.apollon > 0 ? 1.9 : 1) * (multiball ? 1.3 : 1) * dt;
   CITE.foudre = Math.max(0, CITE.foudre - dt); if (CITE.revele) { CITE.revele.t -= dt; if (CITE.revele.t <= 0) CITE.revele = null; }
   const compte = (k, fin) => { if (CITE[k] > 0) { const av = CITE[k]; CITE[k] = Math.max(0, CITE[k] - dt); if (Math.ceil(CITE[k]) < Math.ceil(av) && CITE[k] > 0 && CITE[k] <= 3) SON.tic(Math.ceil(CITE[k])); if (CITE[k] <= 0 && fin) fin(); } };
-  compte('egide'); compte('ares', () => blague('Fin de la fureur d’Arès', 185, 520, '#ff8a7a')); compte('apollon'); compte('hermesT');
+  compte('egide'); compte('ares', () => blague('Fin de la fureur d’Arès', 185, 520, '#ff8a7a')); compte('apollon'); compte('hermesT'); compte('eole');
   compte('apo', () => { CITE.lit = OLYMPIENS.map(() => false); annonce('L’Olympe se repose', 'Les 12 dieux attendent ta prochaine visite au trône', '#fff2b0', 24, 2); });
   EGIDE_C.on = CITE.egide > 0;
-  if (CITE.tridentReset > 0) { // le trident se relève (pas sur une bille)
+  if (CITE.tridentReset > 0) { // le trident revient (pas sur une bille)
     CITE.tridentReset -= dt;
-    if (CITE.tridentReset <= 0) { if (balles.every(b => TRIDENT.every(c => distSeg(b, c) > R + 10))) { TRIDENT.forEach(c => { c.bas = false; c.on = true; }); SON.tombe(); etincelles(185, 446, 14, '#5fe0cf'); } else CITE.tridentReset = 0.3; }
+    if (CITE.tridentReset <= 0) { if (balles.every(b => TRIDENT.every(c => Math.hypot(b.x - c.x, b.y - c.y) > R + c.r + 10))) { TRIDENT.forEach(c => { c.bas = false; c.flash = 0.4; etincelles(c.x, c.y, 10, '#5fe0cf'); }); SON.tombe(); } else CITE.tridentReset = 0.3; }
   }
   if (CITE.lacher > 0) { CITE.lacher -= dt; if (CITE.lacher <= 0) { const b = balleNeuve(TRONE.x, TRONE.y + 20, 170, 230, false); b.ignoreTrone = 1.5; balles.push(b); CITE.foudre = 0.4; SON.ejecte(); SON.eclair(); } }
   CITE.grondT -= dt; if (CITE.grondT <= 0) { CITE.grondT = rnd(12, 20); SON.grondement(); }
@@ -2529,6 +2617,7 @@ function perteCite() { // une bille perdue = la bille suivante, toujours dans la
   if (!balles.length) {
     finMulti();
     if (sauveT > 0) { balles.push(balleNeuve(375, 697, 0, 0, false)); annonce('Bille sauvée !', 'Héra te rend ta bille', '#fff2b0'); SON.sauve(); sauveT = 3; return; }
+    CITE.benit = 0; // la bénédiction de Zeus dure une bille
     perdreBalle();
   } else if (multiball && balles.length + aServir === 1) { finMulti(); annonce('Fin du festin', 'Les dieux digèrent… Pégase t’attend', '#e0b3ff', 26, 1.6); }
 }
@@ -2613,7 +2702,7 @@ function maj(dt) {
     b.tirBut -= dt; b.sansGardien -= dt;
     if (b.tient > 0) {
       b.tient -= dt; b.ax = b.x; b.ay = b.y; b.at = temps;
-      if (b.tient <= 0) { if (b.lieu === 'casier') sortirCasier(b); else if (b.lieu === 'asgard') sortirValh(b); else if (b.lieu === 'trone') sortirTrone(b); else if (b.lieu) sortirGoth(b); else { b.vx = -230; b.vy = 170; b.ignoreTrou = 1; SON.ejecte(); } }
+      if (b.tient <= 0) { if (b.lieu === 'casier') sortirCasier(b); else if (b.lieu === 'asgard') sortirValh(b); else if (b.lieu === 'trone') sortirTrone(b); else if (b.lieu === 'pandore') sortirPandore(b); else if (b.lieu) sortirGoth(b); else { b.vx = -230; b.vy = 170; b.ignoreTrou = 1; SON.ejecte(); } }
       continue;
     }
     b.ignoreTrou -= dt; b.ignoreCasier -= dt;
@@ -2690,7 +2779,7 @@ function toileFond() { const c = document.createElement('canvas'); c.width = cv.
 function lacher(c) { if (c) c.width = c.height = 0; return null; } // rend la mémoire tout de suite
 function refaireFonds() {
   for (const r in fondBoss) lacher(fondBoss[r]);
-  fondNuit = lacher(fondNuit); fondGoth = lacher(fondGoth); fondBoss = {}; fondValh = lacher(fondValh); fondDieu = lacher(fondDieu); dessusValh = lacher(dessusValh); fondCite = lacher(fondCite); dessusCite = lacher(dessusCite);
+  fondNuit = lacher(fondNuit); fondGoth = lacher(fondGoth); fondBoss = {}; fondValh = lacher(fondValh); fondDieu = lacher(fondDieu); dessusValh = lacher(dessusValh); fondCite = lacher(fondCite); dessusCite = lacher(dessusCite); CSPR = {};
   dessinerFond(); sprites();
 }
 let tableAvant = null;
@@ -2701,7 +2790,7 @@ function menageFonds() { // à chaque changement de table : on lâche le décor 
   else if (t === 'goth') fondGoth = lacher(fondGoth);
   else if (t === 'valh') { fondValh = lacher(fondValh); dessusValh = lacher(dessusValh); }
   else if (t === 'dieu') fondDieu = lacher(fondDieu);
-  else if (t === 'cite') { fondCite = lacher(fondCite); dessusCite = lacher(dessusCite); }
+  else if (t === 'cite') { fondCite = lacher(fondCite); dessusCite = lacher(dessusCite); CSPR = {}; }
 }
 cv.addEventListener('contextrestored', refaireFonds);
 function redim() {
@@ -3653,47 +3742,54 @@ function renduDieu() {
 // (Kevin : complètement différent des autres : ni l'or et la braise du Valhalla, ni le néon de la récré, ni la crypte)
 const CITE_C = { marbre: '#eef0f6', marbreF: '#9aa6c8', or: '#f2cf63', orF: '#8a6a12', azur: '#2f6fe0', nuit: '#0e1a4d', pourpre: '#a35bd6', mer: '#2fc4b2', rose: '#ffd6ec' };
 let fondCite = null, dessusCite = null;
-function cheminCite(c) { c.beginPath(); c.moveTo(10, 740); c.lineTo(10, 252); c.lineTo(200, 64); c.lineTo(390, 252); c.lineTo(390, 740); c.closePath(); }
-function cheminTympan(c) { c.beginPath(); c.moveTo(14, 270); c.lineTo(14, 252); c.lineTo(200, 68); c.lineTo(386, 252); c.lineTo(386, 270); c.closePath(); }
+let CSPR = {}; // petits dessins pré-rendus de la Cité (nuages, médaillons, colonnes…) : rien de lourd à refaire à chaque image (fluidité)
+function cheminCite(c, o = 0) { // le grand rectangle au haut arrondi (o : décalé vers l'intérieur)
+  c.beginPath(); c.moveTo(10 + o, 740); c.lineTo(10 + o, CG.y); c.arc(CG.x, CG.y, RC - o, Math.PI, 1.5 * Math.PI); c.lineTo(CD.x, 10 + o); c.arc(CD.x, CD.y, RC - o, 1.5 * Math.PI, 2 * Math.PI); c.lineTo(390 - o, 740); c.closePath();
+}
 function grecque(c, x0, x1, y, h, coul) { // frise à méandres (la « grecque »)
   c.strokeStyle = coul; c.lineWidth = 1.6; c.lineJoin = 'miter'; c.beginPath();
   for (let x = x0; x < x1 - h; x += h) { c.moveTo(x, y + h / 2); c.lineTo(x, y - h / 2); c.lineTo(x + h * 0.75, y - h / 2); c.lineTo(x + h * 0.75, y + h * 0.15); c.lineTo(x + h * 0.35, y + h * 0.15); c.lineTo(x + h * 0.35, y - h * 0.15); }
   c.stroke(); c.lineJoin = 'round';
   c.beginPath(); c.moveTo(x0, y - h * 0.8); c.lineTo(x1, y - h * 0.8); c.moveTo(x0, y + h * 0.8); c.lineTo(x1, y + h * 0.8); c.stroke();
 }
+function nuagePeint(c, x, y, r, a) { const g = c.createRadialGradient(x - r * 0.3, y - r * 0.4, 2, x, y, r); g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
 function dessinerFondCite() {
-  fondCite = toileFond();
+  fondCite = toileFond(); CSPR = {};
   const c = fondCite.getContext('2d'), k = S * DPR, C = CITE_C;
   c.fillStyle = '#0a0f26'; c.fillRect(0, 0, fondCite.width, fondCite.height);
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.textAlign = 'center'; c.textBaseline = 'middle'; c.lineCap = 'round'; c.lineJoin = 'round';
   let graine = 17; const alea = () => (graine = (graine * 16807) % 2147483647) / 2147483647;
   c.save(); cheminCite(c); c.clip();
   // le sol : grandes dalles de marbre blanc veiné (lumière d'en haut)
-  let g = c.createLinearGradient(0, 260, 0, 740); g.addColorStop(0, '#f3f4f9'); g.addColorStop(0.55, '#d9deec'); g.addColorStop(1, '#a9b3d1'); c.fillStyle = g; c.fillRect(0, 0, 400, 740);
+  let g = c.createLinearGradient(0, 200, 0, 740); g.addColorStop(0, '#f3f4f9'); g.addColorStop(0.55, '#d9deec'); g.addColorStop(1, '#a9b3d1'); c.fillStyle = g; c.fillRect(0, 0, 400, 740);
   c.strokeStyle = 'rgba(70,80,120,.12)'; c.lineWidth = 1;
-  for (let y = 280; y < 740; y += 46) for (let x = (y / 46 % 2) * 34 - 34; x < 400; x += 68) c.strokeRect(x, y, 68, 46);
-  for (let i = 0; i < 34; i++) { // veines
-    const x = alea() * 400, y = 280 + alea() * 460; c.strokeStyle = `rgba(${90 + alea() * 40},${90 + alea() * 30},${140 + alea() * 40},${0.08 + alea() * 0.12})`; c.lineWidth = 0.6 + alea() * 1.4;
-    c.beginPath(); c.moveTo(x, y); c.bezierCurveTo(x + rnd(-40, 40), y + rnd(-20, 30), x + rnd(-60, 60), y + rnd(0, 50), x + rnd(-80, 80), y + rnd(10, 70)); c.stroke();
+  for (let y = 236; y < 740; y += 46) for (let x = (Math.round(y / 46) % 2) * 34 - 34; x < 400; x += 68) c.strokeRect(x, y, 68, 46);
+  for (let i = 0; i < 40; i++) { // veines
+    const x = alea() * 400, y = 240 + alea() * 500; c.strokeStyle = `rgba(${90 + alea() * 40},${90 + alea() * 30},${140 + alea() * 40},${0.08 + alea() * 0.12})`; c.lineWidth = 0.6 + alea() * 1.4;
+    c.beginPath(); c.moveTo(x, y); c.bezierCurveTo(x + (alea() - 0.5) * 80, y + alea() * 30, x + (alea() - 0.5) * 120, y + alea() * 50, x + (alea() - 0.5) * 160, y + alea() * 70); c.stroke();
   }
-  // la mosaïque du soleil autour du disque d'Hélios
-  { const H_ = HELIOS; for (let i = 0; i < 24; i++) { const a = i * Math.PI / 12; c.fillStyle = i % 2 ? 'rgba(242,207,99,.32)' : 'rgba(47,111,224,.16)'; c.beginPath(); c.moveTo(H_.x + Math.cos(a - 0.12) * (H_.r + 4), H_.y + Math.sin(a - 0.12) * (H_.r + 4)); c.lineTo(H_.x + Math.cos(a) * (H_.r + 30), H_.y + Math.sin(a) * (H_.r + 30)); c.lineTo(H_.x + Math.cos(a + 0.12) * (H_.r + 4), H_.y + Math.sin(a + 0.12) * (H_.r + 4)); c.closePath(); c.fill(); }
-    c.strokeStyle = 'rgba(138,106,18,.45)'; c.lineWidth = 1.5; c.beginPath(); c.arc(H_.x, H_.y, H_.r + 4, 0, 7); c.stroke(); }
-  // la constellation de Pégase : le chemin de son vol, en pointillés d'étoiles
-  c.save(); c.setLineDash([1.5, 9]); c.strokeStyle = 'rgba(47,111,224,.35)'; c.lineWidth = 2.2; c.beginPath(); PEGASE.pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); c.restore();
-  // le tympan du fronton : le ciel de l'Olympe (nuit étoilée, une aube dorée derrière le trône)
-  c.save(); cheminTympan(c); c.clip();
-  g = c.createLinearGradient(0, 60, 0, 270); g.addColorStop(0, '#0a1440'); g.addColorStop(0.6, '#1d3d8f'); g.addColorStop(1, '#4f78c9'); c.fillStyle = g; c.fillRect(0, 0, 400, 280);
-  c.globalCompositeOperation = 'lighter'; g = c.createRadialGradient(200, 130, 4, 200, 140, 130); g.addColorStop(0, 'rgba(255,230,160,.55)'); g.addColorStop(1, 'rgba(255,230,160,0)'); c.fillStyle = g; c.fillRect(60, 20, 280, 260);
-  for (let i = 0; i < 70; i++) { const x = alea() * 400, y = 60 + alea() * 210, r = alea() * 1.3 + 0.3; c.fillStyle = `rgba(255,255,255,${0.3 + alea() * 0.6})`; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
+  // le ciel de l'Olympe : tout le haut de la table (nuit étoilée, aube dorée derrière le trône), qui se fond dans le marbre
+  g = c.createLinearGradient(0, 0, 0, 300); g.addColorStop(0, '#081038'); g.addColorStop(0.45, '#1a3a8c'); g.addColorStop(0.72, '#4f78c9'); g.addColorStop(0.86, 'rgba(160,185,235,.6)'); g.addColorStop(1, 'rgba(240,242,250,0)');
+  c.fillStyle = g; c.fillRect(0, 0, 400, 300);
+  c.globalCompositeOperation = 'lighter'; g = c.createRadialGradient(185, 140, 4, 185, 150, 150); g.addColorStop(0, 'rgba(255,230,160,.6)'); g.addColorStop(1, 'rgba(255,230,160,0)'); c.fillStyle = g; c.fillRect(20, 0, 340, 300);
+  for (let i = 0; i < 110; i++) { const x = alea() * 400, y = alea() * 230, r = alea() * 1.4 + 0.3; c.fillStyle = `rgba(255,255,255,${0.25 * (1 - y / 260) + alea() * 0.55})`; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
   c.globalCompositeOperation = 'source-over';
-  for (let i = 0; i < 16; i++) { const x = alea() * 400, y = 235 + alea() * 40, r = 14 + alea() * 18; g = c.createRadialGradient(x - r * 0.3, y - r * 0.4, 2, x, y, r); g.addColorStop(0, 'rgba(255,255,255,.7)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
-  c.restore();
-  // la corniche du fronton (marbre et or) et la frise à méandres sous le tympan
-  c.strokeStyle = 'rgba(138,106,18,.7)'; c.lineWidth = 2; cheminTympan(c); c.stroke();
-  c.fillStyle = 'rgba(255,255,255,.55)'; c.fillRect(10, 270, 350, 16); grecque(c, 14, 358, 278, 9, 'rgba(138,106,18,.75)');
-  // les dalles du trône : un chemin d'or qui monte du disque vers Zeus
-  c.strokeStyle = 'rgba(242,207,99,.35)'; c.lineWidth = 16; c.beginPath(); c.moveTo(185, 290); c.lineTo(200, 150); c.stroke();
+  for (let i = 0; i < 26; i++) nuagePeint(c, alea() * 400, 232 + alea() * 46, 16 + alea() * 22, 0.75); // la mer de nuages, entre le ciel et le marbre
+  // la constellation de Pégase : le chemin de son vol autour du soleil, en pointillés d'étoiles
+  c.save(); c.setLineDash([1.5, 9]); c.strokeStyle = 'rgba(47,111,224,.4)'; c.lineWidth = 2.2; c.beginPath(); PEGASE.pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); c.restore();
+  // la mosaïque du soleil autour du disque d'Hélios
+  { const H_ = HELIOS; for (let i = 0; i < 24; i++) { const a = i * Math.PI / 12; c.fillStyle = i % 2 ? 'rgba(242,207,99,.4)' : 'rgba(47,111,224,.18)'; c.beginPath(); c.moveTo(H_.x + Math.cos(a - 0.12) * (H_.r + 4), H_.y + Math.sin(a - 0.12) * (H_.r + 4)); c.lineTo(H_.x + Math.cos(a) * (H_.r + 26), H_.y + Math.sin(a) * (H_.r + 26)); c.lineTo(H_.x + Math.cos(a + 0.12) * (H_.r + 4), H_.y + Math.sin(a + 0.12) * (H_.r + 4)); c.closePath(); c.fill(); }
+    c.strokeStyle = 'rgba(138,106,18,.45)'; c.lineWidth = 1.5; c.beginPath(); c.arc(H_.x, H_.y, H_.r + 4, 0, 7); c.stroke(); }
+  // les couloirs Ζ Ε Υ Σ : dalles de lapis, liserés d'or
+  for (const l of ZEUSL) { rrect(c, l.x - 13, 58, 26, 36, 5); c.fillStyle = 'rgba(14,26,77,.55)'; c.fill(); c.strokeStyle = 'rgba(242,207,99,.5)'; c.lineWidth = 1; c.stroke(); }
+  // le chemin d'or qui monte vers le trône
+  c.strokeStyle = 'rgba(242,207,99,.3)'; c.lineWidth = 16; c.beginPath(); c.moveTo(185, 262); c.lineTo(185, 168); c.stroke();
+  // les fentes des couloirs cachés : des fissures sombres dans le marbre, une lueur au fond
+  for (const [K, col] of [[CACHE_H, '255,90,70'], [CACHE_D, '120,220,255']]) {
+    g = c.createRadialGradient(K.x, K.y, 1, K.x, K.y, 22); g.addColorStop(0, `rgba(${col},.55)`); g.addColorStop(1, `rgba(${col},0)`); c.fillStyle = g; c.fillRect(K.x - 24, K.y - 24, 48, 48);
+    c.beginPath(); c.ellipse(K.x, K.y, 10, 7, K === CACHE_H ? 0.5 : -0.6, 0, 7); c.fillStyle = '#05040c'; c.fill(); c.strokeStyle = 'rgba(200,190,170,.8)'; c.lineWidth = 2; c.stroke();
+    c.strokeStyle = 'rgba(5,4,12,.7)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(K.x + 7, K.y + 5); c.lineTo(K.x + 14, K.y + 12); c.lineTo(K.x + 12, K.y + 19); c.moveTo(K.x - 8, K.y - 3); c.lineTo(K.x - 15, K.y - 7); c.stroke();
+  }
   // ΟΛΥΜΠΟΣ gravé dans le marbre
   c.save(); c.translate(185, 536); c.font = 'italic 900 30px Georgia,"Times New Roman",serif'; c.fillStyle = 'rgba(255,255,255,.8)'; c.fillText('ΟΛΥΜΠΟΣ', 1.5, 2); c.fillStyle = 'rgba(60,70,120,.55)'; c.fillText('ΟΛΥΜΠΟΣ', 0, 0); c.restore();
   c.font = '800 9px Georgia,serif'; c.fillStyle = 'rgba(60,70,120,.6)'; c.fillText('LA CITÉ DES DIEUX', 185, 560);
@@ -3701,21 +3797,24 @@ function dessinerFondCite() {
   for (const [E, nom, iris] of [[ENTREE_I, 'IRIS', true], [ENTREE_P, 'PÉGASE', false]]) {
     g = c.createLinearGradient(E.x - 24, 0, E.x + 24, 0);
     if (iris) ['#ff8fa3', '#ffc36b', '#fff08a', '#8ff0b0', '#8fc8ff', '#c8a2ff'].forEach((col, i) => g.addColorStop(i / 5, col)); else { g.addColorStop(0, '#d9deec'); g.addColorStop(0.5, '#ffffff'); g.addColorStop(1, '#d9deec'); }
-    c.globalAlpha = 0.75; c.fillStyle = g; c.beginPath(); c.moveTo(E.x - 20, E.y + 16); c.lineTo(E.x, E.y); c.lineTo(E.x + 20, E.y + 16); c.lineTo(E.x + 24, E.y + 52); c.lineTo(E.x - 24, E.y + 52); c.closePath(); c.fill(); c.globalAlpha = 1;
+    c.globalAlpha = 0.8; c.fillStyle = g; c.beginPath(); c.moveTo(E.x - 20, E.y + 16); c.lineTo(E.x, E.y); c.lineTo(E.x + 20, E.y + 16); c.lineTo(E.x + 24, E.y + 52); c.lineTo(E.x - 24, E.y + 52); c.closePath(); c.fill(); c.globalAlpha = 1;
     c.font = '900 9px Georgia,serif'; c.fillStyle = iris ? '#7b3fa0' : C.azur; c.strokeStyle = '#ffffff'; c.lineWidth = 3; c.strokeText(nom, E.x, E.y + 62); c.fillText(nom, E.x, E.y + 62);
   }
   // l'escalier de l'Olympe (le lanceur) : marches de marbre
-  g = c.createLinearGradient(360, 0, 390, 0); g.addColorStop(0, '#c8cfe2'); g.addColorStop(0.5, '#f6f7fb'); g.addColorStop(1, '#c8cfe2'); c.fillStyle = g; c.fillRect(360, 280, 30, 440);
-  c.strokeStyle = 'rgba(70,80,120,.25)'; c.lineWidth = 1; for (let y = 300; y < 708; y += 12) { c.beginPath(); c.moveTo(361, y); c.lineTo(389, y); c.stroke(); }
+  g = c.createLinearGradient(360, 0, 390, 0); g.addColorStop(0, '#c8cfe2'); g.addColorStop(0.5, '#f6f7fb'); g.addColorStop(1, '#c8cfe2'); c.fillStyle = g; c.fillRect(360, 296, 30, 424);
+  c.strokeStyle = 'rgba(70,80,120,.25)'; c.lineWidth = 1; for (let y = 312; y < 708; y += 12) { c.beginPath(); c.moveTo(361, y); c.lineTo(389, y); c.stroke(); }
   c.save(); c.translate(375, 560); c.rotate(-Math.PI / 2); c.font = '800 11px Georgia,serif'; c.fillStyle = C.orF; c.fillText('L’OLYMPE ▶', 0, -1); c.restore();
   // couloirs du bas : le Styx (gauche), l'Hadès (droite)
   for (const m of [false, true]) {
     const xo = m ? OUT.d : OUT.g, xm = m ? 360 : 10, X = x => m ? 370 - x : x;
     c.beginPath(); c.moveTo(xm, OUT.haut - 30); c.lineTo(xo, OUT.haut - 30); c.lineTo(xo, OUT.bas); c.lineTo(X(99), 631); c.lineTo(X(99), 740); c.lineTo(xm, 740); c.closePath();
     c.fillStyle = m ? 'rgba(70,10,20,.6)' : 'rgba(15,40,70,.6)'; c.fill();
-    c.save(); c.translate((xo + xm) / 2, 650); c.rotate(m ? Math.PI / 2 : -Math.PI / 2); c.font = '900 10px Georgia,serif'; c.fillStyle = m ? '#ff8a7a' : '#9fd8ff'; c.fillText(m ? 'HADÈS' : 'STYX', 0, 1); c.restore();
+    c.save(); c.translate((xo + xm) / 2, 650); c.rotate(m ? Math.PI / 2 : -Math.PI / 2); c.font = '900 10px Georgia,serif'; c.fillStyle = m ? '#ff8a7a' : '#9fd8ff'; c.fillText(m ? 'TARTARE' : 'STYX', 0, 1); c.restore();
   }
   c.restore();
+  // la frise d'or qui fait tout le tour de la table, juste à l'intérieur du cadre
+  c.save(); c.setLineDash([5, 3, 1.5, 3]); c.strokeStyle = 'rgba(217,178,74,.75)'; c.lineWidth = 2.2; cheminCite(c, 8); c.stroke(); c.restore();
+  c.strokeStyle = 'rgba(217,178,74,.45)'; c.lineWidth = 1; cheminCite(c, 12); c.stroke();
   // murs : marbre blanc, liseré d'or
   const rails = segsC.filter(s => s.rail);
   const tracer = (dx = 0, dy = 0) => { c.beginPath(); for (const s of rails) { c.moveTo(s.ax + dx, s.ay + dy); c.lineTo(s.bx + dx, s.by + dy); } };
@@ -3726,12 +3825,16 @@ function dessinerFondCite() {
   c.lineWidth = 14; c.strokeStyle = '#1a1f3d'; cheminCite(c); c.stroke(); c.lineWidth = 3; c.strokeStyle = '#d9b24a'; c.stroke(); // cadre
   c.fillStyle = '#f7f4ec'; c.fillRect(366, 710, 18, 18); c.strokeStyle = C.or; c.lineWidth = 1.5; c.strokeRect(366, 710, 18, 18);
 }
-// les 12 dieux sur la frise du fronton (Zeus au sommet)
-const MEDAILLONS = OLYMPIENS.map((o, i) => { if (i === 11) return { x: 200, y: 96 }; const g = i < 6, j = g ? i : i - 6, x = g ? 44 + j * 24 : 236 + (4 - j) * 24; return { x, y: 252 - (Math.min(x, 400 - x) - 10) * 188 / 190 + 19 }; });
+// les 12 dieux en médaillons le long du haut arrondi (Zeus tout en haut, au milieu)
+const MEDAILLONS = OLYMPIENS.map((o, i) => {
+  if (i === 11) return { x: 200, y: 26 };
+  const g = i < 6, a = g ? (186 + i * 16) * Math.PI / 180 : (282 + (i - 6) * 16) * Math.PI / 180, C_ = g ? CG : CD;
+  return { x: C_.x + 115 * Math.cos(a), y: C_.y + 115 * Math.sin(a) };
+});
 const LAMPES_C = [
   { x: ENTREE_I.x, y: ENTREE_I.y + 80, r: 10, forme: 'fleche', h: 300, on: () => Math.floor(temps * 2 + 0.5) % 2 === 0 },
   { x: ENTREE_P.x, y: ENTREE_P.y + 80, r: 10, forme: 'fleche', h: 45, on: () => Math.floor(temps * 2) % 2 === 0 },
-  { x: 200, y: 172, r: 8, forme: 'fleche', h: 50, on: () => (multiball ? Math.floor(temps * 8) : Math.floor(temps * 3)) % 2 === 0 },
+  { x: 185, y: 196, r: 8, forme: 'fleche', h: 50, on: () => (multiball ? Math.floor(temps * 8) : Math.floor(temps * 3)) % 2 === 0 },
   { x: 185, y: 600, forme: 'pilule', w: 120, hh: 18, h: 45, txt: 'HÉRA TE PROTÈGE', t: 9, on: () => sauveT > 0 && (sauveT > 2 || Math.floor(temps * 6) % 2 === 0) }
 ];
 function amphore(c, x, y, plein, coul) {
@@ -3747,96 +3850,120 @@ function nuage(c, x, y, r, f) {
   c.fillStyle = 'rgba(30,40,90,.25)'; for (const [dx, dy, s] of P) { c.beginPath(); c.arc(x + dx * r + 3, y + dy * r + 5, s * r, 0, 7); c.fill(); }
   for (const [dx, dy, s] of P) { const g = c.createRadialGradient(x + dx * r - s * r * 0.3, y + dy * r - s * r * 0.4, 1, x + dx * r, y + dy * r, s * r); g.addColorStop(0, '#ffffff'); g.addColorStop(1, f > 0 ? '#ffd6ec' : '#c9d6f2'); c.fillStyle = g; c.beginPath(); c.arc(x + dx * r, y + dy * r, s * r, 0, 7); c.fill(); }
 }
+function lueur(c, x, y, r, coul) { const g = c.createRadialGradient(x, y, 1, x, y, r); g.addColorStop(0, coul); g.addColorStop(1, coul.replace(/[\d.]+\)$/, '0)')); c.fillStyle = g; c.fillRect(x - r, y - r, 2 * r, 2 * r); }
+function cspr(nom, w, h, dessin) { return CSPR[nom] || (CSPR[nom] = sprite(w, h, dessin)); } // dessiné une fois (à la taille de l'écran), puis juste recopié
+function poser(nom, w, h, x, y, dessin) { ctx.drawImage(cspr(nom, w, h, dessin), x - w / 2, y - h / 2, w, h); }
+const EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,sans-serif';
 function renduCite() {
-  const C = CITE_C;
+  const C = CITE_C, ajout = (f) => { ctx.save(); ctx.globalCompositeOperation = 'lighter'; f(); ctx.restore(); };
   if (CITE.apo > 0) { // l'apothéose : tout l'Olympe s'illumine
     ctx.save(); cheminCite(ctx); ctx.clip(); ctx.globalCompositeOperation = 'lighter';
-    const p = 0.15 + 0.1 * Math.sin(temps * 6); const gg = ctx.createRadialGradient(200, 130, 20, 200, 300, 520); gg.addColorStop(0, `rgba(255,240,190,${p + 0.2})`); gg.addColorStop(1, 'rgba(255,240,190,0)'); ctx.fillStyle = gg; ctx.fillRect(0, 0, 400, 740);
-    for (let i = 0; i < 22; i++) { const x = (i * 83 + temps * 30) % 400, y = (i * 131 + temps * (40 + i * 5)) % 740; ctx.fillStyle = `rgba(255,250,220,${0.5 + 0.4 * Math.sin(temps * 7 + i)})`; ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 0.6 + 0.3 * Math.sin(temps * 6); poser('apo', 400, 740, 200, 370, c => lueur(c, 185, 150, 520, 'rgba(255,240,190,.45)')); ctx.globalAlpha = 1;
+    for (let i = 0; i < 22; i++) { const x = (i * 83 + temps * 30) % 400, y = (i * 131 + temps * (40 + i * 5)) % 740; ctx.fillStyle = `rgba(255,250,220,${0.5 + 0.4 * Math.sin(temps * 7 + i)})`; ctx.fillRect(x - 1.5, y - 1.5, 3, 3); }
     ctx.restore(); texte('APOTHÉOSE ×3 · ' + Math.ceil(CITE.apo) + ' s', 185, 506, 13, Math.floor(temps * 4) % 2 ? C.orF : '#ffffff');
   }
   LAMPES_C.forEach((L, i) => { let on = L.on(); if (chaseT > 0 && (i + Math.floor(temps * 24)) % 3 === 0) on = true; dessinerLampe(L, on, L.h); });
-  // les 12 médaillons des dieux
-  ctx.font = '11px system-ui,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  // les 12 médaillons des dieux (pré-rendus : éteint / allumé)
   MEDAILLONS.forEach((m, i) => {
-    const on = CITE.lit[i] || (CITE.apo > 0 && Math.floor(temps * 6 + i) % 2 === 0), rev = CITE.revele && CITE.revele.i === i, r = i === 11 ? 11 : 9.5;
-    if (on || rev) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(m.x, m.y, 2, m.x, m.y, r * 2.6); gg.addColorStop(0, 'rgba(255,230,150,.75)'); gg.addColorStop(1, 'rgba(255,230,150,0)'); ctx.fillStyle = gg; ctx.fillRect(m.x - r * 3, m.y - r * 3, r * 6, r * 6); ctx.restore(); }
-    const g = ctx.createRadialGradient(m.x - 3, m.y - 3, 1, m.x, m.y, r); if (on) { g.addColorStop(0, '#fffbe8'); g.addColorStop(1, '#d9a520'); } else { g.addColorStop(0, '#3a4a86'); g.addColorStop(1, '#141d48'); }
-    ctx.beginPath(); ctx.arc(m.x, m.y, r, 0, 7); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = on ? '#ffffff' : 'rgba(242,207,99,.6)'; ctx.lineWidth = 1.3; ctx.stroke();
-    ctx.globalAlpha = on ? 1 : 0.35; ctx.fillText(OLYMPIENS[i].s, m.x, m.y + 1); ctx.globalAlpha = 1;
+    const on = CITE.lit[i] || (CITE.apo > 0 && Math.floor(temps * 6 + i) % 2 === 0), rev = CITE.revele && CITE.revele.i === i, r = i === 11 ? 12 : 10;
+    if (on || rev) { ctx.globalCompositeOperation = 'lighter'; poser('halo', 64, 64, m.x, m.y, c => lueur(c, 32, 32, 32, 'rgba(255,230,150,.8)')); ctx.globalCompositeOperation = 'source-over'; }
+    poser('med' + i + (on ? 'a' : 'e'), 2 * r + 4, 2 * r + 4, m.x, m.y, c => {
+      const x = r + 2, y = r + 2, g = c.createRadialGradient(x - 3, y - 3, 1, x, y, r); if (on) { g.addColorStop(0, '#fffbe8'); g.addColorStop(1, '#d9a520'); } else { g.addColorStop(0, '#3a4a86'); g.addColorStop(1, '#141d48'); }
+      c.beginPath(); c.arc(x, y, r, 0, 7); c.fillStyle = g; c.fill(); c.strokeStyle = on ? '#ffffff' : 'rgba(242,207,99,.7)'; c.lineWidth = 1.4; c.stroke();
+      c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = (r + 1) + 'px ' + EMOJI; c.globalAlpha = on ? 1 : 0.4; c.fillText(OLYMPIENS[i].s, x, y + 1); });
   });
-  // le trône de Zeus : dossier, accoudoirs, la soucoupe au milieu
+  // les couloirs Ζ Ε Υ Σ
+  ZEUSL.forEach(l => { if (l.on || l.flash > 0) { ctx.globalCompositeOperation = 'lighter'; poser('haloL', 40, 60, l.x, 76, c => lueur(c, 20, 30, 26, 'rgba(255,225,140,.7)')); ctx.globalCompositeOperation = 'source-over'; }
+    ctx.font = '900 16px Georgia,serif'; ctx.fillStyle = l.on ? '#fff2b0' : 'rgba(242,207,99,.4)'; ctx.fillText(l.l, l.x, 76); });
+  if (CITE.benit > 0) texte('ZEUS ×' + (1 + CITE.benit), 185, 106, 10, '#fff2b0');
+  // le trône de Zeus : dossier, accoudoirs, la soucoupe au milieu (pré-rendu, seule la lueur bouge)
   { const x = TRONE.x, y = TRONE.y, fest = multiball, p = 0.5 + 0.5 * Math.sin(temps * (fest ? 9 : 3));
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(x, y, 4, x, y, 44); gg.addColorStop(0, `rgba(255,230,150,${0.3 + 0.3 * p + (CITE.foudre > 0 ? 0.4 : 0)})`); gg.addColorStop(1, 'rgba(255,230,150,0)'); ctx.fillStyle = gg; ctx.fillRect(x - 50, y - 50, 100, 100); ctx.restore();
-    let g = ctx.createLinearGradient(x - 26, 0, x + 26, 0); g.addColorStop(0, '#8a6a12'); g.addColorStop(0.5, '#fff2b0'); g.addColorStop(1, '#8a6a12');
-    ctx.fillStyle = 'rgba(0,0,30,.35)'; rrect(ctx, x - 21, y - 27, 46, 50, 6); ctx.fill();
-    ctx.fillStyle = g; ctx.strokeStyle = '#5a4508'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x - 22, y - 16); ctx.lineTo(x - 22, y - 24); ctx.lineTo(x - 12, y - 28); ctx.lineTo(x - 6, y - 25); ctx.lineTo(x, y - 34); ctx.lineTo(x + 6, y - 25); ctx.lineTo(x + 12, y - 28); ctx.lineTo(x + 22, y - 24); ctx.lineTo(x + 22, y - 16); ctx.closePath(); ctx.fill(); ctx.stroke(); // le dossier, couronné de pointes
-    rrect(ctx, x - 19, y - 18, 38, 36, 5); ctx.fillStyle = '#7b3fa0'; ctx.fill(); ctx.stroke(); // l'assise (coussin pourpre)
-    ctx.fillStyle = g; for (const s of [-1, 1]) { rrect(ctx, x + s * 21 - 4, y - 16, 8, 32, 3); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.arc(x + s * 21, y + 16, 4.5, 0, 7); ctx.fill(); ctx.stroke(); } // accoudoirs (têtes de lion)
-    ctx.beginPath(); ctx.arc(x, y, 15, 0, 7); ctx.fillStyle = '#2a1f5a'; ctx.fill(); ctx.strokeStyle = C.or; ctx.lineWidth = 3; ctx.stroke(); // la soucoupe
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = Math.min(1, 0.45 + 0.35 * p + (CITE.foudre > 0 ? 0.4 : 0)); poser('haloT', 100, 100, x, y, c => lueur(c, 50, 50, 46, 'rgba(255,230,150,.75)')); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    poser('trone', 60, 76, x, y - 4, c => { const X = 30, Y = 42;
+      let g = c.createLinearGradient(X - 26, 0, X + 26, 0); g.addColorStop(0, '#8a6a12'); g.addColorStop(0.5, '#fff2b0'); g.addColorStop(1, '#8a6a12');
+      c.fillStyle = 'rgba(0,0,30,.35)'; rrect(c, X - 21, Y - 27, 46, 50, 6); c.fill();
+      c.fillStyle = g; c.strokeStyle = '#5a4508'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(X - 22, Y - 16); c.lineTo(X - 22, Y - 24); c.lineTo(X - 12, Y - 28); c.lineTo(X - 6, Y - 25); c.lineTo(X, Y - 34); c.lineTo(X + 6, Y - 25); c.lineTo(X + 12, Y - 28); c.lineTo(X + 22, Y - 24); c.lineTo(X + 22, Y - 16); c.closePath(); c.fill(); c.stroke();
+      rrect(c, X - 19, Y - 18, 38, 36, 5); c.fillStyle = '#7b3fa0'; c.fill(); c.stroke();
+      c.fillStyle = g; for (const s of [-1, 1]) { rrect(c, X + s * 21 - 4, Y - 16, 8, 32, 3); c.fill(); c.stroke(); c.beginPath(); c.arc(X + s * 21, Y + 16, 4.5, 0, 7); c.fill(); c.stroke(); }
+      c.beginPath(); c.arc(X, Y, 15, 0, 7); c.fillStyle = '#2a1f5a'; c.fill(); c.strokeStyle = '#f2cf63'; c.lineWidth = 3; c.stroke(); });
     ctx.font = '900 13px Georgia,serif'; ctx.fillStyle = `rgba(255,242,176,${0.5 + 0.4 * p})`; ctx.fillText('⚡', x, y + 1);
     if (fest) texte('JACKPOT ' + fmt(pc(CITE.jackpot) * mult), x, y + 30, 11, Math.floor(temps * 4) % 2 ? C.orF : '#ffffff');
-    if (CITE.foudre > 0) eclairTrace(ctx, x + rnd(-20, 20), 40, x, y, 2 + 6 * CITE.foudre, '#fff6d0');
+    if (CITE.foudre > 0) eclairTrace(ctx, x + rnd(-20, 20), 20, x, y, 2 + 6 * CITE.foudre, '#fff6d0');
     if (CITE.revele) { const O = OLYMPIENS[CITE.revele.i], k = 1 - CITE.revele.t / 2.2, a = k < 0.15 ? k / 0.15 : k > 0.75 ? (1 - k) / 0.25 : 1;
-      ctx.save(); ctx.globalAlpha = a; ctx.font = (30 + 12 * k) + 'px system-ui,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.fillText(O.s, x, y + 54 - 20 * k); ctx.restore();
+      ctx.save(); ctx.globalAlpha = a; ctx.font = (30 + 12 * k) + 'px ' + EMOJI; ctx.fillText(O.s, x, y + 54 - 20 * k); ctx.restore();
       texte(O.nom, x, y + 82 - 20 * k, 13, '#fff2b0', a); } }
   // les colonnes (vues de dessus : chapiteau cannelé)
   for (const c of COLONNES) { const f = c.flash > 0;
-    ctx.fillStyle = 'rgba(0,0,30,.35)'; ctx.beginPath(); ctx.arc(c.x + 2, c.y + 4, c.r + 2, 0, 7); ctx.fill();
-    const g = ctx.createRadialGradient(c.x - 3, c.y - 4, 1, c.x, c.y, c.r + 2); g.addColorStop(0, '#ffffff'); g.addColorStop(1, f ? '#ffe9a8' : '#c3cbe0'); ctx.beginPath(); ctx.arc(c.x, c.y, c.r + 2, 0, 7); ctx.fillStyle = g; ctx.fill();
-    ctx.strokeStyle = 'rgba(80,90,130,.55)'; ctx.lineWidth = 1; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; ctx.beginPath(); ctx.moveTo(c.x + Math.cos(a) * 4, c.y + Math.sin(a) * 4); ctx.lineTo(c.x + Math.cos(a) * (c.r + 1), c.y + Math.sin(a) * (c.r + 1)); ctx.stroke(); }
-    ctx.beginPath(); ctx.arc(c.x, c.y, c.r + 2, 0, 7); ctx.strokeStyle = f ? '#ffffff' : C.or; ctx.lineWidth = 2; ctx.stroke(); }
-  // les nuages (bumpers)
-  for (const c of NUAGES) { nuage(ctx, c.x, c.y, c.r + 3, c.flash); if (c.flash > 0) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(c.x, c.y, 2, c.x, c.y, c.r * 2.6); gg.addColorStop(0, 'rgba(255,214,236,.7)'); gg.addColorStop(1, 'rgba(255,214,236,0)'); ctx.fillStyle = gg; ctx.fillRect(c.x - c.r * 3, c.y - c.r * 3, c.r * 6, c.r * 6); ctx.restore(); } }
+    poser('col' + (f ? 'f' : ''), 2 * c.r + 14, 2 * c.r + 14, c.x + 1, c.y + 1, x => { const X = c.r + 6, Y = c.r + 6;
+      x.fillStyle = 'rgba(0,0,30,.35)'; x.beginPath(); x.arc(X + 2, Y + 4, c.r + 2, 0, 7); x.fill();
+      const g = x.createRadialGradient(X - 3, Y - 4, 1, X, Y, c.r + 2); g.addColorStop(0, '#ffffff'); g.addColorStop(1, f ? '#ffe9a8' : '#c3cbe0'); x.beginPath(); x.arc(X, Y, c.r + 2, 0, 7); x.fillStyle = g; x.fill();
+      x.strokeStyle = 'rgba(80,90,130,.55)'; x.lineWidth = 1; for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; x.beginPath(); x.moveTo(X + Math.cos(a) * 4, Y + Math.sin(a) * 4); x.lineTo(X + Math.cos(a) * (c.r + 1), Y + Math.sin(a) * (c.r + 1)); x.stroke(); }
+      x.beginPath(); x.arc(X, Y, c.r + 2, 0, 7); x.strokeStyle = f ? '#ffffff' : '#f2cf63'; x.lineWidth = 2; x.stroke(); }); }
+  // les nuages (bumpers), pré-rendus ; les vents d'Éole les font briller
+  for (const c of NUAGES) { const f = c.flash > 0, d = 2 * c.r + 26;
+    poser('nu' + c.r + (f ? 'f' : ''), d * 1.6, d * 1.3, c.x + 2, c.y + 3, x => nuage(x, d * 0.8 - 2, d * 0.65 - 3, c.r + 3, f ? 1 : 0));
+    if (f || CITE.eole > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = f ? 1 : 0.4 + 0.3 * Math.sin(temps * 8); poser('haloN', 90, 90, c.x, c.y, x => lueur(x, 45, 45, 45, 'rgba(255,214,236,.7)')); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; } }
   // les portails d'Hermès : tourbillons violet et turquoise, deux petites ailes
   for (const p of HERMES) { const f = Math.max(0, p.flash);
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, 26 + f * 20); gg.addColorStop(0, `rgba(190,160,255,${0.55 + f})`); gg.addColorStop(1, 'rgba(120,220,255,0)'); ctx.fillStyle = gg; ctx.fillRect(p.x - 46, p.y - 46, 92, 92); ctx.restore();
-    ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, 7); ctx.fillStyle = '#160f3a'; ctx.fill();
-    for (let j = 0; j < 3; j++) { ctx.beginPath(); ctx.arc(p.x, p.y, 5 + j * 3.5, temps * (4 + j) + j * 2, temps * (4 + j) + j * 2 + 3.6); ctx.strokeStyle = j % 2 ? '#9fe8ff' : '#c9a7ff'; ctx.lineWidth = 2; ctx.stroke(); }
-    ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, 7); ctx.strokeStyle = C.or; ctx.lineWidth = 2; ctx.stroke();
-    for (const s of [-1, 1]) { ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.moveTo(p.x + s * 13, p.y - 2); ctx.quadraticCurveTo(p.x + s * 24, p.y - 14, p.x + s * 28, p.y - 10); ctx.quadraticCurveTo(p.x + s * 22, p.y - 4, p.x + s * 24, p.y + 1); ctx.quadraticCurveTo(p.x + s * 18, p.y + 1, p.x + s * 13, p.y + 3); ctx.closePath(); ctx.fill(); ctx.strokeStyle = C.orF; ctx.lineWidth = 0.8; ctx.stroke(); }
+    ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = Math.min(1, 0.6 + f); poser('haloH', 92, 92, p.x, p.y, c => lueur(c, 46, 46, 34, 'rgba(190,160,255,.75)')); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    poser('portail', 64, 34, p.x, p.y - 2, c => { const X = 32, Y = 18;
+      c.beginPath(); c.arc(X, Y, 14, 0, 7); c.fillStyle = '#160f3a'; c.fill(); c.strokeStyle = '#f2cf63'; c.lineWidth = 2; c.stroke();
+      for (const s of [-1, 1]) { c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(X + s * 13, Y - 2); c.quadraticCurveTo(X + s * 24, Y - 14, X + s * 28, Y - 10); c.quadraticCurveTo(X + s * 22, Y - 4, X + s * 24, Y + 1); c.quadraticCurveTo(X + s * 18, Y + 1, X + s * 13, Y + 3); c.closePath(); c.fill(); c.strokeStyle = '#8a6a12'; c.lineWidth = 0.8; c.stroke(); } });
+    for (let j = 0; j < 3; j++) { ctx.beginPath(); ctx.arc(p.x, p.y, 4 + j * 3.3, temps * (4 + j) + j * 2, temps * (4 + j) + j * 2 + 3.6); ctx.strokeStyle = j % 2 ? '#9fe8ff' : '#c9a7ff'; ctx.lineWidth = 2; ctx.stroke(); }
     if (CITE.hermesT > 0) texte('×3', p.x, p.y + 24, 10, Math.floor(temps * 4) % 2 ? '#c9a7ff' : '#ffffff'); }
-  // le disque d'Hélios : il tourne (rayons et graduations), plus vite avec Apollon
-  { const H_ = HELIOS, a = H_.a, fort = CITE.apollon > 0;
+  // le disque d'Hélios : pré-rendu une fois, puis tourné (plus vite avec Apollon)
+  { const H_ = HELIOS, fort = CITE.apollon > 0, d = 2 * H_.r + 10;
     ctx.fillStyle = 'rgba(0,0,30,.25)'; ctx.beginPath(); ctx.arc(H_.x + 3, H_.y + 5, H_.r, 0, 7); ctx.fill();
-    let g = ctx.createRadialGradient(H_.x - 8, H_.y - 10, 4, H_.x, H_.y, H_.r); g.addColorStop(0, '#fff6c8'); g.addColorStop(0.55, fort ? '#ffc23a' : '#f2cf63'); g.addColorStop(1, '#c98a1a'); ctx.beginPath(); ctx.arc(H_.x, H_.y, H_.r, 0, 7); ctx.fillStyle = g; ctx.fill();
-    ctx.save(); ctx.translate(H_.x, H_.y); ctx.rotate(a);
-    for (let i = 0; i < 12; i++) { ctx.rotate(Math.PI / 6); ctx.fillStyle = i % 2 ? 'rgba(255,255,255,.45)' : 'rgba(160,90,10,.35)'; ctx.beginPath(); ctx.moveTo(10, -3); ctx.lineTo(H_.r - 3, -7); ctx.lineTo(H_.r - 3, 7); ctx.lineTo(10, 3); ctx.closePath(); ctx.fill(); }
-    ctx.strokeStyle = '#8a5a00'; ctx.lineWidth = 1.2; for (let i = 0; i < 24; i++) { const b = i * Math.PI / 12; ctx.beginPath(); ctx.moveTo(Math.cos(b) * (H_.r - 4), Math.sin(b) * (H_.r - 4)); ctx.lineTo(Math.cos(b) * H_.r, Math.sin(b) * H_.r); ctx.stroke(); }
-    ctx.restore();
+    ctx.save(); ctx.translate(H_.x, H_.y); ctx.rotate(H_.a);
+    const sp = cspr('helios' + (fort ? 'f' : ''), d, d, c => { c.translate(d / 2, d / 2);
+      const g = c.createRadialGradient(-8, -10, 4, 0, 0, H_.r); g.addColorStop(0, '#fff6c8'); g.addColorStop(0.55, fort ? '#ffc23a' : '#f2cf63'); g.addColorStop(1, '#c98a1a'); c.beginPath(); c.arc(0, 0, H_.r, 0, 7); c.fillStyle = g; c.fill();
+      for (let i = 0; i < 12; i++) { c.rotate(Math.PI / 6); c.fillStyle = i % 2 ? 'rgba(255,255,255,.45)' : 'rgba(160,90,10,.35)'; c.beginPath(); c.moveTo(10, -3); c.lineTo(H_.r - 3, -7); c.lineTo(H_.r - 3, 7); c.lineTo(10, 3); c.closePath(); c.fill(); }
+      c.strokeStyle = '#8a5a00'; c.lineWidth = 1.2; for (let i = 0; i < 24; i++) { const b = i * Math.PI / 12; c.beginPath(); c.moveTo(Math.cos(b) * (H_.r - 4), Math.sin(b) * (H_.r - 4)); c.lineTo(Math.cos(b) * H_.r, Math.sin(b) * H_.r); c.stroke(); }
+      c.beginPath(); c.arc(0, 0, H_.r, 0, 7); c.strokeStyle = fort ? '#ffffff' : '#8a6a12'; c.lineWidth = 2.5; c.stroke(); });
+    ctx.drawImage(sp, -d / 2, -d / 2, d, d); ctx.restore();
     ctx.beginPath(); ctx.arc(H_.x, H_.y, 11, 0, 7); ctx.fillStyle = '#fffbe6'; ctx.fill(); ctx.strokeStyle = '#c98a1a'; ctx.lineWidth = 1.5; ctx.stroke();
     ctx.font = '900 7px Georgia,serif'; ctx.fillStyle = '#8a5a00'; ctx.fillText('ΗΛΙΟΣ', H_.x, H_.y + 1);
-    ctx.beginPath(); ctx.arc(H_.x, H_.y, H_.r, 0, 7); ctx.strokeStyle = fort ? '#ffffff' : '#8a6a12'; ctx.lineWidth = 2.5; ctx.stroke();
     if (fort) texte('☀️ ×3', H_.x, H_.y + H_.r + 12, 10, '#c98a1a'); }
+  // la boîte de Pandore : un coffre d'or et d'améthyste ; elle tremble puis s'ouvre quand elle tient la bille
+  { const P_ = PANDORE, o = P_.ouv, tremble = o > 0.5 ? rnd(-1.5, 1.5) : 0, cou = o > 0 ? Math.min(1, (1.5 - o) / 0.4) : 0;
+    ctx.save(); ctx.translate(P_.x + tremble, P_.y);
+    ctx.fillStyle = 'rgba(0,0,30,.3)'; rrect(ctx, -14, -6, 32, 22, 4); ctx.fill();
+    const g = ctx.createLinearGradient(0, -8, 0, 12); g.addColorStop(0, '#c58bf0'); g.addColorStop(1, '#5b2a86'); rrect(ctx, -16, -8, 32, 20, 4); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = C.or; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = C.or; ctx.fillRect(-2.5, -8, 5, 20);
+    if (cou > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = cou; poser('haloP', 70, 70, 0, -10, c => lueur(c, 35, 35, 35, 'rgba(255,170,230,.8)')); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+    ctx.save(); ctx.translate(-16, -8); ctx.rotate(-1.1 * cou); rrect(ctx, 0, -6, 32, 7, 3); ctx.fillStyle = '#d9a8ff'; ctx.fill(); ctx.strokeStyle = C.or; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+    ctx.restore();
+    if (!o) { ctx.font = '800 7px Georgia,serif'; ctx.fillStyle = '#5b2a86'; ctx.fillText('ΠΑΝΔΩΡΑ', P_.x, P_.y + 20); } }
   // les ambroisies (vers le festin) : petites amphores
-  { const n = CITE.besoin, x0 = 185 - (n - 1) * 9; for (let i = 0; i < n; i++) amphore(ctx, x0 + i * 18, 398, multiball || i < CITE.ambro, multiball ? (Math.floor(temps * 6 + i) % 2 ? '#e0b3ff' : '#ff9ad5') : C.pourpre); }
-  // le trident de Poséidon : 3 plaques de bronze vert-de-mer (Ψ), qui ondulent
-  for (const s of TRIDENT) { const mx = (s.ax + s.bx) / 2, my = s.ay;
-    if (s.bas) { rrect(ctx, mx - 14, my - 2, 28, 4, 2); ctx.fillStyle = 'rgba(20,40,70,.45)'; ctx.fill(); continue; }
-    ctx.fillStyle = 'rgba(0,0,30,.3)'; rrect(ctx, mx - 13, my - 3, 30, 12, 3); ctx.fill();
-    const g = ctx.createLinearGradient(0, my - 7, 0, my + 7); g.addColorStop(0, '#7ff0e0'); g.addColorStop(1, '#16786f'); rrect(ctx, mx - 15, my - 7, 30, 13, 3); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = C.or; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.font = '900 12px Georgia,serif'; ctx.fillStyle = '#ffffff'; ctx.fillText('Ψ', mx, my); }
+  { const n = CITE.besoin, x0 = 250 - (n - 1) * 9; for (let i = 0; i < n; i++) amphore(ctx, x0 + i * 18, 432, multiball || i < CITE.ambro, multiball ? (Math.floor(temps * 6 + i) % 2 ? '#e0b3ff' : '#ff9ad5') : C.pourpre); }
+  // le trident de Poséidon : 3 boucliers de bronze vert-de-mer (Ψ) qui volent partout en tournant
+  for (const T of TRIDENT) { if (T.bas) continue;
+    ctx.fillStyle = 'rgba(0,0,30,.25)'; ctx.beginPath(); ctx.arc(T.x + 4, T.y + 7, T.r, 0, 7); ctx.fill();
+    ctx.save(); ctx.translate(T.x, T.y); ctx.rotate(Math.sin(T.a) * 0.8);
+    poser('trid', 2 * T.r + 6, 2 * T.r + 6, 0, 0, c => { const X = T.r + 3; const g = c.createRadialGradient(X - 3, X - 4, 1, X, X, T.r); g.addColorStop(0, '#9ff6ea'); g.addColorStop(1, '#16786f'); c.beginPath(); c.arc(X, X, T.r, 0, 7); c.fillStyle = g; c.fill(); c.strokeStyle = '#f2cf63'; c.lineWidth = 2; c.stroke();
+      c.font = '900 13px Georgia,serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#ffffff'; c.fillText('Ψ', X, X + 1); });
+    ctx.restore();
+    if (T.flash > 0) { ctx.globalCompositeOperation = 'lighter'; poser('haloTr', 60, 60, T.x, T.y, c => lueur(c, 30, 30, 30, 'rgba(95,224,207,.8)')); ctx.globalCompositeOperation = 'source-over'; } }
   // slingshots : triangles de marbre, liseré d'or
   for (const s of SLC) { const m = s.ax > 185, X = x => m ? 370 - x : x, f = s.flash > 0;
-    ctx.beginPath(); ctx.moveTo(X(64), 478); ctx.lineTo(X(64), 548); ctx.lineTo(X(100), 582); ctx.closePath(); const g = ctx.createLinearGradient(X(64), 478, X(100), 582); g.addColorStop(0, '#ffffff'); g.addColorStop(1, f ? '#ffe9a8' : '#c3cbe0'); ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#4a5275'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(X(64), 478); ctx.lineTo(X(64), 548); ctx.lineTo(X(100), 582); ctx.closePath(); ctx.fillStyle = f ? '#fff3cf' : '#dde2ef'; ctx.fill(); ctx.strokeStyle = '#4a5275'; ctx.lineWidth = 2; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(X(64), 478); ctx.lineTo(X(100), 582); ctx.strokeStyle = f ? '#ffffff' : C.or; ctx.lineWidth = 4; ctx.stroke(); }
   // l'égide d'Athéna (barre d'or sous les flippers)
   if (CITE.egide > 0 && (CITE.egide > 3 || Math.floor(temps * 6) % 2 === 0)) { const s = EGIDE_C;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const gg = ctx.createLinearGradient(0, s.ay - 14, 0, s.ay + 14); gg.addColorStop(0, 'rgba(255,220,120,0)'); gg.addColorStop(0.5, 'rgba(255,220,120,.6)'); gg.addColorStop(1, 'rgba(255,220,120,0)'); ctx.fillStyle = gg; ctx.fillRect(s.ax - 10, s.ay - 14, s.bx - s.ax + 20, 28); ctx.restore();
-    rrect(ctx, s.ax, s.ay - 4, s.bx - s.ax, 8, 4); ctx.fillStyle = C.or; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.font = '13px system-ui,"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; ctx.fillText('🦉', 185, s.ay); }
+    ctx.globalCompositeOperation = 'lighter'; poser('haloE', 100, 30, (s.ax + s.bx) / 2, s.ay, c => { const g = c.createLinearGradient(0, 0, 0, 30); g.addColorStop(0, 'rgba(255,220,120,0)'); g.addColorStop(0.5, 'rgba(255,220,120,.6)'); g.addColorStop(1, 'rgba(255,220,120,0)'); c.fillStyle = g; c.fillRect(0, 0, 100, 30); }); ctx.globalCompositeOperation = 'source-over';
+    rrect(ctx, s.ax, s.ay - 4, s.bx - s.ax, 8, 4); ctx.fillStyle = C.or; ctx.fill(); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke(); }
   // les dons en cours, en petit au-dessus des flippers
-  { const L = []; if (CITE.ares > 0) L.push('⚔️ ×2 ' + Math.ceil(CITE.ares) + ' s'); if (CITE.apollon > 0) L.push('☀️ ' + Math.ceil(CITE.apollon) + ' s'); if (CITE.hermesT > 0) L.push('✉️ ×3 ' + Math.ceil(CITE.hermesT) + ' s'); if (CITE.egide > 0) L.push('🦉 ' + Math.ceil(CITE.egide) + ' s');
+  { const L = []; if (CITE.ares > 0) L.push('⚔️ ×2 ' + Math.ceil(CITE.ares) + ' s'); if (CITE.apollon > 0) L.push('☀️ ' + Math.ceil(CITE.apollon) + ' s'); if (CITE.hermesT > 0) L.push('✉️ ×3 ' + Math.ceil(CITE.hermesT) + ' s'); if (CITE.egide > 0) L.push('🦉 ' + Math.ceil(CITE.egide) + ' s'); if (CITE.eole > 0) L.push('🌬️ ' + Math.ceil(CITE.eole) + ' s');
     if (L.length) texte(L.join(' · '), 185, 578, 10, '#2a3266'); }
 }
-function dessinerDessusCite() { // le ruban d'Iris (surélevé) : un ruban arc-en-ciel qui dessine un 8
+function dessinerDessusCite() { // le ruban d'Iris (surélevé) : un grand arc-en-ciel qui fait le tour du haut de la table
   dessusCite = toileFond();
   const c = dessusCite.getContext('2d'), k = S * DPR, P = IRIS.pts;
   c.setTransform(k, 0, 0, k * KY, OX * DPR, OY * DPR); c.lineCap = 'round'; c.lineJoin = 'round';
   bordRail(c, P, 0, 8, 13); c.strokeStyle = 'rgba(20,30,80,.22)'; c.lineWidth = 18; c.stroke();
-  bordRail(c, P, 0); c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 17; c.stroke();
-  ['#ff6f8f', '#ffa94d', '#ffe066', '#6fe3a0', '#6fb8ff', '#b48cff'].forEach((col, i) => { bordRail(c, P, -6.25 + i * 2.5); c.strokeStyle = col; c.globalAlpha = 0.7; c.lineWidth = 2.6; c.stroke(); });
+  bordRail(c, P, 0); c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 17; c.stroke();
+  ['#ff6f8f', '#ffa94d', '#ffe066', '#6fe3a0', '#6fb8ff', '#b48cff'].forEach((col, i) => { bordRail(c, P, -6.25 + i * 2.5); c.strokeStyle = col; c.globalAlpha = 0.72; c.lineWidth = 2.6; c.stroke(); });
   c.globalAlpha = 1; for (const off of [-8.5, 8.5]) { bordRail(c, P, off); c.strokeStyle = '#ffffff'; c.lineWidth = 1.3; c.stroke(); }
 }
 function aile(c, x, y, s, battement) { // aile blanche de Pégase
@@ -3854,7 +3981,11 @@ function renduCiteDessus(sx, sy) {
   const tb = 2 * R + 4, to = 2 * R + 14;
   for (const b of balles) {
     if (!b.pont) continue;
-    if (b.pont.rail === PEGASE) { // en vol : haut dans le ciel (ombre loin), deux ailes qui battent, traînée d'étoiles
+    if (b.pont.rail.cache) { // sous le marbre : on ne voit qu'une lueur qui avance
+      const rouge = b.pont.rail === CACHE_H.rail; ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.6 + 0.3 * Math.sin(temps * 20);
+      poser(rouge ? 'souterrainH' : 'souterrainD', 50, 50, b.x, b.y, c => lueur(c, 25, 25, 25, rouge ? 'rgba(255,90,70,.85)' : 'rgba(120,220,255,.85)')); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+      if (Math.random() < 0.3) particules.push({ x: b.x + rnd(-5, 5), y: b.y + rnd(-5, 5), vx: rnd(-15, 15), vy: rnd(-15, 15), age: 0, vie: 0.4, coul: rouge ? '#ff8a7a' : '#9fe8ff' });
+    } else if (b.pont.rail === PEGASE) { // en vol : haut dans le ciel (ombre loin), deux ailes qui battent, traînée d'étoiles
       if (Math.random() < 0.5) particules.push({ x: b.x + rnd(-4, 4), y: b.y + rnd(-4, 4), vx: rnd(-20, 20), vy: rnd(-10, 30), age: 0, vie: 0.6, coul: '#fff6d0' });
       ctx.globalAlpha = 0.45; ctx.drawImage(SPR.ombre, b.x + 16 - to / 2, b.y + 26 - to / 2, to, to); ctx.globalAlpha = 1;
       aile(ctx, b.x, b.y - 2, 0.75, temps * 14);
@@ -3867,7 +3998,7 @@ function renduCiteDessus(sx, sy) {
 }
 function flipperMarbre(f) { // flippers de la Cité : marbre blanc, liseré d'or (azur quand ils frappent)
   cheminFlip(f, 4, 6); ctx.fillStyle = 'rgba(20,30,70,.3)'; ctx.fill();
-  cheminFlip(f, 0, 0); const g = ctx.createLinearGradient(f.px, f.py - 10, f.px, f.py + 10); g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#c3cbe0'); ctx.fillStyle = g; ctx.fill();
+  cheminFlip(f, 0, 0); ctx.fillStyle = '#e9ecf5'; ctx.fill();
   ctx.strokeStyle = f.appui ? CITE_C.azur : '#c9a43a'; ctx.lineWidth = 3.5; ctx.stroke();
   ctx.beginPath(); ctx.arc(f.px, f.py, 4.5, 0, 7); ctx.fillStyle = '#c9a43a'; ctx.fill();
 }

@@ -4482,7 +4482,10 @@ function garderPlaces(r) {
 function prendrePlace(i, moi) { // même règle que le script (hors ligne : on se place soi-même) ; renvoie la place obtenue (-1 : rien ne bouge)
   const P = places.p.slice(); let place = i;
   if (i === 0) { if (score > places.record) places.record = Math.round(score); else place = P[0] && memeNom(P[0].nom, moi.nom) ? -1 : 1; }
+  const deja = P.findIndex(p => p && memeNom(p.nom, moi.nom)); // Kevin (02/11) : une seule place par personne, la plus haute
+  if (place >= 0 && deja >= 0 && deja < place) place = -2;
   if (place >= 0) {
+    if (deja > place) P[deja] = null; // tu montes : ta place d'avant se libère
     if (P[place] && memeNom(P[place].nom, moi.nom)) { if (moi.photo) P[place] = Object.assign({}, P[place], { photo: moi.photo, genre: moi.genre || P[place].genre }); }
     else { let libre = P.indexOf(null, place); if (libre < 0) libre = 4; for (let j = libre; j > place; j--) P[j] = P[j - 1]; P[place] = moi; if (places.bonus) { places.bonus = places.bonus.slice(); places.bonus[place] += MONTEE; } }
   }
@@ -5031,15 +5034,18 @@ let photoData = '';
 function montrerFin() {
   // le nom, le roi / la reine et la photo ne sont demandés qu'ici
   // Kevin (29/10) : ta place = celle du dernier boss battu, quoi qu'il arrive ensuite ; son occupant descend d'un cran (cascade)
-  // Kevin : une même personne peut occuper plusieurs places (chaque partie compte)
+  // Kevin (02/11) : une personne n'a qu'une place, sa plus haute ; si elle a déjà mieux (ou la même), rien ne bouge
   const liste = listeBoss(), boss1 = liste[0] || null;
   const record = bossD ? +bossD.record || 0 : places.record, jeSuisDieu = !!places.p[0] && memeNom(places.p[0].nom, lsGetTxt('battle-nom'));
   const dieuF = CLASSEMENT_OK && dieuBattu && score > record, dieuAvant = dieuF ? bossD : null; // Kevin : le dieu battu ET son record battu → tu prends sa place
   const resteDieu = CLASSEMENT_OK && dieuBattu && !dieuF && jeSuisDieu; // Kevin : le dieu qui rate son propre record reste dieu, rien ne bouge
   const dieuRate = CLASSEMENT_OK && dieuBattu && !dieuF && !resteDieu; // dieu battu mais pas son record : tu deviens empereur
-  const ult = CLASSEMENT_OK && ultimeBattu && !dieuF && !resteDieu, ultAvant = ult || dieuF ? bossUltime() || bossUlt : null;
   const battus = bossFile.filter(b => b.vaincu).map(b => b.rang);
-  const rang = dieuF ? -1 : ult ? 0 : battus.length ? Math.min(...battus) : 4, dansTop = CLASSEMENT_OK && !resteDieu && rang <= 3;
+  const maPlace = places.p.findIndex(p => p && memeNom(p.nom, lsGetTxt('battle-nom'))); // 0 dieu … 4 garde ; -1 : aucune
+  const vise = dieuF ? 0 : CLASSEMENT_OK && ultimeBattu && !resteDieu ? 1 : battus.length ? Math.min(...battus) + 1 : 5; // la place que cette partie donnerait
+  const garde = CLASSEMENT_OK && !dieuF && !resteDieu && maPlace >= 0 && maPlace <= vise && vise <= 4; // tu as déjà cette place ou mieux
+  const ult = CLASSEMENT_OK && ultimeBattu && !dieuF && !resteDieu && !garde, ultAvant = ult || dieuF ? bossUltime() || bossUlt : null;
+  const rang = dieuF ? -1 : ult ? 0 : battus.length ? Math.min(...battus) : 4, dansTop = CLASSEMENT_OK && !resteDieu && !garde && rang <= 3;
   photoData = '';
   const nomFixe = !!lsGetTxt('battle-nom').trim(); // prénom connu : en fin de partie, on choisit roi / reine → photo → envoi → animation
   let html = '', mode = 'simple', genre = lsGetTxt('battle-genre'), moqueur = null;
@@ -5079,6 +5085,12 @@ function montrerFin() {
       <label class="btn photo-btn${nomFixe ? ' cache' : ''}" id="photo-lbl">📸 Prends une photo terrifiante<input type="file" accept="image/*" capture="user" id="photo"></label>
       <div class="aide${simple ? ' cache' : ''}" style="margin:0 0 10px">Ta tête attendra dans le château. Seuls ceux qui battent le roi te verront.${ultAvant && !ultAvant.inconnu ? ' ' + esc(ultAvant.nom) + ' redescend sur le trône du roi.' : ''}</div>
       ${blocNom('Devenir le boss caché 💀', true)}`;
+  } else if (garde) {
+    mode = 'reste';
+    const T = ['Dieu', 'Empereur', 'Roi', 'Bourreau', 'Garde'][maPlace], TF = ['Déesse', 'Impératrice', 'Reine', 'Sorcière', 'Garde'][maPlace], F = places.p[maPlace].genre === 'F';
+    html = `<div class="bandeau boss-n">${maPlace <= 1 ? '⚡' : '👑'}<br>Tu restes ${esc((F ? TF : T).toLowerCase())} !</div>
+      <div class="manque">Cette partie : ${esc(fmt(score))}</div>
+      <div class="msg">Tu as déjà ${maPlace === vise ? 'cette place' : 'mieux'} au classement : tu gardes ta place la plus haute, les autres ne bougent pas.</div>`;
   } else if (resteDieu) {
     mode = 'reste';
     html = `<div class="bandeau boss-n">⚡<br>Tu restes ${places.p[0].genre === 'F' ? 'déesse' : 'dieu'} !</div>
@@ -5162,6 +5174,7 @@ function montrerFin() {
     else if (obtenu === 1) ret.innerHTML = `<div class="msg ok">💀 C’est fait : tu es ${genre === 'F' ? 'l’impératrice cachée' : 'l’empereur caché'} du château. Chut…${ultAvant && !ultAvant.inconnu && !dieuF ? `<br><small>${esc(ultAvant.nom)} redescend sur le trône du roi.</small>` : ''}</div>`;
     else if (obtenu === 2) ret.innerHTML = `<div class="msg ok">👑 C’est officiel : ${genre === 'F' ? 'tu es la nouvelle reine' : 'tu es le nouveau roi'} !</div>`;
     else if (obtenu > 2) ret.innerHTML = `<div class="msg ok">⚔ C’est officiel : tu es ${esc(titreBoss(obtenu - 1, genre).toLowerCase())} !</div>`;
+    else if (obtenu === -2) ret.innerHTML = `<div class="msg ok">Tu gardes ta place la plus haute : rien ne bouge au classement.</div>`;
     else if (ip === 0 && obtenu === -1) ret.innerHTML = `<div class="msg ok">⚡ Tu restes ${genre === 'F' ? 'déesse' : 'dieu'} : ton record tient toujours.</div>`;
     else ret.innerHTML = `<div class="msg ok">Partie enregistrée ✔</div>`;
     btn.classList.add('cache'); if ($('photo-lbl')) $('photo-lbl').classList.add('cache');

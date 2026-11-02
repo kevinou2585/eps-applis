@@ -234,4 +234,18 @@
 .dbl-h2b{background:var(--accent-soft); border:1.5px solid var(--accent); border-radius:12px; padding:8px 12px; font-size:14px}
 `;
   document.head.appendChild(css);
+
+  /* Présences, avant « Commencer l'appel » : ce qui est prévu pour les DEUX heures (kevin, 2 nov.), pas seulement la 1re */
+  const agPlanTag0 = agPlanTag;
+  agPlanTag = function(date, s){
+    const d = s && s.h && hI(s.h2 || s.h) > hI(s.h) ? dblGet(date, s, s.cls || []) : null;
+    if (!d || !(d.s2 || d.n2 || d.pp2)) return agPlanTag0.apply(this, arguments);
+    const g = agGet(date, s), sa = d.sa || [];
+    const heure = (t, sp, sal, n, pp) => `<span class="small dbl-prevu"><b>${t}</b>${sp ? ` <span class="tag ag-sp">🏷 ${esc(sp)}</span>` : ''}${sal ? ` <span class="muted">· ${esc(sal)}</span>` : ''}${pp && !String(n || '').startsWith(prepaCourt(pp)) ? `<br>📋 ${esc(prepaCourt(pp))}` : ''}${n ? `<br>${esc(n).replace(/\n/g, '<br>')}` : ''}${!sp && !n && !pp ? ' <span class="muted">rien de prévu</span>' : ''}</span>`;
+    return `<span class="small" style="font-weight:600">Prévu dans l'agenda :</span>
+      ${heure('1re heure', g.s, sa[0], g.n, g.pp)}${heure('2e heure', d.s2, sa[1], d.n2, d.pp2)}`;
+  };
+  const css2 = document.createElement('style');
+  css2.textContent = '.dbl-prevu{display:block; text-align:left; border-left:3px solid var(--accent); padding:2px 0 2px 8px; margin:4px 0}';
+  document.head.appendChild(css2);
 })();

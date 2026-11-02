@@ -1,5 +1,5 @@
 // Fait marcher les applis sans internet. Version a changer a chaque mise en ligne pour rafraichir le cache.
-const VERSION = 'eps-v169';
+const VERSION = 'eps-v170';
 const FICHIERS = [
   './', './index.html', './sauvegarde.js', './manifest.webmanifest', './eleves.chiffre.json', './perso.js',
   './carnet/', './carnet/aide.js', './carnet/skore.js', './carnet/prepa-moteur.js', './carnet/prepa-guide.js', './carnet/travail.js', './carnet/planning.js', './carnet/deux-activites.js', './carnet/archives.js', './carnet/google/', './carnet/google/Code.gs', './carnet/prepas/schemas.js', './carnet/prepas/basket.js', './carnet/prepas/volley.js', './carnet/prepas/hand.js', './carnet/prepas/natation.js', './carnet/prepas/natdeb.js', './carnet/prepas/endurance.js', './carnet/prepas/bad.js', './carnet/prepas/danse.js', './carnet/prepas/acro.js', './carnet/prepas/prisonnier.js', './carnet/prepas/athle.js', './carnet/prepas/foot.js', './carnet/prepas/corde.js', './carnet/prepas/lutte.js', './carnet/prepas/hiver.js', './tournoi/', './koh-lanta/', './tableau/', './le-fist/', './classeur/', './battle/', './battle/acces.js', './battle/acces.chiffre.json', './battle/manifest.webmanifest', './installer/',
@@ -44,6 +44,8 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin !== location.origin) return;
+  // PDF (guide de mise en place…) : toujours la version en ligne, la copie gardée seulement sans réseau.
+  if (url.pathname.endsWith('.pdf')) { e.respondWith(fetch(req, {cache: 'no-cache'}).catch(() => caches.match(req, {ignoreSearch: true}).then(r => r || Response.error()))); return; }
   // Pages du site : la copie du telephone s'ouvre tout de suite (rapide, meme en mode avion).
   // En meme temps, on redemande le site pour garder une copie a jour. Chaque mise en ligne change
   // VERSION : le telephone installe alors la nouvelle version et la page se recharge toute seule.

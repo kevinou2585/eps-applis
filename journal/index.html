@@ -402,7 +402,7 @@ if ('serviceWorker' in navigator) {
     // pas de rechargement au milieu d'un article : on attend que l'éditeur soit fermé
     if (dejaPilote && !recharge && document.getElementById('vue-editeur').hidden && document.getElementById('vue-mep').hidden) { recharge = true; location.reload(); }
   });
-  if (navigator.onLine) navigator.serviceWorker.register('../sw.js').then(reg => {
+  if (navigator.onLine) navigator.serviceWorker.register('../sw.js').then(reg => { if (!reg) return;
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && navigator.onLine) reg.update().catch(() => {}); });
   }).catch(() => {});
 }

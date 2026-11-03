@@ -7,7 +7,7 @@
 //      Google demande d'autoriser : choisis ton compte > Paramètres avancés > Accéder au projet > Autoriser.
 //   4. Copie l'URL qui finit par /exec et envoie-la à Claude : il la met dans l'appli (journal/app.js), pour tout le monde.
 // Onglets : « Données » (ce que l'appli lit et écrit, à ne pas modifier à la main), et des onglets lisibles
-// « Articles », « Réunions », « Idées » et « Équipe », refaits à chaque envoi (pour relire ou garder une trace).
+// « Articles », « Réunions », « Idées », « Messages » et « Équipe », refaits à chaque envoi (pour relire ou garder une trace).
 const CODE = 'code-journal'; // à remplacer par le code de l'appli Journal (version prête à coller : fichier de kevin)
 const MORCEAU = 45000; // une case Google Sheet garde au plus 50 000 caractères : un long article ou une photo prend plusieurs cases
 const TYPES = ['membre', 'reunion', 'rep', 'article', 'img', 'idee', 'vote', 'com', 'numero'];
@@ -100,7 +100,7 @@ function lisibles(sh) {
   ecrire('Articles', ['Modifié', 'Titre', 'Rubrique', 'Auteurs', 'État', 'Mots', 'Chapeau', 'Texte'],
     (tout.article || []).sort((a, b) => b.maj - a.maj).map(a => {
       const t = texte(a.corps);
-      return [date(a.maj), a.titre || '', a.rub || '', a.auteurs || nom[a.par] || '', etats[a.etat] || a.etat || '', t ? t.split(/\s+/).length : 0, a.chapeau || '', t];
+      return [date(a.maj), a.titre || '', a.rub || '', a.auteurs || nom[a.par] || '', (a.prive ? 'Privé · ' : '') + (etats[a.etat] || a.etat || ''), t ? t.split(/\s+/).length : 0, a.chapeau || '', t];
     }), '#1d4ed8');
   const reps = {}; (tout.rep || []).forEach(r => { (reps[r.reu] = reps[r.reu] || []).push((nom[r.par] || '?') + (r.v === 'oui' ? ' ✓' : r.v === 'non' ? ' ✗' : ' ?')); });
   ecrire('Réunions', ['Date', 'Heure', 'Lieu', 'Objet', 'Ordre du jour', 'Réponses', 'Compte rendu', 'Proposée par'],
@@ -110,6 +110,10 @@ function lisibles(sh) {
   ecrire('Idées', ['Modifié', 'Idée', 'Catégorie', 'Votes', 'Proposée par', 'Prise par'],
     (tout.idee || []).sort((a, b) => (votes[b.id] || 0) - (votes[a.id] || 0)).map(i =>
       [date(i.maj), i.texte || '', i.cat || '', votes[i.id] || 0, nom[i.par] || '', nom[i.pris] || '']), '#7c3aed');
+  const fils = {'fil-general': 'Discussion générale'}; (tout.com || []).forEach(c => { if (c.g === 'fil') fils[c.id] = c.nom; });
+  ecrire('Messages', ['Date', 'Discussion', 'De', 'Pour', 'Message'],
+    (tout.com || []).filter(c => c.g === 'msg').sort((a, b) => b.cree - a.cree).slice(0, 2000).map(m =>
+      [date(m.cree), fils[m.fil || 'fil-general'] || '', nom[m.par] || '', (m.pour || []).map(p => p === 'tous' ? 'tout le monde' : nom[p] || '?').join(', '), String(m.texte || '')]), '#0369a1');
   ecrire('Équipe', ['Prénom', 'Rôle', 'Arrivé le'],
     (tout.membre || []).map(m => [m.nom || '', m.role === 'prof' ? 'Prof (chef)' : 'Élève', date(m.cree)]), '#0f766e');
 }

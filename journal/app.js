@@ -5,7 +5,7 @@
    Journal (numéros de 1 à 8 pages A4, recto-verso ou non, gabarits, propositions automatiques, mise en page libre (editeur.js), impression). Équipe : bouton 👥 en haut.
    Données partagées : un Google Sheet de kevin (script journal/google/Journal.gs, URL dans SCRIPT ci-dessous).
    Chaque chose = un « élément » {id, t: type, maj, par, x: supprimé, …}. Le plus récent gagne.
-   Types : membre, reunion, rep (réponse à une réunion), article, img (photo d'un article), idee, vote, com (commentaire), numero.
+   Types : membre, reunion, rep (réponse à une réunion), article, img (photo d'un article), idee, vote, com (commentaire ; g:'fil' = sujet de discussion, g:'msg' = message), numero.
    Sur l'appareil : IndexedDB « journal » (+ localStorage journal-*). Sans SCRIPT : tout reste sur l'appareil. */
 (() => {
   const SCRIPT = 'https://script.google.com/macros/s/AKfycbxk86bSVBC3IYBwXpt84hI52JfO_HoT_vyq8GzSGUfi27PQ_yAjDTlp6F1TUckt8_HPWQ/exec'; // script « Journal de l'école » de kevin (journal/google/Journal.gs), déployé le 03/11/2026
@@ -60,7 +60,9 @@
       mettre: its => ouvrir().then(db => new Promise(ok => { const tx = db.transaction('items', 'readwrite'); its.forEach(i => tx.objectStore('items').put(i)); tx.oncomplete = ok; tx.onerror = ok; })).catch(() => {})
     };
   })();
-  const liste = t => Object.values(items).filter(i => i.t === t && !i.x);
+  // brouillon privé (kevin, 03/11) : un article « prive » n'est visible que par son auteur, jusqu'à ce qu'il le rende visible
+  const cache = i => i.prive && i.par !== moiId;
+  const liste = t => Object.values(items).filter(i => i.t === t && !i.x && !cache(i));
   let file = []; try { file = JSON.parse(LS('journal-file') || '[]'); } catch (e) {}
   const garderFile = () => LS('journal-file', JSON.stringify(file));
   let moiId = LS('journal-moi') || '';
@@ -102,7 +104,7 @@
   function supprimer(it) { it.x = 1; if (it.t === 'article' && it.img && items[it.img]) sauver(Object.assign(items[it.img], {d: '', x: 1}), true); sauver(it); }
 
   /* ---------- synchro avec le Google Sheet ---------- */
-  let enCours = false, minuteur = null, depuis = +LS('journal-depuis') || 0, etatSync = '';
+  let enCours = false, derSync = 0, minuteur = null, depuis = +LS('journal-depuis') || 0, etatSync = '';
   const planifier = () => { clearTimeout(minuteur); minuteur = setTimeout(synchro, 1500); };
   function montrerSync(e) {
     etatSync = e;
@@ -112,6 +114,7 @@
     p.className = 'pastille ' + t[1];
   }
   async function synchro() {
+    derSync = Date.now();
     if (!SCRIPT) { montrerSync('local'); return; }
     if (enCours) { planifier(); return; }
     if (!navigator.onLine) { montrerSync('hors'); return; }
@@ -145,6 +148,7 @@
       if (changes.length) { await DB.mettre(changes); apresReception(changes); }
       depuis = Math.max(0, (Number(r.t) || 0) - 120000); LS('journal-depuis', String(depuis));
       montrerSync(file.length ? 'envoi' : 'ok');
+      if ($('chat-liste') && !changes.length) majFil(); // l'horloge 🕓 des messages envoyés disparaît
       if (file.length) planifier();
     } catch (e) {
       montrerSync(e.message === 'code' ? 'code' : 'err');
@@ -153,10 +157,18 @@
   function apresReception(changes) {
     const ed = edition && items[edition.id];
     if (ed && changes.some(c => c.id === edition.id && c.par !== moiId)) toast(`⚠️ ${nomDe(ed.par)} vient aussi de modifier cet article`);
-    if (!$('app').hidden && $('vue-editeur').hidden && $('feuille').hidden && !(window.EditeurMEP && EditeurMEP.ouvert())) rendre();
+    alerter(changes);
+    if (!$('app').hidden && vue === 'messages' && $('chat-liste')) majFil();
+    else if (!$('app').hidden && $('vue-editeur').hidden && $('feuille').hidden && !(window.EditeurMEP && EditeurMEP.ouvert())) rendre();
     else if (!$('app').hidden) majBulles();
   }
-  setInterval(() => { if (document.visibilityState === 'visible' && !$('app').hidden) synchro(); }, 45000);
+  // messages : toutes les 10 s dans une discussion ouverte, 45 s ailleurs, 2 min quand l'appli est en arrière-plan (ordinateur)
+  const synchroDatee = () => synchro();
+  setInterval(() => {
+    if ($('app').hidden) return;
+    const att = document.visibilityState !== 'visible' ? 120000 : vue === 'messages' && filOuvert ? 10000 : 45000;
+    if (Date.now() - derSync >= att) synchroDatee();
+  }, 5000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !$('app').hidden) synchro(); });
   addEventListener('online', () => synchro());
 
@@ -185,8 +197,9 @@
   /* ---------- écrans d'entrée : installer, code, prénom ---------- */
   const enAppli = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   if (/[?&]eps\b/.test(location.search)) SS('journal-eps', '1');
+  { const f = new URLSearchParams(location.search).get('fil'); if (f) { SS('journal-vue', 'messages'); SS('journal-fil', f); } }
   const depuisEps = SS('journal-eps') === '1';
-  const ecrans = ['ecran-install', 'ecran-code', 'ecran-nom', 'app'];
+  const ecrans = ['ecran-install', 'ecran-code', 'ecran-nom', 'ecran-pin', 'app'];
   const montrer = id => ecrans.forEach(e => { $(e).hidden = e !== id; });
   const sha = async t => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))].map(b => b.toString(16).padStart(2, '0')).join('');
 
@@ -196,6 +209,7 @@
       montrer('ecran-code'); setTimeout(() => $('code').focus(), 200); return;
     }
     if (!moi() || moi().x) { montrer('ecran-nom'); setTimeout(() => $('nom').focus(), 200); return; }
+    if (!moi().pin) { montrer('ecran-pin'); setTimeout(() => $('pin1').focus(), 200); return; } // code personnel obligatoire (kevin, 03/11)
     montrer('app'); $('retour-eps').hidden = !depuisEps;
     const ici = SS('journal-vue'); aller(ici && VUES[ici] ? ici : 'accueil');
     synchro();
@@ -211,34 +225,55 @@
     LS('journal-ok', '1'); LS('journal-code', c); $('code-err').textContent = '';
     await synchro(); entrer();
   };
-  $('f-nom').onsubmit = e => {
+  // code personnel (kevin, 03/11) : chacun en crée un à la première connexion ; avec son prénom, il permet de retrouver son profil
+  // (articles, rôles, accès) sur un autre appareil, et empêche de prendre le profil de quelqu'un d'autre. Seule l'empreinte est gardée.
+  const empreintePin = (id, pin) => sha('journal-pin:' + id + ':' + pin.trim().toLowerCase());
+  $('f-nom').onsubmit = async e => {
     e.preventDefault();
-    const n = $('nom').value.trim().replace(/\s+/g, ' ');
+    const n = $('nom').value.trim().replace(/\s+/g, ' '), pin = $('pin').value.trim();
     if (n.length < 2) { $('nom-err').textContent = 'Écris ton prénom.'; return; }
-    // déjà dans l'équipe (même prénom) ? on reprend sa fiche (nouvel appareil)
+    await synchro(); // pour connaître les profils déjà créés sur les autres appareils
+    // déjà dans l'équipe (même prénom) ? on reprend sa fiche (nouvel appareil), avec son code personnel
     const meme = liste('membre').find(m => m.nom.toLowerCase() === n.toLowerCase());
-    if (meme && confirm(`${meme.nom} (${rolesTxt(meme)}) est déjà dans l'équipe. C'est toi ?`)) { moiId = meme.id; }
-    else {
+    if (meme && meme.pin) {
+      if (!pin) { $('nom-err').textContent = `${meme.nom} est déjà dans l'équipe. Si c'est toi, tape ton code personnel.`; $('pin').focus(); return; }
+      if (await empreintePin(meme.id, pin) !== meme.pin) { $('nom-err').textContent = 'Ce n\'est pas le bon code personnel. Oublié ? Demande à la rédaction en chef de l\'effacer (👥 Équipe).'; $('pin').select(); return; }
+      moiId = meme.id;
+    } else if (meme) {
+      if (!confirm(`${meme.nom} (${rolesTxt(meme)}) est déjà dans l'équipe. C'est toi ?`)) { $('nom-err').textContent = 'Ce prénom est déjà pris : ajoute l\'initiale de ton nom (ex. : Lina B.).'; return; }
+      moiId = meme.id; // profil sans code : il en crée un juste après (écran « Ton code personnel »)
+    } else {
+      if (pin.length < 4) { $('nom-err').textContent = 'Invente un code personnel de 4 caractères ou plus (et retiens-le).'; $('pin').focus(); return; }
       moiId = uid('m');
       // ouvert depuis EPS ultime (appli des profs) : prof = rédacteur en chef ; sinon journaliste
-      sauver({id: moiId, t: 'membre', nom: n, role: depuisEps ? 'redac-chef' : 'journaliste', roles: [depuisEps ? 'redac-chef' : 'journaliste'], cree: Date.now(), par: moiId}, true);
+      sauver({id: moiId, t: 'membre', nom: n, role: depuisEps ? 'redac-chef' : 'journaliste', roles: [depuisEps ? 'redac-chef' : 'journaliste'], cree: Date.now(), par: moiId, pin: await empreintePin(moiId, pin)}, true);
     }
-    LS('journal-moi', moiId); entrer();
+    $('nom-err').textContent = ''; LS('journal-moi', moiId); entrer();
+  };
+  $('f-pin').onsubmit = async e => {
+    e.preventDefault();
+    const a = $('pin1').value.trim(), b = $('pin2').value.trim();
+    if (a.length < 4) { $('pin-err').textContent = '4 caractères ou plus.'; return; }
+    if (a !== b) { $('pin-err').textContent = 'Les deux codes ne sont pas pareils.'; $('pin2').select(); return; }
+    const m = moi(); m.pin = await empreintePin(m.id, a); sauver(m, true);
+    $('pin1').value = $('pin2').value = ''; $('pin-err').textContent = ''; toast('🔒 Code personnel enregistré'); entrer();
   };
 
   /* ---------- navigation ---------- */
   let vue = 'accueil';
-  const VUES = {accueil: vAccueil, agenda: vAgenda, articles: vArticles, idees: vIdees, maquette: vMaquette, equipe: vEquipe};
+  const VUES = {accueil: vAccueil, agenda: vAgenda, articles: vArticles, idees: vIdees, maquette: vMaquette, messages: vMessages, equipe: vEquipe};
   const TYPES_ONGLET = {agenda: ['reunion'], articles: ['article', 'com'], idees: ['idee'], maquette: ['numero']};
   const vuLe = v => +LS('journal-vu-' + v) || 0;
   function majBulles() {
     document.querySelectorAll('#onglets button').forEach(b => {
       const v = b.dataset.v; b.classList.toggle('on', v === vue);
-      let n = 0; if (TYPES_ONGLET[v] && v !== vue) { const t0 = vuLe(v); n = Object.values(items).filter(i => TYPES_ONGLET[v].includes(i.t) && !i.x && i.par !== moiId && i.maj > t0 && t0).length; }
+      let n = 0; if (TYPES_ONGLET[v] && v !== vue) { const t0 = vuLe(v); n = Object.values(items).filter(i => TYPES_ONGLET[v].includes(i.t) && !(i.t === 'com' && !i.cible) && !i.x && !cache(i) && i.par !== moiId && i.maj > t0 && t0).length; }
+      if (v === 'messages') n = tousNonLus().length;
       let bu = b.querySelector('.bulle'); if (!n) { if (bu) bu.remove(); return; }
       if (!bu) { bu = document.createElement('span'); bu.className = 'bulle'; b.querySelector('i').after(bu); } bu.textContent = n > 9 ? '9+' : n;
     });
     montrerSync(etatSync || (SCRIPT ? '' : 'local'));
+    majBadge();
   }
   function aller(v) {
     if (vue && vue !== v) LS('journal-vu-' + vue, String(Date.now()));
@@ -249,9 +284,9 @@
     if ($('app').hidden) return;
     const n = numCourant();
     $('titre-app').textContent = n && n.nom ? n.nom : 'Le Journal';
-    $('vue').innerHTML = ''; VUES[vue]($('vue')); majBulles();
+    $('vue').classList.remove('en-chat'); $('vue').innerHTML = ''; VUES[vue]($('vue')); majBulles();
   }
-  $('onglets').onclick = e => { const b = e.target.closest('button'); if (b) aller(b.dataset.v); };
+  $('onglets').onclick = e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.v === 'messages' && vue === 'messages') { filOuvert = ''; SS('journal-fil', ''); } aller(b.dataset.v); };
   $('bt-equipe').onclick = () => aller('equipe');
 
   /* ---------- fenêtre du bas ---------- */
@@ -266,17 +301,18 @@
   /* =================== ACCUEIL =================== */
   function vAccueil(el) {
     const m = moi(), t0 = +LS('journal-vu-accueil-avant') || 0;
-    const nouveaux = Object.values(items).filter(i => !i.x && i.par !== moiId && i.maj > t0 && t0 && ['reunion', 'article', 'idee', 'com'].includes(i.t));
+    const nouveaux = Object.values(items).filter(i => !i.x && i.par !== moiId && i.maj > t0 && t0 && ['reunion', 'article', 'idee', 'com'].includes(i.t) && !(i.t === 'com' && !i.cible) && !cache(i));
     const cpt = t => nouveaux.filter(i => i.t === t).length;
     const bouts = [[cpt('reunion'), 'réunion', 'réunions'], [cpt('article'), 'article', 'articles'], [cpt('idee'), 'idée', 'idées'], [cpt('com'), 'commentaire', 'commentaires']]
       .filter(x => x[0]).map(x => `${x[0]} ${x[0] > 1 ? x[2] : x[1]}`);
     const prochaine = liste('reunion').filter(r => r.date >= auj()).sort((a, b) => (a.date + (a.h || '')).localeCompare(b.date + (b.h || '')))[0];
     const n = numCourant();
     const arts = liste('article'), mesArts = arts.filter(a => a.par === moiId || (a.auteurs || '').toLowerCase().includes((m.nom || '').toLowerCase()));
-    const top = liste('idee').map(i => [i, votes(i.id)]).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const top = liste('idee').filter(i => !i.prive).map(i => [i, votes(i.id)]).sort((a, b) => b[1] - a[1]).slice(0, 3);
     const aRelire = arts.filter(a => a.etat === 'relire');
     el.innerHTML = `<h2 class="titre">Salut ${esc(m.nom)} 👋</h2>
       <p class="mut" style="margin-top:-6px">${esc(rolesTxt(m))}</p>
+      ${(() => { const nl = tousNonLus(), pm = nl.filter(pourMoi); return nl.length ? `<div class="nouveau" data-a="msgs" style="cursor:pointer">💬 <b>${pm.length ? `${pm.length} message${pm.length > 1 ? 's' : ''} pour toi` : `${nl.length} nouveau${nl.length > 1 ? 'x' : ''} message${nl.length > 1 ? 's' : ''}`}</b>${pm.length ? ` (${esc([...new Set(pm.map(m => nomDe(m.par)))].join(', '))})` : ''} › Messages</div>` : ''; })()}
       ${bouts.length ? `<div class="nouveau">🆕 Depuis ta dernière visite : <b>${bouts.join(', ')}</b>.</div>` : ''}
       ${!SCRIPT ? `<div class="nouveau">ℹ️ L'appli n'est pas encore reliée au Google Sheet du journal : pour l'instant, ce que tu écris reste sur cet appareil.</div>` : ''}
       <h3 class="st">Prochaine réunion</h3>
@@ -288,6 +324,7 @@
         <div class="carte" data-a="idees" style="cursor:pointer"><div class="chiffre">${liste('idee').length}</div><div class="mut">idée${liste('idee').length > 1 ? 's' : ''} sur le tableau</div></div>
       </div>
       ${peut('valider') && aRelire.length ? `<h3 class="st">À relire et valider</h3>${aRelire.map(ligneArticle).join('')}` : ''}
+      ${(() => { const pa = arts.filter(a => a.prive), pi = liste('idee').filter(i => i.prive); return pa.length || pi.length ? `<div class="nouveau" style="background:#f5f5f4;border-color:#d6d3d1">🔒 <b>Ma table de travail</b> (personne d'autre ne la voit) : ${[pa.length ? `<a data-a="arts" style="cursor:pointer;text-decoration:underline">${pa.length} brouillon${pa.length > 1 ? 's' : ''} privé${pa.length > 1 ? 's' : ''}</a>` : '', pi.length ? `<a data-a="idees" style="cursor:pointer;text-decoration:underline">${pi.length} idée${pi.length > 1 ? 's' : ''} perso</a>` : ''].filter(Boolean).join(' et ')}.</div>` : ''; })()}
       <h3 class="st">Mes articles</h3>
       ${mesArts.length ? mesArts.sort((a, b) => b.maj - a.maj).slice(0, 4).map(ligneArticle).join('') : ''}
       <button class="ajout" data-a="ecrire">✍️ Écrire un article</button>
@@ -296,7 +333,7 @@
       const a = e.target.closest('[data-a]'); if (a) {
         const k = a.dataset.a;
         if (k === 'reu') oblige('agenda', () => formReunion()); else if (k === 'num') formNumero(); else if (k === 'arts') aller('articles'); else if (k === 'idees') aller('idees');
-        else if (k === 'ecrire') oblige('ecrire', () => ouvrirArticle(nouvelArticle())); else if (k === 'journal') aller('maquette');
+        else if (k === 'ecrire') oblige('ecrire', () => ouvrirArticle(nouvelArticle())); else if (k === 'journal') aller('maquette'); else if (k === 'msgs') aller('messages');
         return;
       }
       if (clicReunion(e)) return;
@@ -419,7 +456,7 @@
     const ou = ouPlace(a.id);
     return `<div class="carte art" data-art="${a.id}"><div class="vign" style="${im ? `background-image:url('${im}')` : ''}">${im ? '' : '📝'}</div>
       <div style="flex:1;min-width:0">${a.rub ? `<div class="rub">${esc(a.rub)}</div>` : ''}<h4>${esc(a.titre || 'Sans titre')}</h4>
-      <div class="rangee"><span class="etat ${a.etat || 'brouillon'}">${ETATS[a.etat] || 'Brouillon'}</span><span class="place">${mots} mots · ${place(mots)}</span></div>
+      <div class="rangee">${a.prive ? '<span class="etat prive">🔒 Privé</span>' : ''}<span class="etat ${a.etat || 'brouillon'}">${ETATS[a.etat] || 'Brouillon'}</span><span class="place">${mots} mots · ${place(mots)}</span></div>
       <div class="place" style="margin-top:4px">✍️ ${esc(a.auteurs || nomDe(a.par))} · ${ilya(a.maj)}${coms ? ` · 💬 ${coms}` : ''}${ou ? ` · 📰 ${ou}` : ''}</div></div></div>`;
   }
   function ouPlace(id) {
@@ -443,7 +480,7 @@
       const a = e.target.closest('[data-art]'); if (a) ouvrirArticle(items[a.dataset.art]);
     };
   }
-  const nouvelArticle = (titre, idee) => ({id: uid('a'), t: 'article', titre: titre || '', rub: '', chapeau: '', corps: '', auteurs: (moi() || {}).nom || '', etat: 'brouillon', idee: idee || '', _neuf: 1});
+  const nouvelArticle = (titre, idee) => ({id: uid('a'), t: 'article', titre: titre || '', rub: '', chapeau: '', corps: '', auteurs: (moi() || {}).nom || '', etat: 'brouillon', prive: 1, idee: idee || '', _neuf: 1});
 
   /* ---------- éditeur d'article ---------- */
   let edition = null, minEd = null;
@@ -522,7 +559,9 @@
     };
     // boutons d'état
     const chef = peut('valider'), act = $('e-actions'), et = a.etat || 'brouillon';
-    act.innerHTML = (et === 'brouillon' && !verrou ? '<button class="btn o" data-et="relire">📨 Envoyer à la relecture</button>' : '')
+    act.innerHTML = (a.prive ? '<p class="mut" style="margin:0 0 6px;width:100%">🔒 <b>Brouillon privé</b> : toi seul le vois. Quand tu es prêt, rends-le visible à l\'équipe ou envoie-le à la relecture.</p><button class="btn p" id="e-public">📢 Rendre visible à l\'équipe</button>' : '')
+      + (!a.prive && et === 'brouillon' && a.par === moiId ? '<button class="btn" id="e-prive">🔒 Remettre en privé</button>' : '')
+      + (et === 'brouillon' && !verrou ? '<button class="btn o" data-et="relire">📨 Envoyer à la relecture</button>' : '')
       + (chef && et !== 'valide' ? '<button class="btn p" data-et="valide">✅ Valider pour le journal</button>' : '');
     if (et !== 'brouillon' && (chef || et === 'relire')) act.innerHTML += '<button class="btn" data-et="brouillon">↩︎ Repasser en brouillon</button>';
     act.innerHTML += '<button class="btn" id="e-apercu">👁️ Aperçu dans le journal</button>';
@@ -531,9 +570,15 @@
       const b = e.target.closest('[data-et]');
       if (b) {
         clearTimeout(minEd); enregistrer(); if (a._neuf) { toast('Écris d\'abord un titre ou un texte'); return; }
-        a.etat = b.dataset.et; if (a.etat === 'valide') a.valPar = moiId; sauver(a, true);
+        a.etat = b.dataset.et; if (a.etat === 'valide') a.valPar = moiId; if (a.etat !== 'brouillon') delete a.prive; sauver(a, true);
         toast(b.dataset.et === 'relire' ? '📨 Envoyé à la relecture' : b.dataset.et === 'valide' ? '✅ Article validé' : 'Repassé en brouillon');
         ouvrirArticle(a); return;
+      }
+      if (e.target.id === 'e-public' || e.target.id === 'e-prive') {
+        clearTimeout(minEd); enregistrer(); if (a._neuf) { toast('Écris d\'abord un titre ou un texte'); return; }
+        if (e.target.id === 'e-public') { delete a.prive; toast('📢 Visible par toute l\'équipe'); }
+        else { if (ouPlace(a.id)) { toast('Il est déjà placé dans le journal : il reste visible'); return; } a.prive = 1; toast('🔒 Repassé en privé'); }
+        sauver(a, true); ouvrirArticle(a); return;
       }
       if (e.target.id === 'e-apercu') { clearTimeout(minEd); enregistrer(); apercuArticle(a); return; }
       if (e.target.id === 'e-sup' && confirm('Supprimer cet article pour toute l\'équipe ?')) {
@@ -592,10 +637,10 @@
   const votes = id => liste('vote').filter(v => v.idee === id && v.v).length;
   function vIdees(el) {
     let ids = liste('idee'); if (catFiltre) ids = ids.filter(i => i.cat === catFiltre);
-    ids.sort(triIdees === 'pop' ? (a, b) => votes(b.id) - votes(a.id) || b.maj - a.maj : (a, b) => (b.cree || b.maj) - (a.cree || a.maj));
+    ids.sort((a, b) => (b.prive ? 1 : 0) - (a.prive ? 1 : 0) || (triIdees === 'pop' ? votes(b.id) - votes(a.id) || b.maj - a.maj : (b.cree || b.maj) - (a.cree || a.maj)));
     el.innerHTML = `<h2 class="titre">Tableau des idées</h2>
       <div class="carte nouv-idee"><textarea class="inp" id="i-tx" maxlength="300" placeholder="Balance ton idée : un sujet, une interview, un jeu, un nom pour le journal…" style="min-height:64px"></textarea>
-      <div class="rangee"><select class="inp" id="i-cat" style="flex:1;width:auto">${CATS.map(c => `<option value="${c[0]}">${c[1]}</option>`).join('')}</select><button class="btn p" id="i-ok">📌 Épingler</button></div></div>
+      <div class="rangee"><select class="inp" id="i-cat" style="flex:1;width:auto">${CATS.map(c => `<option value="${c[0]}">${c[1]}</option>`).join('')}</select><button class="btn" id="i-moi" title="Visible seulement par toi">🔒 Garder pour moi</button><button class="btn p" id="i-ok">📌 Épingler pour tous</button></div></div>
       <div class="puces"><button data-tri="pop" class="${triIdees === 'pop' ? 'on' : ''}">👍 Les plus aimées</button><button data-tri="rec" class="${triIdees === 'rec' ? 'on' : ''}">🕐 Récentes</button>
       <button data-cat="" class="${!catFiltre ? 'on' : ''}">Toutes</button>${CATS.map(c => `<button data-cat="${c[0]}" class="${catFiltre === c[0] ? 'on' : ''}">${c[1]}</button>`).join('')}</div>
       ${ids.length ? `<div class="murs">${ids.map(postit).join('')}</div>` : '<p class="vide">Le tableau est vide : épingle la première idée !</p>'}`;
@@ -603,6 +648,10 @@
       if (!peut('idees')) { oblige('idees'); return; }
       const t = $('i-tx').value.trim(); if (!t) { $('i-tx').focus(); return; }
       sauver({id: uid('d'), t: 'idee', texte: t, cat: $('i-cat').value, cree: Date.now()}); toast('📌 Idée épinglée');
+    };
+    $('i-moi').onclick = () => { // idée perso, sur ma table de travail : je la partagerai plus tard
+      const t = $('i-tx').value.trim(); if (!t) { $('i-tx').focus(); return; }
+      sauver({id: uid('d'), t: 'idee', texte: t, cat: $('i-cat').value, cree: Date.now(), prive: 1}); toast('🔒 Gardée pour toi : personne d\'autre ne la voit');
     };
     el.onclick = e => {
       const tri = e.target.closest('[data-tri]'); if (tri) { triIdees = tri.dataset.tri; rendre(); return; }
@@ -616,6 +665,7 @@
         const a = nouvelArticle(i.cat === 'interview' ? 'Interview : ' : '', i.id); a.chapeau = ''; a.titre = a.titre + (i.texte.length < 90 ? i.texte : '');
         i.pris = moiId; sauver(i, true); ouvrirArticle(a);
       }
+      else if (k === 'partager') oblige('idees', () => { delete i.prive; i.cree = Date.now(); sauver(i); toast('📌 Idée épinglée pour tous'); });
       else if (k === 'art' && items[i.article]) ouvrirArticle(items[i.article]);
       else if (k === 'sup' && confirm('Enlever cette idée du tableau ?')) supprimer(i);
     };
@@ -623,6 +673,9 @@
   function postit(i) {
     const c = CAT[i.cat] || CAT.autre, v = votes(i.id), moiV = items['v_' + i.id + '_' + moiId] && items['v_' + i.id + '_' + moiId].v;
     const art = liste('article').find(a => a.idee === i.id);
+    if (i.prive) return `<div class="postit perso" style="background:${c[2]}" data-idee="${i.id}"><button class="x" data-ia="sup" title="Enlever">✕</button>
+      <div class="cat">🔒 Pour moi · ${esc(c[1])}</div><div class="tx">${esc(i.texte)}</div>
+      <div class="pied"><button data-ia="partager">📌 Épingler pour tous</button>${i.cat !== 'nom' ? '<button data-ia="prendre">✍️ Je l\'écris</button>' : ''}</div></div>`;
     return `<div class="postit" style="background:${c[2]}" data-idee="${i.id}">
       ${i.par === moiId || peut('supprimer') ? '<button class="x" data-ia="sup" title="Enlever">✕</button>' : ''}
       <div class="cat">${esc(c[1])}</div><div class="tx">${esc(i.texte)}</div>
@@ -884,6 +937,8 @@
         ${gere ? `<div class="rangee" style="margin-bottom:8px"><button class="btn petit ${eff.length === ACCES.length && acces ? 'p' : ''}" data-pre="tout">⭐ Accès total</button><button class="btn petit ${!acces ? 'p' : ''}" data-pre="roles">Selon ses rôles</button><button class="btn petit" data-pre="rien">👀 Lecture seule</button></div>` : ''}
         <div class="choix-acces">${ACCES.map(a => `<label><input type="checkbox" data-acc="${a[0]}" ${eff.includes(a[0]) ? 'checked' : ''} ${gere ? '' : 'disabled'}><span>${esc(a[1])}</span></label>`).join('')}</div>
         ${!gere ? '<p class="mut" style="font-size:13.5px">Les rôles et les accès sont donnés par la rédaction en chef.</p>' : !acces ? '<p class="mut" style="font-size:13.5px">Les accès suivent ses rôles. Coche ou décoche pour faire sur mesure.</p>' : ''}
+        <label class="lab">Code personnel</label>
+        <div class="rangee">${soi ? '<button class="btn petit" id="mb-pin">🔒 Changer mon code personnel</button>' : x.pin ? (gere ? '<span class="mut" style="font-size:14px">🔒 A un code.</span><button class="btn petit" id="mb-pin-x">Effacer son code (oublié)</button>' : '<span class="mut">🔒 Oui</span>') : '<span class="mut" style="font-size:14px">Pas encore de code (il le créera à sa prochaine ouverture).</span>'}</div>
         <div class="actions">${!soi && gere ? '<button class="btn r" id="mb-sup">Retirer</button>' : ''}<button class="btn" data-fermer>Annuler</button><button class="btn p" id="mb-ok">Enregistrer</button></div>`, f => {
         f.oninput = e => {
           const r = e.target.dataset.r, a = e.target.dataset.acc;
@@ -901,6 +956,8 @@
             if (gere) { x.roles = roles; x.role = roles[0]; x.acces = acces; if (!acces) delete x.acces; }
             sauver(x, true); fermer(); return;
           }
+          if (e.target.id === 'mb-pin') { fermer(); x.pin = ''; montrer('ecran-pin'); setTimeout(() => $('pin1').focus(), 200); return; }
+          if (e.target.id === 'mb-pin-x' && confirm(`Effacer le code personnel de ${x.nom} ? À sa prochaine connexion, il retrouvera son profil avec son prénom et créera un nouveau code.`)) { x.pin = ''; sauver(x, true); toast('Code effacé'); fermer(); return; }
           if (e.target.id === 'mb-sup' && confirm(`Retirer ${x.nom} de l'équipe ? (Ses articles restent.)`)) { supprimer(x); fermer(); }
         };
       });
@@ -908,7 +965,213 @@
     dessiner();
   }
 
+  /* =================== MESSAGES =================== */
+  // Kevin (03/11 soir) : une messagerie « comme WhatsApp » pour toute l'équipe, avec des sujets de discussion.
+  // Tout reste visible par tout le monde (pas de messages cachés). On tague « pour qui » (@prénom ou @tous) :
+  // la personne taguée voit une pastille sur l'icône de l'appli (et une alerte si elle l'a autorisée).
+  // Stockés comme des « com » (le script Google les accepte déjà) : sujet {t:'com', g:'fil', nom, ic}, message {t:'com', g:'msg', fil, texte, pour: [ids | 'tous'], cree}.
+  const GENERAL = {id: 'fil-general', nom: 'Discussion générale', ic: '💬', fixe: 1};
+  const ICONES_FIL = ['💬', '📰', '📸', '✍️', '📅', '🎨', '⚽', '🎤', '😂', '🧠', '📣', '🌍'];
+  const estMsg = i => i && i.t === 'com' && i.g === 'msg' && !i.x;
+  if (!LS('journal-msg-depuis')) LS('journal-msg-depuis', String(Date.now())); // les anciens messages ne comptent pas comme « non lus » sur un nouvel appareil
+  const msgDepuis = +LS('journal-msg-depuis') || 0;
+  const luDe = f => Math.max(+LS('journal-lu-' + f) || 0, msgDepuis);
+  const fils = () => [GENERAL].concat(liste('com').filter(c => c.g === 'fil'));
+  const msgsDe = f => liste('com').filter(c => c.g === 'msg' && (c.fil || GENERAL.id) === f).sort((a, b) => a.cree - b.cree);
+  const pourMoi = m => Array.isArray(m.pour) && (m.pour.includes(moiId) || m.pour.includes('tous'));
+  const nonLus = f => msgsDe(f).filter(m => m.par !== moiId && m.cree > luDe(f));
+  const tousNonLus = () => fils().reduce((s, f) => s.concat(nonLus(f.id)), []);
+  let filOuvert = SS('journal-fil') || '', brouillons = {}, pourChoisis = [];
+  const hhmm = ms => { const d = new Date(ms); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  const jourDe = ms => { const d = new Date(ms), s = iso(d); return s === auj() ? 'Aujourd\'hui' : s === iso(new Date(Date.now() - 86400000)) ? 'Hier' : `${JOURS[d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]}`; };
+  const pourTxt = p => (p || []).map(x => x === 'tous' ? 'tout le monde' : nomDe(x)).join(', ');
+
+  // pastille sur l'icône de l'appli : les messages non lus qui me sont adressés
+  function majBadge() {
+    const n = moiId ? tousNonLus().filter(pourMoi).length : 0;
+    try { if ('setAppBadge' in navigator) (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {}); } catch (e) {}
+    garderCfg(n);
+  }
+  // ce que le service worker garde pour vérifier les messages quand l'appli est fermée (Android / Chrome, de temps en temps)
+  function garderCfg(n) {
+    const code = LS('journal-code'); if (!SCRIPT || !code || !moiId) return;
+    const vus = tousNonLus().map(m => m.id);
+    const cfg = {id: '_cfg', script: SCRIPT, code, moi: moiId, n, depuis, lu: {}, vus};
+    fils().forEach(f => { cfg.lu[f.id] = luDe(f.id); });
+    DB.mettre([cfg]);
+  }
+  // alerte (notification) pour un nouveau message qui m'est adressé, si l'appli est cachée ou ailleurs
+  function alerter(nouveaux) {
+    const pourMoiN = nouveaux.filter(m => estMsg(m) && m.par !== moiId && pourMoi(m) && m.cree > luDe(m.fil || GENERAL.id));
+    if (!pourMoiN.length) return;
+    const ici = document.visibilityState === 'visible' && vue === 'messages' && filOuvert;
+    pourMoiN.forEach(m => {
+      const f = m.fil || GENERAL.id; if (ici && filOuvert === f) return;
+      const fi = items[f] || GENERAL, titre = `${nomDe(m.par)} · ${fi.ic || '💬'} ${fi.nom}`, corps = String(m.texte || '').slice(0, 140);
+      if (document.visibilityState === 'visible') { toast(`💬 ${nomDe(m.par)} : ${corps.slice(0, 60)}`); return; }
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      const opts = {body: corps, icon: '../icones/journal-192.png', badge: '../icones/journal-192.png', tag: 'journal-' + f, renotify: true, data: {fil: f}};
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r => r.showNotification(titre, opts)).catch(() => {});
+      else try { new Notification(titre, opts); } catch (e) {}
+    });
+  }
+  async function activerAlertes() {
+    if (!('Notification' in window)) {
+      toast(JI.ios && !JI.enAppli() ? '📲 Sur iPhone, installe d\'abord l\'appli (écran d\'accueil) pour recevoir les alertes' : 'Ce navigateur ne sait pas faire d\'alertes');
+      return;
+    }
+    const p = await Notification.requestPermission();
+    if (p === 'granted') {
+      toast('🔔 Alertes activées');
+      try { const reg = await navigator.serviceWorker.ready; if (reg.periodicSync) await reg.periodicSync.register('journal-messages', {minInterval: 30 * 60 * 1000}); } catch (e) {}
+      majBadge();
+    } else toast('Alertes refusées : tu peux les réactiver dans les réglages du téléphone');
+    rendre();
+  }
+
+  function vMessages(el) {
+    if (filOuvert && (filOuvert === GENERAL.id || (items[filOuvert] && !items[filOuvert].x))) return vFil(el);
+    filOuvert = ''; SS('journal-fil', '');
+    const fs = fils().map(f => { const ms = msgsDe(f.id); return {f, der: ms[ms.length - 1], nl: nonLus(f.id)}; })
+      .sort((a, b) => (b.f.fixe || 0) - (a.f.fixe || 0) || ((b.der && b.der.cree) || b.f.cree || 0) - ((a.der && a.der.cree) || a.f.cree || 0));
+    const alertes = 'Notification' in window ? Notification.permission : 'non';
+    el.innerHTML = `<h2 class="titre">Messages</h2>
+      <p class="mut" style="margin-top:-6px">Toute l'équipe peut lire toutes les discussions. Tape <b>@</b> pour dire à qui tu écris : la personne est prévenue.</p>
+      ${alertes === 'default' || alertes === 'non' && JI.ios && !JI.enAppli() ? `<div class="nouveau rangee" style="justify-content:space-between">🔔 Être prévenu quand on t'écrit (pastille sur l'icône) <button class="btn p petit" id="ms-alertes">Activer</button></div>` : ''}
+      ${fs.map(({f, der, nl}) => { const at = nl.some(pourMoi);
+        return `<div class="carte fil" data-fil="${esc(f.id)}"><span class="fil-ic">${esc(f.ic || '💬')}</span><div class="fil-t"><b>${esc(f.nom)}</b>
+          <span class="mut fil-der">${der ? `${der.par === moiId ? 'Moi' : esc(nomDe(der.par))} : ${esc(String(der.texte || '').slice(0, 80))}` : 'Pas encore de message'}</span></div>
+          <div class="fil-d">${der ? `<span class="mut" style="font-size:12px">${esc(jourDe(der.cree) === 'Aujourd\'hui' ? hhmm(der.cree) : jourDe(der.cree))}</span>` : ''}${nl.length ? `<span class="fil-nl ${at ? 'at' : ''}">${at ? '@ ' : ''}${nl.length}</span>` : ''}</div></div>`; }).join('')}
+      <button class="ajout" id="ms-nouv">＋ Nouveau sujet de discussion</button>`;
+    el.onclick = e => {
+      const f = e.target.closest('[data-fil]'); if (f) { ouvrirFil(f.dataset.fil); return; }
+      if (e.target.id === 'ms-nouv') formFil();
+      if (e.target.id === 'ms-alertes') activerAlertes();
+    };
+  }
+  function ouvrirFil(id) { filOuvert = id; SS('journal-fil', id); pourChoisis = []; rendre(); }
+  function formFil(f) {
+    const nouveau = !f; f = f || {id: uid('f'), t: 'com', g: 'fil', nom: '', ic: '💬', cree: Date.now()};
+    let ic = f.ic || '💬';
+    feuille(`<h3>${nouveau ? 'Nouveau sujet de discussion' : 'Le sujet'}</h3>
+      <label class="lab">Sujet</label><input class="inp" id="fi-nom" maxlength="40" placeholder="Ex. : Article sur la cantine, Photos du voyage…" value="${esc(f.nom)}">
+      <label class="lab">Icône</label><div class="rangee" id="fi-ic">${ICONES_FIL.map(x => `<button class="btn petit ${x === ic ? 'p' : ''}" data-ic="${x}" style="font-size:20px">${x}</button>`).join('')}</div>
+      <p class="mut" style="font-size:13.5px">Tout le monde dans l'équipe verra ce sujet et pourra y écrire.</p>
+      <div class="actions">${!nouveau && (f.par === moiId || peut('supprimer')) ? '<button class="btn r" id="fi-sup">Supprimer</button>' : ''}<button class="btn" data-fermer>Annuler</button><button class="btn p" id="fi-ok">${nouveau ? 'Créer' : 'Enregistrer'}</button></div>`, el => {
+      el.onclick = e => {
+        const b = e.target.closest('[data-ic]'); if (b) { ic = b.dataset.ic; el.querySelectorAll('[data-ic]').forEach(x => x.classList.toggle('p', x === b)); return; }
+        if (e.target.id === 'fi-ok') {
+          const n = el.querySelector('#fi-nom').value.trim(); if (n.length < 2) { toast('Donne un nom au sujet'); return; }
+          f.nom = n; f.ic = ic; sauver(f, true); if (nouveau) { filOuvert = f.id; SS('journal-fil', f.id); } fermer(); return;
+        }
+        if (e.target.id === 'fi-sup' && confirm(`Supprimer le sujet « ${f.nom} » et ses messages ?`)) {
+          msgsDe(f.id).forEach(m => { m.x = 1; sauver(m, true); }); supprimer(f); filOuvert = ''; SS('journal-fil', ''); fermer();
+        }
+      };
+      setTimeout(() => { const i = el.querySelector('#fi-nom'); if (i) i.focus(); }, 100);
+    });
+  }
+  // texte d'un message : échappé, liens cliquables, @prénom en couleur
+  function texteMsg(t) {
+    let h = esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+    const noms = liste('membre').map(m => m.nom).filter(Boolean).sort((a, b) => b.length - a.length);
+    const moiNom = (moi() && moi().nom || '').toLowerCase();
+    noms.concat(['tous']).forEach(n => {
+      const re = new RegExp('@' + esc(n).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\wÀ-ÿ])', 'gi');
+      h = h.replace(re, s => `<b class="at ${n.toLowerCase() === moiNom || n === 'tous' ? 'moi' : ''}">${s}</b>`);
+    });
+    return h.replace(/\n/g, '<br>');
+  }
+  function bulles(f) {
+    const ms = msgsDe(f); let html = '', jour = '', avant = null;
+    ms.forEach(m => {
+      const j = jourDe(m.cree); if (j !== jour) { html += `<div class="jour"><span>${esc(j)}</span></div>`; jour = j; avant = null; }
+      const mien = m.par === moiId, suite = avant && avant.par === m.par && m.cree - avant.cree < 5 * 60000;
+      html += `<div class="msg ${mien ? 'mien' : ''} ${suite ? 'suite' : ''} ${!mien && pourMoi(m) ? 'pourmoi' : ''}" data-msg="${esc(m.id)}">
+        ${!mien && !suite ? avatar(m.par) : '<span class="av-vide"></span>'}
+        <div class="bul">${!mien && !suite ? `<div class="qui" style="color:${couleurDe(m.par)}">${esc(nomDe(m.par))}</div>` : ''}
+          <div class="txt">${texteMsg(m.texte)}</div>
+          <div class="pied">${m.pour && m.pour.length ? `<span class="pour">→ ${esc(pourTxt(m.pour))}</span>` : ''}<span>${hhmm(m.cree)}</span>${mien && file.includes(m.id) ? ' <span title="Pas encore envoyé">🕓</span>' : ''}</div>
+          ${mien || peut('supprimer') ? '<button class="msg-sup" data-msup="1" hidden>🗑 Supprimer</button>' : ''}</div></div>`;
+      avant = m;
+    });
+    return html || '<div class="vide">Pas encore de message. Écris le premier !</div>';
+  }
+  function marquerLu(f) {
+    const ms = msgsDe(f); if (!ms.length) return;
+    const t = Math.max(ms[ms.length - 1].cree, Date.now());
+    if (t > (+LS('journal-lu-' + f) || 0)) LS('journal-lu-' + f, String(t));
+  }
+  function majFil() {
+    const l = $('chat-liste'); if (!l) return;
+    const bas = innerHeight + scrollY >= document.documentElement.scrollHeight - 140;
+    l.innerHTML = bulles(filOuvert);
+    if (document.visibilityState === 'visible') marquerLu(filOuvert);
+    if (bas) scrollTo(0, document.documentElement.scrollHeight);
+    majBulles();
+  }
+  function vFil(el) {
+    const f = filOuvert === GENERAL.id ? GENERAL : items[filOuvert];
+    const membres = liste('membre').filter(m => m.id !== moiId).sort((a, b) => a.nom.localeCompare(b.nom));
+    el.innerHTML = `<div class="chat-tete"><button class="btn petit" id="ch-ret">‹ Sujets</button><b class="ch-nom">${esc(f.ic || '💬')} ${esc(f.nom)}</b>
+        ${!f.fixe && (f.par === moiId || peut('supprimer')) ? '<button class="btn petit" id="ch-mod">⋯</button>' : ''}</div>
+      <div id="chat-liste">${bulles(f.id)}</div>
+      <div class="compo" id="compo">
+        <div class="choix-pour" id="ch-pour" hidden><span class="mut" style="font-size:13px">Pour qui ?</span>
+          <button type="button" class="pq" data-pq="tous">📣 Tout le monde</button>${membres.map(m => `<button type="button" class="pq" data-pq="${esc(m.id)}">${esc(m.nom)}</button>`).join('')}</div>
+        <div class="pour-ch" id="ch-tags"></div>
+        <div class="compo-l"><button type="button" class="at-b" id="ch-at" title="Pour qui ?">@</button>
+          <textarea id="ch-txt" rows="1" maxlength="2000" placeholder="Message…">${esc(brouillons[f.id] || '')}</textarea>
+          <button type="button" class="env" id="ch-env" title="Envoyer">➤</button></div>
+      </div>`;
+    $('vue').classList.add('en-chat');
+    const tx = $('ch-txt'), grandir = () => { tx.style.height = 'auto'; tx.style.height = Math.min(tx.scrollHeight, 140) + 'px'; };
+    const majTags = () => {
+      $('ch-tags').innerHTML = pourChoisis.map(p => `<span class="tag">@${esc(p === 'tous' ? 'tous' : nomDe(p))}<button type="button" data-tx="${esc(p)}">✕</button></span>`).join('');
+      el.querySelectorAll('[data-pq]').forEach(b => b.classList.toggle('on', pourChoisis.includes(b.dataset.pq)));
+    };
+    const choisir = (p, insere) => {
+      if (!pourChoisis.includes(p)) pourChoisis.push(p);
+      if (insere) { // remplace le « @ » tapé par « @Prénom »
+        const v = tx.value, i = tx.selectionStart, a = v.lastIndexOf('@', i - 1), mot = '@' + (p === 'tous' ? 'tous' : nomDe(p)) + ' ';
+        tx.value = a >= 0 ? v.slice(0, a) + mot + v.slice(i) : v + mot; brouillons[f.id] = tx.value;
+      }
+      $('ch-pour').hidden = true; majTags(); tx.focus();
+    };
+    const envoyer = () => {
+      const t = tx.value.trim(); if (!t) return;
+      const pour = pourChoisis.slice(), bas = t.toLowerCase();
+      liste('membre').forEach(m => { if (m.id !== moiId && bas.includes('@' + m.nom.toLowerCase()) && !pour.includes(m.id)) pour.push(m.id); });
+      if (/@tous\b/i.test(t) && !pour.includes('tous')) pour.push('tous');
+      sauver({id: uid('msg'), t: 'com', g: 'msg', fil: f.id, texte: t.slice(0, 2000), pour, cree: Date.now()}, true);
+      tx.value = ''; brouillons[f.id] = ''; pourChoisis = []; $('ch-pour').hidden = true; $('ch-pour').dataset.ouvert = ''; majTags(); grandir();
+      $('chat-liste').innerHTML = bulles(f.id); marquerLu(f.id); scrollTo(0, document.documentElement.scrollHeight); tx.focus();
+    };
+    tx.oninput = () => {
+      brouillons[f.id] = tx.value; grandir();
+      const i = tx.selectionStart, avant = tx.value.slice(0, i);
+      if (/(^|\s)@[^\s@]{0,20}$/.test(avant)) { // on tape @… : on propose les prénoms
+        const q = avant.slice(avant.lastIndexOf('@') + 1).toLowerCase(); $('ch-pour').hidden = false;
+        let vis = 0; el.querySelectorAll('[data-pq]').forEach(b => { b.hidden = !!q && !(b.dataset.pq === 'tous' ? 'tous tout le monde' : b.textContent).toLowerCase().includes(q); vis += !b.hidden; });
+        if (!vis) $('ch-pour').hidden = true;
+      } else if (!$('ch-pour').dataset.ouvert) $('ch-pour').hidden = true;
+    };
+    tx.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !JI.mobile) { e.preventDefault(); envoyer(); } };
+    el.onclick = e => {
+      if (e.target.id === 'ch-ret') { filOuvert = ''; SS('journal-fil', ''); $('vue').classList.remove('en-chat'); rendre(); scrollTo(0, 0); return; }
+      if (e.target.id === 'ch-mod') { formFil(f); return; }
+      if (e.target.id === 'ch-env') { envoyer(); return; }
+      if (e.target.id === 'ch-at') { const p = $('ch-pour'); p.hidden = !p.hidden; p.dataset.ouvert = p.hidden ? '' : '1'; p.querySelectorAll('[data-pq]').forEach(b => { b.hidden = false; }); return; }
+      const pq = e.target.closest('[data-pq]'); if (pq) { const tape = /(^|\s)@[^\s@]{0,20}$/.test(tx.value.slice(0, tx.selectionStart)); $('ch-pour').dataset.ouvert = ''; choisir(pq.dataset.pq, tape); return; }
+      const x = e.target.closest('[data-tx]'); if (x) { pourChoisis = pourChoisis.filter(p => p !== x.dataset.tx); majTags(); return; }
+      if (e.target.closest('[data-msup]')) { const m = items[e.target.closest('[data-msg]').dataset.msg]; if (m && confirm('Supprimer ce message ?')) { m.x = 1; sauver(m, true); majFil(); } return; }
+      const b = e.target.closest('.msg .bul'); if (b && !e.target.closest('a')) { const s = b.querySelector('.msg-sup'); if (s) s.hidden = !s.hidden; }
+    };
+    majTags(); grandir(); marquerLu(f.id);
+    requestAnimationFrame(() => scrollTo(0, document.documentElement.scrollHeight));
+  }
+
   /* ---------- démarrage ---------- */
-  DB.tout().then(tous => { tous.forEach(i => { if (!items[i.id] || (items[i.id].maj || 0) < (i.maj || 0)) items[i.id] = i; }); entrer(); });
+  DB.tout().then(tous => { tous.forEach(i => { if (String(i.id)[0] === '_') return; if (!items[i.id] || (items[i.id].maj || 0) < (i.maj || 0)) items[i.id] = i; }); entrer(); });
   window.addEventListener('afterprint', () => { $('impression').innerHTML = ''; });
 })();

@@ -7,6 +7,8 @@
 <meta name="theme-color" content="#0f766e">
 <meta name="color-scheme" content="light">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Merriweather:wght@400;700;900&family=Oswald:wght@400;700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:wght@400;700;900&family=Roboto:wght@400;700;900&family=Special+Elite&display=swap">
 <link rel="icon" href="../icones/journal-192.png">
 <link rel="apple-touch-icon" href="../icones/journal-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -182,38 +184,59 @@ textarea.inp{min-height:80px;resize:vertical}
 .liste-ch button .ok{margin-left:auto;font-size:12.5px;font-weight:800;white-space:nowrap}
 .membre{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--ligne)}
 .membre:last-child{border-bottom:0}
+.accs{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.accs .acc{font-size:14px;background:#f5f5f4;border-radius:7px;padding:0 4px}
+.choix-roles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.choix-roles label{display:flex;gap:6px;align-items:center;border:1px solid var(--ligne);border-radius:10px;padding:7px 8px;font-size:14px;font-weight:600}
+.choix-roles label.on{background:#f0fdfa;border-color:var(--teal)}
+.choix-acces label{display:flex;gap:8px;align-items:flex-start;padding:7px 2px;border-bottom:1px solid var(--ligne);font-size:15px}
+.choix-acces label:last-child{border-bottom:0}
+.choix-acces input{margin-top:3px;width:18px;height:18px;flex:none}
 .av{flex:none;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 86px);transform:translateX(-50%);background:#1c1917;color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;z-index:99;max-width:90vw;text-align:center}
 
-/* ===== Pages du journal (aperçu et impression) : vraies dimensions A4 ===== */
-.page{width:210mm;height:297mm;background:#fff;color:#111;padding:11mm 11mm 9mm;display:flex;flex-direction:column;font-family:Georgia,"Times New Roman",serif;overflow:hidden}
-.page .tetiere{border-bottom:3px double #111;padding-bottom:2.5mm;margin-bottom:4mm;text-align:center}
-.page .tetiere .nom{font:900 46pt/0.95 Georgia,serif;letter-spacing:-.02em}
-.page .tetiere .slogan{font-style:italic;font-size:11pt;margin-top:1.5mm}
-.page .tetiere .infos{display:flex;justify-content:space-between;border-top:1px solid #111;margin-top:2mm;padding-top:1.2mm;font:700 8.5pt/1.2 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.06em}
-.page .haut-int{display:flex;justify-content:space-between;border-bottom:1.5px solid #111;padding-bottom:1.2mm;margin-bottom:4mm;font:700 8pt/1.2 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em}
-.page .corps-p{flex:1;min-height:0;display:grid;gap:4mm}
-.page .pied-p{text-align:center;font:8pt system-ui,sans-serif;color:#555;margin-top:2.5mm}
-.z{position:relative;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column}
-.z.filet-g{border-left:.6px solid #999;padding-left:3mm}
-.z.vide-z{border:2px dashed #b9b2a5;border-radius:3mm;align-items:center;justify-content:center;color:#8a8275;font:600 11pt system-ui,sans-serif;text-align:center;padding:4mm;cursor:pointer;background:#faf8f3}
-.z.vide-z b{display:block;font-size:13pt;color:#57534e}
-.z.cliquable{cursor:pointer}
-.z .z-rub{font:800 7.5pt/1.2 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:#0f766e;border-top:2.5px solid #0f766e;padding-top:1mm;margin-bottom:1mm}
-.z h2.z-titre{font:900 17pt/1.05 Georgia,serif;margin:0 0 1.5mm;letter-spacing:-.01em}
-.z .z-chap{font-weight:700;font-size:10.5pt;line-height:1.3;margin:0 0 2mm}
-.z figure{margin:0 0 2mm;flex:none}
-.z figure img{display:block;width:100%;object-fit:cover;border-radius:.5mm}
+/* ===== Pages du journal (aperçu, éditeur et impression) : vraies dimensions A4, blocs placés en mm ===== */
+.page{position:relative;width:210mm;height:297mm;background:#fff;color:#111;font-family:Georgia,"Times New Roman",serif;overflow:hidden}
+.page .haut-int{position:absolute;left:11mm;right:11mm;top:7.5mm;display:flex;justify-content:space-between;border-bottom:1.5px solid #111;padding-bottom:1.2mm;font:700 8pt/1.2 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.page .pied-p{position:absolute;left:0;right:0;bottom:5mm;text-align:center;font:8pt system-ui,sans-serif;color:#555}
+.b{position:absolute;box-sizing:border-box;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column}
+.b.tetiere{justify-content:center;text-align:center;border-bottom:3px double currentColor;padding-bottom:2mm}
+.b.tetiere .nom{font:900 46pt/0.95 Georgia,serif;letter-spacing:-.02em}
+.b.tetiere .slogan{font-style:italic;font-size:11pt;margin-top:1.5mm}
+.b.tetiere .infos{display:flex;justify-content:space-between;border-top:1px solid #111;margin-top:2mm;padding-top:1.2mm;font:700 8.5pt/1.2 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.06em}
+.b.filet-g{border-left:.6px solid #999;padding-left:3mm}
+.b.vide-z{border:2px dashed #b9b2a5;border-radius:3mm;align-items:center;justify-content:center;color:#8a8275;font:600 11pt system-ui,sans-serif;text-align:center;padding:4mm;background:#faf8f3}
+.b.vide-z b{display:block;font-size:13pt;color:#57534e}
+.z .z-rub{flex:none;font:800 7.5pt/1.2 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:#0f766e;border-top:2.5px solid #0f766e;padding-top:1mm;margin-bottom:1mm}
+.z h2.z-titre{flex:none;font:900 17pt/1.05 Georgia,serif;margin:0 0 1.5mm;letter-spacing:-.01em}
+.z .z-chap{flex:none;font-weight:700;font-size:10.5pt;line-height:1.3;margin:0 0 2mm}
+.z .z-corps{flex:1;min-height:0;display:flex;flex-direction:column;gap:2mm}
+.z .z-corps.bas{flex-direction:column-reverse}
+.z .z-corps.gauche{flex-direction:row;gap:3mm}.z .z-corps.droite{flex-direction:row-reverse;gap:3mm}
+.z figure{margin:0;flex:none;min-width:0}
+.z .ph{position:relative;overflow:hidden;width:100%;height:40mm}
+.z .ph img{display:block;width:100%;height:100%;object-fit:cover}
 .z figcaption{font:italic 7.5pt/1.25 system-ui,sans-serif;color:#444;margin-top:.8mm}
-.z .z-texte{flex:1;min-height:0;column-gap:4mm;column-fill:auto;text-align:justify;hyphens:auto;-webkit-hyphens:auto;font-size:9.5pt;line-height:1.36;overflow:hidden}
+.z .z-texte{flex:1;min-height:0;min-width:0;column-gap:4mm;column-fill:auto;text-align:justify;hyphens:auto;-webkit-hyphens:auto;font-size:9.5pt;line-height:1.36;overflow:hidden}
 .z .z-texte p,.z .z-texte div{margin:0 0 1.4mm}
 .z .z-texte h3{font:800 1.05em/1.2 system-ui,sans-serif;margin:2mm 0 1mm;break-after:avoid}
 .z .z-texte blockquote{margin:2mm 0;padding:0 0 0 2.5mm;border-left:2px solid #f59e0b;font-style:italic;font-size:1.15em;text-align:left}
 .z .z-texte ul,.z .z-texte ol{margin:0 0 1.4mm;padding-left:5mm}
-.z .z-sign{font:italic 8pt system-ui,sans-serif;text-align:right;margin-top:1mm;flex:none}
+.z .z-sign{flex:none;font:italic 8pt system-ui,sans-serif;text-align:right;margin-top:1mm}
 .z.grand h2.z-titre{font-size:30pt}
 .z.grand .z-chap{font-size:12pt}
-.z .trop{position:absolute;right:0;bottom:0;background:#dc2626;color:#fff;font:800 9pt system-ui,sans-serif;padding:1mm 2.5mm;border-radius:2mm 0 0 0}
+.z .fond-ph{position:absolute;inset:0}
+.z .voile{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;margin:5mm;padding:3mm;border-radius:1.5mm}
+.z .trop{position:absolute;right:0;bottom:0;background:#dc2626;color:#fff;font:800 9pt system-ui,sans-serif;padding:1mm 2.5mm;border-radius:2mm 0 0 0;z-index:5}
+.b.t-texte .tx{height:100%;display:flex;flex-direction:column;overflow:hidden;overflow-wrap:anywhere}
+.b.t-texte .tx p,.b.t-texte .tx div{margin:0 0 .4em}
+.b.t-texte .tx h3{margin:0 0 .3em;font-size:1.3em}
+.b.t-texte .tx blockquote{margin:0;font-style:italic}
+.ph-txt{color:#a8a29e;font-style:italic}
+.b .leg-img{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font:italic 8pt/1.3 system-ui,sans-serif;padding:1mm 2mm}
+.b img.dessin{width:100%;height:100%;object-fit:contain;display:block}
+.b .forme{width:100%;height:100%}
+.b .ligne{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%)}
 .z.sommaire{background:#f4f1ea;padding:4mm;border-radius:2mm}
 .z.sommaire h2{font:900 15pt Georgia,serif;margin:0 0 3mm;border-bottom:2px solid #111;padding-bottom:1mm}
 .z.sommaire .l{display:flex;gap:2mm;align-items:baseline;margin-bottom:2.6mm;font-size:10pt;line-height:1.25}
@@ -222,7 +245,72 @@ textarea.inp{min-height:80px;resize:vertical}
 .z.ours{border:1.5px solid #111;padding:3mm;font:8.5pt/1.4 system-ui,sans-serif}
 .z.ours h2{font:900 12pt Georgia,serif;margin:0 0 1.5mm}
 .z.ours p{margin:0 0 1.2mm}
-.mode-ecran .z .trop{display:block}
+.mode-ecran .b{cursor:pointer}
+/* ===== éditeur de mise en page libre (editeur.js) ===== */
+#vue-mep{position:fixed;inset:0;z-index:60;background:#44403c;display:flex;flex-direction:column}
+#vue-editeur{z-index:70}
+.mep-barre{display:flex;gap:5px;align-items:center;background:var(--teal);color:#fff;padding:calc(env(safe-area-inset-top) + 6px) 8px 8px;overflow-x:auto;scrollbar-width:none}
+@media (max-width:500px){.mep-barre button,.mep-barre select{padding:6px 8px;min-width:34px;font-size:14px}}
+.mep-barre button,.mep-barre select{flex:none;background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:9px;padding:7px 10px;font-weight:800;min-width:38px;font-size:15px}
+.mep-barre select option{color:#111}
+.mep-barre .sep{flex:1}
+.mep-barre button.on{background:#fff;color:var(--teal)}
+.mep-barre button:disabled{opacity:.35}
+.mep-corps{flex:1;min-height:0;display:flex;flex-direction:column}
+.mep-scene{flex:1;min-height:0;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+.mep-boite{position:relative;margin:0 auto;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+.mep-boite > .page{position:absolute;top:0;left:0}
+.mep-panneau{background:#fff;height:44vh;overflow-y:auto;padding:10px 12px calc(env(safe-area-inset-bottom) + 16px);font-size:15px}
+@media (min-width:900px){.mep-corps{flex-direction:row}.mep-panneau{width:350px;height:auto;border-left:1px solid #d6d3d1}}
+.mep-panneau h3{margin:6px 0 8px;font-size:15px}
+.mep-panneau h4{margin:14px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--gris)}
+.mep-panneau .aide{font-size:13px;margin:8px 0}
+.ajouts{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px}
+.ajouts button{border:1px solid var(--ligne);background:#fafaf9;border-radius:12px;padding:8px 2px;font-size:22px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.ajouts button span{font-size:12px;font-weight:700}
+.pan-tete{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.pan-tete b{font-size:17px}
+.pan-actions{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.pan-actions button{border:1px solid var(--ligne);background:#fff;border-radius:9px;min-width:38px;height:36px;font-size:16px}
+.pan-actions button.on{background:#fef3c7}.pan-actions button.r{color:var(--rouge)}
+.pan-actions.txt{background:#f5f5f4;padding:4px;border-radius:10px}
+.pan-b{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.btn-pan{border:1px solid var(--teal);background:#f0fdfa;color:var(--teal);border-radius:10px;padding:7px 11px;font-weight:800;font-size:14px}
+.btn-pan.on{background:var(--teal);color:#fff}
+.mini-b{border:1px solid var(--ligne);background:#fff;border-radius:8px;padding:2px 8px;font-size:12.5px;font-weight:700}
+.pr{display:grid;grid-template-columns:38% 1fr auto;gap:8px;align-items:center;margin:5px 0;font-size:14px}
+.pr span{color:#44403c}
+.pr input[type=range]{width:100%}
+.pr output{min-width:52px;text-align:right;font-size:12.5px;color:var(--gris)}
+.pr select,.pr input[type=text]{width:100%;padding:6px;border:1px solid var(--ligne);border-radius:8px;background:#fff}
+.pr input[type=color]{width:100%;height:30px;border:1px solid var(--ligne);border-radius:8px;padding:2px;background:#fff}
+.pr.cb{display:flex;gap:6px;margin:3px 10px 3px 0}
+.rangee-f{display:flex;flex-wrap:wrap}
+.pos4{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:13px}
+.pos4 label{display:flex;align-items:center;gap:4px}.pos4 span{min-width:52px;color:#44403c}
+.pos4 input{width:64px;padding:5px;border:1px solid var(--ligne);border-radius:8px}
+.mode-edit .b{cursor:move;touch-action:none}
+.mode-edit::after{content:"";position:absolute;left:11mm;top:9mm;right:11mm;bottom:13mm;border:1px dashed rgba(220,38,38,.35);pointer-events:none;z-index:9998}
+.page.grille{background-image:linear-gradient(rgba(37,99,235,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.09) 1px,transparent 1px);background-size:5mm 5mm}
+.page .sel{position:absolute;outline:2px solid #2563eb;z-index:9999;pointer-events:none;box-sizing:border-box}
+.page .sel.lock{outline-style:dashed;outline-color:#a8a29e}
+.page .sel i{position:absolute;background:#fff;border:solid #2563eb;border-radius:3px;pointer-events:auto;box-sizing:border-box;touch-action:none}
+.sel i[data-h=nw],.sel i[data-h=se]{cursor:nwse-resize}.sel i[data-h=ne],.sel i[data-h=sw]{cursor:nesw-resize}.sel i[data-h=n],.sel i[data-h=s]{cursor:ns-resize}.sel i[data-h=e],.sel i[data-h=w]{cursor:ew-resize}
+.b .tx [contenteditable=true]{outline:none;cursor:text;min-height:1em}
+.paint{position:fixed;inset:0;z-index:95;background:#292524;display:flex;flex-direction:column;color:#fff}
+.paint-barre{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top) + 8px) 12px 8px}
+.paint-barre button{border:0;border-radius:10px;padding:8px 14px;font-weight:800;background:rgba(255,255,255,.15);color:#fff}
+.paint-barre button.ok{background:#14b8a6}
+.paint-zone{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:10px}
+.paint canvas{max-width:100%;max-height:100%;background:#fff;touch-action:none;box-shadow:0 6px 24px rgba(0,0,0,.5);cursor:crosshair}
+.paint-outils{background:#fff;color:#111;padding:8px 10px calc(env(safe-area-inset-bottom) + 10px)}
+.paint .coul{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.paint .coul button{width:32px;height:32px;border-radius:50%;border:2px solid #d6d3d1}
+.paint .coul input{width:40px;height:34px;border:0;background:none}
+.paint .on{outline:3px solid #0f766e;outline-offset:1px}
+.paint .tailles{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.paint .tailles button{border:1px solid #d6d3d1;background:#fff;border-radius:10px;min-width:40px;height:38px;padding:0 8px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.paint .tailles i{display:inline-block;background:#111;border-radius:50%}
 #impression{display:none}
 @media print{
   @page{size:A4 portrait;margin:0}
@@ -298,19 +386,21 @@ textarea.inp{min-height:80px;resize:vertical}
     <button type="button" data-v="maquette"><i>📰</i>Journal</button>
   </nav>
 </div>
+<div id="vue-mep" hidden></div>
 <div id="vue-editeur" hidden></div>
 <div id="feuille" hidden><div class="f" id="feuille-f"></div></div>
 <div id="impression"></div>
 
 <script src="installer.js"></script>
 <script src="maquettes.js"></script>
+<script src="editeur.js"></script>
 <script src="app.js"></script>
 <script>
 if ('serviceWorker' in navigator) {
   const dejaPilote = !!navigator.serviceWorker.controller; let recharge = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     // pas de rechargement au milieu d'un article : on attend que l'éditeur soit fermé
-    if (dejaPilote && !recharge && document.getElementById('vue-editeur').hidden) { recharge = true; location.reload(); }
+    if (dejaPilote && !recharge && document.getElementById('vue-editeur').hidden && document.getElementById('vue-mep').hidden) { recharge = true; location.reload(); }
   });
   if (navigator.onLine) navigator.serviceWorker.register('../sw.js').then(reg => {
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && navigator.onLine) reg.update().catch(() => {}); });

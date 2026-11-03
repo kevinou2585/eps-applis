@@ -100,7 +100,7 @@ function lisibles(sh) {
   ecrire('Articles', ['Modifié', 'Titre', 'Rubrique', 'Auteurs', 'État', 'Mots', 'Chapeau', 'Texte'],
     (tout.article || []).sort((a, b) => b.maj - a.maj).map(a => {
       const t = texte(a.corps);
-      return [date(a.maj), a.titre || '', a.rub || '', a.auteurs || nom[a.par] || '', etats[a.etat] || a.etat || '', t ? t.split(/\s+/).length : 0, a.chapeau || '', t];
+      return [date(a.maj), a.titre || '', a.rub || '', a.auteurs || nom[a.par] || '', (a.prive ? 'Privé · ' : '') + (etats[a.etat] || a.etat || ''), t ? t.split(/\s+/).length : 0, a.chapeau || '', t];
     }), '#1d4ed8');
   const reps = {}; (tout.rep || []).forEach(r => { (reps[r.reu] = reps[r.reu] || []).push((nom[r.par] || '?') + (r.v === 'oui' ? ' ✓' : r.v === 'non' ? ' ✗' : ' ?')); });
   ecrire('Réunions', ['Date', 'Heure', 'Lieu', 'Objet', 'Ordre du jour', 'Réponses', 'Compte rendu', 'Proposée par'],

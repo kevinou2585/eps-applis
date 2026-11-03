@@ -60,7 +60,9 @@
       mettre: its => ouvrir().then(db => new Promise(ok => { const tx = db.transaction('items', 'readwrite'); its.forEach(i => tx.objectStore('items').put(i)); tx.oncomplete = ok; tx.onerror = ok; })).catch(() => {})
     };
   })();
-  const liste = t => Object.values(items).filter(i => i.t === t && !i.x);
+  // brouillon privé (kevin, 03/11) : un article « prive » n'est visible que par son auteur, jusqu'à ce qu'il le rende visible
+  const cache = i => i.prive && i.par !== moiId;
+  const liste = t => Object.values(items).filter(i => i.t === t && !i.x && !cache(i));
   let file = []; try { file = JSON.parse(LS('journal-file') || '[]'); } catch (e) {}
   const garderFile = () => LS('journal-file', JSON.stringify(file));
   let moiId = LS('journal-moi') || '';
@@ -197,7 +199,7 @@
   if (/[?&]eps\b/.test(location.search)) SS('journal-eps', '1');
   { const f = new URLSearchParams(location.search).get('fil'); if (f) { SS('journal-vue', 'messages'); SS('journal-fil', f); } }
   const depuisEps = SS('journal-eps') === '1';
-  const ecrans = ['ecran-install', 'ecran-code', 'ecran-nom', 'app'];
+  const ecrans = ['ecran-install', 'ecran-code', 'ecran-nom', 'ecran-pin', 'app'];
   const montrer = id => ecrans.forEach(e => { $(e).hidden = e !== id; });
   const sha = async t => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))].map(b => b.toString(16).padStart(2, '0')).join('');
 
@@ -207,6 +209,7 @@
       montrer('ecran-code'); setTimeout(() => $('code').focus(), 200); return;
     }
     if (!moi() || moi().x) { montrer('ecran-nom'); setTimeout(() => $('nom').focus(), 200); return; }
+    if (!moi().pin) { montrer('ecran-pin'); setTimeout(() => $('pin1').focus(), 200); return; } // code personnel obligatoire (kevin, 03/11)
     montrer('app'); $('retour-eps').hidden = !depuisEps;
     const ici = SS('journal-vue'); aller(ici && VUES[ici] ? ici : 'accueil');
     synchro();
@@ -222,19 +225,38 @@
     LS('journal-ok', '1'); LS('journal-code', c); $('code-err').textContent = '';
     await synchro(); entrer();
   };
-  $('f-nom').onsubmit = e => {
+  // code personnel (kevin, 03/11) : chacun en crée un à la première connexion ; avec son prénom, il permet de retrouver son profil
+  // (articles, rôles, accès) sur un autre appareil, et empêche de prendre le profil de quelqu'un d'autre. Seule l'empreinte est gardée.
+  const empreintePin = (id, pin) => sha('journal-pin:' + id + ':' + pin.trim().toLowerCase());
+  $('f-nom').onsubmit = async e => {
     e.preventDefault();
-    const n = $('nom').value.trim().replace(/\s+/g, ' ');
+    const n = $('nom').value.trim().replace(/\s+/g, ' '), pin = $('pin').value.trim();
     if (n.length < 2) { $('nom-err').textContent = 'Écris ton prénom.'; return; }
-    // déjà dans l'équipe (même prénom) ? on reprend sa fiche (nouvel appareil)
+    await synchro(); // pour connaître les profils déjà créés sur les autres appareils
+    // déjà dans l'équipe (même prénom) ? on reprend sa fiche (nouvel appareil), avec son code personnel
     const meme = liste('membre').find(m => m.nom.toLowerCase() === n.toLowerCase());
-    if (meme && confirm(`${meme.nom} (${rolesTxt(meme)}) est déjà dans l'équipe. C'est toi ?`)) { moiId = meme.id; }
-    else {
+    if (meme && meme.pin) {
+      if (!pin) { $('nom-err').textContent = `${meme.nom} est déjà dans l'équipe. Si c'est toi, tape ton code personnel.`; $('pin').focus(); return; }
+      if (await empreintePin(meme.id, pin) !== meme.pin) { $('nom-err').textContent = 'Ce n\'est pas le bon code personnel. Oublié ? Demande à la rédaction en chef de l\'effacer (👥 Équipe).'; $('pin').select(); return; }
+      moiId = meme.id;
+    } else if (meme) {
+      if (!confirm(`${meme.nom} (${rolesTxt(meme)}) est déjà dans l'équipe. C'est toi ?`)) { $('nom-err').textContent = 'Ce prénom est déjà pris : ajoute l\'initiale de ton nom (ex. : Lina B.).'; return; }
+      moiId = meme.id; // profil sans code : il en crée un juste après (écran « Ton code personnel »)
+    } else {
+      if (pin.length < 4) { $('nom-err').textContent = 'Invente un code personnel de 4 caractères ou plus (et retiens-le).'; $('pin').focus(); return; }
       moiId = uid('m');
       // ouvert depuis EPS ultime (appli des profs) : prof = rédacteur en chef ; sinon journaliste
-      sauver({id: moiId, t: 'membre', nom: n, role: depuisEps ? 'redac-chef' : 'journaliste', roles: [depuisEps ? 'redac-chef' : 'journaliste'], cree: Date.now(), par: moiId}, true);
+      sauver({id: moiId, t: 'membre', nom: n, role: depuisEps ? 'redac-chef' : 'journaliste', roles: [depuisEps ? 'redac-chef' : 'journaliste'], cree: Date.now(), par: moiId, pin: await empreintePin(moiId, pin)}, true);
     }
-    LS('journal-moi', moiId); entrer();
+    $('nom-err').textContent = ''; LS('journal-moi', moiId); entrer();
+  };
+  $('f-pin').onsubmit = async e => {
+    e.preventDefault();
+    const a = $('pin1').value.trim(), b = $('pin2').value.trim();
+    if (a.length < 4) { $('pin-err').textContent = '4 caractères ou plus.'; return; }
+    if (a !== b) { $('pin-err').textContent = 'Les deux codes ne sont pas pareils.'; $('pin2').select(); return; }
+    const m = moi(); m.pin = await empreintePin(m.id, a); sauver(m, true);
+    $('pin1').value = $('pin2').value = ''; $('pin-err').textContent = ''; toast('🔒 Code personnel enregistré'); entrer();
   };
 
   /* ---------- navigation ---------- */
@@ -245,7 +267,7 @@
   function majBulles() {
     document.querySelectorAll('#onglets button').forEach(b => {
       const v = b.dataset.v; b.classList.toggle('on', v === vue);
-      let n = 0; if (TYPES_ONGLET[v] && v !== vue) { const t0 = vuLe(v); n = Object.values(items).filter(i => TYPES_ONGLET[v].includes(i.t) && !(i.t === 'com' && !i.cible) && !i.x && i.par !== moiId && i.maj > t0 && t0).length; }
+      let n = 0; if (TYPES_ONGLET[v] && v !== vue) { const t0 = vuLe(v); n = Object.values(items).filter(i => TYPES_ONGLET[v].includes(i.t) && !(i.t === 'com' && !i.cible) && !i.x && !cache(i) && i.par !== moiId && i.maj > t0 && t0).length; }
       if (v === 'messages') n = tousNonLus().length;
       let bu = b.querySelector('.bulle'); if (!n) { if (bu) bu.remove(); return; }
       if (!bu) { bu = document.createElement('span'); bu.className = 'bulle'; b.querySelector('i').after(bu); } bu.textContent = n > 9 ? '9+' : n;
@@ -279,14 +301,14 @@
   /* =================== ACCUEIL =================== */
   function vAccueil(el) {
     const m = moi(), t0 = +LS('journal-vu-accueil-avant') || 0;
-    const nouveaux = Object.values(items).filter(i => !i.x && i.par !== moiId && i.maj > t0 && t0 && ['reunion', 'article', 'idee', 'com'].includes(i.t) && !(i.t === 'com' && !i.cible));
+    const nouveaux = Object.values(items).filter(i => !i.x && i.par !== moiId && i.maj > t0 && t0 && ['reunion', 'article', 'idee', 'com'].includes(i.t) && !(i.t === 'com' && !i.cible) && !cache(i));
     const cpt = t => nouveaux.filter(i => i.t === t).length;
     const bouts = [[cpt('reunion'), 'réunion', 'réunions'], [cpt('article'), 'article', 'articles'], [cpt('idee'), 'idée', 'idées'], [cpt('com'), 'commentaire', 'commentaires']]
       .filter(x => x[0]).map(x => `${x[0]} ${x[0] > 1 ? x[2] : x[1]}`);
     const prochaine = liste('reunion').filter(r => r.date >= auj()).sort((a, b) => (a.date + (a.h || '')).localeCompare(b.date + (b.h || '')))[0];
     const n = numCourant();
     const arts = liste('article'), mesArts = arts.filter(a => a.par === moiId || (a.auteurs || '').toLowerCase().includes((m.nom || '').toLowerCase()));
-    const top = liste('idee').map(i => [i, votes(i.id)]).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    const top = liste('idee').filter(i => !i.prive).map(i => [i, votes(i.id)]).sort((a, b) => b[1] - a[1]).slice(0, 3);
     const aRelire = arts.filter(a => a.etat === 'relire');
     el.innerHTML = `<h2 class="titre">Salut ${esc(m.nom)} 👋</h2>
       <p class="mut" style="margin-top:-6px">${esc(rolesTxt(m))}</p>
@@ -302,6 +324,7 @@
         <div class="carte" data-a="idees" style="cursor:pointer"><div class="chiffre">${liste('idee').length}</div><div class="mut">idée${liste('idee').length > 1 ? 's' : ''} sur le tableau</div></div>
       </div>
       ${peut('valider') && aRelire.length ? `<h3 class="st">À relire et valider</h3>${aRelire.map(ligneArticle).join('')}` : ''}
+      ${(() => { const pa = arts.filter(a => a.prive), pi = liste('idee').filter(i => i.prive); return pa.length || pi.length ? `<div class="nouveau" style="background:#f5f5f4;border-color:#d6d3d1">🔒 <b>Ma table de travail</b> (personne d'autre ne la voit) : ${[pa.length ? `<a data-a="arts" style="cursor:pointer;text-decoration:underline">${pa.length} brouillon${pa.length > 1 ? 's' : ''} privé${pa.length > 1 ? 's' : ''}</a>` : '', pi.length ? `<a data-a="idees" style="cursor:pointer;text-decoration:underline">${pi.length} idée${pi.length > 1 ? 's' : ''} perso</a>` : ''].filter(Boolean).join(' et ')}.</div>` : ''; })()}
       <h3 class="st">Mes articles</h3>
       ${mesArts.length ? mesArts.sort((a, b) => b.maj - a.maj).slice(0, 4).map(ligneArticle).join('') : ''}
       <button class="ajout" data-a="ecrire">✍️ Écrire un article</button>
@@ -433,7 +456,7 @@
     const ou = ouPlace(a.id);
     return `<div class="carte art" data-art="${a.id}"><div class="vign" style="${im ? `background-image:url('${im}')` : ''}">${im ? '' : '📝'}</div>
       <div style="flex:1;min-width:0">${a.rub ? `<div class="rub">${esc(a.rub)}</div>` : ''}<h4>${esc(a.titre || 'Sans titre')}</h4>
-      <div class="rangee"><span class="etat ${a.etat || 'brouillon'}">${ETATS[a.etat] || 'Brouillon'}</span><span class="place">${mots} mots · ${place(mots)}</span></div>
+      <div class="rangee">${a.prive ? '<span class="etat prive">🔒 Privé</span>' : ''}<span class="etat ${a.etat || 'brouillon'}">${ETATS[a.etat] || 'Brouillon'}</span><span class="place">${mots} mots · ${place(mots)}</span></div>
       <div class="place" style="margin-top:4px">✍️ ${esc(a.auteurs || nomDe(a.par))} · ${ilya(a.maj)}${coms ? ` · 💬 ${coms}` : ''}${ou ? ` · 📰 ${ou}` : ''}</div></div></div>`;
   }
   function ouPlace(id) {
@@ -457,7 +480,7 @@
       const a = e.target.closest('[data-art]'); if (a) ouvrirArticle(items[a.dataset.art]);
     };
   }
-  const nouvelArticle = (titre, idee) => ({id: uid('a'), t: 'article', titre: titre || '', rub: '', chapeau: '', corps: '', auteurs: (moi() || {}).nom || '', etat: 'brouillon', idee: idee || '', _neuf: 1});
+  const nouvelArticle = (titre, idee) => ({id: uid('a'), t: 'article', titre: titre || '', rub: '', chapeau: '', corps: '', auteurs: (moi() || {}).nom || '', etat: 'brouillon', prive: 1, idee: idee || '', _neuf: 1});
 
   /* ---------- éditeur d'article ---------- */
   let edition = null, minEd = null;
@@ -536,7 +559,9 @@
     };
     // boutons d'état
     const chef = peut('valider'), act = $('e-actions'), et = a.etat || 'brouillon';
-    act.innerHTML = (et === 'brouillon' && !verrou ? '<button class="btn o" data-et="relire">📨 Envoyer à la relecture</button>' : '')
+    act.innerHTML = (a.prive ? '<p class="mut" style="margin:0 0 6px;width:100%">🔒 <b>Brouillon privé</b> : toi seul le vois. Quand tu es prêt, rends-le visible à l\'équipe ou envoie-le à la relecture.</p><button class="btn p" id="e-public">📢 Rendre visible à l\'équipe</button>' : '')
+      + (!a.prive && et === 'brouillon' && a.par === moiId ? '<button class="btn" id="e-prive">🔒 Remettre en privé</button>' : '')
+      + (et === 'brouillon' && !verrou ? '<button class="btn o" data-et="relire">📨 Envoyer à la relecture</button>' : '')
       + (chef && et !== 'valide' ? '<button class="btn p" data-et="valide">✅ Valider pour le journal</button>' : '');
     if (et !== 'brouillon' && (chef || et === 'relire')) act.innerHTML += '<button class="btn" data-et="brouillon">↩︎ Repasser en brouillon</button>';
     act.innerHTML += '<button class="btn" id="e-apercu">👁️ Aperçu dans le journal</button>';
@@ -545,9 +570,15 @@
       const b = e.target.closest('[data-et]');
       if (b) {
         clearTimeout(minEd); enregistrer(); if (a._neuf) { toast('Écris d\'abord un titre ou un texte'); return; }
-        a.etat = b.dataset.et; if (a.etat === 'valide') a.valPar = moiId; sauver(a, true);
+        a.etat = b.dataset.et; if (a.etat === 'valide') a.valPar = moiId; if (a.etat !== 'brouillon') delete a.prive; sauver(a, true);
         toast(b.dataset.et === 'relire' ? '📨 Envoyé à la relecture' : b.dataset.et === 'valide' ? '✅ Article validé' : 'Repassé en brouillon');
         ouvrirArticle(a); return;
+      }
+      if (e.target.id === 'e-public' || e.target.id === 'e-prive') {
+        clearTimeout(minEd); enregistrer(); if (a._neuf) { toast('Écris d\'abord un titre ou un texte'); return; }
+        if (e.target.id === 'e-public') { delete a.prive; toast('📢 Visible par toute l\'équipe'); }
+        else { if (ouPlace(a.id)) { toast('Il est déjà placé dans le journal : il reste visible'); return; } a.prive = 1; toast('🔒 Repassé en privé'); }
+        sauver(a, true); ouvrirArticle(a); return;
       }
       if (e.target.id === 'e-apercu') { clearTimeout(minEd); enregistrer(); apercuArticle(a); return; }
       if (e.target.id === 'e-sup' && confirm('Supprimer cet article pour toute l\'équipe ?')) {
@@ -606,10 +637,10 @@
   const votes = id => liste('vote').filter(v => v.idee === id && v.v).length;
   function vIdees(el) {
     let ids = liste('idee'); if (catFiltre) ids = ids.filter(i => i.cat === catFiltre);
-    ids.sort(triIdees === 'pop' ? (a, b) => votes(b.id) - votes(a.id) || b.maj - a.maj : (a, b) => (b.cree || b.maj) - (a.cree || a.maj));
+    ids.sort((a, b) => (b.prive ? 1 : 0) - (a.prive ? 1 : 0) || (triIdees === 'pop' ? votes(b.id) - votes(a.id) || b.maj - a.maj : (b.cree || b.maj) - (a.cree || a.maj)));
     el.innerHTML = `<h2 class="titre">Tableau des idées</h2>
       <div class="carte nouv-idee"><textarea class="inp" id="i-tx" maxlength="300" placeholder="Balance ton idée : un sujet, une interview, un jeu, un nom pour le journal…" style="min-height:64px"></textarea>
-      <div class="rangee"><select class="inp" id="i-cat" style="flex:1;width:auto">${CATS.map(c => `<option value="${c[0]}">${c[1]}</option>`).join('')}</select><button class="btn p" id="i-ok">📌 Épingler</button></div></div>
+      <div class="rangee"><select class="inp" id="i-cat" style="flex:1;width:auto">${CATS.map(c => `<option value="${c[0]}">${c[1]}</option>`).join('')}</select><button class="btn" id="i-moi" title="Visible seulement par toi">🔒 Garder pour moi</button><button class="btn p" id="i-ok">📌 Épingler pour tous</button></div></div>
       <div class="puces"><button data-tri="pop" class="${triIdees === 'pop' ? 'on' : ''}">👍 Les plus aimées</button><button data-tri="rec" class="${triIdees === 'rec' ? 'on' : ''}">🕐 Récentes</button>
       <button data-cat="" class="${!catFiltre ? 'on' : ''}">Toutes</button>${CATS.map(c => `<button data-cat="${c[0]}" class="${catFiltre === c[0] ? 'on' : ''}">${c[1]}</button>`).join('')}</div>
       ${ids.length ? `<div class="murs">${ids.map(postit).join('')}</div>` : '<p class="vide">Le tableau est vide : épingle la première idée !</p>'}`;
@@ -617,6 +648,10 @@
       if (!peut('idees')) { oblige('idees'); return; }
       const t = $('i-tx').value.trim(); if (!t) { $('i-tx').focus(); return; }
       sauver({id: uid('d'), t: 'idee', texte: t, cat: $('i-cat').value, cree: Date.now()}); toast('📌 Idée épinglée');
+    };
+    $('i-moi').onclick = () => { // idée perso, sur ma table de travail : je la partagerai plus tard
+      const t = $('i-tx').value.trim(); if (!t) { $('i-tx').focus(); return; }
+      sauver({id: uid('d'), t: 'idee', texte: t, cat: $('i-cat').value, cree: Date.now(), prive: 1}); toast('🔒 Gardée pour toi : personne d\'autre ne la voit');
     };
     el.onclick = e => {
       const tri = e.target.closest('[data-tri]'); if (tri) { triIdees = tri.dataset.tri; rendre(); return; }
@@ -630,6 +665,7 @@
         const a = nouvelArticle(i.cat === 'interview' ? 'Interview : ' : '', i.id); a.chapeau = ''; a.titre = a.titre + (i.texte.length < 90 ? i.texte : '');
         i.pris = moiId; sauver(i, true); ouvrirArticle(a);
       }
+      else if (k === 'partager') oblige('idees', () => { delete i.prive; i.cree = Date.now(); sauver(i); toast('📌 Idée épinglée pour tous'); });
       else if (k === 'art' && items[i.article]) ouvrirArticle(items[i.article]);
       else if (k === 'sup' && confirm('Enlever cette idée du tableau ?')) supprimer(i);
     };
@@ -637,6 +673,9 @@
   function postit(i) {
     const c = CAT[i.cat] || CAT.autre, v = votes(i.id), moiV = items['v_' + i.id + '_' + moiId] && items['v_' + i.id + '_' + moiId].v;
     const art = liste('article').find(a => a.idee === i.id);
+    if (i.prive) return `<div class="postit perso" style="background:${c[2]}" data-idee="${i.id}"><button class="x" data-ia="sup" title="Enlever">✕</button>
+      <div class="cat">🔒 Pour moi · ${esc(c[1])}</div><div class="tx">${esc(i.texte)}</div>
+      <div class="pied"><button data-ia="partager">📌 Épingler pour tous</button>${i.cat !== 'nom' ? '<button data-ia="prendre">✍️ Je l\'écris</button>' : ''}</div></div>`;
     return `<div class="postit" style="background:${c[2]}" data-idee="${i.id}">
       ${i.par === moiId || peut('supprimer') ? '<button class="x" data-ia="sup" title="Enlever">✕</button>' : ''}
       <div class="cat">${esc(c[1])}</div><div class="tx">${esc(i.texte)}</div>
@@ -898,6 +937,8 @@
         ${gere ? `<div class="rangee" style="margin-bottom:8px"><button class="btn petit ${eff.length === ACCES.length && acces ? 'p' : ''}" data-pre="tout">⭐ Accès total</button><button class="btn petit ${!acces ? 'p' : ''}" data-pre="roles">Selon ses rôles</button><button class="btn petit" data-pre="rien">👀 Lecture seule</button></div>` : ''}
         <div class="choix-acces">${ACCES.map(a => `<label><input type="checkbox" data-acc="${a[0]}" ${eff.includes(a[0]) ? 'checked' : ''} ${gere ? '' : 'disabled'}><span>${esc(a[1])}</span></label>`).join('')}</div>
         ${!gere ? '<p class="mut" style="font-size:13.5px">Les rôles et les accès sont donnés par la rédaction en chef.</p>' : !acces ? '<p class="mut" style="font-size:13.5px">Les accès suivent ses rôles. Coche ou décoche pour faire sur mesure.</p>' : ''}
+        <label class="lab">Code personnel</label>
+        <div class="rangee">${soi ? '<button class="btn petit" id="mb-pin">🔒 Changer mon code personnel</button>' : x.pin ? (gere ? '<span class="mut" style="font-size:14px">🔒 A un code.</span><button class="btn petit" id="mb-pin-x">Effacer son code (oublié)</button>' : '<span class="mut">🔒 Oui</span>') : '<span class="mut" style="font-size:14px">Pas encore de code (il le créera à sa prochaine ouverture).</span>'}</div>
         <div class="actions">${!soi && gere ? '<button class="btn r" id="mb-sup">Retirer</button>' : ''}<button class="btn" data-fermer>Annuler</button><button class="btn p" id="mb-ok">Enregistrer</button></div>`, f => {
         f.oninput = e => {
           const r = e.target.dataset.r, a = e.target.dataset.acc;
@@ -915,6 +956,8 @@
             if (gere) { x.roles = roles; x.role = roles[0]; x.acces = acces; if (!acces) delete x.acces; }
             sauver(x, true); fermer(); return;
           }
+          if (e.target.id === 'mb-pin') { fermer(); x.pin = ''; montrer('ecran-pin'); setTimeout(() => $('pin1').focus(), 200); return; }
+          if (e.target.id === 'mb-pin-x' && confirm(`Effacer le code personnel de ${x.nom} ? À sa prochaine connexion, il retrouvera son profil avec son prénom et créera un nouveau code.`)) { x.pin = ''; sauver(x, true); toast('Code effacé'); fermer(); return; }
           if (e.target.id === 'mb-sup' && confirm(`Retirer ${x.nom} de l'équipe ? (Ses articles restent.)`)) { supprimer(x); fermer(); }
         };
       });

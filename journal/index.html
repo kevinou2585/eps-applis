@@ -69,6 +69,8 @@ h3.st{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--gr
 .puces button{flex:none;border:1px solid var(--ligne);background:#fff;border-radius:99px;padding:6px 12px;font-size:14px;font-weight:700;color:var(--gris)}
 .puces button.on{background:var(--encre);border-color:var(--encre);color:#fff}
 .etat{display:inline-block;font-size:12px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.postit.perso{outline:2px dashed #57534e;outline-offset:-5px}
+.etat.prive{background:#1c1917;color:#fff}
 .etat.brouillon{background:#e7e5e4;color:#44403c}.etat.relire{background:#fef3c7;color:#92400e}.etat.valide{background:#dcfce7;color:#166534}
 .vide{text-align:center;color:var(--gris);padding:26px 10px}
 .nouveau{background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:15px}
@@ -403,8 +405,25 @@ textarea.inp{min-height:80px;resize:vertical}
     <p>Comment tu t'appelles ? Ton prénom apparaît sur tes articles, tes idées et tes réponses aux réunions.</p>
     <form id="f-nom" class="carte-b" autocomplete="off">
       <input class="champ txt" id="nom" type="text" maxlength="30" placeholder="Ton prénom" autocomplete="given-name">
+      <input class="champ txt" id="pin" type="password" maxlength="30" placeholder="Ton code personnel" autocomplete="off" autocapitalize="none" spellcheck="false" style="margin-top:10px">
+      <p class="mut" id="pin-aide" style="font-size:13.5px;margin:6px 2px 0">🔒 Première fois : invente un code (4 caractères ou plus) et retiens-le. Sur un autre téléphone ou ordinateur, tape ton prénom et ce code : tu retrouves ton profil, tes articles et tes accès.</p>
       <p class="err" id="nom-err"></p>
       <button class="gros vert" type="submit">C'est parti</button>
+    </form>
+  </div>
+</section>
+
+<!-- 3 bis. Code personnel à créer (profil d'avant les codes personnels, ou code effacé par la rédaction en chef) -->
+<section class="ecran" id="ecran-pin" hidden>
+  <div class="boite">
+    <img class="logo" src="../icones/journal-192.png" alt="">
+    <h1>Ton code personnel</h1>
+    <p>Pour que personne d'autre ne puisse prendre ton profil, invente un code (4 caractères ou plus). Tu le taperas avec ton prénom sur tes autres appareils.</p>
+    <form id="f-pin" class="carte-b" autocomplete="off">
+      <input class="champ txt" id="pin1" type="password" maxlength="30" placeholder="Ton code" autocapitalize="none" spellcheck="false">
+      <input class="champ txt" id="pin2" type="password" maxlength="30" placeholder="Encore une fois" autocapitalize="none" spellcheck="false" style="margin-top:10px">
+      <p class="err" id="pin-err"></p>
+      <button class="gros vert" type="submit">Enregistrer</button>
     </form>
   </div>
 </section>

@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <script src="acces.js"></script>
+<script src="installer.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
 <title>Battle des profs</title>
@@ -121,6 +122,7 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 #partage-menu[hidden]{display:none}
 #partage-menu button,#partage-menu a{display:block;border:0;border-radius:10px;padding:11px 14px;text-align:left;font:800 15px system-ui,-apple-system,sans-serif;text-decoration:none;color:#2a0f3d;background:#f4eef8}
 #partage-menu .wa{background:#25d366;color:#06301a}
+#partage-menu .ins{background:#e8590c;color:#fff}
 #accueil #partage i{display:inline-block;width:14px;height:14px;border-radius:50%;background:#25d366;vertical-align:-2px;margin-right:6px}
 #accueil h1.titre{margin:8px 0 0;font-size:30px;color:#fff;transform:none;text-shadow:0 4px 0 #7d1019;animation:none}
 #accueil .defi{margin:6px 0 0;font-size:13px;font-weight:800;color:var(--jaune);letter-spacing:.14em;text-transform:uppercase;opacity:1}
@@ -263,7 +265,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 
 <section id="accueil" class="ecran on">
   <div class="boite">
-    <div class="haut" id="haut"><a class="eps-retour" href="../">‹ Mes applis</a><button type="button" id="recomp">🎁 Récompenses</button></div>
+    <div class="haut" id="haut"><a class="eps-retour" href="jeux/">‹ Les jeux</a><button type="button" id="recomp">🎁 Récompenses</button></div>
     <h1 class="titre">Battle des profs</h1>
     <div class="defi">Novembre · grimpe jusqu'au trône</div>
     <div class="etat" id="etat"></div>

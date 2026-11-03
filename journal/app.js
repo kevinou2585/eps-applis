@@ -8,7 +8,7 @@
    Types : membre, reunion, rep (réponse à une réunion), article, img (photo d'un article), idee, vote, com (commentaire), numero.
    Sur l'appareil : IndexedDB « journal » (+ localStorage journal-*). Sans SCRIPT : tout reste sur l'appareil. */
 (() => {
-  const SCRIPT = ''; // URL /exec du script Google « Journal de l'école » de kevin (à remplir quand il l'a déployé)
+  const SCRIPT = 'https://script.google.com/macros/s/AKfycbxk86bSVBC3IYBwXpt84hI52JfO_HoT_vyq8GzSGUfi27PQ_yAjDTlp6F1TUckt8_HPWQ/exec'; // script « Journal de l'école » de kevin (journal/google/Journal.gs), déployé le 03/11/2026
   const CODE_SHA = '58abc04d89961eb778a3fb1978a52628f875af97b3dbc7d740a9eb6c6658de6f'; // empreinte du code de l'appli (kevin, 03/11 : erasmus…), en minuscules
 
   const $ = id => document.getElementById(id);

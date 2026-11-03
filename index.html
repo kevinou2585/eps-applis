@@ -81,7 +81,7 @@ a.tuile .beta{background:#fff;color:#1f5fc8}
   <a class="tuile c-tournoi" href="tournoi/"><img src="icones/tournoi-192.png" alt=""><b>Tournoi</b></a>
   <a class="tuile c-koh" href="koh-lanta/"><img src="icones/koh-lanta-192.png" alt=""><b>Koh-Lanta Arène</b></a>
   <a class="tuile c-fist" href="le-fist/"><img src="icones/le-fist-192.png" alt=""><b>Le Fist</b></a>
-  <a class="tuile c-battle" href="battle/"><img src="icones/battle-192.png" alt=""><b>Battle des profs</b></a>
+  <a class="tuile c-battle" href="battle/jeux/?eps"><img src="icones/battle-192.png" alt=""><b>Battle des profs</b></a>
 </div>
 <div class="pied"><button type="button" id="b-param" aria-expanded="false">⚙️ Paramètres</button></div>
 <section id="param" hidden>
@@ -254,6 +254,7 @@ document.getElementById('porte-f').onsubmit = async e => {
 (() => {
   const $ = id => document.getElementById(id), tuiles = [...document.querySelectorAll('.app-seul .tuiles a.tuile')];
   let cachees = []; try { cachees = JSON.parse(localStorage.getItem('eps-cachees') || '[]'); } catch(e){}
+  cachees = cachees.map(h => h === 'battle/' ? 'battle/jeux/?eps' : h); // la tuile Battle ouvre maintenant la liste des jeux (03/11)
   const appliquer = () => tuiles.forEach(t => { if (!t.id) t.hidden = cachees.includes(t.getAttribute('href')); });
   $('choix-applis').innerHTML = tuiles.filter(t => !t.id).map(t => `<label class="choix"><input type="checkbox" data-h="${t.getAttribute('href')}" ${cachees.includes(t.getAttribute('href')) ? '' : 'checked'}><img src="${t.querySelector('img').getAttribute('src')}" alt="">${t.querySelector('b').textContent.replace('🔒 ', '')}</label>`).join('');
   $('choix-applis').onchange = e => { const h = e.target.dataset.h; if (!h) return; cachees = cachees.filter(x => x !== h); if (!e.target.checked) cachees.push(h);

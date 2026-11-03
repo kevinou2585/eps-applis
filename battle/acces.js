@@ -68,11 +68,19 @@
   const partage = () => {
     const boite = document.querySelector('#accueil .boite') || document.getElementById('accueil'); if (!boite || document.getElementById('partage')) return;
     const code = lire('eps-code') || '';
-    const msg = 'Viens jouer à Battle des profs 🎮 : ' + LIEN + (code ? '\nCode : ' + code : '');
+    // le lien mène à la liste des jeux, qui propose tout de suite d'installer l'appli (Kevin, 03/11)
+    const msg = 'Viens jouer à Battle des profs 🎮 : ' + LIEN + 'jeux/' + (code ? '\nCode : ' + code : '');
     // petit bouton « Partager » en haut à droite de l'accueil : ouvre un menu Copier le lien / WhatsApp
     const bt = document.createElement('button'); bt.id = 'partage'; bt.type = 'button'; bt.innerHTML = '<i></i>Partager';
     const menu = document.createElement('div'); menu.id = 'partage-menu'; menu.hidden = true;
     menu.innerHTML = '<button type="button" class="cp">🔗 Copier le lien</button><a class="wa" target="_blank" rel="noopener">💬 WhatsApp</a>';
+    // « Installer l'appli » : icône Battle des profs sur l'écran d'accueil (pas quand on est déjà dans cette appli)
+    const BI = window.BattleInstall;
+    if (BI && !BI.dejaLa()) {
+      const ins = document.createElement('button'); ins.type = 'button'; ins.className = 'ins'; ins.textContent = '📲 Installer l\'appli';
+      ins.onclick = () => { menu.hidden = true; BI.lancer(); };
+      menu.insertBefore(ins, menu.firstChild);
+    }
     menu.querySelector('.wa').href = 'https://wa.me/?text=' + encodeURIComponent(msg);
     const cp = menu.querySelector('.cp');
     cp.onclick = async () => {
@@ -83,8 +91,6 @@
     bt.onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; };
     document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) menu.hidden = true; });
     const place = document.getElementById('haut') || boite; place.appendChild(bt); place.appendChild(menu);
-    // Collègue venu par le lien (sans EPS ultime) : pas de retour vers les autres applis
-    if (lire('battle-acces') === '1' && !lire('eps-cle') && !lire('kl-listes-v1')) document.querySelectorAll('.eps-retour').forEach(a => { a.style.display = 'none'; });
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', partage); else partage();
 })();

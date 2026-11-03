@@ -5157,7 +5157,7 @@ async function chargerClassement() {
   etatTxt = places.t ? 'Mise à jour du classement…' : 'Chargement du classement…'; afficherAccueil();
   try {
     const r = await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=places&jeu=${encodeURIComponent(JEU)}`);
-    if (r && r.ok && Array.isArray(r.places)) { garderPlaces(r); etatTxt = ''; } else etatTxt = 'Classement indisponible pour le moment';
+    if (r && r.ok && Array.isArray(r.places)) { garderPlaces(r); etatTxt = ''; if (lsGet('battle-attente', []).length && !envoiEnCours) setTimeout(viderAttente, 0); } else etatTxt = 'Classement indisponible pour le moment';
   } catch (e) { etatTxt = places.t ? 'Hors ligne — dernier classement connu' : 'Hors ligne — classement indisponible'; }
   const n = lsGet('battle-attente', []).length; if (n) etatTxt += (etatTxt ? ' · ' : '') + n + ' partie' + (n > 1 ? 's' : '') + ' en attente d’envoi';
   afficherAccueil();
@@ -5330,7 +5330,7 @@ let envoiEnCours = false;
 async function viderAttente() {
   if (!CLASSEMENT_OK || envoiEnCours || !navigator.onLine) return;
   let q = lsGet('battle-attente', []); if (!q.length) return;
-  envoiEnCours = true;
+  envoiEnCours = true; let envoyes = 0;
   try {
     while (q.length) {
       const p = q[0];
@@ -5338,12 +5338,16 @@ async function viderAttente() {
         const r = await avecTimeout(URL_SCRIPT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(p) });
         garderReponse(p, r);
       } catch (e) { break; }
-      q.shift(); lsSet('battle-attente', q);
+      q.shift(); lsSet('battle-attente', q); envoyes++;
     }
   } finally { envoiEnCours = false; }
-  if (etat === 'accueil') chargerClassement();
+  if (envoyes && etat === 'accueil') chargerClassement(); // rien de parti : pas la peine de recharger (et pas de boucle)
 }
 window.addEventListener('online', viderAttente);
+// Kevin (03/11, dans le train) : « online » ne se déclenche pas quand le réseau revient après une zone blanche
+// (le téléphone se croit toujours en ligne) → on réessaie tout seul tant qu'il reste des parties en attente
+document.addEventListener('visibilitychange', () => { if (!document.hidden) viderAttente(); });
+setInterval(() => { if (!document.hidden && lsGet('battle-attente', []).length) viderAttente(); }, 20000);
 
 // ---------------------------------------------------------------- Intronisation
 // Kevin : un joueur qui entre dans le top 3 arrive sur le chemin de l'accueil avec sa photo, bat un par un les boss qu'il a dépassés

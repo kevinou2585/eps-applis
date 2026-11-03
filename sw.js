@@ -1,15 +1,16 @@
 // Fait marcher les applis sans internet. Version a changer a chaque mise en ligne pour rafraichir le cache.
-const VERSION = 'eps-v182';
+const VERSION = 'eps-v183';
 const FICHIERS = [
   './', './index.html', './sauvegarde.js', './manifest.webmanifest', './eleves.chiffre.json', './perso.js',
-  './carnet/', './carnet/aide.js', './carnet/skore.js', './carnet/prepa-moteur.js', './carnet/prepa-guide.js', './carnet/travail.js', './carnet/planning.js', './carnet/deux-activites.js', './carnet/archives.js', './carnet/avis.js', './carnet/google/', './carnet/google/Code.gs', './carnet/prepas/schemas.js', './carnet/prepas/basket.js', './carnet/prepas/volley.js', './carnet/prepas/hand.js', './carnet/prepas/natation.js', './carnet/prepas/natdeb.js', './carnet/prepas/endurance.js', './carnet/prepas/bad.js', './carnet/prepas/danse.js', './carnet/prepas/acro.js', './carnet/prepas/prisonnier.js', './carnet/prepas/athle.js', './carnet/prepas/foot.js', './carnet/prepas/corde.js', './carnet/prepas/lutte.js', './carnet/prepas/hiver.js', './tournoi/', './koh-lanta/', './tableau/', './le-fist/', './classeur/', './battle/', './battle/acces.js', './battle/acces.chiffre.json', './battle/manifest.webmanifest', './battle/installer.js', './battle/jeux/', './installer/',
+  './carnet/', './carnet/aide.js', './carnet/skore.js', './carnet/prepa-moteur.js', './carnet/prepa-guide.js', './carnet/travail.js', './carnet/planning.js', './carnet/deux-activites.js', './carnet/archives.js', './carnet/avis.js', './carnet/google/', './carnet/google/Code.gs', './carnet/prepas/schemas.js', './carnet/prepas/basket.js', './carnet/prepas/volley.js', './carnet/prepas/hand.js', './carnet/prepas/natation.js', './carnet/prepas/natdeb.js', './carnet/prepas/endurance.js', './carnet/prepas/bad.js', './carnet/prepas/danse.js', './carnet/prepas/acro.js', './carnet/prepas/prisonnier.js', './carnet/prepas/athle.js', './carnet/prepas/foot.js', './carnet/prepas/corde.js', './carnet/prepas/lutte.js', './carnet/prepas/hiver.js', './tournoi/', './koh-lanta/', './tableau/', './le-fist/', './classeur/', './battle/', './battle/acces.js', './battle/acces.chiffre.json', './battle/manifest.webmanifest', './battle/installer.js', './battle/jeux/', './journal/', './journal/app.js', './journal/maquettes.js', './journal/installer.js', './journal/manifest.webmanifest', './installer/',
   './icones/carnet-180.png', './icones/carnet-192.png', './icones/carnet-512.png',
   './icones/eps-180.png', './icones/eps-192.png', './icones/eps-512.png',
   './icones/tournoi-180.png', './icones/tournoi-192.png', './icones/tournoi-512.png',
   './icones/koh-lanta-180.png', './icones/koh-lanta-192.png', './icones/koh-lanta-512.png',
   './icones/le-fist-180.png', './icones/le-fist-192.png', './icones/le-fist-512.png',
   './icones/classeur-180.png', './icones/classeur-192.png', './icones/classeur-512.png',
-  './icones/battle-180.png', './icones/battle-192.png', './icones/battle-512.png'
+  './icones/battle-180.png', './icones/battle-192.png', './icones/battle-512.png',
+  './icones/journal-180.png', './icones/journal-192.png', './icones/journal-512.png'
 ];
 
 self.addEventListener('install', e => {

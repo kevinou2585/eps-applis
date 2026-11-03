@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Journal de l'école</title>
+<meta name="theme-color" content="#0f766e">
+<meta name="color-scheme" content="light">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icones/journal-192.png">
+<link rel="apple-touch-icon" href="../icones/journal-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Journal">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{--teal:#0f766e;--teal2:#14b8a6;--fond:#f4f1ea;--carte:#fff;--encre:#1c1917;--gris:#6b6459;--ligne:#e4ded2;--jaune:#f59e0b;--rouge:#dc2626;--vert:#15803d;--bleu:#1d4ed8;--violet:#7c3aed}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--fond);color:var(--encre);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+.ecran{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 24px) 20px calc(env(safe-area-inset-bottom) + 24px);text-align:center;background:linear-gradient(170deg,#0f766e,#134e4a 70%,#0b2f2c);color:#fff}
+.ecran .boite{width:100%;max-width:420px}
+.ecran img.logo{width:96px;height:96px;border-radius:22px;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.ecran h1{font:900 34px/1.05 Georgia,"Times New Roman",serif;margin:16px 0 6px;letter-spacing:-.01em}
+.ecran p{margin:8px 0;color:#ccfbf1}
+.ecran .carte-b{background:#fff;color:var(--encre);border-radius:20px;padding:18px;margin-top:18px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.ecran .carte-b p{color:var(--gris)}
+.gros{display:block;width:100%;border:0;border-radius:14px;padding:15px;font-weight:800;font-size:18px;background:linear-gradient(140deg,#e8590c,#f59e0b);color:#fff;box-shadow:0 4px 0 #9a3a06;margin-top:10px}
+.gros:active{transform:translateY(3px);box-shadow:0 1px 0 #9a3a06}
+.gros.vert{background:linear-gradient(140deg,#0f766e,#14b8a6);box-shadow:0 4px 0 #0b4f49}
+.lien-doux{display:inline-block;margin-top:14px;color:#ccfbf1;font-size:14px;background:none;border:0;text-decoration:underline}
+.champ{display:block;width:100%;padding:14px;border-radius:12px;border:2px solid var(--ligne);font-size:20px;text-align:center;letter-spacing:.15em;background:#fff;color:var(--encre)}
+.champ.txt{letter-spacing:0;font-size:18px}
+.err{color:#b91c1c;font-weight:700;min-height:1.4em;margin:6px 0 0}
+
+/* ---- appli ---- */
+#app{min-height:100vh;padding-bottom:calc(env(safe-area-inset-bottom) + 76px)}
+header.barre{position:sticky;top:0;z-index:20;background:var(--teal);color:#fff;padding:calc(env(safe-area-inset-top) + 8px) 14px 10px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+header.barre .t{font:900 21px/1 Georgia,serif;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.barre a.ret{color:#ccfbf1;text-decoration:none;font-size:14px;font-weight:600;white-space:nowrap}
+header.barre button{background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:10px;padding:6px 10px;font-size:14px;font-weight:700;white-space:nowrap}
+.pastille{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(255,255,255,.18)}
+.pastille.att{background:#fde68a;color:#78350f}.pastille.ko{background:#fecaca;color:#7f1d1d}
+main{max-width:760px;margin:0 auto;padding:14px 14px 20px}
+nav.onglets{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--ligne);display:grid;grid-template-columns:repeat(5,1fr);padding:4px 4px calc(env(safe-area-inset-bottom) + 4px)}
+nav.onglets button{background:none;border:0;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:11.5px;font-weight:700;color:var(--gris);border-radius:12px}
+nav.onglets button i{font-style:normal;font-size:22px;line-height:1.1}
+nav.onglets button.on{color:var(--teal);background:#ccfbf1}
+nav.onglets button .bulle{position:absolute;margin-left:22px;margin-top:-2px;background:var(--rouge);color:#fff;border-radius:99px;font-size:10px;padding:0 5px;line-height:16px}
+h2.titre{font:900 24px/1.15 Georgia,serif;margin:6px 0 12px}
+h3.st{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris);margin:20px 0 8px}
+.carte{background:var(--carte);border:1px solid var(--ligne);border-radius:16px;padding:14px;margin:0 0 12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.carte h4{margin:0 0 4px;font-size:17px}
+.mut{color:var(--gris);font-size:14px}
+.btn{border:1px solid var(--ligne);background:#fff;border-radius:11px;padding:9px 13px;font-weight:700;font-size:15px}
+.btn.p{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.o{background:var(--jaune);border-color:var(--jaune);color:#422006}
+.btn.r{color:var(--rouge)}
+.btn.petit{padding:5px 10px;font-size:13.5px;border-radius:9px}
+.btn:disabled{opacity:.45}
+.rangee{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ajout{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border:2px dashed #99c9c2;border-radius:14px;background:#f0fdfa;color:var(--teal);font-weight:800;font-size:16px;margin-bottom:14px}
+.puces{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none}
+.puces button{flex:none;border:1px solid var(--ligne);background:#fff;border-radius:99px;padding:6px 12px;font-size:14px;font-weight:700;color:var(--gris)}
+.puces button.on{background:var(--encre);border-color:var(--encre);color:#fff}
+.etat{display:inline-block;font-size:12px;font-weight:800;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.etat.brouillon{background:#e7e5e4;color:#44403c}.etat.relire{background:#fef3c7;color:#92400e}.etat.valide{background:#dcfce7;color:#166534}
+.vide{text-align:center;color:var(--gris);padding:26px 10px}
+.nouveau{background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:15px}
+.grille2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chiffre{font:900 30px/1 Georgia,serif;color:var(--teal)}
+
+/* agenda */
+.mois{background:#fff;border:1px solid var(--ligne);border-radius:16px;padding:10px;margin-bottom:14px}
+.mois .tete{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-weight:800;text-transform:capitalize}
+.mois .tete button{border:0;background:#f5f5f4;border-radius:9px;width:34px;height:30px;font-size:18px}
+.mois .jours{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:13px}
+.mois .jours b{color:var(--gris);font-size:11px;padding:2px 0}
+.mois .j{padding:5px 0 7px;border-radius:9px;position:relative}
+.mois .j.hors{color:#c8c2b6}.mois .j.auj{background:#ccfbf1;font-weight:900}
+.mois .j .pts{position:absolute;left:0;right:0;bottom:2px;display:flex;justify-content:center;gap:2px}
+.mois .j .pts i{width:5px;height:5px;border-radius:50%;background:var(--teal)}
+.mois .j .pts i.bc{background:var(--rouge)}.mois .j .pts i.pa{background:var(--jaune)}
+.reu{display:flex;gap:12px}
+.reu .cal{flex:none;width:56px;text-align:center;border-radius:12px;overflow:hidden;border:1px solid var(--ligne);align-self:flex-start}
+.reu .cal small{display:block;background:var(--rouge);color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;padding:2px 0}
+.reu .cal b{display:block;font:900 24px/1.2 Georgia,serif;padding:2px 0 0}
+.reu .cal span{display:block;font-size:11px;color:var(--gris);padding-bottom:3px;text-transform:capitalize}
+.reu .corps{flex:1;min-width:0}
+.reu .odj{white-space:pre-wrap;background:#fafaf9;border-radius:10px;padding:8px 10px;margin:8px 0;font-size:14.5px}
+.reps{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.reps span{font-size:12.5px;padding:2px 8px;border-radius:99px;background:#f5f5f4}
+.reps span.oui{background:#dcfce7}.reps span.non{background:#fee2e2}.reps span.pt{background:#fef3c7}
+.choix3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.choix3 button{border:1px solid var(--ligne);background:#fff;border-radius:10px;padding:8px 2px;font-size:13.5px;font-weight:700}
+.choix3 button.on.oui{background:#16a34a;border-color:#16a34a;color:#fff}
+.choix3 button.on.pt{background:#f59e0b;border-color:#f59e0b;color:#fff}
+.choix3 button.on.non{background:#dc2626;border-color:#dc2626;color:#fff}
+details.passees summary{cursor:pointer;color:var(--gris);font-weight:700;margin:10px 0}
+
+/* articles */
+.art{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.art .vign{flex:none;width:64px;height:64px;border-radius:10px;background:#eee center/cover;display:flex;align-items:center;justify-content:center;font-size:26px}
+.art .rub{font-size:12px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:.06em}
+.art h4{font:800 18px/1.2 Georgia,serif;margin:2px 0 4px}
+.place{font-size:12.5px;color:var(--gris)}
+
+/* éditeur */
+#vue-editeur{position:fixed;inset:0;z-index:50;background:var(--fond);overflow-y:auto;padding-bottom:calc(env(safe-area-inset-bottom) + 40px)}
+#vue-editeur .ed{max-width:760px;margin:0 auto;padding:12px 14px}
+.lab{display:block;font-size:13px;font-weight:800;color:var(--gris);margin:14px 0 4px;text-transform:uppercase;letter-spacing:.06em}
+.inp{display:block;width:100%;padding:11px 12px;border:1px solid var(--ligne);border-radius:12px;background:#fff;font-size:16px}
+textarea.inp{min-height:80px;resize:vertical}
+.inp.titre{font:800 22px/1.2 Georgia,serif}
+.outils{position:sticky;top:calc(env(safe-area-inset-top) + 52px);z-index:5;display:flex;flex-wrap:wrap;gap:4px;background:#e7e5e4;padding:5px;border-radius:12px 12px 0 0;margin-top:4px}
+.outils button{border:0;background:#fff;border-radius:8px;min-width:38px;height:36px;padding:0 8px;font-size:15px}
+.outils button.on{background:var(--encre);color:#fff}
+#ed-corps{min-height:260px;background:#fff;border:1px solid var(--ligne);border-top:0;border-radius:0 0 12px 12px;padding:14px;font:17px/1.6 Georgia,serif;outline:none}
+#ed-corps:empty:before{content:attr(data-ph);color:#a8a29e}
+#ed-corps h3{font:800 19px/1.3 system-ui,sans-serif;margin:16px 0 6px}
+#ed-corps blockquote{margin:12px 0;padding:6px 14px;border-left:4px solid var(--jaune);font-style:italic;font-size:19px}
+#ed-corps p{margin:0 0 10px}
+.compte{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:var(--gris);margin-top:6px}
+.photo-ed{display:flex;gap:12px;align-items:flex-start}
+.photo-ed .ph{flex:none;width:120px;height:90px;border-radius:12px;background:#e7e5e4 center/cover;display:flex;align-items:center;justify-content:center;color:var(--gris);font-size:30px}
+.coms .com{background:#fff;border:1px solid var(--ligne);border-radius:12px;padding:8px 12px;margin-bottom:8px;font-size:15px}
+.coms .com b{font-size:13.5px}
+.coms .com.prof{border-color:#fcd34d;background:#fffbeb}
+.edtete{position:sticky;top:0;z-index:6;background:var(--teal);color:#fff;padding:calc(env(safe-area-inset-top) + 8px) 14px 10px;display:flex;gap:8px;align-items:center}
+.edtete button{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:10px;padding:7px 11px;font-weight:700;font-size:14px}
+.edtete .t{flex:1;font-weight:800;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ed-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+
+/* idées */
+.murs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.postit{position:relative;padding:12px 12px 10px;border-radius:4px 4px 18px 4px;box-shadow:0 3px 8px rgba(0,0,0,.12);min-height:130px;display:flex;flex-direction:column;font-size:15.5px}
+.postit:nth-child(3n){transform:rotate(-1deg)}.postit:nth-child(3n+1){transform:rotate(.8deg)}
+.postit .cat{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;opacity:.7}
+.postit .tx{flex:1;margin:4px 0 8px;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:600}
+.postit .pied{display:flex;align-items:center;gap:6px;font-size:12.5px}
+.postit .pied .qui{flex:1;opacity:.75}
+.postit button{border:0;background:rgba(255,255,255,.65);border-radius:99px;padding:3px 9px;font-size:13px;font-weight:800}
+.postit button.on{background:#1c1917;color:#fff}
+.postit .pris{font-size:12.5px;font-weight:800;margin-top:6px;background:rgba(255,255,255,.6);border-radius:8px;padding:3px 7px}
+.postit .x{position:absolute;top:4px;right:4px;background:none;opacity:.5;padding:2px 6px}
+.nouv-idee{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+
+/* maquette */
+.pages-t{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.pages-t button{border:1px solid var(--ligne);background:#fff;border-radius:11px;padding:7px 2px;font-weight:800;font-size:13.5px;line-height:1.15}
+.pages-t button small{display:block;font-weight:600;color:var(--gris);font-size:11px}
+.pages-t button.on{background:var(--encre);color:#fff;border-color:var(--encre)}
+.pages-t button.on small{color:#d6d3d1}
+.gabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:8px}
+.gab{flex:none;width:74px;text-align:center;border:0;background:none;padding:0;font-size:11px;font-weight:700;color:var(--gris)}
+.gab .mini{width:74px;height:104px;background:#fff;border:2px solid var(--ligne);border-radius:6px;padding:5px;display:grid;gap:3px;margin-bottom:3px}
+.gab .mini.une{grid-template-rows:auto}
+.gab .mini i{background:#d6d3d1;border-radius:2px}
+.gab .mini i.s{background:#fde68a}.gab .mini i.m{background:#1c1917;height:9px}
+.gab.on .mini{border-color:var(--teal);box-shadow:0 0 0 2px var(--teal)}
+.gab.on{color:var(--teal)}
+.apercu{background:#d6d3d1;border-radius:14px;padding:10px;margin-bottom:10px}
+.cadre{position:relative;margin:0 auto;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.cadre > .page{position:absolute;top:0;left:0;transform-origin:0 0}
+.prop{background:#fff;border:1px solid var(--ligne);border-radius:16px;padding:10px;margin-bottom:12px}
+.prop .mini4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0 8px}
+.prop .mini4 .cadre{box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.rp{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.fiche-num .lignes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* feuille (fenêtre du bas) */
+#feuille{position:fixed;inset:0;z-index:80;background:rgba(12,10,9,.55);display:flex;align-items:flex-end;justify-content:center}
+#feuille .f{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;background:#fff;border-radius:22px 22px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px)}
+#feuille h3{margin:0 0 6px;font:900 21px/1.2 Georgia,serif}
+#feuille .actions{display:flex;gap:8px;margin-top:16px}
+#feuille .actions .btn{flex:1;padding:12px}
+@media (min-width:700px){#feuille{align-items:center}#feuille .f{border-radius:22px}}
+.liste-ch button{display:flex;width:100%;text-align:left;gap:10px;align-items:center;border:1px solid var(--ligne);background:#fff;border-radius:12px;padding:10px;margin-bottom:6px}
+.liste-ch button .ok{margin-left:auto;font-size:12.5px;font-weight:800;white-space:nowrap}
+.membre{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--ligne)}
+.membre:last-child{border-bottom:0}
+.av{flex:none;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 86px);transform:translateX(-50%);background:#1c1917;color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;z-index:99;max-width:90vw;text-align:center}
+
+/* ===== Pages du journal (aperçu et impression) : vraies dimensions A4 ===== */
+.page{width:210mm;height:297mm;background:#fff;color:#111;padding:11mm 11mm 9mm;display:flex;flex-direction:column;font-family:Georgia,"Times New Roman",serif;overflow:hidden}
+.page .tetiere{border-bottom:3px double #111;padding-bottom:2.5mm;margin-bottom:4mm;text-align:center}
+.page .tetiere .nom{font:900 46pt/0.95 Georgia,serif;letter-spacing:-.02em}
+.page .tetiere .slogan{font-style:italic;font-size:11pt;margin-top:1.5mm}
+.page .tetiere .infos{display:flex;justify-content:space-between;border-top:1px solid #111;margin-top:2mm;padding-top:1.2mm;font:700 8.5pt/1.2 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.06em}
+.page .haut-int{display:flex;justify-content:space-between;border-bottom:1.5px solid #111;padding-bottom:1.2mm;margin-bottom:4mm;font:700 8pt/1.2 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.page .corps-p{flex:1;min-height:0;display:grid;gap:4mm}
+.page .pied-p{text-align:center;font:8pt system-ui,sans-serif;color:#555;margin-top:2.5mm}
+.z{position:relative;min-height:0;min-width:0;overflow:hidden;display:flex;flex-direction:column}
+.z.filet-g{border-left:.6px solid #999;padding-left:3mm}
+.z.vide-z{border:2px dashed #b9b2a5;border-radius:3mm;align-items:center;justify-content:center;color:#8a8275;font:600 11pt system-ui,sans-serif;text-align:center;padding:4mm;cursor:pointer;background:#faf8f3}
+.z.vide-z b{display:block;font-size:13pt;color:#57534e}
+.z.cliquable{cursor:pointer}
+.z .z-rub{font:800 7.5pt/1.2 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:#0f766e;border-top:2.5px solid #0f766e;padding-top:1mm;margin-bottom:1mm}
+.z h2.z-titre{font:900 17pt/1.05 Georgia,serif;margin:0 0 1.5mm;letter-spacing:-.01em}
+.z .z-chap{font-weight:700;font-size:10.5pt;line-height:1.3;margin:0 0 2mm}
+.z figure{margin:0 0 2mm;flex:none}
+.z figure img{display:block;width:100%;object-fit:cover;border-radius:.5mm}
+.z figcaption{font:italic 7.5pt/1.25 system-ui,sans-serif;color:#444;margin-top:.8mm}
+.z .z-texte{flex:1;min-height:0;column-gap:4mm;column-fill:auto;text-align:justify;hyphens:auto;-webkit-hyphens:auto;font-size:9.5pt;line-height:1.36;overflow:hidden}
+.z .z-texte p,.z .z-texte div{margin:0 0 1.4mm}
+.z .z-texte h3{font:800 1.05em/1.2 system-ui,sans-serif;margin:2mm 0 1mm;break-after:avoid}
+.z .z-texte blockquote{margin:2mm 0;padding:0 0 0 2.5mm;border-left:2px solid #f59e0b;font-style:italic;font-size:1.15em;text-align:left}
+.z .z-texte ul,.z .z-texte ol{margin:0 0 1.4mm;padding-left:5mm}
+.z .z-sign{font:italic 8pt system-ui,sans-serif;text-align:right;margin-top:1mm;flex:none}
+.z.grand h2.z-titre{font-size:30pt}
+.z.grand .z-chap{font-size:12pt}
+.z .trop{position:absolute;right:0;bottom:0;background:#dc2626;color:#fff;font:800 9pt system-ui,sans-serif;padding:1mm 2.5mm;border-radius:2mm 0 0 0}
+.z.sommaire{background:#f4f1ea;padding:4mm;border-radius:2mm}
+.z.sommaire h2{font:900 15pt Georgia,serif;margin:0 0 3mm;border-bottom:2px solid #111;padding-bottom:1mm}
+.z.sommaire .l{display:flex;gap:2mm;align-items:baseline;margin-bottom:2.6mm;font-size:10pt;line-height:1.25}
+.z.sommaire .l b{font:900 14pt Georgia,serif;color:#0f766e;min-width:7mm}
+.z.sommaire .l small{display:block;font:700 7pt system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:#666}
+.z.ours{border:1.5px solid #111;padding:3mm;font:8.5pt/1.4 system-ui,sans-serif}
+.z.ours h2{font:900 12pt Georgia,serif;margin:0 0 1.5mm}
+.z.ours p{margin:0 0 1.2mm}
+.mode-ecran .z .trop{display:block}
+#impression{display:none}
+@media print{
+  @page{size:A4 portrait;margin:0}
+  html,body{background:#fff!important}
+  body > *:not(#impression){display:none!important}
+  #impression{display:block!important}
+  #impression .page{page-break-after:always;break-after:page}
+  #impression .page:last-child{page-break-after:auto;break-after:auto}
+  #impression .trop{display:none}
+}
+</style>
+</head>
+<body>
+<!-- 1. Dans le navigateur (arrivé par le lien) : installer l'appli -->
+<section class="ecran" id="ecran-install" hidden>
+  <div class="boite">
+    <img class="logo" src="../icones/journal-192.png" alt="">
+    <h1>Le Journal<br>de l'école</h1>
+    <p>Réunions, articles, idées et mise en page du journal, pour toute l'équipe de rédaction.</p>
+    <div class="carte-b">
+      <b style="font-size:19px">📲 Installe l'appli</b>
+      <p>Une icône « Journal » sur ton téléphone : tu l'ouvres en un clic, et tout ce que l'équipe écrit arrive tout seul.</p>
+      <button class="gros" type="button" id="bt-inst-tel">📱 Installer sur mon téléphone</button>
+      <button class="gros vert" type="button" id="bt-inst-pc">💻 Installer sur mon ordinateur (PC / Mac)</button>
+      <p style="font-size:13.5px;margin-top:12px">Ensuite, ouvre l'appli par son icône et tape le code que ton prof t'a donné.</p>
+    </div>
+    <button class="lien-doux" type="button" id="bt-sans">Continuer sans installer</button>
+  </div>
+</section>
+
+<!-- 2. Le code -->
+<section class="ecran" id="ecran-code" hidden>
+  <div class="boite">
+    <img class="logo" src="../icones/journal-192.png" alt="">
+    <h1>Le Journal</h1>
+    <p>Tape le code de l'équipe du journal.</p>
+    <form id="f-code" class="carte-b" autocomplete="off">
+      <input class="champ" id="code" type="password" inputmode="numeric" placeholder="Code" autocomplete="off">
+      <p class="err" id="code-err"></p>
+      <button class="gros vert" type="submit">Entrer</button>
+    </form>
+  </div>
+</section>
+
+<!-- 3. Le prénom -->
+<section class="ecran" id="ecran-nom" hidden>
+  <div class="boite">
+    <img class="logo" src="../icones/journal-192.png" alt="">
+    <h1>Bienvenue !</h1>
+    <p>Comment tu t'appelles ? Ton prénom apparaît sur tes articles, tes idées et tes réponses aux réunions.</p>
+    <form id="f-nom" class="carte-b" autocomplete="off">
+      <input class="champ txt" id="nom" type="text" maxlength="30" placeholder="Ton prénom" autocomplete="given-name">
+      <p class="err" id="nom-err"></p>
+      <button class="gros vert" type="submit">C'est parti</button>
+    </form>
+  </div>
+</section>
+
+<!-- 4. L'appli -->
+<div id="app" hidden>
+  <header class="barre">
+    <a class="ret" id="retour-eps" href="../" hidden>‹ Mes applis</a>
+    <div class="t" id="titre-app">Le Journal</div>
+    <span class="pastille" id="sync" title="Partage avec l'équipe">…</span>
+    <button type="button" id="bt-equipe">👥</button>
+  </header>
+  <main id="vue"></main>
+  <nav class="onglets" id="onglets">
+    <button type="button" data-v="accueil"><i>🏠</i>Accueil</button>
+    <button type="button" data-v="agenda"><i>📅</i>Agenda</button>
+    <button type="button" data-v="articles"><i>✍️</i>Articles</button>
+    <button type="button" data-v="idees"><i>💡</i>Idées</button>
+    <button type="button" data-v="maquette"><i>📰</i>Journal</button>
+  </nav>
+</div>
+<div id="vue-editeur" hidden></div>
+<div id="feuille" hidden><div class="f" id="feuille-f"></div></div>
+<div id="impression"></div>
+
+<script src="installer.js"></script>
+<script src="maquettes.js"></script>
+<script src="app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  const dejaPilote = !!navigator.serviceWorker.controller; let recharge = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // pas de rechargement au milieu d'un article : on attend que l'éditeur soit fermé
+    if (dejaPilote && !recharge && document.getElementById('vue-editeur').hidden) { recharge = true; location.reload(); }
+  });
+  if (navigator.onLine) navigator.serviceWorker.register('../sw.js').then(reg => {
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && navigator.onLine) reg.update().catch(() => {}); });
+  }).catch(() => {});
+}
+</script>
+</body>
+</html>

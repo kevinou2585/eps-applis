@@ -1,5 +1,5 @@
 // Fait marcher les applis sans internet. Version a changer a chaque mise en ligne pour rafraichir le cache.
-const VERSION = 'eps-v184';
+const VERSION = 'eps-v185';
 const FICHIERS = [
   './', './index.html', './sauvegarde.js', './manifest.webmanifest', './eleves.chiffre.json', './perso.js',
   './carnet/', './carnet/aide.js', './carnet/skore.js', './carnet/prepa-moteur.js', './carnet/prepa-guide.js', './carnet/travail.js', './carnet/planning.js', './carnet/deux-activites.js', './carnet/archives.js', './carnet/avis.js', './carnet/google/', './carnet/google/Code.gs', './carnet/prepas/schemas.js', './carnet/prepas/basket.js', './carnet/prepas/volley.js', './carnet/prepas/hand.js', './carnet/prepas/natation.js', './carnet/prepas/natdeb.js', './carnet/prepas/endurance.js', './carnet/prepas/bad.js', './carnet/prepas/danse.js', './carnet/prepas/acro.js', './carnet/prepas/prisonnier.js', './carnet/prepas/athle.js', './carnet/prepas/foot.js', './carnet/prepas/corde.js', './carnet/prepas/lutte.js', './carnet/prepas/hiver.js', './tournoi/', './koh-lanta/', './tableau/', './le-fist/', './classeur/', './battle/', './battle/acces.js', './battle/acces.chiffre.json', './battle/manifest.webmanifest', './battle/installer.js', './battle/jeux/', './journal/', './journal/app.js', './journal/maquettes.js', './journal/editeur.js', './journal/installer.js', './journal/manifest.webmanifest', './installer/',
@@ -59,3 +59,36 @@ self.addEventListener('fetch', e => {
     copie || reseau.then(rep => (rep.redirected && req.mode === 'navigate') ? Response.redirect(rep.url, 302) : rep)));
   e.waitUntil(reseau.catch(() => {}));
 });
+
+// Journal de l'école (kevin, 03/11) : alertes de la messagerie.
+// Toucher une alerte ouvre la discussion. De temps en temps (Android / Chrome, appli installée, alertes autorisées),
+// le téléphone réveille ce fichier même appli fermée : on regarde s'il y a des messages pour moi et on met la pastille sur l'icône.
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const fil = (e.notification.data && e.notification.data.fil) || '';
+  const url = new URL('journal/' + (fil ? '?fil=' + encodeURIComponent(fil) : ''), self.registration.scope).href;
+  e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(cs => {
+    const c = cs.find(x => x.url.includes('/journal/'));
+    return c ? c.navigate(url).then(w => (w || c).focus()).catch(() => c.focus()) : self.clients.openWindow(url);
+  }));
+});
+const journalDB = () => new Promise((ok, ko) => { const r = indexedDB.open('journal', 1); r.onupgradeneeded = () => r.result.createObjectStore('items', {keyPath: 'id'}); r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); });
+async function journalMessages() {
+  const db = await journalDB();
+  const cfg = await new Promise(ok => { const q = db.transaction('items').objectStore('items').get('_cfg'); q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); });
+  if (!cfg || !cfg.script || !cfg.code) return;
+  const r = await (await fetch(`${cfg.script}?code=${encodeURIComponent(cfg.code)}&depuis=${cfg.depuis || 0}`)).json();
+  if (!r || !r.ok) return;
+  const vus = new Set(cfg.vus || []);
+  const nouveaux = (r.items || []).filter(m => m && m.t === 'com' && m.g === 'msg' && !m.x && m.par !== cfg.moi && !vus.has(m.id)
+    && Array.isArray(m.pour) && (m.pour.includes(cfg.moi) || m.pour.includes('tous')) && m.cree > ((cfg.lu || {})[m.fil || 'fil-general'] || 0));
+  if (!nouveaux.length) return;
+  nouveaux.forEach(m => vus.add(m.id));
+  cfg.n = (cfg.n || 0) + nouveaux.length; cfg.vus = [...vus].slice(-300);
+  await new Promise(ok => { const tx = db.transaction('items', 'readwrite'); tx.objectStore('items').put(cfg); tx.oncomplete = ok; tx.onerror = ok; });
+  if (self.navigator.setAppBadge) await self.navigator.setAppBadge(cfg.n).catch(() => {});
+  const m = nouveaux[nouveaux.length - 1];
+  await self.registration.showNotification(nouveaux.length > 1 ? `Journal : ${nouveaux.length} messages pour toi` : 'Journal : un message pour toi',
+    {body: String(m.texte || '').slice(0, 140), icon: 'icones/journal-192.png', badge: 'icones/journal-192.png', tag: 'journal-' + (m.fil || 'fil-general'), data: {fil: m.fil || 'fil-general'}});
+}
+self.addEventListener('periodicsync', e => { if (e.tag === 'journal-messages') e.waitUntil(journalMessages().catch(() => {})); });

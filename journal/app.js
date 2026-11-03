@@ -5,7 +5,7 @@
    Journal (numéros de 1 à 8 pages A4, recto-verso ou non, gabarits, propositions automatiques, mise en page libre (editeur.js), impression). Équipe : bouton 👥 en haut.
    Données partagées : un Google Sheet de kevin (script journal/google/Journal.gs, URL dans SCRIPT ci-dessous).
    Chaque chose = un « élément » {id, t: type, maj, par, x: supprimé, …}. Le plus récent gagne.
-   Types : membre, reunion, rep (réponse à une réunion), article, img (photo d'un article), idee, vote, com (commentaire), numero.
+   Types : membre, reunion, rep (réponse à une réunion), article, img (photo d'un article), idee, vote, com (commentaire ; g:'fil' = sujet de discussion, g:'msg' = message), numero.
    Sur l'appareil : IndexedDB « journal » (+ localStorage journal-*). Sans SCRIPT : tout reste sur l'appareil. */
 (() => {
   const SCRIPT = 'https://script.google.com/macros/s/AKfycbxk86bSVBC3IYBwXpt84hI52JfO_HoT_vyq8GzSGUfi27PQ_yAjDTlp6F1TUckt8_HPWQ/exec'; // script « Journal de l'école » de kevin (journal/google/Journal.gs), déployé le 03/11/2026
@@ -102,7 +102,7 @@
   function supprimer(it) { it.x = 1; if (it.t === 'article' && it.img && items[it.img]) sauver(Object.assign(items[it.img], {d: '', x: 1}), true); sauver(it); }
 
   /* ---------- synchro avec le Google Sheet ---------- */
-  let enCours = false, minuteur = null, depuis = +LS('journal-depuis') || 0, etatSync = '';
+  let enCours = false, derSync = 0, minuteur = null, depuis = +LS('journal-depuis') || 0, etatSync = '';
   const planifier = () => { clearTimeout(minuteur); minuteur = setTimeout(synchro, 1500); };
   function montrerSync(e) {
     etatSync = e;
@@ -112,6 +112,7 @@
     p.className = 'pastille ' + t[1];
   }
   async function synchro() {
+    derSync = Date.now();
     if (!SCRIPT) { montrerSync('local'); return; }
     if (enCours) { planifier(); return; }
     if (!navigator.onLine) { montrerSync('hors'); return; }
@@ -145,6 +146,7 @@
       if (changes.length) { await DB.mettre(changes); apresReception(changes); }
       depuis = Math.max(0, (Number(r.t) || 0) - 120000); LS('journal-depuis', String(depuis));
       montrerSync(file.length ? 'envoi' : 'ok');
+      if ($('chat-liste') && !changes.length) majFil(); // l'horloge 🕓 des messages envoyés disparaît
       if (file.length) planifier();
     } catch (e) {
       montrerSync(e.message === 'code' ? 'code' : 'err');
@@ -153,10 +155,18 @@
   function apresReception(changes) {
     const ed = edition && items[edition.id];
     if (ed && changes.some(c => c.id === edition.id && c.par !== moiId)) toast(`⚠️ ${nomDe(ed.par)} vient aussi de modifier cet article`);
-    if (!$('app').hidden && $('vue-editeur').hidden && $('feuille').hidden && !(window.EditeurMEP && EditeurMEP.ouvert())) rendre();
+    alerter(changes);
+    if (!$('app').hidden && vue === 'messages' && $('chat-liste')) majFil();
+    else if (!$('app').hidden && $('vue-editeur').hidden && $('feuille').hidden && !(window.EditeurMEP && EditeurMEP.ouvert())) rendre();
     else if (!$('app').hidden) majBulles();
   }
-  setInterval(() => { if (document.visibilityState === 'visible' && !$('app').hidden) synchro(); }, 45000);
+  // messages : toutes les 10 s dans une discussion ouverte, 45 s ailleurs, 2 min quand l'appli est en arrière-plan (ordinateur)
+  const synchroDatee = () => synchro();
+  setInterval(() => {
+    if ($('app').hidden) return;
+    const att = document.visibilityState !== 'visible' ? 120000 : vue === 'messages' && filOuvert ? 10000 : 45000;
+    if (Date.now() - derSync >= att) synchroDatee();
+  }, 5000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !$('app').hidden) synchro(); });
   addEventListener('online', () => synchro());
 
@@ -185,6 +195,7 @@
   /* ---------- écrans d'entrée : installer, code, prénom ---------- */
   const enAppli = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   if (/[?&]eps\b/.test(location.search)) SS('journal-eps', '1');
+  { const f = new URLSearchParams(location.search).get('fil'); if (f) { SS('journal-vue', 'messages'); SS('journal-fil', f); } }
   const depuisEps = SS('journal-eps') === '1';
   const ecrans = ['ecran-install', 'ecran-code', 'ecran-nom', 'app'];
   const montrer = id => ecrans.forEach(e => { $(e).hidden = e !== id; });
@@ -228,17 +239,19 @@
 
   /* ---------- navigation ---------- */
   let vue = 'accueil';
-  const VUES = {accueil: vAccueil, agenda: vAgenda, articles: vArticles, idees: vIdees, maquette: vMaquette, equipe: vEquipe};
+  const VUES = {accueil: vAccueil, agenda: vAgenda, articles: vArticles, idees: vIdees, maquette: vMaquette, messages: vMessages, equipe: vEquipe};
   const TYPES_ONGLET = {agenda: ['reunion'], articles: ['article', 'com'], idees: ['idee'], maquette: ['numero']};
   const vuLe = v => +LS('journal-vu-' + v) || 0;
   function majBulles() {
     document.querySelectorAll('#onglets button').forEach(b => {
       const v = b.dataset.v; b.classList.toggle('on', v === vue);
-      let n = 0; if (TYPES_ONGLET[v] && v !== vue) { const t0 = vuLe(v); n = Object.values(items).filter(i => TYPES_ONGLET[v].includes(i.t) && !i.x && i.par !== moiId && i.maj > t0 && t0).length; }
+      let n = 0; if (TYPES_ONGLET[v] && v !== vue) { const t0 = vuLe(v); n = Object.values(items).filter(i => TYPES_ONGLET[v].includes(i.t) && !(i.t === 'com' && !i.cible) && !i.x && i.par !== moiId && i.maj > t0 && t0).length; }
+      if (v === 'messages') n = tousNonLus().length;
       let bu = b.querySelector('.bulle'); if (!n) { if (bu) bu.remove(); return; }
       if (!bu) { bu = document.createElement('span'); bu.className = 'bulle'; b.querySelector('i').after(bu); } bu.textContent = n > 9 ? '9+' : n;
     });
     montrerSync(etatSync || (SCRIPT ? '' : 'local'));
+    majBadge();
   }
   function aller(v) {
     if (vue && vue !== v) LS('journal-vu-' + vue, String(Date.now()));
@@ -249,9 +262,9 @@
     if ($('app').hidden) return;
     const n = numCourant();
     $('titre-app').textContent = n && n.nom ? n.nom : 'Le Journal';
-    $('vue').innerHTML = ''; VUES[vue]($('vue')); majBulles();
+    $('vue').classList.remove('en-chat'); $('vue').innerHTML = ''; VUES[vue]($('vue')); majBulles();
   }
-  $('onglets').onclick = e => { const b = e.target.closest('button'); if (b) aller(b.dataset.v); };
+  $('onglets').onclick = e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.v === 'messages' && vue === 'messages') { filOuvert = ''; SS('journal-fil', ''); } aller(b.dataset.v); };
   $('bt-equipe').onclick = () => aller('equipe');
 
   /* ---------- fenêtre du bas ---------- */
@@ -266,7 +279,7 @@
   /* =================== ACCUEIL =================== */
   function vAccueil(el) {
     const m = moi(), t0 = +LS('journal-vu-accueil-avant') || 0;
-    const nouveaux = Object.values(items).filter(i => !i.x && i.par !== moiId && i.maj > t0 && t0 && ['reunion', 'article', 'idee', 'com'].includes(i.t));
+    const nouveaux = Object.values(items).filter(i => !i.x && i.par !== moiId && i.maj > t0 && t0 && ['reunion', 'article', 'idee', 'com'].includes(i.t) && !(i.t === 'com' && !i.cible));
     const cpt = t => nouveaux.filter(i => i.t === t).length;
     const bouts = [[cpt('reunion'), 'réunion', 'réunions'], [cpt('article'), 'article', 'articles'], [cpt('idee'), 'idée', 'idées'], [cpt('com'), 'commentaire', 'commentaires']]
       .filter(x => x[0]).map(x => `${x[0]} ${x[0] > 1 ? x[2] : x[1]}`);
@@ -277,6 +290,7 @@
     const aRelire = arts.filter(a => a.etat === 'relire');
     el.innerHTML = `<h2 class="titre">Salut ${esc(m.nom)} 👋</h2>
       <p class="mut" style="margin-top:-6px">${esc(rolesTxt(m))}</p>
+      ${(() => { const nl = tousNonLus(), pm = nl.filter(pourMoi); return nl.length ? `<div class="nouveau" data-a="msgs" style="cursor:pointer">💬 <b>${pm.length ? `${pm.length} message${pm.length > 1 ? 's' : ''} pour toi` : `${nl.length} nouveau${nl.length > 1 ? 'x' : ''} message${nl.length > 1 ? 's' : ''}`}</b>${pm.length ? ` (${esc([...new Set(pm.map(m => nomDe(m.par)))].join(', '))})` : ''} › Messages</div>` : ''; })()}
       ${bouts.length ? `<div class="nouveau">🆕 Depuis ta dernière visite : <b>${bouts.join(', ')}</b>.</div>` : ''}
       ${!SCRIPT ? `<div class="nouveau">ℹ️ L'appli n'est pas encore reliée au Google Sheet du journal : pour l'instant, ce que tu écris reste sur cet appareil.</div>` : ''}
       <h3 class="st">Prochaine réunion</h3>
@@ -296,7 +310,7 @@
       const a = e.target.closest('[data-a]'); if (a) {
         const k = a.dataset.a;
         if (k === 'reu') oblige('agenda', () => formReunion()); else if (k === 'num') formNumero(); else if (k === 'arts') aller('articles'); else if (k === 'idees') aller('idees');
-        else if (k === 'ecrire') oblige('ecrire', () => ouvrirArticle(nouvelArticle())); else if (k === 'journal') aller('maquette');
+        else if (k === 'ecrire') oblige('ecrire', () => ouvrirArticle(nouvelArticle())); else if (k === 'journal') aller('maquette'); else if (k === 'msgs') aller('messages');
         return;
       }
       if (clicReunion(e)) return;
@@ -908,7 +922,213 @@
     dessiner();
   }
 
+  /* =================== MESSAGES =================== */
+  // Kevin (03/11 soir) : une messagerie « comme WhatsApp » pour toute l'équipe, avec des sujets de discussion.
+  // Tout reste visible par tout le monde (pas de messages cachés). On tague « pour qui » (@prénom ou @tous) :
+  // la personne taguée voit une pastille sur l'icône de l'appli (et une alerte si elle l'a autorisée).
+  // Stockés comme des « com » (le script Google les accepte déjà) : sujet {t:'com', g:'fil', nom, ic}, message {t:'com', g:'msg', fil, texte, pour: [ids | 'tous'], cree}.
+  const GENERAL = {id: 'fil-general', nom: 'Discussion générale', ic: '💬', fixe: 1};
+  const ICONES_FIL = ['💬', '📰', '📸', '✍️', '📅', '🎨', '⚽', '🎤', '😂', '🧠', '📣', '🌍'];
+  const estMsg = i => i && i.t === 'com' && i.g === 'msg' && !i.x;
+  if (!LS('journal-msg-depuis')) LS('journal-msg-depuis', String(Date.now())); // les anciens messages ne comptent pas comme « non lus » sur un nouvel appareil
+  const msgDepuis = +LS('journal-msg-depuis') || 0;
+  const luDe = f => Math.max(+LS('journal-lu-' + f) || 0, msgDepuis);
+  const fils = () => [GENERAL].concat(liste('com').filter(c => c.g === 'fil'));
+  const msgsDe = f => liste('com').filter(c => c.g === 'msg' && (c.fil || GENERAL.id) === f).sort((a, b) => a.cree - b.cree);
+  const pourMoi = m => Array.isArray(m.pour) && (m.pour.includes(moiId) || m.pour.includes('tous'));
+  const nonLus = f => msgsDe(f).filter(m => m.par !== moiId && m.cree > luDe(f));
+  const tousNonLus = () => fils().reduce((s, f) => s.concat(nonLus(f.id)), []);
+  let filOuvert = SS('journal-fil') || '', brouillons = {}, pourChoisis = [];
+  const hhmm = ms => { const d = new Date(ms); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  const jourDe = ms => { const d = new Date(ms), s = iso(d); return s === auj() ? 'Aujourd\'hui' : s === iso(new Date(Date.now() - 86400000)) ? 'Hier' : `${JOURS[d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]}`; };
+  const pourTxt = p => (p || []).map(x => x === 'tous' ? 'tout le monde' : nomDe(x)).join(', ');
+
+  // pastille sur l'icône de l'appli : les messages non lus qui me sont adressés
+  function majBadge() {
+    const n = moiId ? tousNonLus().filter(pourMoi).length : 0;
+    try { if ('setAppBadge' in navigator) (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {}); } catch (e) {}
+    garderCfg(n);
+  }
+  // ce que le service worker garde pour vérifier les messages quand l'appli est fermée (Android / Chrome, de temps en temps)
+  function garderCfg(n) {
+    const code = LS('journal-code'); if (!SCRIPT || !code || !moiId) return;
+    const vus = tousNonLus().map(m => m.id);
+    const cfg = {id: '_cfg', script: SCRIPT, code, moi: moiId, n, depuis, lu: {}, vus};
+    fils().forEach(f => { cfg.lu[f.id] = luDe(f.id); });
+    DB.mettre([cfg]);
+  }
+  // alerte (notification) pour un nouveau message qui m'est adressé, si l'appli est cachée ou ailleurs
+  function alerter(nouveaux) {
+    const pourMoiN = nouveaux.filter(m => estMsg(m) && m.par !== moiId && pourMoi(m) && m.cree > luDe(m.fil || GENERAL.id));
+    if (!pourMoiN.length) return;
+    const ici = document.visibilityState === 'visible' && vue === 'messages' && filOuvert;
+    pourMoiN.forEach(m => {
+      const f = m.fil || GENERAL.id; if (ici && filOuvert === f) return;
+      const fi = items[f] || GENERAL, titre = `${nomDe(m.par)} · ${fi.ic || '💬'} ${fi.nom}`, corps = String(m.texte || '').slice(0, 140);
+      if (document.visibilityState === 'visible') { toast(`💬 ${nomDe(m.par)} : ${corps.slice(0, 60)}`); return; }
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      const opts = {body: corps, icon: '../icones/journal-192.png', badge: '../icones/journal-192.png', tag: 'journal-' + f, renotify: true, data: {fil: f}};
+      if (navigator.serviceWorker && navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r => r.showNotification(titre, opts)).catch(() => {});
+      else try { new Notification(titre, opts); } catch (e) {}
+    });
+  }
+  async function activerAlertes() {
+    if (!('Notification' in window)) {
+      toast(JI.ios && !JI.enAppli() ? '📲 Sur iPhone, installe d\'abord l\'appli (écran d\'accueil) pour recevoir les alertes' : 'Ce navigateur ne sait pas faire d\'alertes');
+      return;
+    }
+    const p = await Notification.requestPermission();
+    if (p === 'granted') {
+      toast('🔔 Alertes activées');
+      try { const reg = await navigator.serviceWorker.ready; if (reg.periodicSync) await reg.periodicSync.register('journal-messages', {minInterval: 30 * 60 * 1000}); } catch (e) {}
+      majBadge();
+    } else toast('Alertes refusées : tu peux les réactiver dans les réglages du téléphone');
+    rendre();
+  }
+
+  function vMessages(el) {
+    if (filOuvert && (filOuvert === GENERAL.id || (items[filOuvert] && !items[filOuvert].x))) return vFil(el);
+    filOuvert = ''; SS('journal-fil', '');
+    const fs = fils().map(f => { const ms = msgsDe(f.id); return {f, der: ms[ms.length - 1], nl: nonLus(f.id)}; })
+      .sort((a, b) => (b.f.fixe || 0) - (a.f.fixe || 0) || ((b.der && b.der.cree) || b.f.cree || 0) - ((a.der && a.der.cree) || a.f.cree || 0));
+    const alertes = 'Notification' in window ? Notification.permission : 'non';
+    el.innerHTML = `<h2 class="titre">Messages</h2>
+      <p class="mut" style="margin-top:-6px">Toute l'équipe peut lire toutes les discussions. Tape <b>@</b> pour dire à qui tu écris : la personne est prévenue.</p>
+      ${alertes === 'default' || alertes === 'non' && JI.ios && !JI.enAppli() ? `<div class="nouveau rangee" style="justify-content:space-between">🔔 Être prévenu quand on t'écrit (pastille sur l'icône) <button class="btn p petit" id="ms-alertes">Activer</button></div>` : ''}
+      ${fs.map(({f, der, nl}) => { const at = nl.some(pourMoi);
+        return `<div class="carte fil" data-fil="${esc(f.id)}"><span class="fil-ic">${esc(f.ic || '💬')}</span><div class="fil-t"><b>${esc(f.nom)}</b>
+          <span class="mut fil-der">${der ? `${der.par === moiId ? 'Moi' : esc(nomDe(der.par))} : ${esc(String(der.texte || '').slice(0, 80))}` : 'Pas encore de message'}</span></div>
+          <div class="fil-d">${der ? `<span class="mut" style="font-size:12px">${esc(jourDe(der.cree) === 'Aujourd\'hui' ? hhmm(der.cree) : jourDe(der.cree))}</span>` : ''}${nl.length ? `<span class="fil-nl ${at ? 'at' : ''}">${at ? '@ ' : ''}${nl.length}</span>` : ''}</div></div>`; }).join('')}
+      <button class="ajout" id="ms-nouv">＋ Nouveau sujet de discussion</button>`;
+    el.onclick = e => {
+      const f = e.target.closest('[data-fil]'); if (f) { ouvrirFil(f.dataset.fil); return; }
+      if (e.target.id === 'ms-nouv') formFil();
+      if (e.target.id === 'ms-alertes') activerAlertes();
+    };
+  }
+  function ouvrirFil(id) { filOuvert = id; SS('journal-fil', id); pourChoisis = []; rendre(); }
+  function formFil(f) {
+    const nouveau = !f; f = f || {id: uid('f'), t: 'com', g: 'fil', nom: '', ic: '💬', cree: Date.now()};
+    let ic = f.ic || '💬';
+    feuille(`<h3>${nouveau ? 'Nouveau sujet de discussion' : 'Le sujet'}</h3>
+      <label class="lab">Sujet</label><input class="inp" id="fi-nom" maxlength="40" placeholder="Ex. : Article sur la cantine, Photos du voyage…" value="${esc(f.nom)}">
+      <label class="lab">Icône</label><div class="rangee" id="fi-ic">${ICONES_FIL.map(x => `<button class="btn petit ${x === ic ? 'p' : ''}" data-ic="${x}" style="font-size:20px">${x}</button>`).join('')}</div>
+      <p class="mut" style="font-size:13.5px">Tout le monde dans l'équipe verra ce sujet et pourra y écrire.</p>
+      <div class="actions">${!nouveau && (f.par === moiId || peut('supprimer')) ? '<button class="btn r" id="fi-sup">Supprimer</button>' : ''}<button class="btn" data-fermer>Annuler</button><button class="btn p" id="fi-ok">${nouveau ? 'Créer' : 'Enregistrer'}</button></div>`, el => {
+      el.onclick = e => {
+        const b = e.target.closest('[data-ic]'); if (b) { ic = b.dataset.ic; el.querySelectorAll('[data-ic]').forEach(x => x.classList.toggle('p', x === b)); return; }
+        if (e.target.id === 'fi-ok') {
+          const n = el.querySelector('#fi-nom').value.trim(); if (n.length < 2) { toast('Donne un nom au sujet'); return; }
+          f.nom = n; f.ic = ic; sauver(f, true); if (nouveau) { filOuvert = f.id; SS('journal-fil', f.id); } fermer(); return;
+        }
+        if (e.target.id === 'fi-sup' && confirm(`Supprimer le sujet « ${f.nom} » et ses messages ?`)) {
+          msgsDe(f.id).forEach(m => { m.x = 1; sauver(m, true); }); supprimer(f); filOuvert = ''; SS('journal-fil', ''); fermer();
+        }
+      };
+      setTimeout(() => { const i = el.querySelector('#fi-nom'); if (i) i.focus(); }, 100);
+    });
+  }
+  // texte d'un message : échappé, liens cliquables, @prénom en couleur
+  function texteMsg(t) {
+    let h = esc(t).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+    const noms = liste('membre').map(m => m.nom).filter(Boolean).sort((a, b) => b.length - a.length);
+    const moiNom = (moi() && moi().nom || '').toLowerCase();
+    noms.concat(['tous']).forEach(n => {
+      const re = new RegExp('@' + esc(n).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\wÀ-ÿ])', 'gi');
+      h = h.replace(re, s => `<b class="at ${n.toLowerCase() === moiNom || n === 'tous' ? 'moi' : ''}">${s}</b>`);
+    });
+    return h.replace(/\n/g, '<br>');
+  }
+  function bulles(f) {
+    const ms = msgsDe(f); let html = '', jour = '', avant = null;
+    ms.forEach(m => {
+      const j = jourDe(m.cree); if (j !== jour) { html += `<div class="jour"><span>${esc(j)}</span></div>`; jour = j; avant = null; }
+      const mien = m.par === moiId, suite = avant && avant.par === m.par && m.cree - avant.cree < 5 * 60000;
+      html += `<div class="msg ${mien ? 'mien' : ''} ${suite ? 'suite' : ''} ${!mien && pourMoi(m) ? 'pourmoi' : ''}" data-msg="${esc(m.id)}">
+        ${!mien && !suite ? avatar(m.par) : '<span class="av-vide"></span>'}
+        <div class="bul">${!mien && !suite ? `<div class="qui" style="color:${couleurDe(m.par)}">${esc(nomDe(m.par))}</div>` : ''}
+          <div class="txt">${texteMsg(m.texte)}</div>
+          <div class="pied">${m.pour && m.pour.length ? `<span class="pour">→ ${esc(pourTxt(m.pour))}</span>` : ''}<span>${hhmm(m.cree)}</span>${mien && file.includes(m.id) ? ' <span title="Pas encore envoyé">🕓</span>' : ''}</div>
+          ${mien || peut('supprimer') ? '<button class="msg-sup" data-msup="1" hidden>🗑 Supprimer</button>' : ''}</div></div>`;
+      avant = m;
+    });
+    return html || '<div class="vide">Pas encore de message. Écris le premier !</div>';
+  }
+  function marquerLu(f) {
+    const ms = msgsDe(f); if (!ms.length) return;
+    const t = Math.max(ms[ms.length - 1].cree, Date.now());
+    if (t > (+LS('journal-lu-' + f) || 0)) LS('journal-lu-' + f, String(t));
+  }
+  function majFil() {
+    const l = $('chat-liste'); if (!l) return;
+    const bas = innerHeight + scrollY >= document.documentElement.scrollHeight - 140;
+    l.innerHTML = bulles(filOuvert);
+    if (document.visibilityState === 'visible') marquerLu(filOuvert);
+    if (bas) scrollTo(0, document.documentElement.scrollHeight);
+    majBulles();
+  }
+  function vFil(el) {
+    const f = filOuvert === GENERAL.id ? GENERAL : items[filOuvert];
+    const membres = liste('membre').filter(m => m.id !== moiId).sort((a, b) => a.nom.localeCompare(b.nom));
+    el.innerHTML = `<div class="chat-tete"><button class="btn petit" id="ch-ret">‹ Sujets</button><b class="ch-nom">${esc(f.ic || '💬')} ${esc(f.nom)}</b>
+        ${!f.fixe && (f.par === moiId || peut('supprimer')) ? '<button class="btn petit" id="ch-mod">⋯</button>' : ''}</div>
+      <div id="chat-liste">${bulles(f.id)}</div>
+      <div class="compo" id="compo">
+        <div class="choix-pour" id="ch-pour" hidden><span class="mut" style="font-size:13px">Pour qui ?</span>
+          <button type="button" class="pq" data-pq="tous">📣 Tout le monde</button>${membres.map(m => `<button type="button" class="pq" data-pq="${esc(m.id)}">${esc(m.nom)}</button>`).join('')}</div>
+        <div class="pour-ch" id="ch-tags"></div>
+        <div class="compo-l"><button type="button" class="at-b" id="ch-at" title="Pour qui ?">@</button>
+          <textarea id="ch-txt" rows="1" maxlength="2000" placeholder="Message…">${esc(brouillons[f.id] || '')}</textarea>
+          <button type="button" class="env" id="ch-env" title="Envoyer">➤</button></div>
+      </div>`;
+    $('vue').classList.add('en-chat');
+    const tx = $('ch-txt'), grandir = () => { tx.style.height = 'auto'; tx.style.height = Math.min(tx.scrollHeight, 140) + 'px'; };
+    const majTags = () => {
+      $('ch-tags').innerHTML = pourChoisis.map(p => `<span class="tag">@${esc(p === 'tous' ? 'tous' : nomDe(p))}<button type="button" data-tx="${esc(p)}">✕</button></span>`).join('');
+      el.querySelectorAll('[data-pq]').forEach(b => b.classList.toggle('on', pourChoisis.includes(b.dataset.pq)));
+    };
+    const choisir = (p, insere) => {
+      if (!pourChoisis.includes(p)) pourChoisis.push(p);
+      if (insere) { // remplace le « @ » tapé par « @Prénom »
+        const v = tx.value, i = tx.selectionStart, a = v.lastIndexOf('@', i - 1), mot = '@' + (p === 'tous' ? 'tous' : nomDe(p)) + ' ';
+        tx.value = a >= 0 ? v.slice(0, a) + mot + v.slice(i) : v + mot; brouillons[f.id] = tx.value;
+      }
+      $('ch-pour').hidden = true; majTags(); tx.focus();
+    };
+    const envoyer = () => {
+      const t = tx.value.trim(); if (!t) return;
+      const pour = pourChoisis.slice(), bas = t.toLowerCase();
+      liste('membre').forEach(m => { if (m.id !== moiId && bas.includes('@' + m.nom.toLowerCase()) && !pour.includes(m.id)) pour.push(m.id); });
+      if (/@tous\b/i.test(t) && !pour.includes('tous')) pour.push('tous');
+      sauver({id: uid('msg'), t: 'com', g: 'msg', fil: f.id, texte: t.slice(0, 2000), pour, cree: Date.now()}, true);
+      tx.value = ''; brouillons[f.id] = ''; pourChoisis = []; $('ch-pour').hidden = true; $('ch-pour').dataset.ouvert = ''; majTags(); grandir();
+      $('chat-liste').innerHTML = bulles(f.id); marquerLu(f.id); scrollTo(0, document.documentElement.scrollHeight); tx.focus();
+    };
+    tx.oninput = () => {
+      brouillons[f.id] = tx.value; grandir();
+      const i = tx.selectionStart, avant = tx.value.slice(0, i);
+      if (/(^|\s)@[^\s@]{0,20}$/.test(avant)) { // on tape @… : on propose les prénoms
+        const q = avant.slice(avant.lastIndexOf('@') + 1).toLowerCase(); $('ch-pour').hidden = false;
+        let vis = 0; el.querySelectorAll('[data-pq]').forEach(b => { b.hidden = !!q && !(b.dataset.pq === 'tous' ? 'tous tout le monde' : b.textContent).toLowerCase().includes(q); vis += !b.hidden; });
+        if (!vis) $('ch-pour').hidden = true;
+      } else if (!$('ch-pour').dataset.ouvert) $('ch-pour').hidden = true;
+    };
+    tx.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey && !JI.mobile) { e.preventDefault(); envoyer(); } };
+    el.onclick = e => {
+      if (e.target.id === 'ch-ret') { filOuvert = ''; SS('journal-fil', ''); $('vue').classList.remove('en-chat'); rendre(); scrollTo(0, 0); return; }
+      if (e.target.id === 'ch-mod') { formFil(f); return; }
+      if (e.target.id === 'ch-env') { envoyer(); return; }
+      if (e.target.id === 'ch-at') { const p = $('ch-pour'); p.hidden = !p.hidden; p.dataset.ouvert = p.hidden ? '' : '1'; p.querySelectorAll('[data-pq]').forEach(b => { b.hidden = false; }); return; }
+      const pq = e.target.closest('[data-pq]'); if (pq) { const tape = /(^|\s)@[^\s@]{0,20}$/.test(tx.value.slice(0, tx.selectionStart)); $('ch-pour').dataset.ouvert = ''; choisir(pq.dataset.pq, tape); return; }
+      const x = e.target.closest('[data-tx]'); if (x) { pourChoisis = pourChoisis.filter(p => p !== x.dataset.tx); majTags(); return; }
+      if (e.target.closest('[data-msup]')) { const m = items[e.target.closest('[data-msg]').dataset.msg]; if (m && confirm('Supprimer ce message ?')) { m.x = 1; sauver(m, true); majFil(); } return; }
+      const b = e.target.closest('.msg .bul'); if (b && !e.target.closest('a')) { const s = b.querySelector('.msg-sup'); if (s) s.hidden = !s.hidden; }
+    };
+    majTags(); grandir(); marquerLu(f.id);
+    requestAnimationFrame(() => scrollTo(0, document.documentElement.scrollHeight));
+  }
+
   /* ---------- démarrage ---------- */
-  DB.tout().then(tous => { tous.forEach(i => { if (!items[i.id] || (items[i.id].maj || 0) < (i.maj || 0)) items[i.id] = i; }); entrer(); });
+  DB.tout().then(tous => { tous.forEach(i => { if (String(i.id)[0] === '_') return; if (!items[i.id] || (items[i.id].maj || 0) < (i.maj || 0)) items[i.id] = i; }); entrer(); });
   window.addEventListener('afterprint', () => { $('impression').innerHTML = ''; });
 })();

@@ -24,7 +24,7 @@ function onglet(nom, entete, couleur) {
 }
 function donnees() { return onglet('Données', ['Id', 'Type', 'Reçu', 'Modifié', 'Données (suite à droite si long)']); }
 function sortie(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
-function codeOk(c) { return String(c || '').trim() === CODE; }
+function codeOk(c) { return String(c || '').trim().toLowerCase() === CODE.toLowerCase(); }
 
 // Toutes les lignes : [{ligne, id, type, recu, json}]
 function lire(sh) {
@@ -37,7 +37,7 @@ function lire(sh) {
   })).filter(x => x.id);
 }
 
-// GET ?code=12345&depuis=<ms> : tout ce qui a été reçu après « depuis » (0 = tout)
+// GET ?code=…&depuis=<ms> : tout ce qui a été reçu après « depuis » (0 = tout)
 function doGet(e) {
   if (!codeOk(e.parameter.code)) return sortie({ok: false, err: 'code'});
   const depuis = Number(e.parameter.depuis) || 0, maintenant = Date.now();

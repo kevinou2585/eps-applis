@@ -1,5 +1,5 @@
 /* ====== Journal de l'école (kevin, 3 nov. 2026) ======
-   Appli à part (installable sur téléphone et ordinateur) + tuile dans EPS ultime, fermée par le code 12345.
+   Appli à part (installable sur téléphone et ordinateur) + tuile dans EPS ultime, fermée par un code (kevin : erasmus…, empreinte dans CODE_SHA).
    Équipe : 3-4 élèves (16-18 ans) et 2 profs (directeur de la publication / rédacteur en chef, qui valident).
    Onglets : Accueil, Agenda (réunions + réponses), Articles (éditeur avec mise en forme, photo, relecture), Idées (post-it + votes),
    Journal (numéros, 4 pages A4 recto-verso, gabarits, propositions automatiques, impression). Équipe : bouton 👥 en haut.
@@ -9,7 +9,7 @@
    Sur l'appareil : IndexedDB « journal » (+ localStorage journal-*). Sans SCRIPT : tout reste sur l'appareil. */
 (() => {
   const SCRIPT = ''; // URL /exec du script Google « Journal de l'école » de kevin (à remplir quand il l'a déployé)
-  const CODE_SHA = '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5'; // empreinte du code 12345
+  const CODE_SHA = '58abc04d89961eb778a3fb1978a52628f875af97b3dbc7d740a9eb6c6658de6f'; // empreinte du code de l'appli (kevin, 03/11 : erasmus…), en minuscules
 
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -187,7 +187,7 @@
   $('bt-sans').onclick = () => { SS('journal-sans', '1'); entrer(); };
   $('f-code').onsubmit = async e => {
     e.preventDefault();
-    const c = $('code').value.trim();
+    const c = $('code').value.trim().toLowerCase(); // majuscules ou minuscules, peu importe
     if (await sha(c) !== CODE_SHA) { $('code-err').textContent = 'Ce n\'est pas le bon code.'; $('code').select(); return; }
     LS('journal-ok', '1'); LS('journal-code', c); $('code-err').textContent = '';
     await synchro(); entrer();
@@ -778,7 +778,7 @@
   function vEquipe(el) {
     const m = moi(), chef = estChef(), ms = liste('membre');
     const auMoinsUnChef = ms.some(x => ROLE[x.role] && ROLE[x.role].chef);
-    const msg = `Rejoins l'équipe du journal ! Installe l'appli : ${JI.lien} puis tape le code 12345.`;
+    const msg = `Rejoins l'équipe du journal ! Installe l'appli : ${JI.lien} puis tape le code ${LS('journal-code') || ''}.`;
     el.innerHTML = `<h2 class="titre">L'équipe de rédaction</h2>
       <div class="carte"><div class="membre" style="border:0;padding:0">${avatar(moiId)}<div style="flex:1"><b>${esc(m.nom)}</b> (moi)<br><span class="mut">${ROLE[m.role] ? ROLE[m.role].ic : ''} ${esc(roleNom(m.role))}</span></div><button class="btn petit" id="q-moi">Modifier</button></div></div>
       <h3 class="st">Tout le monde (${ms.length})</h3><div class="carte">

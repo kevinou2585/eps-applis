@@ -4,7 +4,7 @@
 //     if (e.parameter.action === 'places') return sortie(placesEtat(e.parameter.jeu));
 //   dans doPost, juste après la ligne « if (o.action === 'jeu') … » :
 //     if (o.action === 'places') return sortie(placesEnvoi(o));
-//   et la ligne « if (o.action === 'jeu') … » devient : if (o.action === 'jeu') { const r = jeuScore(o); flipperRangerSur(o.jeu); return sortie(r); }
+//   et la ligne « if (o.action === 'jeu') … » devient : if (o.action === 'jeu') { const r = jeuScore(o); if (r.ok) statsNoter(o.jeu, o.nom, o.genre, o.score, -1); flipperRangerSur(o.jeu); return sortie(r); }
 //   dans onOpen, avant la dernière ligne : SpreadsheetApp.getUi().createMenu('Flipper').addItem('Ranger l’onglet Flipper', 'flipperMenu').addToUi();
 // Règles (Kevin, 29/10/2026) : battre un boss = prendre sa place ; l'ancien occupant descend d'un cran, et ainsi de suite
 // jusqu'à la première place libre (sinon la Garde sort). Le Dieu se prend seulement en battant aussi son record.
@@ -88,9 +88,58 @@ function placesEnvoi(o) {
   if (place >= 0 && deja >= 0 && deja < place) place = -2; // Kevin (02/11) : tu as déjà mieux, tu gardes ta place la plus haute, rien ne bouge
   if (place >= 0) { const avant = e.places[place]; placesPrendre(e.places, place, moi); if (e.places[place] !== avant && !(avant && avant.nom.toLowerCase() === nom.toLowerCase())) e.bonus[place] += MONTEE; }
   placesEcrire(sh, e);
+  statsNoter(o.jeu, nom, moi.genre, score, place >= 0 && deja !== place ? place : -1); // stats : un titre compte seulement s'il est NOUVEAU (pas déjà à toi)
   ongletJeu(o.jeu).appendRow([new Date(), nom, score, '', moi.genre, place >= 0 ? PLACES[place] : place === -2 ? 'garde ' + PLACES[deja] : 'reste Dieu']); // journal de toutes les parties (sans photo)
   flipperRangerSur(o.jeu);
   return {ok: true, places: e.places, record: e.record, bonus: e.bonus, place: place};
+}
+
+// ---------- Stats de tous les joueurs (Kevin, 03/11/2026) ----------
+// Tout joueur qui envoie une partie entre dans l'onglet caché « Stats joueurs » (une ligne par prénom).
+// On compte combien de fois il est DEVENU Garde, Bourreau, Roi, Empereur ou Dieu en battant un boss.
+// Être battu et descendre ne compte pas ; une partie qui ne lui donne pas de nouveau titre ne compte pas non plus.
+// Les stats démarrent le jour où ce script est collé (pas de reprise des anciennes parties) et survivent aux remises à zéro du classement.
+const ONGLET_STATS = 'Stats joueurs';
+const STATS_COLS = ['Nom', 'Roi/Reine', 'Parties', 'Meilleur score', 'Garde', 'Bourreau', 'Roi', 'Empereur', 'Dieu', 'Dernier titre', 'Le'];
+const TITRES = [['Dieu', 'Déesse'], ['Empereur', 'Impératrice'], ['Roi', 'Reine'], ['Bourreau', 'Sorcière'], ['Garde', 'Garde']];
+
+function ongletStats() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(ONGLET_STATS);
+  if (!sh) {
+    sh = ss.insertSheet(ONGLET_STATS);
+    sh.getRange(1, 1, 1, STATS_COLS.length).setValues([STATS_COLS]).setFontWeight('bold').setBackground('#12352b').setFontColor('#ffffff');
+    sh.setFrozenRows(1);
+    sh.hideSheet();
+  }
+  return sh;
+}
+
+function statsLire(sh) {
+  return sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, STATS_COLS.length).getValues() : [];
+}
+
+// devenu : 0 Dieu … 4 Garde quand ce joueur vient de prendre une NOUVELLE place, -1 sinon. Une erreur ici ne bloque jamais l'envoi.
+function statsNoter(jeu, nom, genre, score, devenu) {
+  try {
+    if (/-(cache|dieu)$/.test(String(jeu || ''))) return; // anciens classements secrets : pas de stats
+    nom = String(nom || '').trim().replace(/\s+/g, ' ').slice(0, 24); score = Math.floor(Number(score) || 0);
+    if (!nom) return;
+    const sh = ongletStats(), v = statsLire(sh);
+    let i = v.findIndex(r => String(r[0]).trim().toLowerCase() === nom.toLowerCase());
+    const r = i >= 0 ? v[i] : [nom, '', 0, 0, 0, 0, 0, 0, 0, '', ''];
+    if (genre === 'F' || genre === 'H') r[1] = genre;
+    r[2] = (Number(r[2]) || 0) + 1;
+    r[3] = Math.max(Number(r[3]) || 0, score);
+    if (devenu >= 0 && devenu < PLACES.length) {
+      const col = 8 - devenu; // Dieu → colonne 8 (index), Garde → 4
+      r[col] = (Number(r[col]) || 0) + 1;
+      r[9] = TITRES[devenu][r[1] === 'F' ? 1 : 0];
+      r[10] = new Date();
+    }
+    if (i < 0) { sh.appendRow(r); return; }
+    sh.getRange(i + 2, 1, 1, STATS_COLS.length).setValues([r]);
+  } catch (err) { console.error(err); }
 }
 
 // ---------- Onglet « Flipper » : tout le flipper sur un seul onglet propre (Kevin, 29/10/2026) ----------
@@ -121,7 +170,8 @@ function flipperRanger() {
   if (!sh) sh = ss.insertSheet(ONGLET_FLIPPER);
   sh.clear(); sh.setHiddenGridlines(true);
   const lignes = [], styles = []; // styles : [ligne, type]
-  const ajoute = (vals, type) => { lignes.push(vals.concat(['', '', '', '', '']).slice(0, 5)); if (type) styles.push([lignes.length, type]); };
+  const L = 10; // colonnes (le tableau des stats est le plus large)
+  const ajoute = (vals, type) => { lignes.push(vals.concat(Array(L).fill('')).slice(0, L)); if (type) styles.push([lignes.length, type]); };
   ajoute(['🎯 Battle des profs — le flipper'], 'titre');
   ajoute(['Mis à jour le ' + Utilities.formatDate(new Date(), 'Europe/Brussels', 'dd/MM/yyyy à HH:mm')], 'note');
   ajoute([]);
@@ -129,7 +179,6 @@ function flipperRanger() {
   ajoute(['👑 LE TOP 5 ACTUEL'], 'section');
   ajoute(['Place', 'Titre', 'Nom', 'Depuis', ''], 'entete');
   const e = jeu && ss.getSheetByName('Places ' + jeu) ? placesLire(ss.getSheetByName('Places ' + jeu)) : {places: [null, null, null, null, null], record: 0};
-  const TITRES = [['Dieu', 'Déesse'], ['Empereur', 'Impératrice'], ['Roi', 'Reine'], ['Bourreau', 'Sorcière'], ['Garde', 'Garde']];
   const RANGS = ['⚡ 1', '💀 2', '👑 3', '🪓 4', '🛡 5'];
   e.places.forEach((p, i) => ajoute([RANGS[i], TITRES[i][p && p.genre === 'F' ? 1 : 0], p ? p.nom : '— personne —', p ? p.date : '', ''], 'place'));
   ajoute(['', 'Record du Dieu', e.record ? e.record : '—', '', ''], 'record');
@@ -146,13 +195,24 @@ function flipperRanger() {
   ajoute(['Date', 'Nom', 'Record', '', ''], 'entete');
   dieux.forEach(r => ajoute([r[0] instanceof Date ? Utilities.formatDate(r[0], 'Europe/Brussels', 'dd/MM/yyyy') : r[0], String(r[1]).trim(), Number(r[2]) || 0, '', ''], 'partie'));
   if (!dieux.length) ajoute(['Personne pour l’instant'], 'note');
-  sh.getRange(1, 1, lignes.length, 5).setValues(lignes);
+  ajoute([]);
+  // 3. Kevin (03/11) : les stats de tous les joueurs (onglet caché « Stats joueurs ») : combien de fois chacun est DEVENU Dieu, Empereur…
+  const stats = statsLire(ongletStats()).filter(r => String(r[0]).trim());
+  const nb = r => [8, 7, 6, 5, 4].map(c => Number(r[c]) || 0);
+  stats.sort((a, b) => { const x = nb(a), y = nb(b); for (let k = 0; k < 5; k++) if (x[k] !== y[k]) return y[k] - x[k]; return (Number(b[2]) || 0) - (Number(a[2]) || 0); });
+  ajoute(['📊 LES STATS DE TOUS LES JOUEURS (depuis le 03/11/2026)'], 'section');
+  ajoute(['Nom', 'Parties', 'Meilleur score', '⚡ Dieu', '💀 Empereur', '👑 Roi', '🪓 Bourreau', '🛡 Garde', 'Dernier titre', 'Le'], 'entete');
+  stats.forEach(r => ajoute([String(r[0]).trim(), Number(r[2]) || 0, Number(r[3]) || 0].concat(nb(r).map(n => n || '')).concat([r[9] || '', r[10] instanceof Date ? Utilities.formatDate(r[10], 'Europe/Brussels', 'dd/MM/yyyy') : r[10] || '']), 'stat'));
+  if (!stats.length) ajoute(['Personne pour l’instant : chaque partie envoyée ajoute son joueur ici.'], 'note');
+  ajoute(['Un titre compte quand le joueur le PREND en battant un boss. Être battu ou refaire moins bien ne compte pas.'], 'note');
+  sh.getRange(1, 1, lignes.length, L).setValues(lignes);
   // mise en forme
-  sh.setColumnWidth(1, 120); sh.setColumnWidth(2, 150); sh.setColumnWidth(3, 170); sh.setColumnWidth(4, 130); sh.setColumnWidth(5, 90);
-  sh.getRange(1, 1, lignes.length, 5).setFontFamily('Arial').setFontSize(11).setVerticalAlignment('middle');
+  sh.setColumnWidth(1, 150); sh.setColumnWidth(2, 150); sh.setColumnWidth(3, 170); sh.setColumnWidth(4, 130); sh.setColumnWidth(5, 110);
+  [6, 7, 8].forEach(c => sh.setColumnWidth(c, 100)); sh.setColumnWidth(9, 130); sh.setColumnWidth(10, 100);
+  sh.getRange(1, 1, lignes.length, L).setFontFamily('Arial').setFontSize(11).setVerticalAlignment('middle');
   sh.getRange(1, 3, lignes.length, 1).setNumberFormat('#,##0');
   styles.forEach(([l, t]) => {
-    const r = sh.getRange(l, 1, 1, 5);
+    const r = sh.getRange(l, 1, 1, L);
     if (t === 'titre') { r.merge().setFontSize(18).setFontWeight('bold').setFontColor(F_VERT); sh.setRowHeight(l, 34); }
     else if (t === 'note') r.merge().setFontColor('#777777').setFontStyle('italic');
     else if (t === 'section') { r.merge().setBackground(F_VERT).setFontColor('#ffffff').setFontWeight('bold').setFontSize(12); sh.setRowHeight(l, 28); }
@@ -160,6 +220,7 @@ function flipperRanger() {
     else if (t === 'place') r.setBackground(l % 2 ? '#ffffff' : F_CLAIR).setBorder(null, null, true, null, null, null);
     else if (t === 'record') { r.setBackground('#fff4c2').setFontWeight('bold'); }
     else if (t === 'partie') r.setBackground(l % 2 ? '#ffffff' : F_CLAIR);
+    else if (t === 'stat') { r.setBackground(l % 2 ? '#ffffff' : F_CLAIR); sh.getRange(l, 1).setFontWeight('bold'); sh.getRange(l, 4, 1, 5).setHorizontalAlignment('center'); }
   });
   sh.setFrozenRows(0);
   // l'onglet Flipper juste après ceux de Koh-Lanta ; les onglets de données cachés

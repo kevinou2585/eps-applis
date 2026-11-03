@@ -1,0 +1,17 @@
+{
+  "name": "Journal de l'école",
+  "short_name": "Journal",
+  "lang": "fr",
+  "id": "/eps-applis/journal/",
+  "start_url": "./",
+  "description": "Réunions, articles, idées et mise en page du journal de l'école",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f766e",
+  "theme_color": "#0f766e",
+  "icons": [
+    {"src": "../icones/journal-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "../icones/journal-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "../icones/journal-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

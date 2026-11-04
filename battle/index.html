@@ -188,7 +188,8 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .i-ecl{position:absolute;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--c,#ffd23f);box-shadow:0 0 8px var(--c,#ffd23f)}
 .i-annonce{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:86%;text-align:center;font:900 26px/1.05 Georgia,"Times New Roman",serif;text-transform:uppercase;color:#ffe7b0;text-shadow:0 3px 0 #5a0f14,0 0 22px rgba(255,110,40,.8)}
 .i-annonce small{display:block;margin-top:6px;font:800 13px system-ui,-apple-system,sans-serif;letter-spacing:.14em;color:var(--jaune)}
-.i-passer{position:absolute;right:10px;top:calc(64px * var(--k));pointer-events:auto;border:0;border-radius:999px;padding:7px 14px;background:rgba(0,0,0,.55);color:#fff;font:800 13px system-ui,-apple-system,sans-serif}
+.i-passer{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 96px);transform:translateX(-50%);z-index:9;pointer-events:auto;border:2px solid #2a0f3d;border-radius:999px;padding:12px 26px;background:#ffd23f;color:#2a0f3d;font:900 17px system-ui,-apple-system,sans-serif;letter-spacing:.03em;box-shadow:0 5px 0 #b38a00,0 10px 24px rgba(0,0,0,.55);white-space:nowrap} /* Kevin (04/11/2026) : gros bouton bien visible pour passer l'animation */
+.i-passer:active{transform:translateX(-50%) translateY(3px);box-shadow:0 2px 0 #b38a00}
 .i-couronne{position:absolute;font-size:34px;line-height:1;transform:translate(-50%,-50%)}
 .i-proj{position:absolute;font-size:30px;line-height:1;transform:translate(-50%,-50%);filter:drop-shadow(0 3px 3px rgba(0,0,0,.5))}
 .i-coiffe{position:absolute;filter:drop-shadow(0 6px 6px rgba(0,0,0,.5))}
@@ -204,6 +205,41 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 .barre{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:12px 16px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(transparent,rgba(20,6,20,.85) 30%)}
 .barre .gros{max-width:440px;margin:0 auto;background:var(--jaune);color:#2a0f3d;font-size:24px;letter-spacing:.08em;box-shadow:0 6px 0 #b38a00,0 12px 24px rgba(0,0,0,.4)}
 .barre .gros:active{box-shadow:0 2px 0 #b38a00}
+/* Kevin (04/11/2026) : Jouer à gauche, Classement général à droite */
+.barre .deux{display:flex;gap:10px;max-width:440px;margin:0 auto}
+.barre .deux .gros{flex:1 1 0;min-width:0;margin:0;display:flex;align-items:center;justify-content:center;min-height:60px;padding:8px 6px}
+#general{background:#3a1452;color:#ffd23f;border:2px solid #ffd23f;font-size:15px;line-height:1.1;letter-spacing:.04em;box-shadow:0 6px 0 #1c0628,0 12px 24px rgba(0,0,0,.4)}
+#general:active{box-shadow:0 2px 0 #1c0628}
+#maj-ecran{position:fixed;inset:0;z-index:22;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 12px);background:rgba(10,3,14,.8)}
+#maj-ecran[hidden]{display:none}
+#maj-ecran .cadre{width:min(400px,100%);max-height:100%;overflow:auto;padding:18px 16px 16px;border-radius:20px;background:radial-gradient(circle at 50% 0,#5a1a6e,#2a0f3d 55%,#12040b);border:3px solid #ffd23f;color:#fff3d6;text-align:center;box-shadow:0 0 0 6px rgba(255,210,63,.15),0 16px 44px rgba(0,0,0,.7);font:700 15px/1.35 system-ui,-apple-system,sans-serif;animation:chute .7s cubic-bezier(.2,1.5,.4,1) both}
+#maj-ecran .cloche{font-size:40px;line-height:1}
+#maj-ecran h3{margin:6px 0 4px;font:900 22px Georgia,"Times New Roman",serif;color:#ffd23f;text-shadow:0 3px 0 #7d1019;text-transform:uppercase;letter-spacing:.03em}
+#maj-ecran .date{margin:0 0 12px;font-size:12px;color:#c9a8d8;letter-spacing:.1em;text-transform:uppercase}
+#maj-ecran .item{display:flex;gap:10px;align-items:flex-start;text-align:left;margin:8px 0;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,210,63,.25)}
+#maj-ecran .item i{font-style:normal;font-size:22px;line-height:1.1}
+#maj-ecran .item b{display:block;color:#ffd23f;margin-bottom:2px}
+#maj-ecran .item span{font-weight:600;color:#f1e3ff;font-size:14px}
+#maj-ecran .actions{display:flex;gap:10px;margin-top:14px}
+#maj-ecran .actions button{flex:1 1 0;min-width:0;padding:13px 8px;border-radius:14px;font:900 15px system-ui,-apple-system,sans-serif}
+#maj-ecran .voir{background:#3a1452;color:#ffd23f;border:2px solid #ffd23f}
+#maj-ecran .go{border:0;background:#ffd23f;color:#2a0f3d;box-shadow:0 5px 0 #b38a00}
+#general-ecran{position:fixed;inset:0;z-index:21;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 12px);background:rgba(10,3,14,.78)}
+#general-ecran[hidden]{display:none}
+#general-ecran .cadre{width:min(420px,100%);max-height:100%;display:flex;flex-direction:column;border-radius:18px;background:linear-gradient(180deg,#2a0f3d,#12040b);border:2px solid #ffd23f;color:#fff3d6;box-shadow:0 14px 40px rgba(0,0,0,.6);font:700 15px/1.3 system-ui,-apple-system,sans-serif}
+#general-ecran h3{margin:0;padding:14px 14px 4px;text-align:center;font:900 21px Georgia,"Times New Roman",serif;color:#ffd23f}
+#general-ecran .info{margin:0 14px 8px;text-align:center;font-size:12px;color:#c9a8d8;font-weight:700}
+#general-ecran .liste{flex:1;overflow:auto;padding:0 10px}
+#general-ecran .l{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px}
+#general-ecran .l:nth-child(even){background:rgba(255,255,255,.05)}
+#general-ecran .l em{font-style:normal;min-width:30px;text-align:right;font-weight:900;color:#ffd23f;font-variant-numeric:tabular-nums}
+#general-ecran .l b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#general-ecran .l span{font-weight:900;color:#ffe9a8;font-variant-numeric:tabular-nums}
+#general-ecran .l.p1{background:rgba(255,210,63,.16)}
+#general-ecran .l.p1 b,#general-ecran .l.p1 span{color:#ffd23f}
+#general-ecran .l.moi{outline:1px solid rgba(255,210,63,.7);background:rgba(255,210,63,.22)}
+#general-ecran .vide{padding:20px 10px;text-align:center;color:#c9a8d8}
+#general-ecran .fermer{margin:10px 14px 14px;padding:12px;border:0;border-radius:12px;background:#ffd23f;color:#2a0f3d;font:900 16px system-ui,-apple-system,sans-serif}
 .carte.r2{--bord:#ff8c1a}
 .carte.r3{--bord:#c9d1de}
 .carte.vide{opacity:.75;border-style:dashed}
@@ -270,9 +306,18 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
     <div class="defi">Novembre · grimpe jusqu'au trône</div>
     <div class="etat" id="etat"></div>
     <div id="bloc-boss"></div>
-    <div class="barre"><button class="gros" id="jouer">▶ Jouer</button></div>
+    <div class="barre"><div class="deux"><button class="gros" id="jouer">▶ Jouer</button><button class="gros" id="general" type="button">🏆 Classement<br>général</button></div></div>
   </div>
 </section>
+
+<div id="general-ecran" hidden role="dialog" aria-label="Classement général">
+  <div class="cadre"><h3>🏆 Classement général</h3><div class="info" id="general-info"></div><div class="liste" id="general-liste"></div><button class="fermer" type="button" id="general-fermer">Fermer</button></div>
+</div>
+
+<div id="maj-ecran" hidden role="dialog" aria-label="Mise à jour">
+  <div class="cadre"><div class="cloche">📯</div><h3>Attention, mise à jour !</h3><div class="quoi" id="maj-quoi"></div>
+  <div class="actions"><button type="button" class="voir" id="maj-general">🏆 Voir le classement général</button><button type="button" class="go" id="maj-jouer">▶ Jouer</button></div></div>
+</div>
 
 <section id="pause-ecran" class="ecran">
   <div class="boite">
@@ -1342,6 +1387,7 @@ for (const C of [CACHE_H, CACHE_D]) { C.rail.vit = VIT_CACHE; C.rail.cache = tru
 
 // ---------------------------------------------------------------- État de jeu
 let etat = 'accueil';
+let billesMax = 3; // Kevin (04/11/2026) : 3 billes, +1 en battant le roi (jusqu'à 3 en main) ou l'empereur (jusqu'à 4)
 let balles = [], score = 0, balleNo = 1, mult = 1, bulletin = 0, multiball = false;
 let sauveT = 0, temps = 0, comboN = 0, comboT = -9, basketHits = [], attenteBalle = 0, tilts = 0;
 let acoup = { x: 0, y: 0, t: -9 }; // à-coup visible de la table quand on secoue le téléphone
@@ -1362,7 +1408,7 @@ const charge = { src: {}, actif: false, t0: 0 };
 function balleNeuve(x, y, vx, vy, neuve) { return { x, y, vx, vy, tient: 0, ignoreTrou: 0, ignoreCasier: 0, neuve, lance: 0, ax: x, ay: y, at: temps, rampe: null, tunnel: null, boucle: null, lieu: null, trou: null, filet: null, vise: 0, viseT: 0, tirBut: 0, sansGardien: 0 }; }
 function nouvelleBalle(nouvelle = true) { finTilt(); balles.push(balleNeuve(375, 697, 0, 0, nouvelle)); }
 function nouvellePartie() {
-  balles = []; score = 0; balleNo = 1; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps; taireParole();
+  balles = []; score = 0; balleNo = 1; billesMax = 3; mult = 1; bulletin = 0; multiball = false; sauveT = 0; comboN = 0; comboT = -9; spectacleT = 0; derniereAction = temps; taireParole();
   paniers = 0; besoin = 3; cagePleine = true; cageFlash = 0; filetT = 0; COLLE.balle = null;
   nuit = false; bascule = null; gelT = 0; protegeT = 0; cageAttente = 0; aServir = 0; CASIER.balle = null; CASIER.visites = 0; CASIER.ouvert = 0;
   cibleRecord = +lsGet('battle-record-' + JEU, 0) || 0; recordFait = cibleRecord <= 0;
@@ -2146,11 +2192,15 @@ function bossVaincu() {
   flash = 0.5; secousse = 0.35; etincelles(C.x, C.y, 60, '#ffe600'); etincelles(C.x, C.y, 40, '#ffffff'); etincelles(C.x, C.y, 30, '#ff4d4d');
   C.chapeau = { vx: rnd(60, 110) * (C.x < 185 ? 1 : -1), vy: -330 };
   SON.vaincu(C.rang); vib([60, 40, 60, 40, 200]);
+  // Kevin (04/11/2026) : battre le roi rend une bille (pas plus de 3 en main), battre l'empereur aussi (jusqu'à 4) ; garde et sorcière : rien
+  const plafB = C.ultime ? 4 : C.rang === 1 ? 3 : 0, enMain = billesMax + 1 - balleNo, gagne = plafB && enMain < plafB;
+  if (gagne) { billesMax++; popups.push({ t: '+1 BILLE ! (' + (enMain + 1) + ')', x: 185, y: 420, age: 0, vie: 2.6, coul: '#7cf' }); }
   // vaincre le n°1 ne donne pas encore la couronne : c'est le score final qui compte (nom + roi/reine + photo en fin de partie)
   if (C.ultime) { ultimeBattu = true; C.ouvert = 0; C.gardes = []; annonce('BOSS CACHÉ VAINCU !', 'Le château est à toi… et plus encore', '#d9b3ff', 32, 2.4); confettis(); }
   else if (C.dieu) { dieuBattu = true; annonce(F ? 'DÉESSE VAINCUE !' : 'DIEU VAINCU !', 'Asgard s’incline devant toi', '#7fd8ff', 34, 2.6); confettis(); SON.tonnerre(0.3); }
   else if (C.rang === 1) { annonce('LE TRÔNE EST VIDE !', 'Tiens jusqu’au bout !', '#ffe600', 30, 2.8); confettis(); }
   else annonce(F ? 'VAINCUE !' : 'VAINCU !', titreBoss(C.rang, B.genre) + ' est à terre', C.N.bord, 44, 2.6);
+  if (gagne && grandMsg) grandMsg.sous += ' · +1 bille 🎱';
 }
 function combatPerdu(cause) { // Kevin : le boss passe les flippers, ou la dernière bille du combat tombe → ÉLIMINÉ, partie finie
   const C = combat, B = C.boss, F = B.genre === 'F'; C.phase = 'elimine'; C.t = 0; C.x0 = C.x; C.y0 = C.y; C.boucl = 0; C.rage = false;
@@ -2650,7 +2700,7 @@ function installerCite() { // derrière les nuages : on installe la Cité (les b
 }
 function finPorteDieux() {
   PORTED = null; finCombatT = temps; balles.push(balleNeuve(375, 697, 0, 0, true)); gelT = 0.4;
-  const reste = Math.max(1, 4 - balleNo), rec = bossD ? +bossD.record || 0 : 0;
+  const reste = Math.max(1, billesMax + 1 - balleNo), rec = bossD ? +bossD.record || 0 : 0;
   annonce('LA CITÉ DES DIEUX', reste + ' bille' + (reste > 1 ? 's' : '') + ' · ' + (rec ? 'bats le record : ' + fmt(rec) : 'le dernier flipper'), '#fff2b0', 34, 3);
   SON.arriveeCite();
 }
@@ -2749,7 +2799,7 @@ function maj(dt) {
   balles = balles.filter(b => b.y < TH + 30);
   if (balles.length < avant) { if (table === 'goth') perteGoth(); else if (table === 'valh') perteValh(); else if (table === 'cite') perteCite(); else if (table === 'boss' || table === 'dieu') perteBoss(avant - balles.length); else apresPerte(true); }
   if (tiltOn && balles.length && balles.every(enAttente)) finTilt(); // bille suivante (ex. bille de combat) : le TILT est levé
-  if (attenteBalle > 0) { attenteBalle -= dt; if (attenteBalle <= 0) { if (balleNo > 3) finPartie(); else nouvelleBalle(true); } }
+  if (attenteBalle > 0) { attenteBalle -= dt; if (attenteBalle <= 0) { if (balleNo > billesMax) finPartie(); else nouvelleBalle(true); } }
   for (const p of popups) p.age += dt; popups = popups.filter(p => p.age < p.vie);
   for (const p of particules) { p.age += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; } particules = particules.filter(p => p.age < p.vie);
   if (grandMsg) { grandMsg.age += dt; if (grandMsg.age > grandMsg.vie) grandMsg = null; }
@@ -2770,7 +2820,7 @@ function perdreBalle() {
   SON.perdu(); vib([80, 50, 120]); secousse = 0.3;
   balleNo++; annonce('Retenue !', pick(TXT.perdu), '#ff6b6b');
   if (attenteBalle <= 0) attenteBalle = 1.8;
-  if (balleNo > 3) grandMsg = { t: 'Fin du cours !', sous: fmt(score) + ' points', age: 0, vie: 3, coul: '#ffd23f' };
+  if (balleNo > billesMax) grandMsg = { t: 'Fin du cours !', sous: fmt(score) + ' points', age: 0, vie: 3, coul: '#ffd23f' };
 }
 
 // ---------------------------------------------------------------- Rendu
@@ -4743,7 +4793,7 @@ function rendu() {
   const hy = HUD_Y - 6; // bande du score, hors de la table (voir redim)
   ctx.textAlign = 'center'; texte(fmt(score), CW / 2, hy, 28, '#ffd23f');
   ctx.textAlign = 'left'; ctx.font = '800 12px system-ui,sans-serif'; ctx.fillStyle = '#9aa6c4'; ctx.fillText('BALLE', 12, hy - 10);
-  for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(18 + i * 16, hy + 8, 6, 0, 7); ctx.fillStyle = i >= balleNo - 1 ? '#e6e9f0' : 'rgba(255,255,255,.15)'; ctx.fill(); }
+  for (let i = 0; i < billesMax; i++) { ctx.beginPath(); ctx.arc(18 + i * 16, hy + 8, 6, 0, 7); ctx.fillStyle = i >= balleNo - 1 ? '#e6e9f0' : 'rgba(255,255,255,.15)'; ctx.fill(); }
   ctx.textAlign = 'center';
   const xm = mult > 1 ? ' · x' + mult : '', dieuTxt = verrou ? ' · ⚡ MONDE D’UN DIEU' : '';
   const etiq = table === 'cite' ? '🏛 LA CITÉ DES DIEUX' + (multiball ? ' · LE FESTIN' : '') + xm : table === 'dieu' ? '⚡ LE DUEL DES DIEUX' : table === 'boss' && combat ? (combat.rang ? '⚔ COMBAT DE BOSS · N°' + combat.rang : '💀 BOSS CACHÉ · LES 4 SCEAUX') + xm : table === 'valh' ? 'ᚱ LE VALHALLA' + xm + dieuTxt : table === 'goth' ? (verrou ? '☠ LA CRYPTE' + xm + dieuTxt : '☠ LA CRYPTE · BILLE BONUS' + xm) : verrou ? (nuit ? '🪩 LA RÉCRÉ' : '🏀 LE GYMNASE') + ' · x' + mult + dieuTxt : (multiball ? 'MULTIBALLE ' : 'MULTIPLICATEUR ') + 'x' + (mult * (multiball ? 2 : 1));
@@ -5079,7 +5129,54 @@ window.addEventListener('popstate', () => {
 $('quitter-non').onclick = () => { $('quitter').hidden = true; $('reprendre').onclick(); };
 $('quitter-oui').onclick = () => { $('quitter').hidden = true; $('abandon').onclick(); };
 $('abandon').onclick = () => { montrer(null); etat = 'jeu'; balleNo = 4; balles = []; attenteBalle = 0; finPartie(); };
-$('jouer').onclick = () => { pleinEcran(); deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); partieTest(); };
+// Kevin (04/11/2026) : classement général = le meilleur score de chaque joueur (colonne « Meilleur score » de l'onglet Stats joueurs du tableur)
+function dessinerGeneral(liste, info) {
+  const moi = lsGetTxt('battle-nom').trim();
+  $('general-info').textContent = info || '';
+  if (!liste) { $('general-liste').innerHTML = '<div class="vide">Chargement…</div>'; return; }
+  if (!liste.length) { $('general-liste').innerHTML = '<div class="vide">Personne pour le moment.</div>'; return; }
+  let rang = 0;
+  $('general-liste').innerHTML = liste.map((j, i) => {
+    if (!i || j.score < liste[i - 1].score) rang = i + 1; // ex aequo = même rang
+    const c = (rang === 1 ? ' p1' : '') + (moi && memeNom(j.nom, moi) ? ' moi' : '');
+    return `<div class="l${c}"><em>${rang === 1 ? '👑' : rang}</em><b>${esc(j.nom)}</b><span>${esc(fmt(j.score))}</span></div>`;
+  }).join('');
+  const m = $('general-liste').querySelector('.moi'); if (m && m.offsetTop > $('general-liste').clientHeight) m.scrollIntoView({ block: 'center' });
+}
+async function ouvrirGeneral() {
+  $('general-ecran').hidden = false;
+  const garde = lsGet('battle-general', null);
+  dessinerGeneral(garde && garde.liste, garde ? 'Mise à jour…' : '');
+  if (!CLASSEMENT_OK) { dessinerGeneral(garde ? garde.liste : [], 'Classement indisponible sur cet appareil'); return; }
+  try {
+    const r = await avecTimeout(`${URL_SCRIPT}?code=${encodeURIComponent(CODE)}&action=stats`);
+    if (r && r.ok && Array.isArray(r.joueurs)) {
+      const liste = r.joueurs.map(j => ({ nom: String(j.nom || '').trim(), score: Math.floor(+j.score || 0) })).filter(j => j.nom && j.score > 0).sort((a, b) => b.score - a.score);
+      lsSet('battle-general', { liste }); dessinerGeneral(liste, liste.length > 1 ? liste.length + ' joueurs · le meilleur score de chacun' : '');
+    } else dessinerGeneral(garde ? garde.liste : [], r && r.ok ? 'Le classement général arrive bientôt (script du tableur à mettre à jour)' : 'Classement indisponible pour le moment');
+  } catch (e) { dessinerGeneral(garde ? garde.liste : [], garde ? 'Hors ligne — dernier classement connu' : 'Hors ligne — classement indisponible'); }
+}
+$('general').onclick = ouvrirGeneral;
+$('general-fermer').onclick = () => { $('general-ecran').hidden = true; };
+$('general-ecran').onclick = e => { if (e.target.id === 'general-ecran') $('general-ecran').hidden = true; };
+// Kevin (04/11/2026) : à chaque mise en ligne, un message « Attention, mise à jour » avant la partie suivante.
+// Pour une nouvelle mise à jour : changer MAJ.id et écrire ce qui change dans MAJ.quoi (chacun le voit une fois).
+const MAJ = { id: '2026-11-04', date: '4 novembre 2026', quoi: [
+  ['🏆', 'Classement général', 'Nouveau bouton à côté de « Jouer » : tous les joueurs avec leur meilleur score. Bats ton record pour grimper !'],
+  ['👑', 'Le roi rend une bille', 'Bats le roi ou la reine : +1 bille (jamais plus de 3 en main).'],
+  ['💀', 'L’empereur aussi', 'Bats l’empereur ou l’impératrice : +1 bille, et là tu peux monter jusqu’à 4 billes !'],
+  ['⏭', 'Passer l’animation', 'Quand quelqu’un prend une place, un gros bouton jaune permet de sauter l’animation du chemin.']
+] };
+function majAMontrer() { return lsGetTxt('battle-maj') !== MAJ.id; }
+function montrerMaj(suite) {
+  $('maj-quoi').innerHTML = `<div class="date">${esc(MAJ.date)}</div>` + MAJ.quoi.map(([ic, t, d]) => `<div class="item"><i>${ic}</i><div><b>${esc(t)}</b><span>${esc(d)}</span></div></div>`).join('');
+  $('maj-ecran').hidden = false;
+  const vu = () => { lsSetTxt('battle-maj', MAJ.id); $('maj-ecran').hidden = true; };
+  $('maj-jouer').onclick = () => { vu(); suite(); };
+  $('maj-general').onclick = () => { vu(); ouvrirGeneral(); };
+}
+$('jouer').onclick = () => { if (majAMontrer()) { montrerMaj(lancerPartie); return; } lancerPartie(); };
+const lancerPartie = () => { pleinEcran(); deverrouiller(); SON.depart(); montrer(null); nouvellePartie(); partieTest(); };
 function partieTest() { // empereur déjà battu : on part du Valhalla (?test=dieu : juste sous le palier du dieu ; ?test=cite : la Cité des dieux ; ?test=porte : la porte des dieux)
   if (TEST === 'cite' || TEST === 'porte') {
     bossFile.forEach(b => b.vaincu = true); ultimeTente = ultimeBattu = dieuTente = dieuBattu = true; score = DIEU_DEPART + 20000; balles = [];
@@ -5383,7 +5480,7 @@ function verifierIntro() {
   const d = lsGet('battle-intro', null); lsSet('battle-intro', null);
   if (!d || Date.now() - d.t > 2 * 864e5 || !Array.isArray(d.avant)) return;
   introEnCours = true; introAvant = d.avant; accueilDessine = false; afficherAccueil();
-  setTimeout(() => jouerIntro(d).catch(() => {}).finally(() => { introEnCours = false; introAvant = null; accueilDessine = false; afficherAccueil(); const c = document.querySelector('.chemin'); if (c) c.style.animation = 'none'; const n = !d.ultime && document.querySelector('.chemin .b' + d.rang); if (n) n.classList.add('nouveau'); }), 1100);
+  setTimeout(() => jouerIntro(d).catch(() => {}).finally(() => { document.querySelectorAll('.i-passer').forEach(e => e.remove()); introEnCours = false; introAvant = null; accueilDessine = false; afficherAccueil(); const c = document.querySelector('.chemin'); if (c) c.style.animation = 'none'; const n = !d.ultime && document.querySelector('.chemin .b' + d.rang); if (n) n.classList.add('nouveau'); }), 1100);
 }
 async function jouerIntro(d) {
   const ch = document.querySelector('.chemin'); if (!ch) return;
@@ -5393,8 +5490,8 @@ async function jouerIntro(d) {
   const anim = (el, kf, o) => { const a = el.animate(kf, Object.assign({ fill: 'forwards', easing: 'ease-in-out' }, o)); anims.push(a); if (saute) a.finish(); return a.finished.catch(() => {}); };
   const attendre = ms => saute ? Promise.resolve() : new Promise(ok => { const t = setTimeout(ok, ms); stops.push(() => { clearTimeout(t); ok(); }); });
   const calque = document.createElement('div'); calque.className = 'intro-calque'; ch.appendChild(calque);
-  const passer = document.createElement('button'); passer.className = 'i-passer'; passer.textContent = 'Passer ⏭'; calque.appendChild(passer);
-  passer.onclick = () => { saute = true; anims.forEach(a => a.finish()); stops.forEach(f => f()); };
+  const passer = document.createElement('button'); passer.className = 'i-passer'; passer.type = 'button'; passer.textContent = '⏭ Passer l’animation'; document.body.appendChild(passer);
+  passer.onclick = () => { passer.remove(); saute = true; anims.forEach(a => a.finish()); stops.forEach(f => f()); };
   const ajoute = (cls, html, x, y) => { const e = document.createElement('div'); e.className = cls; e.innerHTML = html; if (x != null) { e.style.left = x + 'px'; e.style.top = y + 'px'; } calque.appendChild(e); return e; };
   const bulle = async (txt, x, y) => { const e = ajoute('i-bul', esc(txt), Math.min(W - 92, Math.max(92, x)), Math.max(40, y));
     await anim(e, [{ opacity: 0, transform: 'translate(-50%,-100%) scale(.3)' }, { opacity: 1, transform: 'translate(-50%,-100%) scale(1)' }], { duration: 220, easing: 'cubic-bezier(.2,1.6,.4,1)' });
@@ -5538,7 +5635,7 @@ async function jouerIntro(d) {
     anim(an2, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(3) rotate(-12deg)' }, { opacity: 1, transform: 'translate(-50%,-50%) scale(.95) rotate(-4deg)', offset: .6 }, { opacity: 1, transform: 'translate(-50%,-50%) scale(1) rotate(-4deg)' }], { duration: 450, easing: 'ease-in' });
     await attendre(450); secouer(2); await attendre(2000);
   }
-  await anim(calque, [{ opacity: 1 }, { opacity: 0 }], { duration: 350 });
+  passer.remove(); await anim(calque, [{ opacity: 1 }, { opacity: 0 }], { duration: 350 });
   calque.remove();
   async function entrerChateau() { // le chemin jusqu'à la porte, la herse se lève, il entre… et l'ancien boss caché est éjecté
     const hz = ch.querySelector('svg.decor .herse'), pr = (hz || ch).getBoundingClientRect();
@@ -5904,6 +6001,7 @@ window.__battle = {
   finir(s) { score = s; balleNo = 4; balles = []; attenteBalle = 0; finPartie(); },
   // boss
   get combat() { return combat; }, get bossFile() { return bossFile; }, NIV_BOSS, BUMPB, PORTE, listeBoss, lancerCombat, calmePourBoss, finCombat, titreBoss,
+  get billesMax() { return billesMax; }, bossVaincu,
   get places() { return places; }, set score(v) { score = v; }, set sauveT(v) { sauveT = v; }, set mult(v) { mult = v; }, set balleNo(v) { balleNo = v; }, recreGenerale, preparerBoss
 };
 

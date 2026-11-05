@@ -5156,17 +5156,28 @@ function dessinerGeneral(liste, info) {
   $('general-info').textContent = info || ''; $('general-dieu').hidden = true;
   if (!liste) { $('general-liste').innerHTML = '<div class="vide">Chargement…</div>'; return; }
   if (!liste.length) { $('general-liste').innerHTML = '<div class="vide">Personne pour le moment.</div>'; return; }
-  // Kevin (05/11) : le n°1, s'il est le Dieu actuel, trône en haut avec son portrait de dieu (sa photo). Il perd son titre : plus de portrait.
-  const D = places && places.p && places.p[0], dieuEnTete = !!D && memeNom(liste[0].nom, D.nom) && (liste.length < 2 || liste[1].score < liste[0].score);
+  // Kevin (05/11) : le n°1 (seul en tête) trône en haut, en grand, avec le portrait de son titre (Dieu, Empereur, Roi…) et sa photo.
+  // S'il n'a aucun titre en ce moment : une couronne et « Meilleur score ».
+  const dieuEnTete = liste.length < 2 || liste[1].score < liste[0].score; // (nom gardé : « le n°1 est en haut »)
   $('general-dieu').hidden = !dieuEnTete;
-  if (dieuEnTete) { const b = bossDieu(); $('general-dieu-nom').textContent = liste[0].nom + ' · ' + fmt(liste[0].score);
-    $('general-dieu-titre').textContent = (b.genre === 'F' ? '⚡ DÉESSE' : '⚡ DIEU') + ' DU FLIPPER';
-    dessinerPortrait($('general-dieu-portrait'), -1, b.genre, b.photo || AVATAR, true); }
+  if (dieuEnTete) {
+    const ip = places && places.p ? places.p.findIndex(p => p && memeNom(p.nom, liste[0].nom)) : -1, cv = $('general-dieu-portrait');
+    $('general-dieu-nom').textContent = liste[0].nom + ' · ' + fmt(liste[0].score);
+    if (ip >= 0) {
+      const b = bossDePlace(ip);
+      $('general-dieu-titre').textContent = ip === 0 ? (b.genre === 'F' ? '⚡ DÉESSE' : '⚡ DIEU') + ' DU FLIPPER' : '👑 ' + titreBoss(b.rang, b.genre).toUpperCase();
+      dessinerPortrait(cv, b.rang, b.genre, b.photo || AVATAR, true);
+    } else {
+      $('general-dieu-titre').textContent = '👑 MEILLEUR SCORE';
+      const w = cv.clientWidth || 100, h = cv.clientHeight || 100, d = Math.min(window.devicePixelRatio || 1, 2); cv.width = Math.round(w * d); cv.height = Math.round(h * d);
+      const c = cv.getContext('2d'); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = Math.round(Math.min(w, h) * 0.7 * d) + 'px system-ui,sans-serif'; c.fillText('👑', cv.width / 2, cv.height / 2);
+    }
+  }
   let rang = 0;
   $('general-liste').innerHTML = liste.map((j, i) => {
     if (!i || j.score < liste[i - 1].score) rang = i + 1; // ex aequo = même rang
     const c = (rang === 1 ? ' p1' : '') + (moi && memeNom(j.nom, moi) ? ' moi' : '');
-    if (!i && dieuEnTete) return ''; // Kevin (05/11) : le Dieu est déjà en haut avec son portrait, la liste commence au n°2
+    if (!i && dieuEnTete) return ''; // Kevin (05/11) : le n°1 est déjà en haut avec son portrait, la liste commence au n°2
     return `<div class="l${c}"><em>${rang === 1 ? '👑' : rang}</em><b>${esc(j.nom)}</b><span>${esc(fmt(j.score))}</span></div>`;
   }).join('');
   const m = $('general-liste').querySelector('.moi'); if (m && m.offsetTop > $('general-liste').clientHeight) m.scrollIntoView({ block: 'center' });

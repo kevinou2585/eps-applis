@@ -5027,7 +5027,7 @@ function declencherTilt() { // flippers bloqués, plus de bumpers ni de points :
   sauveT = 0; protegeT = 0; aServir = 0; cageAttente = 0; grandMsg = null;
   SON.tilt(); vib([200, 80, 200, 80, 400]); secousse = 0.35; flash = Math.max(flash, 0.3);
 }
-function finTilt() { tiltOn = false; secCompte = []; secAvertiT = -99; }
+function finTilt() { tiltOn = false; secCompte = []; secAvertiT = -99; coupsT = []; }
 function pasTilt(b, h, liste, ronds) { // physique pendant le TILT : murs passifs, bumpers et slingshots éteints, flippers baissés
   const amort = 1 - 0.06 * h;
   b.vy += G * h; b.vx *= amort; b.vy *= amort; b.x += b.vx * h; b.y += b.vy * h;
@@ -5116,19 +5116,28 @@ function sauverCouloir(b) { // renvoie vrai si la bille était dans un couloir d
   return true;
 }
 function sauveVirage() { for (const b of balles) if (b.sauveDir && b.y < OUT.haut - 8) { b.vx = b.sauveDir * 55; b.sauveDir = 0; } else if (b.sauveDir && b.vy > 0 && b.y > OUT.haut + 40) b.sauveDir = 0; }
+// Kevin (05/11) : le bouton TILT ne doit plus garder la bille en haut indéfiniment. Comme un vrai flipper :
+// une seconde entre deux coups, 3 coups en 5 s = « ATTENTION ! », le 4e = vrai TILT (flippers bloqués, bille perdue).
+const COUP = { ECART: 1, FENETRE: 5, AVERT: 3, TILT: 4 };
+let coupsT = [];
 function coupTable() {
   if (etat !== 'jeu' || tiltOn || PORTED || spectacleT > 0 || gelT > 0 || bascule || (combat && combat.phase !== 'combat')) return;
+  if (coupsT.length && temps - coupsT[coupsT.length - 1] < COUP.ECART) return; // trop tôt : le bouton ne fait rien
+  coupsT = coupsT.filter(t => temps - t < COUP.FENETRE);
+  if (coupsT.length + 1 >= COUP.TILT) { coupsT = []; declencherTilt(); return; }
   let n = 0, cote = 0;
   for (const b of balles) {
     if (!libre(b) || dansLanceur(b)) continue;
     const vers = b.x < 185 ? 1 : -1; // vers le milieu de la table
     if (sauverCouloir(b)) cote = vers;
-    else { b.vy -= SECOUSSE.VY * 1.35; b.vx += SECOUSSE.VX * 0.8 * vers; if (!cote) cote = vers * 0.6; }
+    else { b.vy -= SECOUSSE.VY; b.vx += SECOUSSE.VX * 0.6 * vers; if (!cote) cote = vers * 0.6; } // un peu plus doux qu'avant (×1,35 / ×0,8)
     const v = Math.hypot(b.vx, b.vy); if (v > VMAX) { b.vx *= VMAX / v; b.vy *= VMAX / v; }
     b.ax = b.x; b.ay = b.y; b.at = temps; n++;
   }
   if (!n) return;
+  coupsT.push(temps);
   stats.nudges++; derniereAction = temps; secousse = Math.max(secousse, 0.28); acoup = { x: cote * 12, y: -16, t: temps }; SON.nudge(1.25); vib([90, 30, 70]);
+  if (coupsT.length >= COUP.AVERT) { annonce('ATTENTION !', 'Encore un TILT = TILT', '#ffd23f', 38, 1.4); SON.attention(); }
 }
 $('tilt').addEventListener('pointerdown', e => { e.preventDefault(); audio(); coupTable(); });
 $('tilt').addEventListener('touchstart', e => e.preventDefault(), { passive: false });
@@ -5180,7 +5189,8 @@ $('general-fermer').onclick = () => { $('general-ecran').hidden = true; };
 $('general-ecran').onclick = e => { if (e.target.id === 'general-ecran') $('general-ecran').hidden = true; };
 // Kevin (04/11/2026) : à chaque mise en ligne, un message « Attention, mise à jour » avant la partie suivante.
 // Pour une nouvelle mise à jour : changer MAJ.id et écrire ce qui change dans MAJ.quoi (chacun le voit une fois).
-const MAJ = { id: '2026-11-05', date: '5 novembre 2026', quoi: [
+const MAJ = { id: '2026-11-05b', date: '5 novembre 2026', quoi: [
+  ['⚠', 'Le TILT est un vrai TILT', 'Une seconde entre deux coups. 3 coups en 5 secondes : « ATTENTION ! ». Au 4e : TILT, flippers bloqués et bille perdue.'],
   ['🏛', 'La Cité des dieux rapporte moins', 'Même table, mêmes combos, mais les points sont calmés : on ne fait plus des millions en deux billes.'],
   ['✖', 'Multiplicateurs : ×4 au plus', 'Dans la Cité, Zeus, Arès et l’apothéose ensemble ne dépassent plus ×4, et le multiplicateur du bulletin ne compte plus là-haut.'],
   ['⚡', 'Le Dieu reste le Dieu', 'Le record du Dieu a été ramené à un score qu’on peut battre. Les places et les scores de tout le monde ne bougent pas.']

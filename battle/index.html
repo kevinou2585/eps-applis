@@ -341,7 +341,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 
 <script>
 'use strict';
-const JEU = 'flipper-2026-11e'; // changer ce nom = classement remis à zéro (Kevin, 24/10, 27/10, 29/10 puis 01/11/2026 : ouverture aux collègues : places en cascade ; l'ancien reste dans le tableur)
+const JEU = 'flipper-2026-11f'; // changer ce nom = classement remis à zéro (Kevin, 24/10, 27/10, 29/10, 01/11/2026 : ouverture aux collègues ; 05/11 : table rase après le TILT corrigé ; l'ancien reste dans le tableur)
 const URL_SCRIPT = (() => { try { return localStorage.getItem('eps-script') || ''; } catch (e) { return ''; } })();
 const CODE = (() => { try { return localStorage.getItem('eps-code') || ''; } catch (e) { return ''; } })();
 const TEST = (() => { try { return new URLSearchParams(location.search).get('test') || ''; } catch (e) { return ''; } })(); // ?test=valh ou ?test=dieu : Kevin essaie le Valhalla, rien n'est envoyé au classement
@@ -5190,6 +5190,7 @@ $('general-ecran').onclick = e => { if (e.target.id === 'general-ecran') $('gene
 // Kevin (04/11/2026) : à chaque mise en ligne, un message « Attention, mise à jour » avant la partie suivante.
 // Pour une nouvelle mise à jour : changer MAJ.id et écrire ce qui change dans MAJ.quoi (chacun le voit une fois).
 const MAJ = { id: '2026-11-05b', date: '5 novembre 2026', quoi: [
+  ['🧹', 'Table rase', 'Tout le monde repart de zéro : classement, places des boss et classement général sont vides. À vous de reprendre le château !'],
   ['⚠', 'Le TILT est un vrai TILT', 'Une seconde entre deux coups. 3 coups en 5 secondes : « ATTENTION ! ». Au 4e : TILT, flippers bloqués et bille perdue.'],
   ['🏛', 'La Cité des dieux rapporte moins', 'Même table, mêmes combos, mais les points sont calmés : on ne fait plus des millions en deux billes.'],
   ['✖', 'Multiplicateurs : ×4 au plus', 'Dans la Cité, Zeus, Arès et l’apothéose ensemble ne dépassent plus ×4, et le multiplicateur du bulletin ne compte plus là-haut.'],
@@ -5456,7 +5457,7 @@ async function envoyer(p) {
 let envoiEnCours = false;
 async function viderAttente() {
   if (!CLASSEMENT_OK || envoiEnCours || !navigator.onLine) return;
-  let q = lsGet('battle-attente', []); if (!q.length) return;
+  let q = lsGet('battle-attente', []).filter(p => !p || !p.jeu || String(p.jeu).startsWith(JEU)); lsSet('battle-attente', q); if (!q.length) return; // parties d'un ancien classement (avant une remise à zéro) : jetées
   envoiEnCours = true; let envoyes = 0;
   try {
     while (q.length) {

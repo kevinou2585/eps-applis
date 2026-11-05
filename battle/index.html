@@ -238,6 +238,11 @@ h2{font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--gris)
 #general-ecran .l.p1{background:rgba(255,210,63,.16)}
 #general-ecran .l.p1 b,#general-ecran .l.p1 span{color:#ffd23f}
 #general-ecran .l.moi{outline:1px solid rgba(255,210,63,.7);background:rgba(255,210,63,.22)}
+#general-ecran .dieu{display:flex;flex-direction:column;align-items:center;margin:0 10px 8px;padding:6px 0 10px;border-radius:14px;background:radial-gradient(circle at 50% 40%,rgba(127,216,255,.28),rgba(255,210,63,.08) 60%,transparent 75%)}
+#general-ecran .dieu[hidden]{display:none}
+#general-ecran .dieu canvas{width:120px;height:150px;display:block}
+#general-ecran .dieu b{margin-top:2px;font:900 19px Georgia,"Times New Roman",serif;color:#ffd23f}
+#general-ecran .dieu small{font-size:12px;color:#9fe0ff;font-weight:800;letter-spacing:.04em}
 #general-ecran .vide{padding:20px 10px;text-align:center;color:#c9a8d8}
 #general-ecran .fermer{margin:10px 14px 14px;padding:12px;border:0;border-radius:12px;background:#ffd23f;color:#2a0f3d;font:900 16px system-ui,-apple-system,sans-serif}
 .carte.r2{--bord:#ff8c1a}
@@ -311,7 +316,7 @@ canvas#jeu{transform-origin:50% 50%;backface-visibility:hidden;-webkit-backface-
 </section>
 
 <div id="general-ecran" hidden role="dialog" aria-label="Classement général">
-  <div class="cadre"><h3>🏆 Classement général</h3><div class="info" id="general-info"></div><div class="liste" id="general-liste"></div><button class="fermer" type="button" id="general-fermer">Fermer</button></div>
+  <div class="cadre"><h3>🏆 Classement général</h3><div class="info" id="general-info"></div><div class="dieu" id="general-dieu" hidden><canvas id="general-dieu-portrait"></canvas><b id="general-dieu-nom"></b><small id="general-dieu-titre"></small></div><div class="liste" id="general-liste"></div><button class="fermer" type="button" id="general-fermer">Fermer</button></div>
 </div>
 
 <div id="maj-ecran" hidden role="dialog" aria-label="Mise à jour">
@@ -5139,9 +5144,15 @@ $('abandon').onclick = () => { montrer(null); etat = 'jeu'; balleNo = 4; balles 
 // Kevin (04/11/2026) : classement général = le meilleur score de chaque joueur (colonne « Meilleur score » de l'onglet Stats joueurs du tableur)
 function dessinerGeneral(liste, info) {
   const moi = lsGetTxt('battle-nom').trim();
-  $('general-info').textContent = info || '';
+  $('general-info').textContent = info || ''; $('general-dieu').hidden = true;
   if (!liste) { $('general-liste').innerHTML = '<div class="vide">Chargement…</div>'; return; }
   if (!liste.length) { $('general-liste').innerHTML = '<div class="vide">Personne pour le moment.</div>'; return; }
+  // Kevin (05/11) : le n°1, s'il est le Dieu actuel, trône en haut avec son portrait de dieu (sa photo). Il perd son titre : plus de portrait.
+  const D = places && places.p && places.p[0], dieuEnTete = !!D && memeNom(liste[0].nom, D.nom) && (liste.length < 2 || liste[1].score < liste[0].score);
+  $('general-dieu').hidden = !dieuEnTete;
+  if (dieuEnTete) { const b = bossDieu(); $('general-dieu-nom').textContent = liste[0].nom + ' · ' + fmt(liste[0].score);
+    $('general-dieu-titre').textContent = (b.genre === 'F' ? '⚡ DÉESSE' : '⚡ DIEU') + ' DU FLIPPER';
+    dessinerPortrait($('general-dieu-portrait'), -1, b.genre, b.photo || AVATAR, true); }
   let rang = 0;
   $('general-liste').innerHTML = liste.map((j, i) => {
     if (!i || j.score < liste[i - 1].score) rang = i + 1; // ex aequo = même rang

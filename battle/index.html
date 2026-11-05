@@ -5157,6 +5157,7 @@ function dessinerGeneral(liste, info) {
   $('general-liste').innerHTML = liste.map((j, i) => {
     if (!i || j.score < liste[i - 1].score) rang = i + 1; // ex aequo = même rang
     const c = (rang === 1 ? ' p1' : '') + (moi && memeNom(j.nom, moi) ? ' moi' : '');
+    if (!i && dieuEnTete) return ''; // Kevin (05/11) : le Dieu est déjà en haut avec son portrait, la liste commence au n°2
     return `<div class="l${c}"><em>${rang === 1 ? '👑' : rang}</em><b>${esc(j.nom)}</b><span>${esc(fmt(j.score))}</span></div>`;
   }).join('');
   const m = $('general-liste').querySelector('.moi'); if (m && m.offsetTop > $('general-liste').clientHeight) m.scrollIntoView({ block: 'center' });

@@ -5150,35 +5150,68 @@ window.addEventListener('popstate', () => {
 $('quitter-non').onclick = () => { $('quitter').hidden = true; $('reprendre').onclick(); };
 $('quitter-oui').onclick = () => { $('quitter').hidden = true; $('abandon').onclick(); };
 $('abandon').onclick = () => { montrer(null); etat = 'jeu'; balleNo = 4; balles = []; attenteBalle = 0; finPartie(); };
+// Kevin (06/11) : le n°1 du classement général a son titre et son emblème à lui (pas la couronne du roi, ni le crâne de l'empereur, ni l'éclair du dieu)
+const TITRE_LEGENDE = 'LÉGENDE VIVANTE DU FLIPPER';
+const ICONE_LEGENDE = `<svg class="ic-legende" viewBox="0 0 24 24" width="1.2em" height="1.2em" aria-hidden="true" style="vertical-align:-.25em"><defs><radialGradient id="ilg" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#bfe6ff"/><stop offset="1" stop-color="#3a5a78"/></radialGradient></defs><g fill="#ffd23f" stroke="#7a5200" stroke-width=".3"><ellipse cx="10.4" cy="21.4" rx="1.25" ry="2.6" transform="rotate(70 10.4 21.4)"/><ellipse cx="6.2" cy="19.4" rx="1.25" ry="2.6" transform="rotate(100 6.2 19.4)"/><ellipse cx="3.5" cy="15.6" rx="1.25" ry="2.6" transform="rotate(130 3.5 15.6)"/><ellipse cx="3.1" cy="10.9" rx="1.25" ry="2.6" transform="rotate(-200 3.1 10.9)"/><ellipse cx="5.1" cy="6.7" rx="1.25" ry="2.6" transform="rotate(-170 5.1 6.7)"/><ellipse cx="13.6" cy="21.4" rx="1.25" ry="2.6" transform="rotate(110 13.6 21.4)"/><ellipse cx="17.8" cy="19.4" rx="1.25" ry="2.6" transform="rotate(80 17.8 19.4)"/><ellipse cx="20.5" cy="15.6" rx="1.25" ry="2.6" transform="rotate(50 20.5 15.6)"/><ellipse cx="20.9" cy="10.9" rx="1.25" ry="2.6" transform="rotate(20 20.9 10.9)"/><ellipse cx="18.9" cy="6.7" rx="1.25" ry="2.6" transform="rotate(-10 18.9 6.7)"/></g><circle cx="12" cy="12.5" r="5.8" fill="url(#ilg)" stroke="#ffd23f" stroke-width="1.1"/><path d="M19.5 2.5l.6 1.4 1.4.6-1.4.6-.6 1.4-.6-1.4-1.4-.6 1.4-.6z" fill="#fff6c8"/></svg>`;
+function dessinerLegende(cv, src) { // la photo dans un médaillon d'or, une couronne de lauriers, une bille de flipper étincelante et sa traînée d'étoiles
+  const w = cv.clientWidth || 120, h = cv.clientHeight || 150, d = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(w * d); cv.height = Math.round(h * d);
+  const c = cv.getContext('2d'), img = imageDe(src), k = Math.min(w / 120, h / 150) * d, cx = 60, cy = 64, R = 37;
+  const go = () => {
+    c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, cv.width, cv.height);
+    c.setTransform(k, 0, 0, k, (cv.width - 120 * k) / 2, (cv.height - 150 * k) / 2);
+    // rayons de lumière derrière
+    c.save(); c.translate(cx, cy); for (let i = 0; i < 16; i++) { c.rotate(Math.PI / 8); c.fillStyle = i % 2 ? 'rgba(255,210,63,.16)' : 'rgba(159,224,255,.13)'; c.beginPath(); c.moveTo(0, 0); c.lineTo(-7, -66); c.lineTo(7, -66); c.fill(); } c.restore();
+    // couronne de lauriers
+    for (const sens of [-1, 1]) for (let i = 0; i < 9; i++) {
+      const a = Math.PI / 2 + sens * (0.32 + i * 0.29), x = cx + Math.cos(a) * (R + 10), y = cy + Math.sin(a) * (R + 10);
+      c.save(); c.translate(x, y); c.rotate(a + sens * 0.9); c.fillStyle = i % 2 ? '#ffd23f' : '#e0a91c'; c.strokeStyle = '#7a5200'; c.lineWidth = .8;
+      c.beginPath(); c.ellipse(0, 0, 8, 3.6, 0, 0, Math.PI * 2); c.fill(); c.stroke(); c.restore();
+    }
+    // médaillon : la photo
+    c.save(); c.beginPath(); c.arc(cx, cy, R, 0, Math.PI * 2); c.clip();
+    c.fillStyle = '#2a0f3d'; c.fillRect(cx - R, cy - R, R * 2, R * 2);
+    if (img && img.complete && img.naturalWidth) { const s = Math.max(R * 2 / img.naturalWidth, R * 2 / img.naturalHeight), iw = img.naturalWidth * s, ih = img.naturalHeight * s; c.drawImage(img, cx - iw / 2, cy - ih / 2, iw, ih); }
+    const reflet = c.createLinearGradient(cx - R, cy - R, cx + R, cy + R); reflet.addColorStop(0, 'rgba(255,255,255,.28)'); reflet.addColorStop(.35, 'rgba(255,255,255,0)'); c.fillStyle = reflet; c.fillRect(cx - R, cy - R, R * 2, R * 2);
+    c.restore();
+    const anneau = c.createLinearGradient(cx - R, cy - R, cx + R, cy + R); anneau.addColorStop(0, '#fff3b0'); anneau.addColorStop(.5, '#ffd23f'); anneau.addColorStop(1, '#a86b00');
+    c.lineWidth = 5; c.strokeStyle = anneau; c.beginPath(); c.arc(cx, cy, R + 1.5, 0, Math.PI * 2); c.stroke();
+    c.lineWidth = 1.2; c.strokeStyle = '#9fe0ff'; c.beginPath(); c.arc(cx, cy, R + 5, 0, Math.PI * 2); c.stroke();
+    // la bille de flipper qui file au-dessus, avec sa traînée d'étoiles
+    for (let i = 0; i < 5; i++) { const t = i / 5; etoileL(c, 30 + 22 * t, 26 - 14 * t + 8 * t * t, 1.6 + t * 1.6, `rgba(255,246,200,${.35 + t * .5})`); }
+    const bx = 60, by = 14, br = 11, g = c.createRadialGradient(bx - 4, by - 4, 1, bx, by, br); g.addColorStop(0, '#ffffff'); g.addColorStop(.4, '#d6ecff'); g.addColorStop(1, '#3f5d7a');
+    c.shadowColor = 'rgba(159,224,255,.9)'; c.shadowBlur = 10; c.fillStyle = g; c.beginPath(); c.arc(bx, by, br, 0, Math.PI * 2); c.fill(); c.shadowBlur = 0;
+    c.lineWidth = 1.5; c.strokeStyle = '#ffd23f'; c.stroke();
+    etoileL(c, 82, 10, 3.2, '#fff6c8'); etoileL(c, 90, 24, 2, '#9fe0ff');
+    // ruban du bas
+    c.fillStyle = '#7b1fa2'; c.strokeStyle = '#ffd23f'; c.lineWidth = 1.5;
+    c.beginPath(); c.moveTo(18, 116); c.lineTo(102, 116); c.lineTo(96, 125); c.lineTo(102, 134); c.lineTo(18, 134); c.lineTo(24, 125); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#ffd23f'; c.font = '900 11px Georgia,"Times New Roman",serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('N° 1', 60, 125.5);
+  };
+  go(); if (img && !(img.complete && img.naturalWidth)) img.addEventListener('load', go, { once: true });
+}
+function etoileL(c, x, y, r, coul) { c.fillStyle = coul; c.beginPath(); for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4, q = i % 2 ? r * .38 : r; c.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); } c.closePath(); c.fill(); }
 // Kevin (04/11/2026) : classement général = le meilleur score de chaque joueur (colonne « Meilleur score » de l'onglet Stats joueurs du tableur)
 function dessinerGeneral(liste, info) {
   const moi = lsGetTxt('battle-nom').trim();
   $('general-info').textContent = info || ''; $('general-dieu').hidden = true;
   if (!liste) { $('general-liste').innerHTML = '<div class="vide">Chargement…</div>'; return; }
   if (!liste.length) { $('general-liste').innerHTML = '<div class="vide">Personne pour le moment.</div>'; return; }
-  // Kevin (05/11) : le n°1 (seul en tête) trône en haut, en grand, avec le portrait de son titre (Dieu, Empereur, Roi…) et sa photo.
-  // S'il n'a aucun titre en ce moment : une couronne et « Meilleur score ».
+  // Kevin (06/11) : le n°1 (seul en tête) trône en haut, en grand, avec SA photo dans l'emblème de la Légende vivante.
+  // Rien à voir avec sa place du moment (roi, empereur, dieu…) : seul le meilleur score compte ici.
   const dieuEnTete = liste.length < 2 || liste[1].score < liste[0].score; // (nom gardé : « le n°1 est en haut »)
   $('general-dieu').hidden = !dieuEnTete;
   if (dieuEnTete) {
-    const ip = places && places.p ? places.p.findIndex(p => p && memeNom(p.nom, liste[0].nom)) : -1, cv = $('general-dieu-portrait');
     $('general-dieu-nom').textContent = liste[0].nom + ' · ' + fmt(liste[0].score);
-    if (ip >= 0) {
-      const b = bossDePlace(ip);
-      $('general-dieu-titre').textContent = ip === 0 ? (b.genre === 'F' ? '⚡ DÉESSE' : '⚡ DIEU') + ' DU FLIPPER' : '👑 ' + titreBoss(b.rang, b.genre).toUpperCase();
-      dessinerPortrait(cv, b.rang, b.genre, b.photo || AVATAR, true);
-    } else {
-      $('general-dieu-titre').textContent = '👑 MEILLEUR SCORE';
-      const w = cv.clientWidth || 100, h = cv.clientHeight || 100, d = Math.min(window.devicePixelRatio || 1, 2); cv.width = Math.round(w * d); cv.height = Math.round(h * d);
-      const c = cv.getContext('2d'); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = Math.round(Math.min(w, h) * 0.7 * d) + 'px system-ui,sans-serif'; c.fillText('👑', cv.width / 2, cv.height / 2);
-    }
+    $('general-dieu-titre').innerHTML = ICONE_LEGENDE + ' ' + esc(TITRE_LEGENDE);
+    dessinerLegende($('general-dieu-portrait'), photoDe(liste[0].nom) || AVATAR);
   }
   let rang = 0;
   $('general-liste').innerHTML = liste.map((j, i) => {
     if (!i || j.score < liste[i - 1].score) rang = i + 1; // ex aequo = même rang
     const c = (rang === 1 ? ' p1' : '') + (moi && memeNom(j.nom, moi) ? ' moi' : '');
     if (!i && dieuEnTete) return ''; // Kevin (05/11) : le n°1 est déjà en haut avec son portrait, la liste commence au n°2
-    return `<div class="l${c}"><em>${rang === 1 ? '👑' : rang}</em><b>${esc(j.nom)}</b><span>${esc(fmt(j.score))}</span></div>`;
+    return `<div class="l${c}"><em>${rang === 1 ? ICONE_LEGENDE : rang}</em><b>${esc(j.nom)}</b><span>${esc(fmt(j.score))}</span></div>`;
   }).join('');
   const m = $('general-liste').querySelector('.moi'); if (m && m.offsetTop > $('general-liste').clientHeight) m.scrollIntoView({ block: 'center' });
 }
@@ -5200,12 +5233,9 @@ $('general-fermer').onclick = () => { $('general-ecran').hidden = true; };
 $('general-ecran').onclick = e => { if (e.target.id === 'general-ecran') $('general-ecran').hidden = true; };
 // Kevin (04/11/2026) : à chaque mise en ligne, un message « Attention, mise à jour » avant la partie suivante.
 // Pour une nouvelle mise à jour : changer MAJ.id et écrire ce qui change dans MAJ.quoi (chacun le voit une fois).
-const MAJ = { id: '2026-11-05b', date: '5 novembre 2026', quoi: [
-  ['🧹', 'Table rase', 'Tout le monde repart de zéro : classement, places des boss et classement général sont vides. À vous de reprendre le château !'],
-  ['⚠', 'Le TILT est un vrai TILT', 'Une seconde entre deux coups. 3 coups en 5 secondes : « ATTENTION ! ». Au 4e : TILT, flippers bloqués et bille perdue.'],
-  ['🏛', 'La Cité des dieux rapporte moins', 'Même table, mêmes combos, mais les points sont calmés : on ne fait plus des millions en deux billes.'],
-  ['✖', 'Multiplicateurs : ×4 au plus', 'Dans la Cité, Zeus, Arès et l’apothéose ensemble ne dépassent plus ×4, et le multiplicateur du bulletin ne compte plus là-haut.'],
-  ['⚡', 'Le Dieu reste le Dieu', 'Le record du Dieu a été ramené à un score qu’on peut battre. Les places et les scores de tout le monde ne bougent pas.']
+const MAJ = { id: '2026-11-06', date: '6 novembre 2026', quoi: [
+  ['🏆', 'La Légende vivante du flipper', 'Le n°1 du classement général a maintenant son propre titre et son emblème, avec sa photo. Seul le meilleur score compte : peu importe qu’il soit roi, empereur ou dieu en ce moment.'],
+  ['⚔', 'Les deux classements sont séparés', 'Le château (garde, bourreau, roi, empereur, dieu) se gagne en battant les boss. Le classement général, lui, garde juste le meilleur score de chacun, toutes parties confondues.']
 ] };
 function majAMontrer() { return lsGetTxt('battle-maj') !== MAJ.id; }
 function montrerMaj(suite) {
@@ -5270,7 +5300,21 @@ function garderPlaces(r) {
   if (!r || !r.ok || !Array.isArray(r.places)) return;
   const p = [0, 1, 2, 3, 4].map(i => { const x = r.places[i]; return x && String(x.nom || '').trim() ? { nom: String(x.nom).trim(), genre: x.genre === 'F' || x.genre === 'H' ? x.genre : '', photo: photoOk(x.photo) ? x.photo : '' } : null; });
   const bonus = [0, 1, 2, 3, 4].map(i => Math.max(0, Math.floor(+(Array.isArray(r.bonus) ? r.bonus[i] : 0) || 0))); // palier qui monte (script du 01/11 ; ancien script : 0)
-  places = { jeu: JEU, p, record: +r.record || 0, bonus, t: Date.now() }; lsSet('battle-places', places);
+  places = { jeu: JEU, p, record: +r.record || 0, bonus, t: Date.now() }; lsSet('battle-places', places); memoPhotos(p);
+}
+// Kevin (06/11) : la photo du n°1 du classement général ne doit pas dépendre de sa place du moment.
+// On retient la dernière photo connue de chaque prénom (vue dans les places), même après qu'il a perdu sa place.
+function memoPhotos(liste) {
+  const m = lsGet('battle-photos', {}) || {}; let change = false;
+  (liste || []).forEach(x => { if (x && x.nom && photoOk(x.photo)) { const k = x.nom.trim().toLowerCase(); if (m[k] !== x.photo) { delete m[k]; m[k] = x.photo; change = true; } } });
+  if (!change) return;
+  const k = Object.keys(m); k.slice(0, Math.max(0, k.length - 30)).forEach(n => delete m[n]); // les 30 plus récentes
+  lsSet('battle-photos', m);
+}
+function photoDe(nom) {
+  const ip = places && places.p ? places.p.findIndex(p => p && memeNom(p.nom, nom)) : -1;
+  if (ip >= 0 && places.p[ip].photo) return places.p[ip].photo;
+  return (lsGet('battle-photos', {}) || {})[String(nom || '').trim().toLowerCase()] || '';
 }
 function prendrePlace(i, moi) { // même règle que le script (hors ligne : on se place soi-même) ; renvoie la place obtenue (-1 : rien ne bouge)
   const P = places.p.slice(); let place = i;
@@ -5282,7 +5326,7 @@ function prendrePlace(i, moi) { // même règle que le script (hors ligne : on s
     if (P[place] && memeNom(P[place].nom, moi.nom)) { if (moi.photo) P[place] = Object.assign({}, P[place], { photo: moi.photo, genre: moi.genre || P[place].genre }); }
     else { let libre = P.indexOf(null, place); if (libre < 0) libre = 4; for (let j = libre; j > place; j--) P[j] = P[j - 1]; P[place] = moi; if (places.bonus) { places.bonus = places.bonus.slice(); places.bonus[place] += MONTEE; } }
   }
-  places = Object.assign({}, places, { p: P }); lsSet('battle-places', places);
+  places = Object.assign({}, places, { p: P }); lsSet('battle-places', places); memoPhotos(P);
   return place;
 }
 const garderReponse = (p, r) => { if (p.action === 'places') garderPlaces(r); };

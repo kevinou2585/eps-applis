@@ -1207,7 +1207,7 @@ const CRANES = [ // têtes de mort (bumpers) : même disposition que les bumpers
 const CHAUVES = [{ cx: 190, cy: 318, ax: 76, ay: 16, fx: 0.9, fy: 2.3, ph: 0 }, { cx: 186, cy: 374, ax: 64, ay: 12, fx: 0.7, fy: 1.9, ph: 2.2 }]
   .map(c => Object.assign(c, { x: c.cx, y: c.cy, r: 10, kick: 260, petit: true, hors: 0, chute: null, cd: 0 }));
 const CERCUEIL = { x: 305, y: 335, r: 17 }; // trou-cercueil (même place que la cantine)
-const CRYPTE = { ripReset: 0, allume: false, jackpot: 30000, chauves: 0, cercueils: 0, glas: 3 };
+const CRYPTE = { ripReset: 0, allume: false, jackpot: 30000, chauves: 0, cercueils: 0, glas: 3, bille: false }; // bille : la bille bonus de l'orgue est déjà prise pendant ce passage
 const T_ORGUE = 1.4, T_CERCUEIL = 1.2, RIP_ATTENTE = 8;
 const BOUGIES = [[128, 74], [236, 74], [22, 400], [22, 470], [346, 300], [346, 380]];
 
@@ -1886,13 +1886,20 @@ function abattreRip(s) {
     annonce('R.I.P. !', 'L’orgue hanté s’éveille : vise le JACKPOT', '#9dff5c', 40, 2); SON.rip(); vib([40, 40, 60]);
   } else blague(RIP.filter(c => c.bas).map(c => c.lettre).join('.') + ' …', 199, 404, '#e3c8ff');
 }
+const billeOrgueDispo = () => !verrou && !CRYPTE.bille; // pas pour un dieu qui vit dans la crypte (pas de gymnase où la rendre)
+function billeOrgue() { // Kevin (07/11/2026) : la bille dans l'orgue = +1 bille au gymnase, une seule fois par passage dans la crypte
+  CRYPTE.bille = true; billesMax++;
+  popups.push({ t: '+1 BILLE ! 🎱', x: ORGUE.cx, y: 150, age: 0, vie: 2.6, coul: '#7cf' });
+}
 function entrerOrgue(b) {
+  const bonus = billeOrgueDispo(); if (bonus) billeOrgue();
   b.tient = T_ORGUE; b.lieu = 'orgue'; b.x = ORGUE.cx; b.y = ORGUE.haut + 7; b.vx = b.vy = 0; tir('orgue', ORGUE.cx, 150);
   for (let i = 0; i < 4; i++) popups.push({ t: pick(['♪', '♫']), x: ORGUE.cx + rnd(-40, 40), y: 70 + i * 6, age: -i * 0.18, vie: 1.2, petit: true });
   if (CRYPTE.allume) {
-    points(CRYPTE.jackpot, ORGUE.cx, 110); annonce('JACKPOT DE L’ORGUE !', 'Toccata hantée : +' + fmt(CRYPTE.jackpot * mult), '#9dff5c', 30, 2.2);
+    points(CRYPTE.jackpot, ORGUE.cx, 110); annonce('JACKPOT DE L’ORGUE !', 'Toccata hantée : +' + fmt(CRYPTE.jackpot * mult) + (bonus ? ' · +1 bille 🎱' : ''), '#9dff5c', 30, 2.2);
     SON.jackpotOrgue(); vib([60, 40, 60, 40, 120]); flash = Math.max(flash, 0.3); secousse = 0.15; etincelles(ORGUE.cx, 60, 30, '#9dff5c');
     CRYPTE.jackpot += 10000; CRYPTE.allume = false;
+  } else if (bonus) { points(5000, ORGUE.cx, 110); annonce('+1 BILLE !', 'L’orgue hanté te donne une bille pour le gymnase', '#7cf', 30, 2.2); SON.orgue(); SON.sauve(); vib([30, 30, 60]); etincelles(ORGUE.cx, 60, 20, '#7cf');
   } else { points(5000, ORGUE.cx, 110); blague('Orgue hanté !', ORGUE.cx, 130, '#e3c8ff'); SON.orgue(); vib([20, 30, 20]); etincelles(ORGUE.cx, 60, 12, '#e3c8ff'); }
 }
 function entrerCercueil(b) {
@@ -1935,10 +1942,10 @@ function changerTable(v) { // appelé à mi-retournement (table de profil)
   if (table === v) return;
   const de = table; table = v; nuit = false; flash = Math.max(flash, 0.5); balles = []; charge.src = {}; charge.actif = false; arreterCharge(); sauveT = 0; popups = []; particules = [];
   if (v === 'goth') {
-    butsN = 0; gothScore0 = score; Object.assign(CRYPTE, { ripReset: 0, allume: false, jackpot: 30000, chauves: 0, cercueils: 0, glas: 4 });
+    butsN = 0; gothScore0 = score; Object.assign(CRYPTE, { ripReset: 0, allume: false, jackpot: 30000, chauves: 0, cercueils: 0, glas: 4, bille: false });
     RIP.forEach(c => { c.bas = false; c.on = true; }); CHAUVES.forEach(c => { c.hors = 0; c.chute = null; }); CRANES.forEach(c => { c.flash = 0; c.mach = 0; });
     balles.push(balleNeuve(375, 697, 0, 0, true));
-    annonce('LA CRYPTE', 'Une seule bille… ne la perds pas !', '#e3c8ff', 40, 2.4); SON.arriveeCrypte();
+    annonce('LA CRYPTE', 'Une seule bille… vise l’orgue : +1 bille !', '#e3c8ff', 40, 2.4); SON.arriveeCrypte();
   } else { if (de === 'goth') { butsN = 0; butsBesoin = Math.min(9, butsBesoin + 1); } nouvelleBalle(true); } // la bille de la crypte était un bonus : on reprend la même balle au gymnase
 }
 function perteGoth() {
@@ -2239,7 +2246,8 @@ function finCombat() { // boss vaincu : retour au gymnase, la bille attend au la
   table = 'base'; nuit = false; multiball = false;
   if (C.sauve) { const v = C.sauve;
     if (v.multiball) { cagePleine = true; cageFlash = 1.2; paniers = 0; besoin = Math.min(9, besoin + 1); } // multibille finie par le boss : la prochaine demande un panier de plus
-    if (v.table === 'goth') { butsN = 0; butsBesoin = Math.min(9, butsBesoin + 1); } // idem pour la crypte sauveT = 0; protegeT = v.protegeT || 0; cageAttente = v.cageAttente || 0; aServir = 0;
+    if (v.table === 'goth') { butsN = 0; butsBesoin = Math.min(9, butsBesoin + 1); } // idem pour la crypte
+    sauveT = 0; protegeT = v.protegeT || 0; cageAttente = v.cageAttente || 0; aServir = 0;
     balles = (v.balles || []).filter(b => b.collee); } // la bille en colle y reste ; les autres sont remplacées par celle du lanceur
   else balles = [];
   if (CASIER.balle) CASIER.balle = null;
@@ -3472,6 +3480,7 @@ function renduGoth() {
     const gg = ctx.createRadialGradient(ORGUE.cx, 34, 4, ORGUE.cx, 34, 80); gg.addColorStop(0, `rgba(157,255,92,${0.55 * p})`); gg.addColorStop(1, 'rgba(157,255,92,0)'); ctx.fillStyle = gg; ctx.fillRect(ORGUE.cx - 80, -46, 160, 160); ctx.restore();
     if (CRYPTE.allume && !joue) texte('JACKPOT ' + fmt(CRYPTE.jackpot * mult), ORGUE.cx, 128, 12, Math.floor(temps * 4) % 2 ? C.vert : '#ffffff');
   }
+  if (billeOrgueDispo() && !joue) texte('+1 BILLE', ORGUE.cx, CRYPTE.allume ? 144 : 128, 11, Math.floor(temps * 3) % 2 ? '#7cf' : '#ffffff'); // la bille bonus attend dans l'orgue
   // élastiques des slingshots (os)
   SLG.forEach(s => {
     const f = s.flash > 0;
@@ -5233,7 +5242,8 @@ $('general-fermer').onclick = () => { $('general-ecran').hidden = true; };
 $('general-ecran').onclick = e => { if (e.target.id === 'general-ecran') $('general-ecran').hidden = true; };
 // Kevin (04/11/2026) : à chaque mise en ligne, un message « Attention, mise à jour » avant la partie suivante.
 // Pour une nouvelle mise à jour : changer MAJ.id et écrire ce qui change dans MAJ.quoi (chacun le voit une fois).
-const MAJ = { id: '2026-11-06', date: '6 novembre 2026', quoi: [
+const MAJ = { id: '2026-11-07', date: '7 novembre 2026', quoi: [
+  ['🎹', 'L’orgue de la crypte donne une bille', 'Dans la crypte, mets la bille dans l’orgue hanté tout en haut : tu gagnes une bille de plus pour la table principale. Une seule par passage dans la crypte.'],
   ['🏆', 'La Légende vivante du flipper', 'Le n°1 du classement général a maintenant son propre titre et son emblème, avec sa photo. Seul le meilleur score compte : peu importe qu’il soit roi, empereur ou dieu en ce moment.'],
   ['⚔', 'Les deux classements sont séparés', 'Le château (garde, bourreau, roi, empereur, dieu) se gagne en battant les boss. Le classement général, lui, garde juste le meilleur score de chacun, toutes parties confondues.']
 ] };

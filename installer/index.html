@@ -301,9 +301,10 @@ document.getElementById('porte-f').onsubmit = async e => {
     catch(e){ dire('⚠️ ' + e.message, true); }
     occupe(false);
   };
-  $('s-rest').onclick = async () => { occupe(true); const ok = await verifier(); occupe(false); if (ok) $('s-fich').click(); };
+  // iPhone : le choix du fichier doit s'ouvrir tout de suite au toucher (pas après une attente), le code est vérifié ensuite
+  $('s-rest').onclick = () => { if (!$('s-code').value.trim()){ verifier(); return; } $('s-fich').click(); };
   $('s-fich').onchange = async () => {
-    const f = $('s-fich').files[0]; $('s-fich').value = ''; if (!f) return;
+    const f = $('s-fich').files[0]; $('s-fich').value = ''; if (!f) return; if (!(await verifier())) return;
     occupe(true);
     try {
       const L = await Sauvegarde.lire(f), quand = new Date(L.date).toLocaleDateString('fr-BE', {day: 'numeric', month: 'long', year: 'numeric'});

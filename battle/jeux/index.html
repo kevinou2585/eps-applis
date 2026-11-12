@@ -3,97 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Battle des profs</title>
-<meta name="theme-color" content="#2a0f3d">
-<link rel="manifest" href="../manifest.webmanifest">
-<link rel="icon" href="../../icones/battle-192.png">
-<link rel="apple-touch-icon" href="../../icones/battle-180.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Battle profs">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#12352b">
+<title>Battle des profs : nouvelle adresse</title>
 <style>
-:root{--jaune:#ffd23f;--clair:#f4f1e8;--doux:#ffd9c2;--gris:#b9a9c9}
-*{box-sizing:border-box}
-html,body{margin:0;min-height:100%}
-body{background:linear-gradient(180deg,#2a0f3d 0,#4a1230 40%,#12040b 100%) fixed;color:var(--clair);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding:calc(env(safe-area-inset-top) + 10px) 16px calc(env(safe-area-inset-bottom) + 28px);-webkit-tap-highlight-color:transparent}
-.boite{max-width:460px;margin:0 auto}
-.haut{display:flex;justify-content:space-between;align-items:center;min-height:30px}
-.retour{color:var(--doux);font-weight:600;font-size:14px;text-decoration:none;padding:4px 0}
-.retour[hidden]{display:none}
-header{text-align:center;margin:8px 0 20px}
-header img{width:84px;height:84px;border-radius:20px;box-shadow:0 8px 22px rgba(0,0,0,.45)}
-h1{margin:12px 0 4px;font-size:34px;line-height:1;font-weight:900;letter-spacing:-.02em;text-transform:uppercase;color:var(--jaune);text-shadow:0 3px 0 #c2410c,0 6px 14px rgba(0,0,0,.5);transform:rotate(-2deg)}
-header p{margin:10px 0 0;color:var(--doux);font-weight:600}
-/* carte « Installer l'appli » (seulement dans le navigateur, quand on arrive par le lien) */
-#installer{background:#fff;color:#1b1030;border-radius:20px;padding:18px;margin:0 0 22px;box-shadow:0 10px 28px rgba(0,0,0,.4)}
-#installer[hidden]{display:none}
-#installer b{display:block;font-size:19px;margin-bottom:4px}
-#installer p{margin:0 0 12px;color:#4a4060;font-size:15px}
-#installer button{width:100%;border:0;border-radius:14px;padding:15px;font:900 18px system-ui,-apple-system,sans-serif;background:linear-gradient(140deg,#e8590c,#ff8a3d);color:#fff;box-shadow:0 4px 0 #9a3a06}
-#installer button:active{transform:translateY(3px);box-shadow:0 1px 0 #9a3a06}
-#installer .ou{display:block;text-align:center;margin-top:10px;font-size:14px;color:#6a5a80}
-h2{font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--gris);margin:0 0 10px}
-.jeux{display:grid;gap:12px}
-a.jeu,div.jeu{display:flex;align-items:center;gap:14px;padding:14px;border-radius:20px;text-decoration:none;color:#fff;background:linear-gradient(140deg,#d0388f,#ff7ac0);box-shadow:0 8px 20px rgba(0,0,0,.35)}
-a.jeu:active{transform:scale(.98)}
-.jeu img,.jeu .ph{flex:none;width:64px;height:64px;border-radius:16px;box-shadow:0 3px 10px rgba(0,0,0,.3)}
-.jeu b{display:block;font-size:20px;text-shadow:0 1px 2px rgba(0,0,0,.25)}
-.jeu span{display:block;font-size:14px;opacity:.92}
-.jeu .fl{margin-left:auto;font-size:26px;opacity:.8}
-div.jeu.bientot{background:rgba(255,255,255,.07);border:2px dashed rgba(255,255,255,.22);box-shadow:none;color:var(--gris)}
-.jeu .ph{display:flex;align-items:center;justify-content:center;font-size:30px;background:rgba(0,0,0,.25);box-shadow:none}
+  :root { --vert: #12352b; --or: #ffd23f; }
+  html, body { margin: 0; min-height: 100%; background: var(--vert); color: #fff; font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Arial, sans-serif; }
+  main { max-width: 460px; margin: 0 auto; padding: 40px 20px; text-align: center; }
+  .logo { font-size: 64px; line-height: 1; }
+  h1 { font-size: 28px; margin: 12px 0 6px; color: var(--or); }
+  p { margin: 12px 0; }
+  .carte { background: rgba(255, 255, 255, .08); border-radius: 18px; padding: 16px; margin: 20px 0; text-align: left; }
+  .carte b { color: var(--or); }
+  a.btn { display: block; margin: 22px 0 10px; padding: 16px; border-radius: 16px; background: var(--or); color: var(--vert); font-weight: 800; font-size: 20px; text-decoration: none; }
+  .petit { font-size: 15px; opacity: .8; }
+  ol { padding-left: 22px; margin: 6px 0; }
 </style>
 </head>
 <body>
-<div class="boite">
-  <div class="haut"><a class="retour" id="retour" href="../../" hidden>‹ Mes applis</a></div>
-  <header>
-    <img src="../../icones/battle-192.png" alt="">
-    <h1>Battle des profs</h1>
-    <p>Un nouveau défi chaque mois entre profs</p>
-  </header>
-
-  <section id="installer" hidden>
-    <b>📲 Installe l'appli</b>
-    <p>Une icône Battle des profs sur ton téléphone : tous les jeux au même endroit, en un clic.</p>
-    <button type="button" id="installer-bt">Installer l'appli</button>
-    <a class="ou" href="../">ou jouer tout de suite sans installer ↓</a>
-  </section>
-
-  <h2>Les jeux</h2>
-  <div class="jeux">
-    <a class="jeu" href="../"><img src="../../icones/battle-192.png" alt=""><div><b>Flipper infernal</b><span>Novembre · grimpe jusqu'au trône</span></div><i class="fl">›</i></a>
-    <div class="jeu bientot"><div class="ph">🔒</div><div><b>???</b><span>Le prochain jeu dort quelque part dans le château…</span></div></div>
+<main>
+  <div class="logo">🎯</div>
+  <h1>La Battle des profs déménage !</h1>
+  <p>Le flipper a une nouvelle maison : <b>beapp.be</b>.</p>
+  <div class="carte" id="moi">
+    <p><b>Tes résultats te suivent.</b> Ton meilleur score, tes titres et ta place au classement sont déjà là-bas : il suffit de jouer avec <b>le même prénom</b>.</p>
   </div>
-</div>
-<script src="../installer.js"></script>
+  <a class="btn" id="aller" href="https://beapp.be/eps-applis/battle/">Ouvrir la nouvelle Battle</a>
+  <div class="carte">
+    <p><b>Pour l'avoir sur ton écran d'accueil :</b></p>
+    <ol>
+      <li>Ouvre la nouvelle Battle avec le bouton jaune.</li>
+      <li>iPhone : bouton Partager > « Sur l'écran d'accueil ».<br>Android : menu ⋮ > « Installer l'application ».</li>
+      <li>Tu peux supprimer l'ancienne icône.</li>
+    </ol>
+  </div>
+  <p class="petit">Cette ancienne adresse ne garde plus les scores.</p>
+</main>
 <script>
-// Venu de la tuile d'EPS ultime (?eps) : on garde l'info pour la session, et le bouton « ‹ Mes applis » ramène à EPS ultime.
-try { if (/[?&]eps\b/.test(location.search)) sessionStorage.setItem('battle-eps', '1'); } catch (e) {}
-let depuisEps = false; try { depuisEps = sessionStorage.getItem('battle-eps') === '1'; } catch (e) {}
-document.getElementById('retour').hidden = !depuisEps;
-// Arrivé par le lien partagé, dans le navigateur : on propose tout de suite d'installer l'appli.
-const BI = window.BattleInstall;
-const carte = document.getElementById('installer'), bt = document.getElementById('installer-bt');
-const majCarte = () => {
-  const dansAppli = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-  carte.hidden = dansAppli || depuisEps;
-  bt.textContent = BI.ios ? 'Comment l\'installer ?' : 'Installer l\'appli';
-};
-majCarte(); BI.quand(majCarte);
-bt.onclick = () => BI.lancer();
-// iPhone : pas de fenêtre d'installation possible, on montre directement le mode d'emploi à la 1re visite
-if (BI.ios && !carte.hidden) { let vu = null; try { vu = sessionStorage.getItem('battle-aide-vue'); } catch (e) {}
-  if (!vu) { try { sessionStorage.setItem('battle-aide-vue', '1'); } catch (e) {} setTimeout(() => BI.lancer(), 700); } }
-// Mise à jour automatique (même cache que les autres applis)
-if ('serviceWorker' in navigator) {
-  const dejaPilote = !!navigator.serviceWorker.controller; let recharge = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (dejaPilote && !recharge) { recharge = true; location.reload(); } });
-  if (navigator.onLine) navigator.serviceWorker.register('../../sw.js').then(reg => {
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && navigator.onLine) reg.update().catch(() => {}); });
-  }).catch(() => {});
-}
+// Le prénom, roi/reine et le code d'école de ce téléphone partent avec le joueur : sur beapp.be il retrouve son nom (et donc ses résultats).
+(() => {
+  const lire = k => { try { return (localStorage.getItem(k) || '').trim(); } catch (e) { return ''; } };
+  const nom = lire('battle-nom'), genre = lire('battle-genre'), code = lire('eps-code');
+  const q = new URLSearchParams();
+  if (nom) q.set('nom', nom);
+  if (genre === 'F' || genre === 'H') q.set('genre', genre);
+  if (code) q.set('code', code);
+  const lien = 'https://beapp.be/eps-applis/battle/' + (q.toString() ? '?' + q : '');
+  document.getElementById('aller').href = lien;
+  if (nom) document.getElementById('moi').insertAdjacentHTML('afterbegin', '<p>Salut <b></b> 👋</p>'), document.querySelector('#moi b').textContent = nom;
+  // l'ancienne version gardée hors ligne ne doit plus revenir
+  if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.update())).catch(() => {});
+})();
 </script>
 </body>
 </html>

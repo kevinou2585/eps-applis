@@ -94,8 +94,8 @@
     return f;
   }
   const champs = (nom) => `<label for="cb-nom">Ton prénom</label><input id="cb-nom" autocomplete="given-name" value="${esc(nom || '')}" placeholder="ex. Delphine">
-    <label for="cb-code">Ton petit code (4 caractères ou plus)</label><input id="cb-code" type="password" autocomplete="off" autocapitalize="none" placeholder="Code">
-    <p class="cb-n">Retiens bien ce code : il protège tes données (les notes de tes élèves). Il te sera demandé pour les récupérer.</p>`;
+    <label for="cb-code">Choisis ton mot de passe (4 caractères ou plus)</label><input id="cb-code" type="password" autocomplete="new-password" autocapitalize="none" placeholder="Mot de passe">
+    <p class="cb-n">Retiens bien ce prénom et ce mot de passe : sur beapp.be, ils ouvrent ton compte et toutes tes données, sur tous tes appareils.</p>`;
   const lire = $ => ({nom: $('#cb-nom').value.trim(), code: $('#cb-code').value.trim()});
 
   /** Réglage « Copie sur beapp.be » (dans les paramètres). mode : 'passer' = depuis l'ancienne adresse (github.io). */
@@ -116,8 +116,9 @@
           const lien = APP === 'eps' ? 'https://beapp.be/eps-applis/installer/' : 'https://beapp.be/Maison/installer/';
           $('.cb-boite').innerHTML = `<h3>✅ C'est parti !</h3><p class="cb-ok">${n} éléments envoyés sur beapp.be au nom de « ${esc(x ? x.nom : v.nom)} ».</p>
             <p><b>Maintenant :</b></p><p>① Ouvre <a href="${lien}">${lien.replace('https://', '')}</a> et installe ${NOM_APP} (même façon que d'habitude).</p>
-            <p>② À la première ouverture, demande l'accès : kevin l'accepte.</p><p>③ L'appli te demande « C'est qui ? » : ton prénom + ton code, puis <b>Récupérer mes données</b>. Tout revient.</p>
-            <p class="cb-n">Ensuite tu peux supprimer l'ancienne appli de ton écran d'accueil. Rien n'est effacé ici tant que tu ne le fais pas.</p>
+            <p>② L'appli te demande de te connecter : tape ce même prénom et ce même mot de passe. Kevin accepte ton compte, et toutes tes données sont là.</p>
+            <p>③ Sur ton ordinateur ou un autre appareil : beapp.be/eps-applis, même prénom, même mot de passe. Tout reste synchronisé.</p>
+            <p class="cb-n">Cette ancienne appli marche encore : rien n'est effacé ici. Tu pourras la supprimer de ton écran d'accueil quand tout est bon sur beapp.be.</p>
             <div class="cb-btns"><button type="button" class="cb-go" id="cb-aller">Ouvrir beapp.be</button><button type="button" id="cb-f">Fermer</button></div>`;
           $('#cb-aller').onclick = () => { location.href = lien; };
           $('#cb-f').onclick = fermer;
@@ -191,12 +192,12 @@
     if (p && !document.getElementById('cb-param')) {
       const h = document.createElement('h2'); h.id = 'cb-param'; h.textContent = '🚚 Passer sur beapp.be';
       const d = document.createElement('div');
-      d.innerHTML = '<p class="note" style="padding:0;margin:0 0 8px">EPS ultime déménage sur beapp.be. Ce bouton envoie toutes tes données (classes, horaires, notes, tout) dans un coffre à ton nom, pour les récupérer dans la nouvelle appli.</p><div class="btns"><button type="button" class="go" id="cb-ouvrir">Passer sur beapp.be…</button></div>';
+      d.innerHTML = '<p class="note" style="padding:0;margin:0 0 8px">EPS ultime déménage sur beapp.be. Ce bouton envoie toutes tes données (classes, horaires, notes, tout) dans un compte à ton prénom, avec un mot de passe. Sur beapp.be, tu te connectes et tout est là, sur tous tes appareils. Cette appli-ci continue de marcher.</p><div class="btns"><button type="button" class="go" id="cb-ouvrir">Passer sur beapp.be…</button></div>';
       const avant = [...p.querySelectorAll('h2')].find(x => /Sauvegarde complète/.test(x.textContent));
       if (avant) { p.insertBefore(h, avant); p.insertBefore(d, avant); } else p.prepend(h, d);
-      d.querySelector('#cb-ouvrir').onclick = () => C.ouvrir(C.qui() ? undefined : 'passer');
+      d.querySelector('#cb-ouvrir').onclick = () => C.ouvrir('passer');
     }
-    C.bandeau();
+    // kevin (12/11) : pas de bandeau, juste le bouton dans ⚙️ Paramètres (il le fera avec ses collègues à l'école)
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
 })();
